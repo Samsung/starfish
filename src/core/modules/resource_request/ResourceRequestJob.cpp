@@ -269,12 +269,8 @@ void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
                                                String* filePath)
 {
-    // Fetch leaves file: to the implementation; only navigations and
-    // file: contexts may read local files, never web content.
-    Optional<ResourceURL*> requesterURL =
-        request->executionContext()->webOrigin()->url();
-    if (request->requestMode() != RequestMode::Navigate &&
-        !(requesterURL && requesterURL->isFileURL())) {
+    // Navigate is also used by web content, so it grants no file access.
+    if (!request->executionContext()->webOrigin()->canAccessLocalFiles()) {
         auto s = request->url()->urlString()->toUTF8NonGCString();
         STARFISH_LOG_WARN("blocked file access from non-file context: %s",
                           s.data());

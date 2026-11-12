@@ -1,0 +1,126 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Local file access is restricted to local app origins</title>
+<body>
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var config = window.productSecurityOptions || {
+    action: params.get('action') || 'fetch',
+    allowed: params.get('allowed') !== 'false',
+    file: params.get('file') ||
+      new URL('../../fixtures/security/file-origin-target.html', location.href).href,
+    readable: params.get('readable') ||
+      new URL('../../fixtures/security/file-origin-readable.txt', location.href).href
+  };
+  var finished = false;
+  var timer;
+  function finish(passed, message) {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timer);
+    console.assert(passed, message);
+    console.log('PRODUCT_SECURITY:' + JSON.stringify({
+      passed: passed, message: message,
+      testHooks: typeof testEnd === 'function'
+    }));
+    if (typeof testEnd === 'function') testEnd();
+  }
+  timer = setTimeout(function () {
+    finish(false, 'test did not complete');
+  }, 2000);
+
+  if (config.action === 'fetch') {
+    fetch(config.readable).then(function (response) {
+      return response.text();
+    }).then(function (text) {
+      finish(config.allowed && text.trim() === 'starfish-file-origin-fixture',
+             'fetch must follow the initiator origin');
+    }, function () {
+      finish(!config.allowed, 'non-file fetch must reject local files');
+    });
+  } else if (config.action === 'xhr') {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', config.readable);
+    xhr.onload = function () {
+      finish(config.allowed &&
+             xhr.responseText.trim() === 'starfish-file-origin-fixture',
+             'XHR must follow the initiator origin');
+    };
+    xhr.onerror = function () {
+      finish(!config.allowed, 'non-file XHR must reject local files');
+    };
+    xhr.send();
+  } else if (config.action === 'frame') {
+    var loaded = false;
+    addEventListener('message', function (event) {
+      if (event.data === 'file-origin-target-loaded') {
+        loaded = true;
+        finish(config.allowed, 'iframe file navigation policy');
+      }
+    });
+    var frame = document.createElement('iframe');
+    frame.src = config.file;
+    document.body.appendChild(frame);
+    setTimeout(function () {
+      finish(!config.allowed && !loaded, 'iframe file navigation policy');
+    }, 800);
+  } else if (config.action === 'opaque-child') {
+    addEventListener('message', function (event) {
+      if (event.data === 'opaque-child-blocked' ||
+          event.data === 'opaque-child-accessed') {
+        finish(event.data === 'opaque-child-blocked',
+               'opaque data child must not acquire local parent privileges');
+      }
+    });
+    var child = document.createElement('iframe');
+    var source = "var result = 'opaque-child-accessed';" +
+      "try { parent.document.documentElement; } catch (e) {" +
+      " result = 'opaque-child-blocked'; }" +
+      "parent.postMessage(result, '*');";
+    child.src = 'data:text/html,' +
+      encodeURIComponent('<script>' + source + '<' + '/script>');
+    document.body.appendChild(child);
+  } else if (config.action === 'srcdoc') {
+    addEventListener('message', function (event) {
+      if (event.data === 'srcdoc-read' || event.data === 'srcdoc-blocked') {
+        finish((event.data === 'srcdoc-read') === config.allowed,
+               'srcdoc must inherit its parent file access policy');
+      }
+    });
+    var nested = document.createElement('iframe');
+    var script = 'fetch(' + JSON.stringify(config.readable) + ')' +
+      '.then(function(r) { return r.text(); })' +
+      '.then(function(t) { parent.postMessage(' +
+      't.trim() === "starfish-file-origin-fixture" ? ' +
+      '"srcdoc-read" : "srcdoc-unexpected", "*"); },' +
+      'function() { parent.postMessage("srcdoc-blocked", "*"); });';
+    nested.srcdoc = '<script>' + script + '<' + '/script>';
+    document.body.appendChild(nested);
+  } else {
+    setTimeout(function () {
+      finish(!config.allowed, 'web initiated file navigation must be blocked');
+    }, 800);
+    if (config.action === 'assign') {
+      location.assign(config.file);
+    } else if (config.action === 'replace') {
+      location.replace(config.file);
+    } else if (config.action === 'href') {
+      location.href = config.file;
+    } else if (config.action === 'anchor') {
+      var anchor = document.createElement('a');
+      anchor.href = config.file;
+      anchor.referrerPolicy = 'no-referrer';
+      document.body.appendChild(anchor);
+      anchor.click();
+    } else if (config.action === 'form') {
+      var form = document.createElement('form');
+      form.action = config.file;
+      document.body.appendChild(form);
+      form.submit();
+    } else {
+      finish(false, 'unknown test action');
+    }
+  }
+}());
+</script>

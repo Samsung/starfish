@@ -122,6 +122,14 @@ bool WebOrigin::isSameOriginDomain(const WebOrigin* otherWebOrigin) const
     return isSameOrigin(otherWebOrigin);
 }
 
+bool WebOrigin::canAccessLocalFiles() const
+{
+    // Fetch leaves file: policy to the implementation. Local app origins,
+    // including inherited about:blank origins, retain their file access.
+    // https://fetch.spec.whatwg.org/#scheme-fetch
+    return m_originalURL && m_originalURL->isFileURL();
+}
+
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#can-have-its-url-rewritten
 bool WebOrigin::canRewritten(const WebOrigin* targetWebOrigin) const
 {

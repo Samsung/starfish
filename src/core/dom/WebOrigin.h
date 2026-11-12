@@ -45,6 +45,7 @@ public:
     bool isSameOrigin(const WebOrigin* otherWebOrigin) const;
     bool isSameOriginDomain(const WebOrigin* otherWebOrigin) const;
 
+    bool canAccessLocalFiles() const;
     bool canRewritten(const WebOrigin* targetWebOrigin) const;
 
 protected:

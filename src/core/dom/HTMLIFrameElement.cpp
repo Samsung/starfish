@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/WebOrigin.h"
 #include "browser/history/HistoryManager.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/Event.h"
@@ -316,6 +317,11 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
                                  ReferrerURL* referrerURL,
                                  CustomHTMLIFrameElementType elementType)
 {
+    // Check the initiator before creating a document with the target's
+    // origin; otherwise a file: target would authorize its own load.
+    if (url->isFileURL() && !document()->webOrigin()->canAccessLocalFiles()) {
+        url = ResourceURL::aboutBlankURL();
+    }
     // An SVG document used as an image runs no script and loads nothing
     // external (SVG Integration, secure animated and static modes), so an
     // iframe in it gets no browsing context; only a nested SVG image renders

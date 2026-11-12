@@ -1,0 +1,127 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebGL buffer uploads validate types and ranges without test hooks</title>
+<script>
+(function () {
+  var failures = [];
+  var checks = 0;
+  function check(condition, message) {
+    checks++;
+    console.assert(condition, message);
+    if (!condition) failures.push(message);
+  }
+  function expectError(gl, error, message) {
+    check(gl.getError() === error, message);
+  }
+  function expectTypeError(callback, message) {
+    var thrown = false;
+    try {
+      callback();
+    } catch (error) {
+      thrown = error instanceof TypeError;
+    }
+    check(thrown, message);
+  }
+  ['webgl', 'webgl2'].forEach(function (version) {
+    var gl = document.createElement('canvas').getContext(version);
+    check(!!gl, version + ' context is required');
+    if (!gl) return;
+    var buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    // The report passes a number where the WebGL2 view overload requires
+    // an ArrayBufferView. It must never reach an unchecked native cast.
+    if (version === 'webgl2') {
+      expectTypeError(function () {
+        gl.bufferData(gl.ARRAY_BUFFER, 2147483647,
+                      new Uint8Array(4), gl.STATIC_DRAW);
+      }, 'reported WebGL2 PoC rejects the invalid view');
+    } else {
+      gl.bufferData(gl.ARRAY_BUFFER, 2147483647,
+                    new Uint8Array(4), gl.STATIC_DRAW);
+      expectError(gl, gl.INVALID_ENUM, 'WebGL1 PoC rejects usage');
+    }
+    gl.bufferData(gl.ARRAY_BUFFER, -1, gl.STATIC_DRAW);
+    expectError(gl, gl.INVALID_VALUE, version + ' negative allocation');
+    gl.bufferData(gl.ARRAY_BUFFER, 32, gl.STATIC_DRAW);
+    expectError(gl, gl.NO_ERROR, version + ' normal allocation');
+    check(gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE) === 32,
+          version + ' records allocated size');
+    if (version !== 'webgl2') return;
+
+    var bytes = new Uint8Array(32);
+    gl.getBufferSubData(gl.ARRAY_BUFFER, 0, bytes);
+    check(bytes.every(function (value) { return value === 0; }),
+          'size-only allocations are zero initialized');
+    var views = [new Uint8Array(4), new Uint32Array(4),
+                 new DataView(new ArrayBuffer(4))];
+    views.forEach(function (view) {
+      var length = view instanceof DataView ? view.byteLength : view.length;
+      gl.bufferData(gl.ARRAY_BUFFER, 32, gl.STATIC_DRAW);
+      gl.bufferData(gl.ARRAY_BUFFER, view, gl.STATIC_DRAW, 9007199254740991);
+      expectError(gl, gl.INVALID_VALUE, 'large source offset rejected');
+      check(gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE) === 32,
+            'failed allocation preserves size');
+      gl.bufferData(gl.ARRAY_BUFFER, view, gl.STATIC_DRAW, length, 1);
+      expectError(gl, gl.INVALID_VALUE, 'source length overflow rejected');
+      gl.bufferData(gl.ARRAY_BUFFER, view, gl.STATIC_DRAW, length);
+      expectError(gl, gl.NO_ERROR, 'empty sub-source is valid');
+      check(gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE) === 0,
+            'empty sub-source replaces storage with a zero-length buffer');
+    });
+
+    var empty = new Uint8Array(0);
+    gl.bufferData(gl.ARRAY_BUFFER, 8, gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, empty, 0, 0);
+    expectError(gl, gl.INVALID_ENUM, 'empty bufferData validates usage');
+    check(gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE) === 8,
+          'invalid empty allocation preserves size');
+    gl.bufferData(0, empty, gl.STATIC_DRAW, 0);
+    expectError(gl, gl.INVALID_ENUM, 'empty bufferData validates target');
+    gl.bufferSubData(0, 0, empty, 0);
+    expectError(gl, gl.INVALID_ENUM, 'empty bufferSubData validates target');
+    gl.bufferSubData(gl.ARRAY_BUFFER, -1, empty, 0);
+    expectError(gl, gl.INVALID_VALUE, 'empty bufferSubData validates destination');
+    gl.bufferSubData(gl.ARRAY_BUFFER, 9, empty, 0);
+    expectError(gl, gl.INVALID_VALUE, 'empty bufferSubData checks destination end');
+    gl.bufferSubData(gl.ARRAY_BUFFER, 8, empty, 0);
+    expectError(gl, gl.NO_ERROR, 'zero-length write at buffer end is valid');
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, empty, 1);
+    expectError(gl, gl.INVALID_VALUE, 'empty bufferSubData validates source');
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.bufferData(gl.ARRAY_BUFFER, empty, gl.STATIC_DRAW, 0);
+    expectError(gl, gl.INVALID_OPERATION, 'empty allocation needs a buffer');
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, empty, 0);
+    expectError(gl, gl.INVALID_OPERATION, 'empty upload needs a buffer');
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    expectTypeError(function () {
+      gl.bufferData(gl.ARRAY_BUFFER, {}, gl.STATIC_DRAW, 0);
+    }, 'plain object cannot be cast to an ArrayBufferView');
+    expectTypeError(function () {
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, 1, 0);
+    }, 'number cannot be cast to an ArrayBufferView');
+    // Transfer can detach a view before the call, or during conversion of
+    // another argument. Neither path may form a pointer into freed storage.
+    var detached = new Uint8Array(8);
+    detached.buffer.transfer();
+    check(detached.byteLength === 0, 'transfer detached the source buffer');
+    gl.bufferData(gl.ARRAY_BUFFER, detached, gl.STATIC_DRAW, 1);
+    expectError(gl, gl.INVALID_VALUE, 'detached source offset is rejected');
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, detached, 1);
+    expectError(gl, gl.INVALID_VALUE, 'detached sub-source offset is rejected');
+    var converted = new Uint8Array(8);
+    var target = {valueOf: function () {
+      converted.buffer.transfer();
+      return gl.ARRAY_BUFFER;
+    }};
+    gl.bufferData(target, converted, gl.STATIC_DRAW, 1);
+    expectError(gl, gl.INVALID_VALUE,
+                'detachment during conversion cannot bypass range checks');
+    gl.deleteBuffer(buffer);
+  });
+  console.log('PRODUCT_SECURITY:' + JSON.stringify({
+    passed: failures.length === 0, checks: checks, failures: failures,
+    testHooks: typeof testEnd === 'function'
+  }));
+  if (typeof testEnd === 'function') testEnd();
+}());
+</script>

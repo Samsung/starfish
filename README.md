@@ -680,6 +680,23 @@ If you want to capture the screenshot on the command line, use:
 ELM_ENGINE="shot:file=[capture.png]" ./run.sh [filepath=*.html] --pixel-test --width=800 --height=600
 ```
 
+### Product security regressions
+
+Build with `-DCMAKE_BUILD_TYPE=Release` (or `RelWithDebInfo`),
+`-DENABLE_TEST=0`, and the product's WebGL setting. Then run:
+
+```sh
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/product_security_test.py \
+  --browser <build>/bin/lightweight-web-engine --webgl on
+```
+
+Use `--webgl off` for a product without WebGL. The runner checks ordinary
+fetch/XHR, iframe/srcdoc, Location, anchor/form, redirect, and WebGL calls
+using harmless checked-in local fixtures and a loopback HTTP server.
+It rejects native test bindings by default. `--allow-test-hooks` lets CI
+also exercise these regressions with its existing Debug test build; that
+run does not verify the absence of product test hooks.
+
 ### Khronos WebGL Conformance Tests
 
 The [Khronos WebGL conformance suites](https://github.com/KhronosGroup/WebGL)

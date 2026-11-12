@@ -2413,6 +2413,15 @@ Worker exposure is not a claim that the Worker test variants were verified.
 | `Body` mixin | `body` (`ReadableStream`), `bodyUsed`, plus the consumers above. **`BodyInit` does not accept `FormData` or `URLSearchParams`** — only `Blob`/`BufferSource`/`USVString`/`ReadableStream`. |
 | **Cancellation not integrated** | `AbortController` and `AbortSignal` are exposed as DOM cancellation signals, but cannot yet cancel an in-flight `fetch()`. |
 
+Local-file policy is independent of `ENABLE_TEST`: a `file:` origin,
+including an inherited `about:blank` or `srcdoc` origin, may read local
+resources. Other origins cannot fetch local files or navigate to them
+through Location, links/forms, or iframes. Native embedding calls can still
+load local apps. File checks run before native file I/O callbacks.
+This preserves existing local app access; it is not a per-app directory
+sandbox. The embedder and OS remain responsible for restricting which
+files an installed app can read.
+
 ### URL & URLSearchParams
 
 | Interface | Status |

@@ -4221,27 +4221,30 @@ void WebGL2RenderingContext::bufferData(GLenum target,
 {
     ENTER_CONTEXT_SCOPE();
 
-    size_t srcLength = srcData->isDataViewObject() ? srcData->byteLength()
-                                                   : srcData->arrayLength();
-
-    unsigned long long copyLength =
-        (length == 0) ? srcLength - srcOffset : length;
-
-    if (copyLength == 0) {
+    const size_t srcLength = srcData->isDataViewObject()
+                                 ? srcData->byteLength()
+                                 : srcData->arrayLength();
+    if (!isValidBufferTarget(target)) {
+        setGLError(GL_INVALID_ENUM);
         return;
     }
-
-    size_t elementSize = viewElementSize(srcData);
-
-    unsigned long long copyByteLength = copyLength * elementSize;
-
     if (!getState()->getBoundBuffer(target).hasValue()) {
         setGLError(GL_INVALID_OPERATION);
         return;
     }
-
-    if (srcOffset > srcLength || copyLength > srcLength - srcOffset) {
+    if (srcOffset > srcLength || length > srcLength - srcOffset) {
         setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    // WebGL 2.0 section 3.7.3: an empty sub-source still replaces the
+    // buffer's storage. Validate before subtracting or forming a pointer.
+    const size_t copyLength = length ? length : srcLength - srcOffset;
+    const size_t elementSize = viewElementSize(srcData);
+    const size_t copyByteLength = copyLength * elementSize;
+    if (copyByteLength >
+        static_cast<uint64_t>(std::numeric_limits<GLsizeiptr>::max())) {
+        setGLError(GL_OUT_OF_MEMORY);
         return;
     }
 
@@ -4249,7 +4252,9 @@ void WebGL2RenderingContext::bufferData(GLenum target,
     // succeeded, and an earlier error must not fail it.
     hasNewGLError();
     gl()->bufferData(target, copyByteLength,
-                     srcData->rawBuffer() + srcOffset * elementSize, usage);
+                     copyLength ? srcData->rawBuffer() + srcOffset * elementSize
+                                : nullptr,
+                     usage);
     if (!bufferDataSucceeded(target)) {
         return;
     }
@@ -4268,20 +4273,9 @@ void WebGL2RenderingContext::bufferSubData(GLenum target,
 {
     ENTER_CONTEXT_SCOPE();
 
-    size_t srcLength = srcData->isDataViewObject() ? srcData->byteLength()
-                                                   : srcData->arrayLength();
-
-    unsigned long long copyLength =
-        (length == 0) ? srcLength - srcOffset : length;
-
-    if (copyLength == 0) {
-        return;
-    }
-
-    size_t elementSize = viewElementSize(srcData);
-
-    unsigned long long copyByteLength = copyLength * elementSize;
-
+    const size_t srcLength = srcData->isDataViewObject()
+                                 ? srcData->byteLength()
+                                 : srcData->arrayLength();
     if (!isValidBufferTarget(target)) {
         setGLError(GL_INVALID_ENUM);
         return;
@@ -4290,18 +4284,29 @@ void WebGL2RenderingContext::bufferSubData(GLenum target,
         setGLError(GL_INVALID_OPERATION);
         return;
     }
-
-    // The size bufferData recorded, not a GL query, so that no unrelated
-    // pending GL error drops the upload.
-    const uint64_t bufSize =
-        getState()->getBoundBuffer(target).value()->byteLength();
     if (dstByteOffset < 0 || srcOffset > srcLength ||
-        copyLength > srcLength - srcOffset ||
-        !isRangeWithin(dstByteOffset, copyByteLength, bufSize)) {
+        length > srcLength - srcOffset) {
         setGLError(GL_INVALID_VALUE);
         return;
     }
 
+    const size_t copyLength = length ? length : srcLength - srcOffset;
+    const size_t elementSize = viewElementSize(srcData);
+    const size_t copyByteLength = copyLength * elementSize;
+    // The size bufferData recorded, not a GL query, so that no unrelated
+    // pending GL error drops the upload.
+    const uint64_t bufSize =
+        getState()->getBoundBuffer(target).value()->byteLength();
+    if (!isRangeWithin(dstByteOffset, copyByteLength, bufSize)) {
+        setGLError(GL_INVALID_VALUE);
+        return;
+    }
+
+    // A no-op upload must still validate its target and ranges (section
+    // 3.7.3); avoid pointer arithmetic on a zero-length backing store.
+    if (!copyLength) {
+        return;
+    }
     gl()->bufferSubData(target, clampToGLintptr(dstByteOffset), copyByteLength,
                         srcData->rawBuffer() + srcOffset * elementSize);
 }

@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/WebOrigin.h"
 #include "core/page/Location.h"
 #include "core/util/URL.h"
 #include "core/page/BrowsingContext.h"
@@ -217,6 +218,10 @@ void Location::assign(String* url, ReferrerURL* referrerURL)
 static void navigateImpl(BrowsingContext* ctx, ResourceURL* url,
                          ReferrerURL* referrerURL, HistoryManagerAction action)
 {
+    if (url->isFileURL() &&
+        !ctx->document()->webOrigin()->canAccessLocalFiles()) {
+        return;
+    }
     if (ctx->isTopLevelBrowsingContext()) {
         ctx->webView()->navigateAsync(url, action, referrerURL);
     } else {
@@ -379,6 +384,9 @@ private:
 
 void Location::assign(ResourceURL* url, ReferrerURL* referrerURL, bool force)
 {
+    if (url->isFileURL() && !document()->webOrigin()->canAccessLocalFiles()) {
+        return;
+    }
     // check whether the resource can be displayed
     HeaderResource* resource = document()->resourceLoader().fetchHeader(url);
     resource->addResourceClient(
