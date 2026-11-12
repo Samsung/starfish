@@ -6739,11 +6739,18 @@ void StyleResolver::applyProperty(Element* element,
                    (newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setOpacity(1.0);
-        } else if (newCssValue.valueKind() ==
+                } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Number) {
             float beforeClip = newCssValue.numberValue();
             style->setOpacity(
                 beforeClip < 0 ? 0 : (beforeClip > 1.0 ? 1.0 : beforeClip));
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::CalcValueKind) {
+            // A number-typed calc() (e.g. min(.1, .2)) resolves to a plain
+            // number at computed-value time and clamps to [0, 1].
+                        float number = newCssValue.calcValue()->numberValue();
+            style->setOpacity(number < 0 ? 0
+                                         : (number > 1.0 ? 1.0 : number));
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -13552,7 +13559,8 @@ bool CSSStyleValuePair::updateValueUnitNumber(const CSSTokenValue& token,
 
 static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                       bool isLenParser, bool isAngleParser, bool isTimeParser,
-                      bool isLineheightParser, uint8_t parserOption)
+                      bool isLineheightParser, bool isNumberParser,
+                      uint8_t parserOption)
 {
     STARFISH_ASSERT(data != nullptr);
 
@@ -13579,16 +13587,51 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
             auto str = parser.parsedString();
             CalcValue val;
             if (parser.consumeIfNext('(')) {
-                CalcData* newData = new CalcData(str);
+                                CalcData* newData = new CalcData(str);
+                bool negate = !isPlus;
                 if (parseCalc(parser, newData, isLenParser, isAngleParser,
-                              isTimeParser, isLineheightParser, parserOption)) {
-                    if (!isPlus) {
-                        newData->setSign(false);
-                        isPlus = true;
+                              isTimeParser, isLineheightParser, isNumberParser,
+                              parserOption)) {
+                    GCVector<CalcTerm*>& nestedTerms = newData->terms();
+                    if (newData->type() == CalcData::Type::kCalc &&
+                        nestedTerms.size() == 1 &&
+                        (*nestedTerms.begin())->values().size() == 1) {
+                        // A nested calc() that folded to a single bare value
+                        // (e.g. a simplified min()/max()) joins the parent
+                        // summation directly instead of staying parenthesized.
+                        CalcValue nested =
+                            *(*nestedTerms.begin())->values().begin();
+                        if (negate) {
+                            if (nested.type().isNumber()) {
+                                nested =
+                                    CalcValue(-nested.numberValue(), false);
+                            } else if (nested.type().isPercentage()) {
+                                nested =
+                                    CalcValue(-nested.percentageValue(), true);
+                            } else if (nested.type().isLength()) {
+                                CSSLength length = nested.lengthValue();
+                                nested = CalcValue(
+                                    CSSLength(length.kind(), -length.value()));
+                            } else if (nested.type().isAngle()) {
+                                CSSAngle angle = nested.angleValue();
+                                nested = CalcValue(
+                                    CSSAngle(angle.kind(), -angle.value()));
+                            } else if (nested.type().isTime()) {
+                                CSSTime time = nested.timeValue();
+                                nested = CalcValue(
+                                    CSSTime(time.kind(), -time.value()));
+                            }
+                            isPlus = true;
+                        }
+                        val = nested;
+                    } else {
+                        if (negate) {
+                            newData->setSign(false);
+                            isPlus = true;
+                        }
+                        val.setType(CalcValueType::ValueKind::kCalcData);
+                        val.setValue(newData);
                     }
-                    val.setType(CalcValueType::ValueKind::kCalcData);
-                    val.setValue(newData);
-
                 } else {
                     return false;
                 }
@@ -13760,6 +13803,10 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
     if (summedType.isInvalid() || summedType.isNone()) {
         return false;
     }
+
+    // css-values-4 "Simplification": min()/max() whose arguments are all
+    // comparable absolute values fold to the compared value at parse time.
+    data->foldComparableArguments();
     return true;
 }
 
@@ -13773,9 +13820,11 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
         (calcParserOption == CSSStyleValuePair::CalcParserOption::AngleParser);
     bool isTimeParser =
         (calcParserOption == CSSStyleValuePair::CalcParserOption::TimeParser);
-    bool isLineheightParser =
+        bool isLineheightParser =
         (calcParserOption ==
          CSSStyleValuePair::CalcParserOption::LineheightParser);
+    bool isNumberParser =
+        (calcParserOption == CSSStyleValuePair::CalcParserOption::NumberParser);
 
     CSSPropertyParser parser((char*)token.data());
 
@@ -13790,7 +13839,8 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
 
         CalcData* data = new CalcData(name);
         bool result = parseCalc(parser, data, isLenParser, isAngleParser,
-                                isTimeParser, isLineheightParser, parserOption);
+                                isTimeParser, isLineheightParser,
+                                isNumberParser, parserOption);
         if (result && parser.isEnd()) {
             m_valueKind = CSSStyleValuePair::ValueKind::CalcValueKind;
             m_value = data;
@@ -15819,7 +15869,17 @@ bool CSSStyleValuePair::updateValueOpacity(Document* document,
 {
     STARFISH_ASSERT(document != nullptr);
 
-    return updateValueNumber(tokens, CSSPropertyParser::AllowNegative);
+    if (updateValueNumber(tokens, CSSPropertyParser::AllowNegative)) {
+        return true;
+    }
+    if (tokens.size() != 1) {
+        return false;
+    }
+    // <number> accepts calc(): a number-typed calc entry (css-values-4
+    // §5.6); unit-carrying terms are rejected by the type check.
+    return updateValueUnitCalc(tokens[0],
+                               CSSStyleValuePair::CalcParserOption::NumberParser,
+                               CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueFontWeight(Document* document,

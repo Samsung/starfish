@@ -2834,7 +2834,8 @@ public:
         LengthParser = 0,
         AngleParser = 1,
         TimeParser = 2,
-        LineheightParser = 3
+        LineheightParser = 3,
+        NumberParser = 4
     };
     bool updateValueUnitCalc(const CSSTokenValue& token, uint8_t parserOption,
                              uint8_t lengthOption);
