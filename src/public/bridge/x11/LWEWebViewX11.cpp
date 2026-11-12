@@ -33,6 +33,7 @@ public:
 #include "StarfishConfig.h"
 #include "PlatformIntegrationData.h"
 #include "public/delegate/LWEWebViewDelegateImpl.h"
+#include "public/delegate/ThreadedCallHelper.h"
 #include "public/contract/LWEWebContainerDelegate.h"
 #include "LWEWebView.h"
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
@@ -266,9 +267,6 @@ public:
             return;
         }
 
-        // Register X11 file descriptor to glib main loop
-        registerX11Fd();
-
         // Create WebContainer with GL rendering
         WebContainer::WebContainerArguments args{
             width,           height, devicePixelRatio,
@@ -385,10 +383,18 @@ public:
                     XUnsetICFocus(m_ic);
                 }
             });
+
+        // pollEvent() uses the handlers above, so watch the X connection
+        // only now.
+        registerX11Fd();
     }
 
     ~WebViewX11()
     {
+        // pollEvent() uses the container, the window and the display, so
+        // stop it before any of them goes away.
+        unregisterX11Fd();
+
         if (m_webContainer) {
             m_webContainer->Destroy();
             m_webContainer = nullptr;
@@ -404,21 +410,6 @@ public:
             XCloseIM(m_im);
             m_im = nullptr;
         }
-
-#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
-        if (m_uvPollHandle) {
-            uv_poll_stop(m_uvPollHandle);
-            uv_close(reinterpret_cast<uv_handle_t*>(m_uvPollHandle),
-                     [](uv_handle_t* handle) {
-                         delete reinterpret_cast<uv_poll_t*>(handle);
-                     });
-        }
-#else
-        if (m_x11FdSource) {
-            g_source_remove(m_x11FdSource);
-            m_x11FdSource = 0;
-        }
-#endif
 
         if (m_ownsWindow && m_window && m_display) {
             XDestroyWindow(m_display, m_window);
@@ -736,18 +727,22 @@ public:
         int fd = ConnectionNumber(m_display);
 
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
-        m_uvPollHandle = new uv_poll_t;
-        uv_poll_init(Starfish::MessageLoopLibUV::mainLoop(), m_uvPollHandle,
-                     fd);
-        m_uvPollHandle->data = this;
-        uv_poll_start(m_uvPollHandle, UV_READABLE,
-                      [](uv_poll_t* handle, int status, int events) {
-                          WebViewX11* self =
-                              static_cast<WebViewX11*>(handle->data);
-                          if (status == 0) {
-                              self->pollEvent();
-                          }
-                      });
+        // This backend runs the uv loop on LWE's own thread, and a uv handle
+        // may only be used on the thread of its loop. pollEvent() runs there.
+        ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() {
+            m_uvPollHandle = new uv_poll_t;
+            uv_poll_init(Starfish::MessageLoopLibUV::mainLoop(), m_uvPollHandle,
+                         fd);
+            m_uvPollHandle->data = this;
+            uv_poll_start(m_uvPollHandle, UV_READABLE,
+                          [](uv_poll_t* handle, int status, int events) {
+                              WebViewX11* self =
+                                  static_cast<WebViewX11*>(handle->data);
+                              if (status == 0) {
+                                  self->pollEvent();
+                              }
+                          });
+        });
 #else
         GIOChannel* channel = g_io_channel_unix_new(fd);
 
@@ -773,6 +768,29 @@ public:
             });
 
         g_io_channel_unref(channel);
+#endif
+    }
+
+    void unregisterX11Fd()
+    {
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+        if (m_uvPollHandle) {
+            // On the loop's thread, so that a pollEvent() in progress there
+            // finishes first and no later one starts.
+            ThreadedCallHelper::Instance()->PostTaskToLWEMainThreadSync([&]() {
+                uv_poll_stop(m_uvPollHandle);
+                uv_close(reinterpret_cast<uv_handle_t*>(m_uvPollHandle),
+                         [](uv_handle_t* handle) {
+                             delete reinterpret_cast<uv_poll_t*>(handle);
+                         });
+            });
+            m_uvPollHandle = nullptr;
+        }
+#else
+        if (m_x11FdSource) {
+            g_source_remove(m_x11FdSource);
+            m_x11FdSource = 0;
+        }
 #endif
     }
 
