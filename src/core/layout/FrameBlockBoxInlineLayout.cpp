@@ -3638,10 +3638,13 @@ static void textBidiResolver(FrameText* frameText,
     UBiDi* bidi = ubidi_open();
     UTF16StringDataNonGCStd str = frameText->text()->toUTF16NonGCString();
     UErrorCode err = U_ZERO_ERROR;
+    // The paragraph embedding level comes from 'direction', not from the
+    // first strong character (UAX9 HL1, css-writing-modes-4 §2.4.1);
+    // neutrals at a paragraph end then take the base direction.
     ubidi_setPara(bidi, (const UChar*)str.data(), (int32_t)str.length(),
                   directionValue == DirectionValue::LtrDirectionValue
-                      ? UBIDI_DEFAULT_LTR
-                      : UBIDI_DEFAULT_RTL,
+                      ? UBIDI_LTR
+                      : UBIDI_RTL,
                   nullptr, &err);
     STARFISH_ASSERT(U_SUCCESS(err));
     size_t total = ubidi_countRuns(bidi, &err);

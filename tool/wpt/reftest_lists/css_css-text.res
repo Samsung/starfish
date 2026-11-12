@@ -1184,10 +1184,10 @@ http://web-platform.test:8000/css/css-text/white-space/pre-wrap-020.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/pre-wrap-align-center-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/pre-wrap-align-center-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/pre-wrap-align-end-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/pre-wrap-align-end-002.html
+http://web-platform.test:8000/css/css-text/white-space/pre-wrap-align-end-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/pre-wrap-align-end-003.html
 http://web-platform.test:8000/css/css-text/white-space/pre-wrap-align-left-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/pre-wrap-align-left-002.html
+http://web-platform.test:8000/css/css-text/white-space/pre-wrap-align-left-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/pre-wrap-align-left-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/pre-wrap-align-right-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/pre-wrap-align-right-002.html
