@@ -150,7 +150,7 @@ http://web-platform.test:8000/css/css-overflow/scrollable-overflow-fixed-positio
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/scrollable-overflow-padding.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/scrollable-overflow-self-collapsing.html
 http://web-platform.test:8000/css/css-overflow/scrollable-overflow-textarea.html
-http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-001.html
+# [vacuous-pass:BOM_INJECTION_CORRUPTS_PAGE] http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-001.html
 http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-002.html
 http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-003.html
 http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-004.html
@@ -163,8 +163,8 @@ http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-004
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-dynamic-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-dynamic-002.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-dynamic-003.html
-http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-dynamic-004.html
-http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-dynamic-005.html
+# [vacuous-pass:BOM_INJECTION_CORRUPTS_PAGE] http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-dynamic-004.html
+# [vacuous-pass:BOM_INJECTION_CORRUPTS_PAGE] http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-dynamic-005.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-dynamic-006.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/scrollable-overflow-transform-unreachable-region.html
 # [vacuous-pass:WRITING_MODE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-overflow/scrollable-overflow-vertical-rl-dynamic.html

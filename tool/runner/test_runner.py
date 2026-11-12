@@ -492,7 +492,7 @@ _WPT_CRASHTEST_LISTS_DIR = os.path.join(working_directory, "tool/wpt/crashtest_l
 
 def _wpt_manifest_run(list_dir, mode, jobs=8, timeout=20):
     import wpt_runner
-    from wpt_server import wpt_serve, DEFAULT_WPT_ROOT, WptServerError
+    from wpt_server import wpt_serve, inject_script_for, DEFAULT_WPT_ROOT, WptServerError
 
     if not os.path.isdir(list_dir):
         print("no lists at %s -- run: python3 tool/wpt/scripts/wpt_manifest_lists.py "
@@ -510,7 +510,8 @@ def _wpt_manifest_run(list_dir, mode, jobs=8, timeout=20):
         ensure_manifest(DEFAULT_WPT_ROOT, manifest_path)
         manifest = wpt_runner.load_manifest(DEFAULT_WPT_ROOT)
     try:
-        with wpt_serve(DEFAULT_WPT_ROOT, verbose=True):
+        with wpt_serve(DEFAULT_WPT_ROOT, inject_script=inject_script_for(mode),
+                       verbose=True):
             # verbose=True: this suite gates CI, so a crash here means a
             # crash on the CI machine -- surface the captured backtrace
             # in the (only) log we get, the CI job's own live stdout.

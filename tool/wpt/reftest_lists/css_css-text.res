@@ -25,7 +25,7 @@ http://web-platform.test:8000/css/css-text/boundary-shaping/boundary-shaping-009
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hanging-punctuation/hanging-punctuation-first-whitespace.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hanging-punctuation/hanging-punctuation-first.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hanging-punctuation/hanging-punctuation-force-end-001.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hanging-punctuation/hanging-punctuation-inline-001.html
+# [vacuous-pass:HANGING_PUNCTUATION_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/hanging-punctuation/hanging-punctuation-inline-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hanging-punctuation/hanging-punctuation-inline-bound-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hanging-punctuation/hanging-punctuation-last-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/hanging-punctuation/hanging-punctuation-last-ascii-quote.html

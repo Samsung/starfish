@@ -51,10 +51,10 @@ http://web-platform.test:8000/css/css-ui/caret-color-bar-shape-text-color.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/caret-color-block-shape-text-color-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/caret-color-block-shape-text-color-005.html
 http://web-platform.test:8000/css/css-ui/caret-color-underscore-shape-text-color.html
-http://web-platform.test:8000/css/css-ui/caret-eol-001.html
-http://web-platform.test:8000/css/css-ui/caret-eol-002.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-ui/caret-eol-001.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-ui/caret-eol-002.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-ui/caret-eol-003.html
-http://web-platform.test:8000/css/css-ui/caret-eol-004.tentative.html
+# [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-ui/caret-eol-004.tentative.html
 # [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-001-rtl-sideways-lr.html
 # [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-001-rtl-sideways-rl.html
 # [auto-fail:REF_LOAD_FAIL(TIMEOUT)] http://web-platform.test:8000/css/css-ui/caret-shape-block-001-rtl-vlr.html
@@ -939,9 +939,9 @@ http://web-platform.test:8000/css/css-ui/text-overflow-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-004.html
 http://web-platform.test:8000/css/css-ui/text-overflow-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-007.html
+http://web-platform.test:8000/css/css-ui/text-overflow-007.html
 http://web-platform.test:8000/css/css-ui/text-overflow-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-009.html
+http://web-platform.test:8000/css/css-ui/text-overflow-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-012.html
@@ -949,8 +949,8 @@ http://web-platform.test:8000/css/css-ui/text-overflow-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-016.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-020.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-021.html
+http://web-platform.test:8000/css/css-ui/text-overflow-020.html
+# [vacuous-pass:TEXT_OVERFLOW_ON_SCROLLER_UNIMPLEMENTED] http://web-platform.test:8000/css/css-ui/text-overflow-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-022.html
 http://web-platform.test:8000/css/css-ui/text-overflow-024.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-025.html

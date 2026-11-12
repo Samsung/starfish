@@ -133,6 +133,19 @@ class WptServerError(RuntimeError):
     pass
 
 
+def inject_script_for(mode):
+    """The bridge script to inject for a run of `mode` tests, or None.
+
+    Reftests are judged from the shell's own screenshot and need no bridge.
+    Injecting it anyway is harmful: `wpt serve --inject-script` places the
+    tag at a character offset into the raw bytes, so a page that starts
+    with a UTF-8 BOM gets its doctype split (`<!DOCTYPE htm<script>...`)
+    and renders the script source as text. A test and its reference then
+    both show that text and "match" without testing anything.
+    """
+    return None if mode == "reftest" else DEFAULT_INJECT
+
+
 @contextmanager
 def wpt_serve(wpt_root, inject_script=DEFAULT_INJECT, http2=True,
               startup_timeout=60, verbose=False):

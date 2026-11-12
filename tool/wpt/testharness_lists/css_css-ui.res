@@ -20,7 +20,7 @@ http://web-platform.test:8000/css/css-ui/parsing/outline-width-valid.html
 http://web-platform.test:8000/css/css-ui/appearance-parsing.html
 http://web-platform.test:8000/css/css-ui/appearance-property.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/appearance-serialization.html
-http://web-platform.test:8000/css/css-ui/box-sizing-027.html
+# [vacuous-pass:BOM_INJECTION_CORRUPTS_PAGE] http://web-platform.test:8000/css/css-ui/box-sizing-027.html
 http://web-platform.test:8000/css/css-ui/button-author-level-padding-applies.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/caret-color-009.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/caret-color-013.html

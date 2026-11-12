@@ -312,7 +312,14 @@ Responsibilities:
 - start `wpt serve --inject-script inject_report.js --alias_file ...`
   in its own session, the alias file mapping `/resources/testharnessreport.js`
   to a temp dir holding a copy of `inject_report.js` under that name (a file
-  alias looks the file up by name inside `local-dir`);
+  alias looks the file up by name inside `local-dir`). Reftest runs start it
+  without injection (`inject_script_for("reftest")`): the injector inserts
+  the tag at a character offset into the raw bytes, so a page that starts
+  with a UTF-8 BOM gets a broken doctype and shows the script source as
+  text, and its test and reference then match without testing anything.
+  Testharness and crashtest pages still go through the injector, so a
+  BOM-prefixed one of those can be served corrupted; such list entries are
+  tagged `# [vacuous-pass:BOM_INJECTION_CORRUPTS_PAGE]`;
 - consider it healthy only after several consecutive successful HTTP and HTTPS
   probes, and fail fast if it dies during boot. The HTTPS probe accepts WPT's
   fixture certificate; it does not change browser TLS settings;

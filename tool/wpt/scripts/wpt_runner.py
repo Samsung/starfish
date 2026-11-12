@@ -55,7 +55,7 @@ sys.path.insert(0, _HERE)                                      # sibling wpt_*
 sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
 from repo_paths import REPO_ROOT  # noqa: E402
 from wpt_scope import collect, read_res  # noqa: E402, F401
-from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
+from wpt_server import wpt_serve, inject_script_for, DEFAULT_WPT_ROOT  # noqa: E402
 from wpt_reftest import (run_reftest, load_manifest, ensure_manifest,  # noqa: E402
                          ensure_imgdiff, starfish_env)
 
@@ -487,7 +487,8 @@ def main(argv):
     if args.no_serve:
         npass, reasons, per_list = go()
     else:
-        with wpt_serve(args.wpt_root, verbose=True):
+        with wpt_serve(args.wpt_root, inject_script=inject_script_for(args.mode),
+                       verbose=True):
             npass, reasons, per_list = go()
 
     total = len(items)
