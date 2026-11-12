@@ -1,0 +1,88 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>min()/max() simplify to calc() and resolve at computed-value time</title>
+<style>
+  #target { font-size: 16px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[minmax-eager-simplify] " + document.title);
+  };
+}
+</script>
+<div id="target"></div>
+<script>
+// css-values-4 #comp-func: a min()/max() whose arguments are all
+// comparable absolute values simplifies to the compared value, a
+// single-argument min()/max() is calc() of that argument, and mixed
+// relative arguments keep the function. Expectations cross-checked on
+// Chrome 157.
+var target = document.getElementById("target");
+
+function specified(prop, value) {
+  target.style.setProperty(prop, "");
+  target.style.setProperty(prop, value);
+  return target.style.getPropertyValue(prop);
+}
+function computed(prop, value) {
+  target.style.setProperty(prop, "");
+  target.style.setProperty(prop, value);
+  return getComputedStyle(target).getPropertyValue(prop);
+}
+
+// specified values: comparable arguments fold, single argument is calc()
+console.assert(specified("min-width", "min(1px)") === "calc(1px)",
+  "specified min(1px): " + specified("min-width", "min(1px)"));
+console.assert(specified("min-width", "min(50px, 1in + 1px)") === "calc(50px)",
+  "specified min(50px, 1in + 1px): " + specified("min-width", "min(50px, 1in + 1px)"));
+console.assert(specified("min-width", "max(50px, 1in + 1px)") === "calc(97px)",
+  "specified max(50px, 1in + 1px): " + specified("min-width", "max(50px, 1in + 1px)"));
+console.assert(specified("min-width", "min(1% + 1px)") === "calc(1% + 1px)",
+  "specified min(1% + 1px): " + specified("min-width", "min(1% + 1px)"));
+
+// specified values: mixed relative or percentage arguments keep the
+// function
+console.assert(specified("min-width", "min(1px, 1em)") === "min(1px, 1em)",
+  "specified min(1px, 1em): " + specified("min-width", "min(1px, 1em)"));
+console.assert(specified("min-width", "min(20px, 10%)") === "min(20px, 10%)",
+  "specified min(20px, 10%): " + specified("min-width", "min(20px, 10%)"));
+
+// computed values: comparable arguments resolve to the plain length
+console.assert(computed("min-width", "min(1px)") === "1px",
+  "computed min(1px): " + computed("min-width", "min(1px)"));
+console.assert(computed("min-width", "min(50px, 1in + 1px)") === "50px",
+  "computed min(50px, 1in + 1px): " + computed("min-width", "min(50px, 1in + 1px)"));
+console.assert(computed("min-width", "min(1px, 1em)") === "1px",
+  "computed min(1px, 1em): " + computed("min-width", "min(1px, 1em)"));
+console.assert(computed("min-width", "min(1em, 1px)") === "1px",
+  "computed min(1em, 1px): " + computed("min-width", "min(1em, 1px)"));
+console.assert(computed("min-width", "calc(1px + min(1in, 100px))") === "97px",
+  "computed calc(1px + min(1in, 100px)): " +
+    computed("min-width", "calc(1px + min(1in, 100px))"));
+console.assert(computed("min-width", "min(1% + 1px)") === "calc(1% + 1px)",
+  "computed min(1% + 1px): " + computed("min-width", "min(1% + 1px)"));
+
+// opacity: a number-typed calc() folds and clamps to [0, 1]
+console.assert(computed("opacity", "min(.1, .2)") === "0.1",
+  "computed opacity min(.1, .2): " + computed("opacity", "min(.1, .2)"));
+console.assert(computed("opacity", "max(.3, .2)") === "0.3",
+  "computed opacity max(.3, .2): " + computed("opacity", "max(.3, .2)"));
+console.assert(computed("opacity", "min(1.5, 2)") === "1",
+  "computed opacity min(1.5, 2): " + computed("opacity", "min(1.5, 2)"));
+console.assert(computed("opacity", "min(-.5, .2)") === "0",
+  "computed opacity min(-.5, .2): " + computed("opacity", "min(-.5, .2)"));
+
+// Known gaps (not asserted): transform rotate()/scale() arguments and
+// transition-duration do not parse min()/max() yet, so those WPT
+// minmax-*-serialize subtests stay red until their calc entries are
+// wired; product chains keep their written form.
+testEnd();
+</script>
