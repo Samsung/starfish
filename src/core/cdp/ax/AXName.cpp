@@ -312,7 +312,14 @@ namespace {
                 collectNativeSources(element, tag, role, list, found);
             collectContentsSource(element, tag, role, list, found);
 
-            bool prohibited = axRoleIsNameProhibited(role);
+            // A name-prohibited role (generic and friends) reports no title
+            // source -- Blink drops the source list at the title step for
+            // them. A live-region container is the exception: the carousel
+            // scroller (generic with aria-live) still ends its source list
+            // with the title attribute, because a live region is not name
+            // prohibited.
+            bool prohibited = axRoleIsNameProhibited(role) &&
+                              !axHasAttribute(element, "aria-live");
             if (!prohibited &&
                 !(explicitlyEmpty && (tag == "img" || tag == "area"))) {
                 collectTitleSource(element, list, found);

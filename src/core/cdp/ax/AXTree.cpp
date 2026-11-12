@@ -293,8 +293,16 @@ private:
                     !next.value()->isElement()) {
                     continue;
                 }
+                // Only the active slide is in the accessibility tree; the
+                // inactive ones are pruned entirely (CSS Overflow 5 tabs
+                // mode -- "Only the active tabpanel is in the accessibility
+                // tree").
+                if (slideIndex != activeIndex) {
+                    slideIndex++;
+                    continue;
+                }
                 addSubtree(next.value(), parentAXNode, state, tabsScroller,
-                           slideIndex == activeIndex);
+                           true);
                 slideIndex++;
             } else {
                 addSubtree(next.value(), parentAXNode, state, nullptr, false);

@@ -4948,6 +4948,13 @@ public:
             return seenPseudoElementScrollMarkerGroup();
         } else if (pseudoId == PseudoElementType::PseudoElementScrollMarker) {
             return seenPseudoElementScrollMarker();
+        } else if (pseudoId == PseudoElementType::PseudoElementFormOnly ||
+                   pseudoId == PseudoElementType::PseudoElementCounter) {
+            // Engine-generated pseudo elements (the form-control boxes and
+            // list counters FrameTreeBuilder builds); no author rule can
+            // mark them seen, and Element::didComputedStyleChanged's
+            // general-range pseudo sweep still asks about them.
+            return false;
         } else {
             STARFISH_ASSERT_NOT_REACHED();
             return false;
