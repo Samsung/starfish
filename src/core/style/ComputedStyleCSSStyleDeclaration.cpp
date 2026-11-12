@@ -1058,7 +1058,11 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         Length minWidth = style->minWidth();
 
         if (minWidth.isAuto()) {
-            if (frame && frame->isFlexItem()) {
+            // cssom-1: `auto` resolves to itself on a flex or grid item and
+            // on a box with a preferred aspect ratio, where it is the
+            // automatic minimum size, and to 0 elsewhere.
+            if (frame && (frame->isFlexItem() || frame->isGridItem() ||
+                          style->hasAspectRatio())) {
                 minW.setValueKind(CSSStyleValuePair::ValueKind::Auto);
             } else {
                 minW.setLengthValue(CSSLength(CSSLength::PX, 0));
@@ -1099,7 +1103,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         Length minHeight = style->minHeight();
 
         if (minHeight.isAuto()) {
-            if (frame && frame->isFlexItem()) {
+            if (frame && (frame->isFlexItem() || frame->isGridItem() ||
+                          style->hasAspectRatio())) {
                 minH.setValueKind(CSSStyleValuePair::ValueKind::Auto);
             } else {
                 minH.setLengthValue(CSSLength(CSSLength::PX, 0));
@@ -3246,6 +3251,17 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         ADD_VALUE_PAIR(FlexGrow, Number, flexGrow)
         ADD_VALUE_PAIR(FlexShrink, Number, flexShrink)
         ADD_VALUE_PAIR(ObjectFit, ObjectFitValueKind, objectFit)
+    case CSSStyleValuePair::KeyKind::AspectRatio: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::AspectRatio);
+        if (style->hasAspectRatio()) {
+            p.setAspectRatioValue(style->aspectRatio(),
+                                  style->aspectRatioWithAuto());
+        } else {
+            p.setValueKind(CSSStyleValuePair::ValueKind::Auto);
+        }
+        addValuePair(p);
+    } break;
         ADD_VALUE_PAIR(ListStylePosition, ListStylePositionValueKind,
                        listStylePosition)
         ADD_VALUE_PAIR(ListStyleType, KeywordValueKind, listStyleType)

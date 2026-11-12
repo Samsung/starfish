@@ -129,7 +129,7 @@ http://web-platform.test:8000/css/cssom/getComputedStyle-margins-roundtrip.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom/getComputedStyle-pseudo.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom/getComputedStyle-resolved-colors.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom/getComputedStyle-resolved-min-max-clamping.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom/getComputedStyle-resolved-min-size-auto.html
+http://web-platform.test:8000/css/cssom/getComputedStyle-resolved-min-size-auto.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/cssom/getComputedStyle-sticky-pos-percent.html
 http://web-platform.test:8000/css/cssom/getComputedStyle-width-scroll.tentative.html
 http://web-platform.test:8000/css/cssom/historical.html

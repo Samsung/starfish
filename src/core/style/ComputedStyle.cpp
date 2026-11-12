@@ -2704,6 +2704,15 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->hasAspectRatio() != oldStyle->hasAspectRatio() ||
+        newStyle->aspectRatioWithAuto() != oldStyle->aspectRatioWithAuto() ||
+        (newStyle->hasAspectRatio() &&
+         newStyle->aspectRatio() != oldStyle->aspectRatio())) {
+        damagedKeys[CSSStyleValuePair::KeyKind::AspectRatio] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+    }
+
     if (newStyle->flexGrow() != oldStyle->flexGrow()) {
         damagedKeys[CSSStyleValuePair::KeyKind::FlexGrow] = true;
         damage = static_cast<ComputedStyleDamage>(

@@ -351,6 +351,7 @@ tests/assertion/css/url/url-computed.html
 tests/pixel/css/url/url-invalid.html
 tests/assertion/css/url/url-parsing.html
 tests/assertion/css/url/url-serialization.html
+tests/assertion/css/sizing/aspect-ratio-auto-side.html
 tests/assertion/css/sizing/margins-collapsed-through-top.html
 tests/assertion/css/values/calc-intrinsic-sizing.html
 tests/assertion/css/values/calc-serialization-order.html

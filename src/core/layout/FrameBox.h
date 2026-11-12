@@ -465,6 +465,72 @@ public:
         return height;
     }
 
+    // https://drafts.csswg.org/css-sizing-4/#aspect-ratio
+    // The preferred aspect ratio (width / height) relates the sides of the
+    // box that 'box-sizing' names, or of the content box when the value
+    // has `auto`; these convert one content side into the other.
+    bool aspectRatioUsesBorderBox()
+    {
+        return style()->boxSizing() ==
+                   BoxSizingValue::BorderBoxBoxSizingValue &&
+               !style()->aspectRatioWithAuto();
+    }
+
+    LayoutUnit contentHeightFromAspectRatio(double ratio,
+                                            LayoutUnit contentWidth)
+    {
+        if (aspectRatioUsesBorderBox()) {
+            LayoutUnit borderBoxWidth =
+                contentWidth + paddingWidth() + borderWidth();
+            return std::max(LayoutUnit(borderBoxWidth.toFloat() / ratio) -
+                                paddingHeight() - borderHeight(),
+                            LayoutUnit(0));
+        }
+
+        return LayoutUnit(contentWidth.toFloat() / ratio);
+    }
+
+    LayoutUnit contentWidthFromAspectRatio(double ratio,
+                                           LayoutUnit contentHeight)
+    {
+        if (aspectRatioUsesBorderBox()) {
+            LayoutUnit borderBoxHeight =
+                contentHeight + paddingHeight() + borderHeight();
+            return std::max(LayoutUnit(borderBoxHeight.toFloat() * ratio) -
+                                paddingWidth() - borderWidth(),
+                            LayoutUnit(0));
+        }
+
+        return LayoutUnit(contentHeight.toFloat() * ratio);
+    }
+
+    // The preferred aspect ratio this box sizes an auto side with, or 0.
+    // It does not apply to inline boxes and internal table boxes.
+    double preferredAspectRatio()
+    {
+        if (isAnonymous() || isFrameTableCellBox()) {
+            return 0;
+        }
+        return style()->preferredAspectRatio();
+    }
+
+    // The content height known before the content is laid out: a definite
+    // 'height', or both insets of an absolutely positioned box, with the
+    // min and max heights applied. Nothing for an auto height.
+    Optional<LayoutUnit> definiteContentHeight(LayoutContext& ctx,
+                                               FrameBox* cb);
+    // A flex item that takes the cross size of its single-line row container.
+    bool isStretchedRowFlexItem();
+
+    // css-sizing-4 5.2-5.3: what the preferred aspect ratio adds to a width
+    // that is not a specified length. Definite min and max heights carry
+    // over to the width, and a width taken from the height
+    // (`widthIsFromRatio`) does not go below the min-content width unless
+    // the box scrolls or has its own min-width.
+    LayoutUnit widthAfterApplyingAspectRatioConstraints(
+        LayoutContext& ctx, FrameBox* cb, double ratio, LayoutUnit width,
+        LayoutUnit availableWidth, bool widthIsFromRatio);
+
     enum CopyFlag {
         PositionCopy = 1 << 0,
         WidthAndHeightCopy = 1 << 1,

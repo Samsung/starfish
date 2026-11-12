@@ -1580,6 +1580,12 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
             if (!height.isPercent()) {
                 specifiedHeight += borderHeight() + paddingHeight();
             }
+        } else if (preferredAspectRatio()) {
+            // css-sizing-4 5.1: an auto height follows from the width; the
+            // rows still grow the table past it.
+            specifiedHeight = contentHeightFromAspectRatio(
+                                  preferredAspectRatio(), contentWidth()) +
+                              borderHeight() + paddingHeight();
         }
 
         specifiedHeight = heightAfterApplyingMinMaxHeights(

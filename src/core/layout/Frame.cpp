@@ -503,7 +503,10 @@ bool LayoutContext::parentHasFixedHeight(Frame* currentFrame)
         }
 
         if (height.isAuto()) {
-            return false;
+            // css-sizing-4 5.1: the height an auto-height box gets from its
+            // preferred aspect ratio is known once its width is, so
+            // percentages resolve against it.
+            return container->preferredAspectRatio() != 0;
         }
 
         STARFISH_ASSERT(height.isPercent() || height.isCalc());
@@ -559,6 +562,17 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame,
                 reverse.emplace_back(container, Length(Length::Fixed, height));
                 break;
             }
+        }
+
+        if (height.isAuto() && container->preferredAspectRatio()) {
+            LayoutUnit ratioHeight = container->contentHeightFromAspectRatio(
+                container->preferredAspectRatio(), container->contentWidth());
+            if (container->style()->boxSizing() == BorderBoxBoxSizingValue) {
+                ratioHeight +=
+                    container->paddingHeight() + container->borderHeight();
+            }
+            reverse.emplace_back(container, Length(Length::Fixed, ratioHeight));
+            break;
         }
 
         if (isQuirksMode) {

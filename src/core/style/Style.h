@@ -510,6 +510,46 @@ enum ObjectFitValue ENSURE_ENUM_UNSIGNED {
     ScaledownObjectFitValue,
 };
 
+// https://drafts.csswg.org/css-sizing-4/#aspect-ratio
+// The <ratio> of `aspect-ratio`, kept as written because it serializes as
+// its two numbers.
+struct AspectRatioData {
+    float m_width;
+    float m_height;
+
+    AspectRatioData() = default;
+    AspectRatioData(float width, float height)
+        : m_width(width)
+        , m_height(height)
+    {
+    }
+
+    bool operator==(const AspectRatioData& o) const
+    {
+        return m_width == o.m_width && m_height == o.m_height;
+    }
+
+    bool operator!=(const AspectRatioData& o) const
+    {
+        return !operator==(o);
+    }
+
+    // A ratio with a zero or infinite side is degenerate: the box is sized
+    // as if it had none.
+    bool isDegenerate() const
+    {
+        double r = static_cast<double>(m_width) / m_height;
+        return !(m_width > 0) || !(m_height > 0) || !std::isfinite(r) ||
+               !(r > 0);
+    }
+
+    // width / height
+    double ratio() const
+    {
+        return static_cast<double>(m_width) / m_height;
+    }
+};
+
 enum ImageRenderingValue ENSURE_ENUM_UNSIGNED {
     ImageRenderingAutoValue,
     ImageRenderingCrispEdgesValue,
@@ -792,6 +832,7 @@ class CSSFilterFunction;
     F(TransformOrigin, transformOrigin, "transform-origin")                    \
     F(Visibility, visibility, "visibility")                                    \
     F(ObjectFit, objectFit, "object-fit")                                      \
+    F(AspectRatio, aspectRatio, "aspect-ratio")                                \
     F(ObjectPosition, objectPosition, "object-position")                       \
     F(OverflowX, overflowX, "overflow-x")                                      \
     F(OverflowY, overflowY, "overflow-y")                                      \
@@ -1232,6 +1273,10 @@ public:
         // object-fit
         ObjectFitValueKind,
 
+        // aspect-ratio: <ratio>, and auto && <ratio>
+        AspectRatioValueKind,
+        AutoAspectRatioValueKind,
+
         ListStylePositionValueKind,
         CounterFunctionValueKind,
 
@@ -1492,6 +1537,20 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == ScrollMarkerGroupValueKind);
         return m_value.m_scrollMarkerGroup;
+    }
+
+    AspectRatioData aspectRatioValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == AspectRatioValueKind ||
+                        m_valueKind == AutoAspectRatioValueKind);
+        return m_value.m_aspectRatio;
+    }
+
+    void setAspectRatioValue(const AspectRatioData& ratio, bool withAuto)
+    {
+        m_valueKind =
+            withAuto ? AutoAspectRatioValueKind : AspectRatioValueKind;
+        m_value.m_aspectRatio = ratio;
     }
 
     UnicodeBidiValue unicodeBidiValue() const
@@ -2135,6 +2194,7 @@ public:
         TextTransformValue m_textTransform;
         ObjectFitValue m_objectFit;
         ScrollMarkerGroupValue m_scrollMarkerGroup;
+        AspectRatioData m_aspectRatio;
         ListStylePositionValue m_listStylePosition;
         UserSelectValue m_userSelect;
         HyphensValue m_hyphens;

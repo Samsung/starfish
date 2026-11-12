@@ -212,7 +212,8 @@ public:
 
         MixBlendMode,
 
-        ScrollMarkerGroup
+        ScrollMarkerGroup,
+        AspectRatio
     };
 
     union RareComputedStyleValue {
@@ -265,6 +266,7 @@ public:
         MutablePropertyValueList* m_mutablePropertyValueList;
         BlendMode m_blendMode;
         ScrollMarkerGroupValue m_scrollMarkerGroup;
+        AspectRatioData m_aspectRatio;
 
         RareComputedStyleValue()
             : m_int32Value(0)
@@ -521,6 +523,11 @@ public:
             : m_blendMode(v)
         {
         }
+
+        RareComputedStyleValue(AspectRatioData v)
+            : m_aspectRatio(v)
+        {
+        }
     };
 
     struct RareComputedStyleValuePair {
@@ -597,6 +604,8 @@ public:
     GETTER_VALUE(float, floatValue, opacity, Opacity, 0);
     GETTER_VALUE(String*, stringValue, d, D, nullptr);
     GETTER_VALUE(int32_t, int32Value, lineClamp, LineClamp, 0);
+    GETTER_VALUE(AspectRatioData, aspectRatio, aspectRatio, AspectRatio,
+                 AspectRatioData());
 
     GETTER_VALUE(String*, stringValue, gridRowStart, GridRowStart, nullptr);
     GETTER_VALUE(String*, stringValue, gridRowEnd, GridRowEnd, nullptr);
@@ -836,6 +845,7 @@ public:
 #undef GETTER_PTR
 
     CLEARER(Transforms);
+    CLEARER(AspectRatio);
     CLEARER(PendingColors);
     CLEARER(Content);
     CLEARER(CounterReset);
@@ -4339,6 +4349,18 @@ public:
         return m_alignSelf;
     }
 
+    // False when 'align-self' is `auto` and the value comes from the
+    // container's 'align-items'.
+    bool alignSelfSpecifiedByUser()
+    {
+        return m_alignSelfSpecifiedByUser;
+    }
+
+    bool justifySelfSpecifiedByUser()
+    {
+        return m_justifySelfSpecifiedByUser;
+    }
+
     void setJustifyItems(AlignItemValue value)
     {
         m_justifyItems = value;
@@ -4367,6 +4389,51 @@ public:
     AlignContentValue alignContent()
     {
         return m_alignContent;
+    }
+
+    // https://drafts.csswg.org/css-sizing-4/#aspect-ratio
+    // True when a <ratio> was given, alone or next to `auto`.
+    bool hasAspectRatio()
+    {
+        return m_hasAspectRatio;
+    }
+
+    AspectRatioData aspectRatio()
+    {
+        STARFISH_ASSERT(hasAspectRatio());
+        return m_rareComputedStyleData.aspectRatio().getValue();
+    }
+
+    // `auto && <ratio>`: a replaced element with a natural aspect ratio uses
+    // that one instead of the given <ratio>.
+    bool aspectRatioWithAuto()
+    {
+        return m_aspectRatioWithAuto;
+    }
+
+    void setAspectRatio(const AspectRatioData& ratio, bool withAuto)
+    {
+        *m_rareComputedStyleData.ensureAspectRatio() = ratio;
+        m_hasAspectRatio = true;
+        m_aspectRatioWithAuto = withAuto;
+    }
+
+    void clearAspectRatio()
+    {
+        m_rareComputedStyleData.clearAspectRatio();
+        m_hasAspectRatio = false;
+        m_aspectRatioWithAuto = false;
+    }
+
+    // The preferred aspect ratio (width / height) a non-replaced box is sized
+    // with, or 0 when it has none: `auto`, or a degenerate ratio.
+    double preferredAspectRatio()
+    {
+        if (!hasAspectRatio()) {
+            return 0;
+        }
+        AspectRatioData ratio = aspectRatio();
+        return ratio.isDegenerate() ? 0 : ratio.ratio();
     }
 
     void setFlexGrow(float value)
@@ -5579,6 +5646,8 @@ protected:
         m_clear = ClearValue::NoneClearValue;
         m_zIndexSpecifiedByUser = false;
         m_hasPendingColors = false;
+        m_hasAspectRatio = false;
+        m_aspectRatioWithAuto = false;
         m_overflowX = OverflowValue::VisibleOverflow;
         m_overflowY = OverflowValue::VisibleOverflow;
         m_verticalAlign = VerticalAlignValue::BaselineVAlignValue;
@@ -5670,6 +5739,10 @@ protected:
     int m_styleDamageSourceNodeStateDOMTreeMap : 5;
     bool m_zIndexSpecifiedByUser : 1;
     bool m_hasPendingColors : 1;
+    // Layout asks every box for its preferred aspect ratio; this keeps the
+    // answer off the rare-data lookup for the boxes that have none.
+    bool m_hasAspectRatio : 1;
+    bool m_aspectRatioWithAuto : 1;
 
 public:
     // Prototype (measure/tile-cost-breakdown): lazy cache for

@@ -206,7 +206,7 @@ http://web-platform.test:8000/css/css-flexbox/inline-flex.html
 http://web-platform.test:8000/css/css-flexbox/intrinsic-size/col-wrap-004.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/intrinsic-size/col-wrap-005.html
 http://web-platform.test:8000/css/css-flexbox/intrinsic-size/col-wrap-010.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/intrinsic-size/col-wrap-018.html
+http://web-platform.test:8000/css/css-flexbox/intrinsic-size/col-wrap-018.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/intrinsic-size/col-wrap-019.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/intrinsic-size/row-005.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/intrinsic-size/row-008.html

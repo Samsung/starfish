@@ -1501,14 +1501,31 @@ void GridFormattingContext::stretchAutoColumnTracks()
     }
 }
 
+Optional<LayoutUnit> GridFormattingContext::definiteContainerHeight()
+{
+    if (m_container->hasFixedStyleHeight()) {
+        return Optional<LayoutUnit>(
+            LayoutUnit(m_container->style()->height().fixed()));
+    }
+    // css-sizing-4 5.1: an auto height the preferred aspect ratio derives
+    // from the width is known before the rows are sized.
+    double ratio = m_container->preferredAspectRatio();
+    if (ratio && m_container->style()->height().isAuto()) {
+        return Optional<LayoutUnit>(m_container->contentHeightFromAspectRatio(
+            ratio, m_container->contentWidth()));
+    }
+    return Optional<LayoutUnit>();
+}
+
 void GridFormattingContext::applyImplicitTrackSizing()
 {
     const GCVector<GridTrackSize*>* rows =
         m_container->style()->gridTemplateRows();
 
     GCVector<GridTrack*> autoRows;
-    if (m_container->hasFixedStyleHeight()) {
-        double containerHeight = m_container->style()->height().fixed();
+    Optional<LayoutUnit> definiteHeight = definiteContainerHeight();
+    if (definiteHeight) {
+        double containerHeight = definiteHeight.value().toDouble();
         double availableHeight = containerHeight;
         size_t autoRowsNum = 0;
         for (size_t i = 1; i < m_gridTemplateRows.size(); i++) {
@@ -1657,8 +1674,9 @@ void GridFormattingContext::expandFlexibleRowTracks()
 
     LayoutUnit flexFraction = 0;
     LayoutUnit flexFactor = 1;
-    if (m_container->hasFixedStyleHeight()) {
-        LayoutUnit availableHeight = m_container->style()->height().fixed();
+    Optional<LayoutUnit> definiteHeight = definiteContainerHeight();
+    if (definiteHeight) {
+        LayoutUnit availableHeight = definiteHeight.value();
         LayoutUnit gapSpace = m_rowGap * (m_gridTemplateRows.size() - 2);
         LayoutUnit remainingSpace =
             availableHeight - (sumOfRowHeights + gapSpace);
@@ -1730,6 +1748,19 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
 
     colTrackWidth +=
         ((gridArea.columnEnd() - gridArea.columnStart() - 1) * m_columnGap);
+
+    // css-grid-2 6.2: a grid item with a preferred aspect ratio is not
+    // stretched by `normal` alignment; its auto side follows from the other
+    // one as for a block-level box. An explicit `stretch` still stretches.
+    bool hasRatio = gridItem->preferredAspectRatio() != 0;
+    bool keepsAutoWidth =
+        hasRatio && style->width().isAuto() && style->height().isSpecified() &&
+        !(style->justifySelfSpecifiedByUser() &&
+          style->justifySelf() == AlignItemValue::StretchAlignItemValue);
+    bool keepsAutoHeight =
+        hasRatio && style->height().isAuto() &&
+        !(style->alignSelfSpecifiedByUser() &&
+          style->alignSelf() == AlignItemValue::StretchAlignItemValue);
 
     // Apply specified width of grid item.
     LayoutUnit width = 0;
@@ -1822,7 +1853,9 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
         width = 0;
     }
 
-    style->setWidth(Length(Length::Fixed, width));
+    if (!keepsAutoWidth) {
+        style->setWidth(Length(Length::Fixed, width));
+    }
 
     // A clean item whose childNeedsLayout bit is raised had frames below it
     // laid out by a measurement in this pass (track sizing computes the
@@ -1926,7 +1959,9 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
         height = 0;
     }
 
-    style->setHeight(Length(Length::Fixed, height));
+    if (!keepsAutoHeight) {
+        style->setHeight(Length(Length::Fixed, height));
+    }
 
     if (gridItem->needsLayout() || gridItem->childNeedsLayout() ||
         needsGridItemLayout(gridItem, style, false)) {
@@ -2203,6 +2238,13 @@ bool GridFormattingContext::needsGridItemLayout(FrameBox* gridItem,
                                                 ComputedStyle* style,
                                                 bool testWidthOnly)
 {
+    // A side left auto for the item's preferred aspect ratio has no fixed
+    // size to compare with; the item is laid out to find it.
+    if (!style->width().isFixed() ||
+        (!testWidthOnly && !style->height().isFixed())) {
+        return true;
+    }
+
     bool changed = false;
 
     if (style->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {

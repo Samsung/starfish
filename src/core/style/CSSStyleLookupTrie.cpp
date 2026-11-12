@@ -601,7 +601,13 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // grid-row-end
         // grid-row-gap
         // justify-self
+        // aspect-ratio
         switch (data[0]) {
+        case 'a':
+            if (memcmp(data, "aspect-ratio", 12) == 0) {
+                return CSSStyleValuePair::KeyKind::AspectRatio;
+            }
+            break;
         case 'b':
             if (memcmp(data, "border-image", 12) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderImage;
@@ -1994,6 +2000,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
         break;
     case 11:
         switch (data[0]) {
+        case 'a':
+            if (memcmp(data, "aspectRatio", 11) == 0) {
+                return CSSStyleValuePair::KeyKind::AspectRatio;
+            }
+            break;
         case 'b':
             if (memcmp(data, "borderImage", 11) == 0) {
                 return CSSStyleValuePair::KeyKind::BorderImage;

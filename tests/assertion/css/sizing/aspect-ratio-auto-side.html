@@ -1,0 +1,102 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>aspect-ratio gives the auto side of a box from the other one</title>
+<style>
+  body { margin: 0; }
+  /* A preview grid whose cells get their height only from the ratio: four
+     25px columns with a 5px gap in a 115px container. */
+  #preview { width: 115px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .cell { width: 100%; aspect-ratio: 1 / 1; }
+
+  #block { width: 120px; aspect-ratio: 3 / 1; }
+  #percent-child { height: 50%; }
+  #from-height { height: 40px; aspect-ratio: 2 / 1; }
+  #border-box { width: 100px; aspect-ratio: 2 / 1; box-sizing: border-box; padding-left: 20px; }
+  #auto-content-box { width: 100px; aspect-ratio: auto 2 / 1; box-sizing: border-box; padding-left: 20px; }
+  #grows { width: 100px; aspect-ratio: 2 / 1; }
+  #grows-not { width: 100px; aspect-ratio: 2 / 1; min-height: 0; }
+  .tall { height: 80px; }
+  #max { width: 300px; height: 0; }
+  #max > div { aspect-ratio: 1 / 1; max-height: 60px; }
+  #holder { position: relative; width: 90px; height: 300px; }
+  #abs { position: absolute; left: 0; right: 0; top: 0; bottom: 0; aspect-ratio: 3 / 1; }
+  #row { display: flex; height: 70px; }
+  #row > div { aspect-ratio: 1 / 1; min-width: 0; }
+  #column { display: flex; flex-direction: column; width: 80px; }
+  #column > div { aspect-ratio: 4 / 1; }
+  #degenerate { width: 100px; aspect-ratio: 0 / 1; }
+</style>
+<div id="preview"></div>
+<div id="block"><div id="percent-child"></div></div>
+<div id="from-height"></div>
+<div id="border-box"></div>
+<div id="auto-content-box"></div>
+<div id="grows"><div class="tall"></div></div>
+<div id="grows-not"><div class="tall"></div></div>
+<div id="max"><div id="max-item"></div></div>
+<div id="holder"><div id="abs"></div></div>
+<div id="row"><div id="row-item"></div></div>
+<div id="column"><div id="column-item"></div></div>
+<div id="degenerate"></div>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[aspect-ratio-auto-side] " + document.title);
+  };
+}
+
+var preview = document.getElementById("preview");
+for (var i = 0; i < 16; i++) {
+  var cell = document.createElement("span");
+  cell.className = "cell";
+  preview.appendChild(cell);
+}
+
+function size(id, width, height) {
+  var r = document.getElementById(id).getBoundingClientRect();
+  console.assert(r.width === width && r.height === height,
+    id + " should be " + width + "x" + height + ", got " + r.width + "x" + r.height);
+}
+
+// Grid items: every cell is a 25px square, so the grid is four rows tall.
+var cells = preview.children;
+for (var i = 0; i < cells.length; i++) {
+  var r = cells[i].getBoundingClientRect();
+  console.assert(r.width === 25 && r.height === 25,
+    "cell " + i + " should be 25x25, got " + r.width + "x" + r.height);
+}
+console.assert(preview.getBoundingClientRect().height === 115,
+  "the preview grid should be 115px tall, got " + preview.getBoundingClientRect().height);
+
+// Block boxes.
+size("block", 120, 40);
+size("percent-child", 120, 20);   // a percentage resolves against the ratio height
+size("from-height", 80, 40);      // an auto width follows a definite height
+size("border-box", 100, 50);      // the ratio relates the box-sizing box
+size("auto-content-box", 100, 40); // with `auto`, the content box: 80 / 2
+size("grows", 100, 80);           // content still grows an auto min-height
+size("grows-not", 100, 50);
+size("max-item", 60, 60);         // max-height carries over to the width
+size("abs", 90, 30);              // the ratio wins over both vertical insets
+// Flex items.
+size("row-item", 70, 70);         // main size from the stretched cross size
+size("column-item", 80, 20);
+// A degenerate ratio sizes like `auto`.
+size("degenerate", 100, 0);
+
+console.assert(getComputedStyle(document.getElementById("block")).aspectRatio === "3 / 1",
+  "computed aspect-ratio should be '3 / 1', got " +
+  getComputedStyle(document.getElementById("block")).aspectRatio);
+console.assert(getComputedStyle(document.getElementById("auto-content-box")).aspectRatio === "auto 2 / 1",
+  "computed aspect-ratio should be 'auto 2 / 1', got " +
+  getComputedStyle(document.getElementById("auto-content-box")).aspectRatio);
+
+testEnd();
+</script>

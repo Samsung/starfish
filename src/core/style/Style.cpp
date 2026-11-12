@@ -1392,6 +1392,10 @@ bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src) const
     case ObjectFitValueKind:
         return m_value.m_objectFit == src.m_value.m_objectFit;
 
+    case AspectRatioValueKind:
+    case AutoAspectRatioValueKind:
+        return m_value.m_aspectRatio == src.m_value.m_aspectRatio;
+
     case ListStylePositionValueKind:
         return m_value.m_listStylePosition == src.m_value.m_listStylePosition;
 
@@ -1937,6 +1941,20 @@ String* CSSStyleValuePair::toString() const
         auto p = CanvasBlend::blendModeNames[static_cast<unsigned>(
             blendModeValue())];
         return String::fromUTF8(p, strlen(p));
+    }
+    case CSSStyleValuePair::ValueKind::AspectRatioValueKind:
+    case CSSStyleValuePair::ValueKind::AutoAspectRatioValueKind: {
+        // Serialized as both numbers even when the second was omitted.
+        StringBuilder builder;
+        if (valueKind() ==
+            CSSStyleValuePair::ValueKind::AutoAspectRatioValueKind) {
+            builder.appendString("auto ");
+        }
+        AspectRatioData ratio = aspectRatioValue();
+        builder.appendString(String::fromFloat(ratio.m_width));
+        builder.appendString(" / ");
+        builder.appendString(String::fromFloat(ratio.m_height));
+        return builder.finalize();
     }
     case CSSStyleValuePair::ValueKind::ObjectFitValueKind:
         switch (objectFitValue()) {
@@ -7731,6 +7749,33 @@ void StyleResolver::applyProperty(Element* element,
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
+    case CSSStyleValuePair::KeyKind::AspectRatio:
+        if ((newCssValue.valueKind() ==
+             CSSStyleValuePair::ValueKind::Initial) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset) ||
+            (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Auto)) {
+            style->clearAspectRatio();
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::Inherit) {
+            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            if (parentStyle->hasAspectRatio()) {
+                style->setAspectRatio(parentStyle->aspectRatio(),
+                                      parentStyle->aspectRatioWithAuto());
+            } else {
+                style->clearAspectRatio();
+            }
+        } else if (newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::AspectRatioValueKind ||
+                   newCssValue.valueKind() ==
+                       CSSStyleValuePair::ValueKind::AutoAspectRatioValueKind) {
+            style->setAspectRatio(
+                newCssValue.aspectRatioValue(),
+                newCssValue.valueKind() ==
+                    CSSStyleValuePair::ValueKind::AutoAspectRatioValueKind);
+        } else {
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
     case CSSStyleValuePair::KeyKind::ObjectPosition:
         if ((newCssValue.valueKind() ==
              CSSStyleValuePair::ValueKind::Inherit) ||
@@ -12240,6 +12285,74 @@ bool CSSStyleValuePair::updateValueTextWrapStyle(Document* document,
 {
     STARFISH_ASSERT(document != nullptr);
     return tokens.size() == 1 && updateValueUnitTextWrapStyle(tokens[0]);
+}
+
+bool CSSStyleValuePair::updateValueAspectRatio(Document* document,
+                                               const CSSTokenVector& tokens)
+{
+    // https://drafts.csswg.org/css-sizing-4/#aspect-ratio
+    // auto || <ratio>, where <ratio> = <number [0,inf]> [ / <number [0,inf]> ]?
+    // Values are split on white space only, so "16/9", "16 /9" and "16/ 9"
+    // arrive with the solidus glued to a number. Math functions are not
+    // accepted as ratio numbers.
+    std::vector<std::string> parts;
+    for (size_t t = 0; t < tokens.size(); t++) {
+        const CSSTokenValue& token = tokens[t];
+        if (token.find('(') != std::string::npos) {
+            return false;
+        }
+        size_t start = 0;
+        for (size_t i = 0; i <= token.length(); i++) {
+            if (i == token.length() || token[i] == '/') {
+                if (i > start) {
+                    parts.emplace_back(token.data() + start, i - start);
+                }
+                if (i < token.length()) {
+                    parts.emplace_back("/");
+                }
+                start = i + 1;
+            }
+        }
+    }
+
+    bool hasAuto = false;
+    size_t begin = 0;
+    size_t end = parts.size();
+    if (end && parts[0] == "auto") {
+        hasAuto = true;
+        begin++;
+    } else if (end && parts[end - 1] == "auto") {
+        hasAuto = true;
+        end--;
+    }
+
+    size_t count = end - begin;
+    if (count == 0) {
+        if (!hasAuto) {
+            return false;
+        }
+        m_valueKind = CSSStyleValuePair::ValueKind::Auto;
+        return true;
+    }
+    if (count != 1 && count != 3) {
+        return false;
+    }
+
+    float width;
+    float height = 1;
+    if (!CSSPropertyParser::parseNumber(parts[begin].data(),
+                                        parts[begin].length(), 0, &width)) {
+        return false;
+    }
+    if (count == 3 &&
+        (parts[begin + 1] != "/" ||
+         !CSSPropertyParser::parseNumber(
+             parts[begin + 2].data(), parts[begin + 2].length(), 0, &height))) {
+        return false;
+    }
+
+    setAspectRatioValue(AspectRatioData(width, height), hasAuto);
+    return true;
 }
 
 bool CSSStyleValuePair::updateValueObjectFit(Document* document,

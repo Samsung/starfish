@@ -92,7 +92,7 @@ http://web-platform.test:8000/css/css-multicol/increase-prev-sibling-height.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/intrinsic-size-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/intrinsic-size-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/intrinsic-size-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/intrinsic-size-005.html
+# [vacuous-pass:MULTICOL_UNIMPLEMENTED] http://web-platform.test:8000/css/css-multicol/intrinsic-size-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/intrinsic-width-change-column-count.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/large-actual-column-count.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/max-height-stretch-relayout.html

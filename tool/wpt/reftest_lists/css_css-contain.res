@@ -207,7 +207,7 @@ http://web-platform.test:8000/css/css-contain/contain-size-010.html
 http://web-platform.test:8000/css/css-contain/contain-size-012.html
 http://web-platform.test:8000/css/css-contain/contain-size-012b.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/contain-size-013.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/contain-size-014.html
+# [vacuous-pass:CONTAINER_QUERIES_UNIMPLEMENTED] http://web-platform.test:8000/css/css-contain/contain-size-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/contain-size-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/contain-size-023.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-contain/contain-size-025.html

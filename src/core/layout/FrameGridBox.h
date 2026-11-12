@@ -464,6 +464,8 @@ private:
 
     void initializeContentHeights();
     void applyImplicitTrackSizing();
+    // The container's height when it is known before the rows are sized.
+    Optional<LayoutUnit> definiteContainerHeight();
     void resolveIntrinsicRowTrackSizes();
     void increaseRowGridTracksForSpans(GCVector<GridArea*>& gridAreasWithSpans);
 

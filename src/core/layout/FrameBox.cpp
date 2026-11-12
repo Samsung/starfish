@@ -5407,8 +5407,29 @@ LayoutUnit FrameBox::widthAfterApplyingMinMaxWidths(
 
             PreferredWidthContext p(ctx, nullptr, this, this,
                                     parentWidth - mbpWidth());
+            p.setIgnoresOwnerAspectRatio(true);
             p.computePreferredWidth();
-            minWidth = std::min(minWidth, p.preferredMinWidth());
+            LayoutUnit contentSuggestion = p.preferredMinWidth();
+
+            // css-flexbox-1 4.5: with a preferred aspect ratio the
+            // min-content width is at least what a definite height gives,
+            // and the suggestion is clamped by the min and max heights
+            // carried over through the ratio.
+            double ratio = preferredAspectRatio();
+            if (ratio) {
+                FrameBox* cb = containingBlock(this);
+                Optional<LayoutUnit> definiteHeight =
+                    definiteContentHeight(ctx, cb);
+                if (definiteHeight) {
+                    contentSuggestion = std::max(
+                        contentSuggestion, contentWidthFromAspectRatio(
+                                               ratio, definiteHeight.value()));
+                }
+                contentSuggestion = widthAfterApplyingAspectRatioConstraints(
+                    ctx, cb, ratio, contentSuggestion, parentWidth - mbpWidth(),
+                    false);
+            }
+            minWidth = std::min(minWidth, contentSuggestion);
         }
 
         if (minWidth != intMaxForLayoutUnit && minWidth > width) {
@@ -5500,6 +5521,16 @@ LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
                     e.m_valid = true;
                 }
             }
+            // css-flexbox-1 4.5: with a preferred aspect ratio the
+            // min-content height is at least what the width gives.
+            double ratio = preferredAspectRatio();
+            if (ratio) {
+                LayoutUnit ratioHeight =
+                    contentHeightFromAspectRatio(ratio, contentWidth());
+                result = Optional<LayoutUnit>(
+                    result ? std::max(result.value(), ratioHeight)
+                           : ratioHeight);
+            }
             if (result) {
                 minHeight = std::min(contentHeight(), result.value());
                 // CSS Flexbox §4.5: the content-based minimum is capped by the
@@ -5537,6 +5568,123 @@ LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
         }
     }
     return height;
+}
+
+bool FrameBox::isStretchedRowFlexItem()
+{
+    if (!isFlexItem() || isAbsolutePositioned()) {
+        return false;
+    }
+    FrameFlexibleBox* container = layoutParent()->asFrameFlexibleBox();
+    if (!container->isMainAxisInInlineAxis() || !container->isSingleLine() ||
+        style()->alignSelf() != StretchAlignItemValue ||
+        !style()->height().isAuto()) {
+        return false;
+    }
+    LengthData margin = style()->margin();
+    return !margin.top().isAuto() && !margin.bottom().isAuto();
+}
+
+Optional<LayoutUnit> FrameBox::definiteContentHeight(LayoutContext& ctx,
+                                                     FrameBox* cb)
+{
+    Length height = style()->height();
+    LayoutUnit parentHeight;
+    bool parentHasFixedHeight;
+    if (isAbsolutePositioned()) {
+        parentHasFixedHeight = true;
+        parentHeight = cb->contentHeight() + cb->paddingHeight();
+    } else {
+        parentHasFixedHeight = ctx.parentHasFixedHeight(this);
+        if (parentHasFixedHeight) {
+            parentHeight = ctx.parentFixedHeight(this);
+        }
+    }
+
+    LayoutUnit contentHeight;
+    if (height.isAuto()) {
+        LengthData offset = style()->offset();
+        if (isAbsolutePositioned() && offset.top().isSpecified() &&
+            offset.bottom().isSpecified()) {
+            contentHeight = parentHeight -
+                            offset.top().specifiedValue(parentHeight, this) -
+                            offset.bottom().specifiedValue(parentHeight, this) -
+                            paddingHeight() - borderHeight();
+        } else if (parentHasFixedHeight && isStretchedRowFlexItem()) {
+            // css-flexbox-1 9.4: a stretched item of a single-line container
+            // with a definite cross size has that size, less its own
+            // margins, borders and padding.
+            contentHeight =
+                std::max(LayoutUnit(0), parentHeight - marginHeight() -
+                                            paddingHeight() - borderHeight());
+        } else {
+            return Optional<LayoutUnit>();
+        }
+    } else if (height.isDefinite(parentHasFixedHeight)) {
+        contentHeight = contentHeightAfterApplyingBoxSizing(
+            height.specifiedValue(parentHeight, this));
+    } else {
+        return Optional<LayoutUnit>();
+    }
+
+    // Only the specified limits: the automatic minimum of a flex item needs
+    // its content laid out, which has not happened yet.
+    Length maxHeight = style()->maxHeight();
+    if (maxHeight.isSpecified() && maxHeight.isDefinite(parentHasFixedHeight)) {
+        contentHeight = std::min(
+            contentHeight, contentHeightAfterApplyingBoxSizing(
+                               maxHeight.specifiedValue(parentHeight, this)));
+    }
+    Length minHeight = style()->minHeight();
+    if (minHeight.isSpecified() && minHeight.isDefinite(parentHasFixedHeight)) {
+        contentHeight = std::max(
+            contentHeight, contentHeightAfterApplyingBoxSizing(
+                               minHeight.specifiedValue(parentHeight, this)));
+    }
+    return Optional<LayoutUnit>(contentHeight);
+}
+
+LayoutUnit FrameBox::widthAfterApplyingAspectRatioConstraints(
+    LayoutContext& ctx, FrameBox* cb, double ratio, LayoutUnit width,
+    LayoutUnit availableWidth, bool widthIsFromRatio)
+{
+    LayoutUnit parentHeight;
+    bool parentHasFixedHeight;
+    if (isAbsolutePositioned()) {
+        parentHasFixedHeight = true;
+        parentHeight = cb->contentHeight() + cb->paddingHeight();
+    } else {
+        parentHasFixedHeight = ctx.parentHasFixedHeight(this);
+        if (parentHasFixedHeight) {
+            parentHeight = ctx.parentFixedHeight(this);
+        }
+    }
+
+    Length maxHeight = style()->maxHeight();
+    if (maxHeight.isSpecified() && maxHeight.isDefinite(parentHasFixedHeight)) {
+        LayoutUnit transferred = contentWidthFromAspectRatio(
+            ratio, contentHeightAfterApplyingBoxSizing(
+                       maxHeight.specifiedValue(parentHeight, this)));
+        width = std::min(width, transferred);
+    }
+
+    Length minHeight = style()->minHeight();
+    if (minHeight.isSpecified() && minHeight.isDefinite(parentHasFixedHeight)) {
+        LayoutUnit transferred = contentWidthFromAspectRatio(
+            ratio, contentHeightAfterApplyingBoxSizing(
+                       minHeight.specifiedValue(parentHeight, this)));
+        width = std::max(width, transferred);
+    }
+
+    if (widthIsFromRatio && style()->minWidth().isAuto() &&
+        appliedOverflowX() == OverflowValue::VisibleOverflow) {
+        PreferredWidthContext p(ctx, nullptr, this, this, availableWidth);
+        p.setIgnoresOwnerAspectRatio(true);
+        p.computePreferredWidth();
+        width = std::max(width, p.preferredMinWidth());
+    }
+
+    return width;
 }
 
 LayoutUnit FrameBox::outlineThickness()

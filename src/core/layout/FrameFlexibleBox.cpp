@@ -114,6 +114,16 @@ void FlexFormattingContext::computeAvailableSpace(LayoutUnit availableWidth)
         }
     }
 
+    // css-sizing-4 5.1: the height the container's preferred aspect ratio
+    // gives from its width is the space its items are laid out in.
+    if (contentHeight == intMaxForLayoutUnit) {
+        double ratio = m_container->preferredAspectRatio();
+        if (ratio) {
+            contentHeight = m_container->contentHeightFromAspectRatio(
+                ratio, m_container->contentWidth());
+        }
+    }
+
     if (m_isMainAxisInInlineAxis) {
         m_availableMainSize = availableWidth;
         m_availableCrossSize = contentHeight;
@@ -1742,6 +1752,26 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
     bool isMainAxisInInlineAxis = this->isMainAxisInInlineAxis();
     LayoutUnit basisSize = intMaxForLayoutUnit;
     FlexBasisData flexBasis = flexItem->style()->flexBasis();
+    // The measurement below zeroes the item's main-axis minimum; keep track
+    // of an auto min-height, which a preferred aspect ratio sizes with.
+    struct AutoMinHeightScope {
+        AutoMinHeightScope(LayoutContext& ctx, FrameBox* flexItem)
+            : m_ctx(ctx)
+            , m_old(ctx.basisItemWithAutoMinHeight())
+        {
+            m_ctx.setBasisItemWithAutoMinHeight(flexItem);
+        }
+        ~AutoMinHeightScope()
+        {
+            m_ctx.setBasisItemWithAutoMinHeight(m_old);
+        }
+        LayoutContext& m_ctx;
+        FrameBox* m_old;
+    } autoMinHeightScope(ctx, !isMainAxisInInlineAxis &&
+                                      flexItem->style()->minHeight().isAuto()
+                                  ? flexItem
+                                  : nullptr);
+
     MinMaxWidthHeightRestorer restorer(flexItem, isMainAxisInInlineAxis);
     restorer.initValues();
     MBPRestorer restorer2(flexItem);

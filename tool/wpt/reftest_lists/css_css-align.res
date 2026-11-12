@@ -10,12 +10,12 @@ http://web-platform.test:8000/css/css-align/abspos/align-self-static-position-00
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/abspos/align-self-static-position-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/abspos/align-self-static-position-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/abspos/align-self-static-position-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/abspos/align-self-stretch-auto-margins-aspect-ratio.html
+http://web-platform.test:8000/css/css-align/abspos/align-self-stretch-auto-margins-aspect-ratio.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/abspos/align-self-stretch-auto-margins.html
 http://web-platform.test:8000/css/css-align/abspos/align-self-stretch-auto-size.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/abspos/align-self-with-flex-grid-parent.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/abspos/justify-self-static-position-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/abspos/justify-self-stretch-auto-margins-aspect-ratio.html
+http://web-platform.test:8000/css/css-align/abspos/justify-self-stretch-auto-margins-aspect-ratio.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/abspos/justify-self-stretch-auto-margins.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/baseline-of-scrollable-1a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-align/baseline-of-scrollable-1b.html

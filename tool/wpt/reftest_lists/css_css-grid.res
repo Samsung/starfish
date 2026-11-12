@@ -242,7 +242,7 @@ http://web-platform.test:8000/css/css-grid/alignment/grid-item-no-aspect-ratio-s
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-003.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-005.html
+# [vacuous-pass:WRITING_MODE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-008.html
@@ -489,7 +489,7 @@ http://web-platform.test:8000/css/css-grid/grid-items/percentage-margin-dynamic.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-items/percentage-size-subitems-002.html
 http://web-platform.test:8000/css/css-grid/grid-items/remove-svg-grid-item-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-items/replaced-element-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-items/replaced-element-002.html
+http://web-platform.test:8000/css/css-grid/grid-items/replaced-element-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-items/replaced-element-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-items/replaced-element-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-items/replaced-element-011.html
@@ -987,7 +987,7 @@ http://web-platform.test:8000/css/css-grid/grid-lanes/subgrid/grid-subgridded-to
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/track-sizing/auto-repeat/column-auto-repeat-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/track-sizing/auto-repeat/column-auto-repeat-005.html
 http://web-platform.test:8000/css/css-grid/grid-lanes/track-sizing/auto-repeat/column-auto-repeat-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/track-sizing/auto-repeat/column-auto-repeat-007.html
+http://web-platform.test:8000/css/css-grid/grid-lanes/track-sizing/auto-repeat/column-auto-repeat-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/track-sizing/auto-repeat/column-auto-repeat-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/track-sizing/auto-repeat/column-auto-repeat-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-lanes/track-sizing/auto-repeat/column-auto-repeat-015.html

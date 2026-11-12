@@ -73,8 +73,8 @@ http://web-platform.test:8000/css/css-position/position-absolute-scrollable-over
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/position-fixed-at-bottom-right-on-viewport.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/position-relative-015.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/position-relative-016.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/position-relative-aspect-ratio-001.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/position-relative-aspect-ratio-002.html
+http://web-platform.test:8000/css/css-position/position-relative-aspect-ratio-001.html
+http://web-platform.test:8000/css/css-position/position-relative-aspect-ratio-002.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/position-sticky-dynamic-ancestor-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/sticky-dialog.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/sticky/position-sticky-bottom.html

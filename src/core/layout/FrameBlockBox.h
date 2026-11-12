@@ -917,6 +917,13 @@ public:
     void computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                              LayoutUnit containgBlockContentWidth);
     void computeContentHeight(LayoutContext& ctx, LayoutUnit contentHeight);
+    // The height an auto-height box takes: the one its preferred aspect
+    // ratio gives, or the given content height when it has none.
+    LayoutUnit contentHeightWithAspectRatio(LayoutContext& ctx,
+                                            LayoutUnit contentHeight);
+    // An absolutely positioned box with auto sizes and both horizontal
+    // insets: they decide its width before the preferred aspect ratio.
+    bool widthIsStretchedByInsets();
 
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth) override;

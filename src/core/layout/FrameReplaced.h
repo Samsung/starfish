@@ -136,6 +136,23 @@ public:
                               Length parentContentHeight,
                               bool underComputingPreferredWidth);
 
+    // css-sizing-4 5.1: the <ratio> of 'aspect-ratio' when it replaces the
+    // natural aspect ratio -- always for a plain <ratio>, and for
+    // `auto && <ratio>` only when the element has no natural one. 0 otherwise.
+    double aspectRatioOverride()
+    {
+        double ratio = style()->preferredAspectRatio();
+        if (ratio && style()->aspectRatioWithAuto()) {
+            IntrinsicSize natural = intrinsicSize();
+            if (natural.m_hasAspectRatio &&
+                natural.m_intrinsicContentSize.width() > 0 &&
+                natural.m_intrinsicContentSize.height() > 0) {
+                return 0;
+            }
+        }
+        return ratio;
+    }
+
     virtual IntrinsicSize intrinsicSize() = 0;
     IntrinsicSizeUsedInLayout computeIntrinsicSizeForLayout();
     bool hasPercentageWidthAttribute();

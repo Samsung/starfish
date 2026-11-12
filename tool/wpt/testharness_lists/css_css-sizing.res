@@ -15,25 +15,25 @@
 # [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/css-sizing/animation/width-composition.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-sizing/animation/width-interpolation.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio-affects-container-width-when-height-changes.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio-automatic-minimum.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-aspect-ratio-border.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio-automatic-minimum.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/abspos-aspect-ratio-border.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/aspect-ratio-minimum-size-single-axis-scroll-container.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/box-sizing-aspect-ratio-positioned.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/box-sizing-dimensions.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/box-sizing-aspect-ratio-positioned.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/box-sizing-dimensions.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/box-sizing-squashed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/fractional-aspect-ratio.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/inheritance.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/parsing/aspect-ratio-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/parsing/aspect-ratio-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/parsing/aspect-ratio-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/quirks-mode-001.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/quirks-mode-002.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/fractional-aspect-ratio.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/inheritance.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/parsing/aspect-ratio-computed.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/parsing/aspect-ratio-invalid.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/parsing/aspect-ratio-valid.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/quirks-mode-001.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/quirks-mode-002.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/quirks-mode-003.html
-# [vacuous-pass:ASPECT_RATIO_UNIMPLEMENTED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-028.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-036.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-028.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-036.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-042.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-043.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-044.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-044.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/sign-function-aspect-ratio.html
 http://web-platform.test:8000/css/css-sizing/available-height-for-replaced-content-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/button-min-width.html

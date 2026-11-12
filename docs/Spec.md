@@ -1731,6 +1731,7 @@ section are supported.
 | | height | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto &#124; available &#124; min-content &#124; max-content &#124; fit-content | Sets the height of an element. | |
 | | min-height | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto &#124; available &#124; min-content &#124; max-content &#124; fit-content | Sets the minimum height of an element. | |
 | | max-height | &lt;length&gt; &#124; &lt;percentage&gt; &#124; none &#124; available &#124; min-content &#124; max-content &#124; fit-content | Sets the maximum height of an element. | |
+| [Aspect ratio](https://drafts.csswg.org/css-sizing-4/#aspect-ratio) | aspect-ratio | auto &#124;&#124; &lt;ratio&gt; | Sets the preferred aspect ratio of a box: an `auto` width or height follows from the other side. Applies to block, flex and grid containers and items, absolutely positioned boxes, tables and replaced elements; see "Aspect-ratio + intrinsic sizing" below for the limits. Not animatable. | |
 | [Box Model](https://www.w3.org/TR/css-ui-3/#box-model) | box-sizing | content-box &#124; border-box | Tells the padding and border is included to actual width&#124;height of an element's box. | |
 | [Line height](https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#line-height) | line-height | normal &#124; &lt;number&gt; &#124; &lt;length&gt; &#124; &lt;percentage&gt; | Sets the line height. | |
 | | vertical-align | baseline &#124; sub &#124; super &#124; top &#124; text-top &#124; middle &#124; bottom &#124; text-bottom &#124; &lt;length&gt; &#124; &lt;percentage&gt; | Sets the vertical alignment of an element. | |
@@ -2962,9 +2963,10 @@ The logical-direction sizing properties from CSS Logical Properties 1 are **not*
 
 | Construct | Status |
 |-----------|--------|
-| `aspect-ratio: <ratio>` (CSS Sizing 4 box property, e.g. `aspect-ratio: 16 / 9`) | **NOT recognized.** No entry in `CSSStyleLookupTrie`. The `aspect-ratio` token IS a recognized `@media` feature, but the box-level property is silently dropped — declarations log `Unsupported css property: aspect-ratio` and produce no constraint. |
-| `aspect-ratio: auto <ratio>` (the two-value form preserving intrinsic ratio fallback) | **NOT recognized.** |
-| Implicit aspect ratio from `<img width=H height=W>` | Honored by layout (intrinsic ratio used during image load placeholder phase), but only via the HTML attributes, not via CSS. |
+| `aspect-ratio: <ratio>` (CSS Sizing 4 box property, e.g. `aspect-ratio: 16 / 9`) | **Supported.** An `auto` height follows from the width and an `auto` width from a definite height; the ratio relates the sides of the `box-sizing` box. Content still grows the box (automatic minimum size) unless it scrolls or has its own `min-height`/`min-width`; definite `min-height`/`max-height` carry over to an `auto` width. Percentage heights of children resolve against the ratio height. Flex and grid items with a ratio are not stretched by `normal` alignment. A ratio with a zero or infinite side behaves as `auto`. |
+| `aspect-ratio: auto <ratio>` (the two-value form preserving intrinsic ratio fallback) | **Supported.** A replaced element with a natural aspect ratio keeps it; otherwise the `<ratio>` applies, to the content box regardless of `box-sizing`. |
+| `aspect-ratio` limits | Math functions (`calc()`, `sign()`) are not accepted as ratio numbers — the declaration is dropped. The property does not animate or transition (a change applies at once). `<canvas>` `width`/`height` attributes still map to the CSS `width`/`height` properties, so a `<canvas>` with both attributes ignores `aspect-ratio`. `writing-mode` is unsupported, so the ratio always relates the physical width and height. Max-height does not lower the min-content/max-content contribution of a box to its container. |
+| Implicit aspect ratio from `<img width=H height=W>` | Honored by layout (intrinsic ratio used during image load placeholder phase), but only via the HTML attributes, not mapped to the `aspect-ratio` property. |
 | `width: min-content`/`max-content`/`fit-content`/`available` | Parsed (already documented in main width/height table); honored by layout. **`fit-content(<length>)` function form is NOT recognized** — only the bare keyword. |
 | `contain-intrinsic-size` | NOT recognized (already documented under containment). |
 

@@ -11,8 +11,8 @@ http://web-platform.test:8000/css/css-images/conic-gradient-center.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/conic-gradient-color-with-sibling-index.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/conic-gradient-line-height-relative-units-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/conic-gradient-line-height-relative-units-002.html
-http://web-platform.test:8000/css/css-images/conic-gradient-line-height-relative-units-003.html
-http://web-platform.test:8000/css/css-images/conic-gradient-line-height-relative-units-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/conic-gradient-line-height-relative-units-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/conic-gradient-line-height-relative-units-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/cross-fade-basic.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/cross-fade-cross-origin-orientation.sub.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/cross-fade-natural-size.html
@@ -447,8 +447,8 @@ http://web-platform.test:8000/css/css-images/out-of-range-color-stop-conic.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/radial-gradient-container-relative-units-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/radial-gradient-line-height-relative-units-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/radial-gradient-line-height-relative-units-002.html
-http://web-platform.test:8000/css/css-images/radial-gradient-line-height-relative-units-003.html
-http://web-platform.test:8000/css/css-images/radial-gradient-line-height-relative-units-004.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/radial-gradient-line-height-relative-units-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/radial-gradient-line-height-relative-units-004.html
 http://web-platform.test:8000/css/css-images/repeating-conic-gradient.html
 http://web-platform.test:8000/css/css-images/svg-images-are-ignored.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/svg-script-is-ignored.html

@@ -190,6 +190,11 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
     LayoutUnit parentHeight, bool hasAspectRatio,
     bool parentHeightHasFixedValue, bool underComputingPreferredWidth)
 {
+    // A zero side has no proportion to keep while clamping the other one.
+    if (w == 0 || h == 0) {
+        hasAspectRatio = false;
+    }
+
     LayoutUnit newWidth = w;
     LayoutUnit newHeight = h;
     Length width = style()->width();
@@ -346,12 +351,35 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     computeIntrinsicSize(ctx, intrinsicWidth, intrinsicHeight, hasAspectRatio,
                          parentContentWidth, parentHeightLength, false);
 
+    // One side scaled from the other. The preferred aspect ratio from
+    // 'aspect-ratio' relates the sides of the 'box-sizing' box; the natural
+    // one relates the content sides.
+    double cssRatio = aspectRatioOverride();
+    auto heightFromWidth = [&](LayoutUnit width) -> LayoutUnit {
+        if (cssRatio) {
+            return contentHeightFromAspectRatio(cssRatio, width);
+        }
+        return width * (intrinsicHeight.toDouble() / intrinsicWidth.toDouble());
+    };
+    auto widthFromHeight = [&](LayoutUnit height) -> LayoutUnit {
+        if (cssRatio) {
+            return contentWidthFromAspectRatio(cssRatio, height);
+        }
+        return height *
+               (intrinsicWidth.toDouble() / intrinsicHeight.toDouble());
+    };
+
     LayoutUnit w, h;
     bool isBrokenImageWithAuto = false;
     if (node()->isHTMLImageElement() &&
         (node()->asHTMLImageElement()->imageData() ==
          node()->document()->brokenImage())) {
-        if (width.isAuto() || height.isAuto()) {
+        // A broken image takes the size of its icon. Only a block-level or
+        // inline-block one is a box the preferred aspect ratio sizes; an
+        // inline one stands for its alternative text.
+        bool ratioApplies =
+            cssRatio && style()->display() != DisplayValue::InlineDisplayValue;
+        if (!ratioApplies && (width.isAuto() || height.isAuto())) {
             isBrokenImageWithAuto = true;
             width = Length(Length::Type::Fixed, intrinsicWidth);
             height = Length(Length::Type::Fixed, intrinsicHeight);
@@ -360,8 +388,27 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
 
     if ((intrinsicWidth == 0 || intrinsicHeight == 0) &&
         (width.isAuto() || height.isAuto())) {
-        setContentWidth(0);
-        setContentHeight(0);
+        // No natural size to scale: a preferred aspect ratio still gives
+        // the auto side from the specified one.
+        if (cssRatio && !width.isAuto() && width.isSpecified()) {
+            w = contentWidthAfterApplyingBoxSizing(
+                width.specifiedValue(parentContentWidth, this));
+            h = heightFromWidth(w);
+        } else if (cssRatio && height.isDefinite(parentHasFixedHeight)) {
+            h = contentHeightAfterApplyingBoxSizing(
+                height.specifiedValue(parentContentHeight, this));
+            w = widthFromHeight(h);
+        } else {
+            setContentWidth(0);
+            setContentHeight(0);
+            return;
+        }
+        applyMinMaxWidthAndHeightIfNeeds(ctx, w, h, parentContentWidth,
+                                         parentContentHeight, false,
+                                         parentHasFixedHeight);
+        if (isFlexItem()) {
+            ctx.registerContentHeight(this, contentHeight());
+        }
         return;
     } else if ((width.isIntrinsicOrAuto() && height.isAuto()) ||
                isBrokenImageWithAuto) {
@@ -379,17 +426,18 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         w = width.specifiedValue(parentContentWidth, this);
         w = contentWidthAfterApplyingBoxSizing(w);
         if (hasAspectRatio) {
-            h = w * (intrinsicHeight.toDouble() / intrinsicWidth.toDouble());
+            h = heightFromWidth(w);
         } else {
             h = intrinsicHeight;
         }
-    } else if (width.isAuto()) {
+    } else if (width.isIntrinsicOrAuto()) {
+        // css-sizing-3 5.1: the min-content, max-content and fit-content
+        // widths of a replaced element are its automatic width.
         if (height.isDefinite(parentHasFixedHeight)) {
             h = height.specifiedValue(parentContentHeight, this);
             h = contentHeightAfterApplyingBoxSizing(h);
             if (hasAspectRatio && intrinsicHeight) {
-                w = h *
-                    (intrinsicWidth.toDouble() / intrinsicHeight.toDouble());
+                w = widthFromHeight(h);
             } else {
                 w = intrinsicWidth;
             }
@@ -407,8 +455,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
             h = contentHeightAfterApplyingBoxSizing(h);
         } else {
             if (hasAspectRatio && intrinsicWidth) {
-                h = w *
-                    (intrinsicHeight.toDouble() / intrinsicWidth.toDouble());
+                h = heightFromWidth(w);
             } else {
                 h = intrinsicHeight;
             }
@@ -688,6 +735,21 @@ void FrameReplaced::computeIntrinsicSize(
                     intrinsicHeight = b.height();
                 }
             }
+        }
+    }
+
+    // A preferred aspect ratio from 'aspect-ratio' takes the place of the
+    // natural one; the natural width stays and the height follows it. With
+    // no natural size both stay zero and only the ratio is reported.
+    double ratio = aspectRatioOverride();
+    if (ratio) {
+        hasAspectRatio = true;
+        if (intrinsicWidth > 0) {
+            intrinsicHeight =
+                contentHeightFromAspectRatio(ratio, intrinsicWidth);
+        } else if (intrinsicHeight > 0) {
+            intrinsicWidth =
+                contentWidthFromAspectRatio(ratio, intrinsicHeight);
         }
     }
 }

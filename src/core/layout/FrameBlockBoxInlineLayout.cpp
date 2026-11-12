@@ -4675,7 +4675,30 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
     computeBorderMarginPadding(ctx.layoutContext(), cb->contentWidth());
     Length width = style()->width();
 
-    if (width.isDefinite(false) && this != ctx.owner()) {
+    // css-sizing-4 5.1: with a preferred aspect ratio and a definite height
+    // the min-content and max-content widths are the width the ratio gives.
+    Optional<LayoutUnit> widthFromRatio;
+    double ratio = 0;
+    if (width.isIntrinsicOrAuto() &&
+        !(this == ctx.owner() && ctx.ignoresOwnerAspectRatio())) {
+        ratio = preferredAspectRatio();
+        if (ratio) {
+            Optional<LayoutUnit> height =
+                definiteContentHeight(ctx.layoutContext(), cb);
+            if (height) {
+                widthFromRatio =
+                    contentWidthFromAspectRatio(ratio, height.value());
+            }
+        }
+    }
+
+    if (widthFromRatio) {
+        LayoutUnit w = widthAfterApplyingAspectRatioConstraints(
+            ctx.layoutContext(), cb, ratio, widthFromRatio.value(),
+            cb->contentWidth(), true);
+        ctx.updatePreferredMinWidth(w);
+        ctx.updatePreferredWidth(w);
+    } else if (width.isDefinite(false) && this != ctx.owner()) {
         LayoutUnit unused;
         LayoutUnit w = width.specifiedValue(unused, this);
         w = contentWidthAfterApplyingBoxSizing(w);
@@ -4746,6 +4769,16 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                 ctx.updatePreferredMinWidth(ctx.preferredWidth());
             }
         }
+    }
+
+    // css-sizing-4 5.2: a definite min-height carries over to the intrinsic
+    // widths through the preferred aspect ratio.
+    if (ratio && !widthFromRatio) {
+        LayoutUnit transferred = widthAfterApplyingAspectRatioConstraints(
+            ctx.layoutContext(), cb, ratio, LayoutUnit(0), cb->contentWidth(),
+            false);
+        ctx.updatePreferredMinWidth(transferred);
+        ctx.updatePreferredWidth(transferred);
     }
 
     LayoutUnit unused;

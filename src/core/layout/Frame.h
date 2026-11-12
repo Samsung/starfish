@@ -285,6 +285,7 @@ public:
     LayoutContext(Starfish* starfish, FrameDocument* frameDocument)
         : m_starfish(starfish)
         , m_frameDocument(frameDocument)
+        , m_basisItemWithAutoMinHeight(nullptr)
         , m_viewportWidthDamaged(false)
         , m_viewportHeightDamaged(false)
         , m_isQuickLayout(false)
@@ -663,6 +664,18 @@ public:
         m_inComputingBasisSize = b;
     }
 
+    // The flex item whose basis is being measured, when the zero min-height
+    // the measurement installs stands in for `min-height: auto`.
+    FrameBox* basisItemWithAutoMinHeight()
+    {
+        return m_basisItemWithAutoMinHeight;
+    }
+
+    void setBasisItemWithAutoMinHeight(FrameBox* flexItem)
+    {
+        m_basisItemWithAutoMinHeight = flexItem;
+    }
+
     bool didResetTable(FrameTableBox* table)
     {
         auto it = m_didResetTables.find(table);
@@ -815,6 +828,8 @@ private:
     std::unordered_map<Frame*, CachedGridItemPreferredWidthVector>
         m_gridItemPreferredWidthCache;
 
+    FrameBox* m_basisItemWithAutoMinHeight;
+
     bool m_viewportWidthDamaged : 1;
     bool m_viewportHeightDamaged : 1;
     bool m_isQuickLayout : 1;
@@ -964,6 +979,7 @@ public:
         , m_isWhiteSpaceAtLast(true)
         , m_isPendingWrapLine(false)
         , m_hasAppliedTextIndent(false)
+        , m_ignoresOwnerAspectRatio(false)
     {
     }
 
@@ -1172,6 +1188,18 @@ public:
 
     LayoutUnit wordSpacing(const TextToken& token);
 
+    // Measure the owner's content alone, without the width its preferred
+    // aspect ratio gives it (the content-based minimum of such a box).
+    void setIgnoresOwnerAspectRatio(bool b)
+    {
+        m_ignoresOwnerAspectRatio = b;
+    }
+
+    bool ignoresOwnerAspectRatio()
+    {
+        return m_ignoresOwnerAspectRatio;
+    }
+
 private:
     LayoutContext& m_layoutContext;
     PreferredWidthContext* m_upperContext;
@@ -1191,6 +1219,7 @@ private:
     bool m_isWhiteSpaceAtLast;
     bool m_isPendingWrapLine;
     bool m_hasAppliedTextIndent;
+    bool m_ignoresOwnerAspectRatio;
 
     bool canAppendToCurrentLineBox(LayoutUnit width);
     bool hasFloatingBoxAlreadyInLineBox() const

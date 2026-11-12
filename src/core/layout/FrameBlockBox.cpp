@@ -112,7 +112,25 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
         Length width = style()->width();
         LayoutUnit contentWidth;
 
+        // css-sizing-4 5.1: with a preferred aspect ratio, an auto width
+        // follows from a definite height instead of stretching or
+        // shrinking to fit.
+        Optional<LayoutUnit> widthFromRatio;
+        double ratio = 0;
         if (width.isIntrinsicOrAuto()) {
+            ratio = preferredAspectRatio();
+            if (ratio && !widthIsStretchedByInsets()) {
+                Optional<LayoutUnit> height = definiteContentHeight(ctx, cb);
+                if (height) {
+                    widthFromRatio =
+                        contentWidthFromAspectRatio(ratio, height.value());
+                }
+            }
+        }
+
+        if (widthFromRatio) {
+            contentWidth = widthFromRatio.value();
+        } else if (width.isIntrinsicOrAuto()) {
             bool shouldComputeWithNormalBlockWidthRule =
                 isNormalFlow() && !isAtomicInlineLevel() &&
                 !width.isIntrinsic();
@@ -173,6 +191,13 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
             contentWidth = contentWidthAfterApplyingBoxSizing(contentWidth);
         }
 
+        if (ratio) {
+            contentWidth = widthAfterApplyingAspectRatioConstraints(
+                ctx, cb, ratio, contentWidth,
+                containgBlockContentWidth - mbpWidth(),
+                widthFromRatio.hasValue());
+        }
+
         setContentWidthConsideringMinMaxWidths(ctx, contentWidth,
                                                containgBlockContentWidth);
     }
@@ -203,10 +228,16 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 {
     LayoutUnit top = paddingTop() + borderTop();
     LayoutUnit bottom = paddingBottom() + borderBottom();
+    // A height given by the preferred aspect ratio keeps the children's
+    // bottom margins inside, the way a specified height does.
+    Length heightForMargins = style()->height();
+    if (heightForMargins.isAuto() && preferredAspectRatio()) {
+        heightForMargins = Length(Length::Fixed, 0);
+    }
     MarginInfo marginInfo(top, bottom,
                           needToEstablishBlockFormattingContext() ||
                               isFrameDocument(),
-                          style()->height());
+                          heightForMargins);
     ctx.setMarginInfo(this, &marginInfo);
 
     if (needToEstablishKindsOfFormattingContext()) {
@@ -310,11 +341,20 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
                 LengthData offset = style()->offset();
                 Length top = offset.top();
                 Length bottom = offset.bottom();
-                if (top.isSpecified() && bottom.isSpecified()) {
+                // css-sizing-4 5.1: the preferred aspect ratio decides an
+                // auto height from the width, also against both insets,
+                // unless that height is what gave the width.
+                bool widthIsFromHeight = style()->width().isIntrinsicOrAuto() &&
+                                         !widthIsStretchedByInsets();
+                if (top.isSpecified() && bottom.isSpecified() &&
+                    (!preferredAspectRatio() || widthIsFromHeight)) {
                     LayoutUnit t = top.specifiedValue(parentHeight, this);
                     LayoutUnit b = bottom.specifiedValue(parentHeight, this);
                     contentHeight =
                         parentHeight - t - b - paddingHeight() - borderHeight();
+                } else {
+                    contentHeight =
+                        contentHeightWithAspectRatio(ctx, contentHeight);
                 }
             } else {
                 contentHeight = height.specifiedValue(parentHeight, this);
@@ -411,10 +451,44 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
     if (height.isDefinite(parentHasFixedHeight)) {
         contentHeight = height.specifiedValue(parentHeight, this);
         contentHeight = contentHeightAfterApplyingBoxSizing(contentHeight);
+    } else {
+        contentHeight = contentHeightWithAspectRatio(ctx, contentHeight);
     }
 
     setContentHeightConsideringMinMaxHeights(ctx, contentHeight, parentHeight,
                                              parentHasFixedHeight);
+}
+
+bool FrameBlockBox::widthIsStretchedByInsets()
+{
+    if (!isAbsolutePositioned() || !style()->width().isAuto() ||
+        !style()->height().isAuto()) {
+        return false;
+    }
+    LengthData offset = style()->offset();
+    return offset.left().isSpecified() && offset.right().isSpecified();
+}
+
+LayoutUnit FrameBlockBox::contentHeightWithAspectRatio(LayoutContext& ctx,
+                                                       LayoutUnit contentHeight)
+{
+    double ratio = preferredAspectRatio();
+    if (!ratio) {
+        return contentHeight;
+    }
+
+    // css-sizing-4 5.1: an auto height follows from the width through the
+    // preferred aspect ratio. The automatic minimum size still lets the
+    // content grow the box, unless it scrolls or has its own min-height.
+    LayoutUnit ratioHeight =
+        contentHeightFromAspectRatio(ratio, contentWidth());
+    bool minHeightIsAuto = style()->minHeight().isAuto() ||
+                           ctx.basisItemWithAutoMinHeight() == this;
+    if (!minHeightIsAuto ||
+        appliedOverflowY() != OverflowValue::VisibleOverflow) {
+        return ratioHeight;
+    }
+    return std::max(ratioHeight, contentHeight);
 }
 
 static LayoutLocation relativeLocation(LayoutContext& ctx, Frame* f,
@@ -1174,6 +1248,11 @@ bool FrameBlockBox::isSelfCollapsingBlock(LayoutContext& ctx)
     }
 
     if (paddingHeight() || borderHeight()) {
+        return false;
+    }
+
+    // The preferred aspect ratio gives an auto height its own extent.
+    if (preferredAspectRatio()) {
         return false;
     }
 
