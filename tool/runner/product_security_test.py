@@ -1,188 +1,107 @@
 #!/usr/bin/env python3
-"""Exercise file-origin and WebGL boundaries without native test bindings."""
+"""Run registered browser security groups against a product build."""
 
 import argparse
-import base64
 import concurrent.futures
-import contextlib
 import functools
-import http.server
 import json
 import os
 from pathlib import Path
 import subprocess
-import threading
 import tempfile
-from urllib.parse import urlencode
 
-ROOT = Path(__file__).resolve().parents[2]
-TESTS = ROOT / "tests"
-PAGE = TESTS / "assertion/security/file-origin-policy.html"
-TARGET = TESTS / "fixtures/security/file-origin-target.html"
-READABLE = TESTS / "fixtures/security/file-origin-readable.txt"
-MARKER = "PRODUCT_SECURITY:"
+from security_cases import (
+    ROOT, RESULT_PREFIX, collect_cases, configure_features, discover_suites,
+    server,
+)
 
 
-class Handler(http.server.SimpleHTTPRequestHandler):
-    def log_message(self, *args):
-        pass
-
-    def do_GET(self):
-        if self.path == "/redirect-to-file":
-            self.send_response(302)
-            self.send_header("Location", TARGET.as_uri())
-            self.end_headers()
-            return
-        super().do_GET()
-
-
-@contextlib.contextmanager
-def server():
-    handler = functools.partial(Handler, directory=str(TESTS))
-    with http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler) as httpd:
-        thread = threading.Thread(target=httpd.serve_forever, daemon=True)
-        thread.start()
-        try:
-            yield "http://127.0.0.1:%d" % httpd.server_port
-        finally:
-            httpd.shutdown()
-            thread.join()
-
-
-def cases(base):
-    for action in ("fetch", "xhr", "frame", "srcdoc"):
-        for local in (False, True):
-            options = {
-                "action": action,
-                "allowed": "true" if local else "false",
-                "file": TARGET.as_uri(),
-                "readable": READABLE.as_uri(),
-            }
-            url = (PAGE.as_uri() if local else
-                   base + "/assertion/security/file-origin-policy.html")
-            yield ("%s-%s" % ("local" if local else "http", action),
-                   url + "?" + urlencode(options), False,
-                   local and action == "frame")
-
-    for action in ("assign", "replace", "href", "anchor", "form"):
-        options = {
-            "action": action, "allowed": "false",
-            "file": TARGET.as_uri(),
-        }
-        yield ("http-" + action,
-               base + "/assertion/security/file-origin-policy.html?" +
-               urlencode(options), False, False)
-
-    for action in ("fetch", "xhr", "frame", "replace"):
-        options = {
-            "action": action, "allowed": False,
-            "file": TARGET.as_uri(), "readable": READABLE.as_uri(),
-        }
-        source = ("<script>window.productSecurityOptions=" +
-                  json.dumps(options) + ";</script>" + PAGE.read_text())
-        data_url = ("data:text/html;base64," +
-                    base64.b64encode(source.encode()).decode())
-        yield ("data-" + action, data_url, False, False)
-
-    yield ("local-opaque-child",
-           PAGE.as_uri() + "?action=opaque-child", False, False)
-    yield ("native-local-load", TARGET.as_uri() + "?allowed=true", True, True)
-    for action in ("assign", "replace"):
-        yield ("local-" + action,
-               PAGE.as_uri() + "?" + urlencode({
-                   "action": action, "allowed": "true",
-                   "file": TARGET.as_uri() + "?allowed=true",
-               }), True, True)
-    # A network redirect must not turn an HTTP initiator into a local app.
-    yield ("http-file-redirect",
-           base + "/assertion/security/file-origin-policy.html?" +
-           urlencode({"action": "frame", "allowed": "false",
-                      "file": base + "/redirect-to-file"}), False, False)
+def check_output(case, output, returncode):
+    if returncode:
+        raise AssertionError("browser exited %d" % returncode)
+    for text in case.forbidden_output:
+        if text in output:
+            raise AssertionError("forbidden output: " + text)
+    for text in case.required_output:
+        if text not in output:
+            raise AssertionError("missing required output: " + text)
+    reports = []
+    for line in output.splitlines():
+        if RESULT_PREFIX in line:
+            reports.append(json.JSONDecoder().raw_decode(
+                line.split(RESULT_PREFIX, 1)[1])[0])
+    if len(reports) != 1:
+        raise AssertionError("expected exactly one completion report")
+    report = reports[0]
+    if not isinstance(report, dict):
+        raise AssertionError("completion report must be an object")
+    if report.get("passed") is not True:
+        raise AssertionError(json.dumps(report, ensure_ascii=False))
+    if report.get("testHooks") is not False:
+        raise AssertionError("native test bindings enabled or not reported")
+    if case.validate:
+        case.validate(output, report)
 
 
 def run_case(browser, case, timeout):
-    name, url, target_expected, target_allowed = case
+    timeout = case.timeout or timeout
     environment = os.environ.copy()
     environment.setdefault("LP_NUM_THREADS", "2")
+    output = ""
     try:
-        with tempfile.TemporaryDirectory(
-                prefix="starfish-product-security-") as storage:
+        with tempfile.TemporaryDirectory(prefix="starfish-security-") as storage:
             result = subprocess.run(
-                [str(browser), url, "--hide-window", "--disable-console",
+                [str(browser), case.url, "--hide-window", "--disable-console",
                  "--timeout=%d" % timeout, "--storage-dir=" + storage],
                 cwd=ROOT, env=environment, stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, text=True, errors="replace",
                 timeout=timeout + 10,
             )
         output = result.stdout
-        if result.returncode:
-            raise AssertionError("browser exited %d" % result.returncode)
-        target_loaded = "FILE_ORIGIN_TARGET_LOADED" in output
-        if target_loaded and not target_allowed:
-            raise AssertionError("untrusted content executed a local file")
-        if target_expected:
-            if not target_loaded:
-                raise AssertionError("trusted local navigation did not complete")
-        else:
-            reports = []
-            for line in output.splitlines():
-                if MARKER in line:
-                    reports.append(json.JSONDecoder().raw_decode(
-                        line.split(MARKER, 1)[1])[0])
-            if len(reports) != 1:
-                raise AssertionError("expected exactly one completion report")
-            report = reports[0]
-            if not report["passed"]:
-                raise AssertionError(json.dumps(report, ensure_ascii=False))
-            if report["testHooks"]:
-                raise AssertionError("native test bindings are enabled")
-        if name.startswith(("http-", "data-")) and name != "http-file-redirect":
-            action = name.split("-", 1)[1]
-            blocked = READABLE if action in ("fetch", "xhr", "srcdoc") else TARGET
-            diagnostic = "console.error: Not allowed to load local resource: "
-            if diagnostic + blocked.as_uri() not in output:
-                raise AssertionError("missing local-resource console error")
-        return name, True, ""
-    except (AssertionError, subprocess.TimeoutExpired, ValueError) as error:
-        output = locals().get("output", "")
-        return name, False, str(error) + "\n" + output[-5000:]
+        check_output(case, output, result.returncode)
+        return case.name, True, ""
+    except (AssertionError, subprocess.TimeoutExpired, ValueError, OSError) as error:
+        return case.name, False, str(error) + "\n" + output[-5000:]
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--browser", type=Path, required=True)
+    parser.add_argument("--browser", type=Path)
     parser.add_argument("--jobs", type=int, default=4)
-    parser.add_argument("--timeout", type=int, default=3)
-    parser.add_argument("--webgl", choices=("on", "off"), default="on")
+    parser.add_argument("--timeout", type=int, default=3,
+                        help="default per-case seconds; cases may override it")
+    parser.add_argument("--group", action="append", default=[],
+                        help="run a registered group (repeatable; default: all)")
+    parser.add_argument("--case", action="append", default=[], dest="patterns",
+                        help="select group/case IDs by glob (repeatable)")
+    parser.add_argument("--feature", action="append", default=[],
+                        help="group feature NAME=VALUE (repeatable)")
+    parser.add_argument("--list", action="store_true",
+                        help="list matching cases without launching a browser")
     arguments = parser.parse_args()
-    browser = arguments.browser.resolve()
-    if not browser.is_file():
-        parser.error("browser does not exist: %s" % browser)
     if arguments.jobs < 1 or arguments.timeout < 3:
         parser.error("--jobs must be positive and --timeout at least 3")
-
-    with server() as base:
-        selected = list(cases(base))
-        if arguments.webgl == "on":
-            selected.append((
-                "webgl-buffers",
-                base + "/assertion/canvas/webgl-buffer-input-validation.html",
-                False, False))
-        else:
-            source = """<script>
-var passed = !document.createElement('canvas').getContext('webgl') &&
-             !document.createElement('canvas').getContext('webgl2');
-console.log('PRODUCT_SECURITY:' + JSON.stringify({
-  passed: passed, testHooks: typeof testEnd === 'function'
-}));
-</script>"""
-            data_url = ("data:text/html;base64," +
-                        base64.b64encode(source.encode()).decode())
-            selected.append(("webgl-disabled", data_url, False, False))
-        run = functools.partial(run_case, browser, timeout=arguments.timeout)
-        with concurrent.futures.ThreadPoolExecutor(
-                max_workers=arguments.jobs) as pool:
-            results = list(pool.map(run, selected))
+    if not arguments.list and not arguments.browser:
+        parser.error("--browser is required unless --list is used")
+    browser = arguments.browser.resolve() if arguments.browser else None
+    if browser and not browser.is_file():
+        parser.error("browser does not exist: %s" % browser)
+    try:
+        suites = discover_suites()
+        features = configure_features(suites, arguments.feature)
+        with server(features) as context:
+            selected = collect_cases(suites, context, arguments.group,
+                                     arguments.patterns)
+            if arguments.list:
+                for case in selected:
+                    print(case.name)
+                return 0
+            run = functools.partial(run_case, browser, timeout=arguments.timeout)
+            with concurrent.futures.ThreadPoolExecutor(
+                    max_workers=arguments.jobs) as pool:
+                results = list(pool.map(run, selected))
+    except ValueError as error:
+        parser.error(str(error))
     for name, passed, detail in results:
         print("%s %s" % ("PASS" if passed else "FAIL", name))
         if detail:

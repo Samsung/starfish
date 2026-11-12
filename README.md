@@ -687,16 +687,21 @@ Build with `-DCMAKE_BUILD_TYPE=Release` (or `RelWithDebInfo`),
 
 ```sh
 xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/product_security_test.py \
-  --browser <build>/bin/lightweight-web-engine --webgl on
+  --browser <build>/bin/lightweight-web-engine --feature webgl=on
 ```
 
-Use `--webgl off` for a product without WebGL. The runner checks ordinary
-fetch/XHR, iframe/srcdoc, Location, anchor/form, redirect, and WebGL calls
-using harmless checked-in local fixtures and a loopback HTTP server.
-The runner requires native test bindings to be absent. CI executes the same
-file-origin cases through the existing assertion driver in `internal_test`;
-the WebGL page is also in that suite's active list. The external runner is
-for product-build validation.
+Use `--feature webgl=off` for a product without WebGL. With no selection,
+all registered security groups run. List cases with `--list`, or select groups
+and glob patterns with repeated `--group` and `--case` options, for example
+`--group file-origin --case '*xhr*'`.
+
+Cases live in `tool/runner/security_cases/`; adding a group needs no runner
+or CI workflow edits. Groups own their fixture routes, feature settings,
+timeouts and optional output validators. See that directory's
+[extension guide](tool/runner/security_cases/README.md) for the case contract.
+The runner requires native test bindings to be absent. Registered cases that
+support native assertions also run through the existing `internal_test`
+driver. The external runner remains for product-build validation.
 
 ### Khronos WebGL Conformance Tests
 
