@@ -58,18 +58,24 @@ void CanvasRenderingContext::calculateDimension(Starfish* starfish,
         height = 1;
     }
 
-    uint32_t maxTextureSize = Compositor::maximumTextureSize(starfish);
+    uint64_t maxTextureSize = Compositor::maximumTextureSize(starfish);
     uint64_t maxTextureArea = maxTextureSize * maxTextureSize;
 
-    if (elementWidth * elementHeight >= maxTextureArea) {
-        width = maxTextureArea * (static_cast<double>(elementWidth) /
-                                  (elementWidth + elementHeight));
-        height = maxTextureArea * (static_cast<double>(elementHeight) /
-                                   (elementWidth + elementHeight));
+    if (width * height >= maxTextureArea) {
+        double total = width + height;
+        // Bound the bitmap dimensions before conversion: a nonempty canvas
+        // must not acquire a zero dimension through truncation, and rounding
+        // a large area must not overflow the integer conversion.
+        double scaledWidth =
+            maxTextureArea * (static_cast<double>(width) / total);
+        double scaledHeight =
+            maxTextureArea * (static_cast<double>(height) / total);
+        width = std::max(1.0, std::min<double>(maxTextureSize, scaledWidth));
+        height = std::max(1.0, std::min<double>(maxTextureSize, scaledHeight));
     }
 
-    width = std::min(width, static_cast<uint64_t>(maxTextureSize));
-    height = std::min(height, static_cast<uint64_t>(maxTextureSize));
+    width = std::min(width, maxTextureSize);
+    height = std::min(height, maxTextureSize);
 
     STARFISH_ASSERT(width != 0);
     STARFISH_ASSERT(height != 0);

@@ -874,6 +874,7 @@ tests/assertion/canvas/webgl2-compressed-texture-s3tc.html
 tests/assertion/canvas/webgl-draw-buffers-frag-color.html
 tests/assertion/canvas/webgl-draw-buffers-resize.html
 tests/assertion/canvas/toDataURL-nocontext.html
+tests/assertion/canvas/dimension-overflow.html
 tests/pixel/css/overflow/overflow-pseudo-element.html
 #tests/pixel/iframe/iframe-hittest.html
 # [known-fail:PRE_FIX_BASELINE] tests/pixel/iframe/webgl-blend-in-iframe.html

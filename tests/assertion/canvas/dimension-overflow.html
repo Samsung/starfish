@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Canvas dimension arithmetic at unsigned long boundaries</title>
+<script>
+// Width and height are unsigned long values. Serializing a thin canvas
+// must not turn an overflowing sum or product into a large square bitmap.
+// Browsers that cannot represent the requested bitmap may return data:,.
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-todataurl
+var cases = [
+  [4294967295, 1, 1],
+  [1, 4294967295, 1],
+  [2147483648, 2, 4],
+  [2, 2147483648, 4],
+  [100, 1, 1],
+  [1, 100, 1]
+];
+var prefix = "data:image/png;base64,";
+
+function readUint32(bytes, offset) {
+  return bytes.charCodeAt(offset) * 16777216 +
+         bytes.charCodeAt(offset + 1) * 65536 +
+         bytes.charCodeAt(offset + 2) * 256 +
+         bytes.charCodeAt(offset + 3);
+}
+
+for (var i = 0; i < cases.length; ++i) {
+  var size = cases[i];
+  var canvas = document.createElement("canvas");
+  canvas.width = size[0];
+  canvas.height = size[1];
+  console.assert(canvas.width === size[0] && canvas.height === size[1],
+                 "setting dimensions preserves the unsigned long values");
+  var url = canvas.toDataURL();
+  if (url === "data:,") {
+    continue;
+  }
+  console.assert(url.indexOf(prefix) === 0, "a nonempty result is PNG");
+  if (url.indexOf(prefix) !== 0) {
+    continue;
+  }
+  // Read only the PNG header, without decoding or allocating the bitmap.
+  var header = atob(url.slice(prefix.length, prefix.length + 44));
+  var width = readUint32(header, 16);
+  var height = readUint32(header, 20);
+  console.assert(width > 0 && height > 0,
+                 "serialized bitmap has nonzero dimensions");
+  console.assert((size[0] > size[1] ? height : width) <= size[2],
+                 "a thin canvas remains thin: " + size[0] + "x" + size[1] +
+                 " serialized as " + width + "x" + height);
+  if (size[0] <= 100 && size[1] <= 100) {
+    console.assert(width === size[0] && height === size[1],
+                   "ordinary dimensions are unchanged");
+  }
+}
+
+var empty = document.createElement("canvas");
+empty.width = 0;
+console.assert(empty.toDataURL() === "data:,", "zero width stays empty");
+empty.width = 1;
+empty.height = 0;
+console.assert(empty.toDataURL() === "data:,", "zero height stays empty");
+if (typeof testEnd === "function") {
+  testEnd();
+}
+</script>
