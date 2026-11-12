@@ -353,6 +353,7 @@ tests/assertion/css/url/url-parsing.html
 tests/assertion/css/url/url-serialization.html
 tests/assertion/css/sizing/aspect-ratio-auto-side.html
 tests/assertion/css/sizing/margins-collapsed-through-top.html
+tests/assertion/css/sizing/replaced-flex-grid-item-size.html
 tests/assertion/css/values/calc-intrinsic-sizing.html
 tests/assertion/css/values/calc-serialization-order.html
 tests/assertion/css/values/calc-type-check.html

@@ -153,6 +153,9 @@ public:
         return ratio;
     }
 
+    // An <img> whose resource is an SVG document.
+    bool isSVGImage();
+
     virtual IntrinsicSize intrinsicSize() = 0;
     IntrinsicSizeUsedInLayout computeIntrinsicSizeForLayout();
     bool hasPercentageWidthAttribute();

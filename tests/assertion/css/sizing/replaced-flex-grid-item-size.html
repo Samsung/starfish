@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>An image keeps its proportions as a flex or grid item</title>
+<style>
+  body { margin: 0; }
+  .column { display: flex; flex-direction: column; width: 400px; }
+  .row { display: flex; width: 400px; height: 200px; }
+  .grid { display: grid; width: 400px; grid-template-rows: 200px; }
+  #fixed-width, #grid-fixed-width { width: 100px; }
+  #explicit { justify-self: stretch; align-self: stretch; }
+</style>
+<!-- The image is 50x50. -->
+<div class="column"><img id="fixed-width" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="column"><img id="stretched-width" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="row"><img id="stretched-height" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="grid"><img id="grid-natural" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="grid"><img id="grid-fixed-width" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="grid"><img id="explicit" src="../minmaxwidthheight/lime50x50.png"></div>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[replaced-flex-grid-item-size] " + document.title);
+  };
+}
+
+function size(id, width, height) {
+  var r = document.getElementById(id).getBoundingClientRect();
+  console.assert(r.width === width && r.height === height,
+    id + " should be " + width + "x" + height + ", got " + r.width + "x" + r.height);
+}
+
+window.onload = function () {
+  // Column flex: the height follows the item's own width, specified or
+  // stretched, not the container's.
+  size("fixed-width", 100, 100);
+  size("stretched-width", 400, 400);
+  // Row flex: the stretched height gives the width.
+  size("stretched-height", 200, 200);
+  // Grid: `normal` alignment does not stretch an image; `stretch` does.
+  size("grid-natural", 50, 50);
+  size("grid-fixed-width", 100, 100);
+  size("explicit", 400, 200);
+  testEnd();
+};
+</script>

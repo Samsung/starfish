@@ -105,9 +105,9 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-012.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-014.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-015.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-016.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-016.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-017.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-018.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-018.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-019.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-020.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-021.html
@@ -116,8 +116,8 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-023.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-024.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-025.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-026.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-027.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-028.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-027.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-028.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-029.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-030.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-031.html
@@ -395,7 +395,7 @@ http://web-platform.test:8000/css/css-sizing/dynamic-change-inline-size-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/float-clearance-with-margin-collapse-and-fit-content-and-padding-percentage-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/float-clearance-with-margin-collapse-and-fit-content-and-padding-percentage-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/float-clearance-with-margin-collapse-and-fit-content-and-padding-percentage-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/grid-item-image-percentage-min-height-computes-as-0.html
+http://web-platform.test:8000/css/css-sizing/grid-item-image-percentage-min-height-computes-as-0.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/hori-block-size-small-or-larger-than-container-with-min-or-max-content-1.html
 http://web-platform.test:8000/css/css-sizing/hori-block-size-small-or-larger-than-container-with-min-or-max-content-2a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/hori-block-size-small-or-larger-than-container-with-min-or-max-content-2b.html

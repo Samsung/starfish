@@ -84,7 +84,7 @@ http://web-platform.test:8000/css/css-flexbox/anonymous-flex-item-003.html
 http://web-platform.test:8000/css/css-flexbox/aspect-ratio-intrinsic-size-003.html
 http://web-platform.test:8000/css/css-flexbox/aspect-ratio-intrinsic-size-004.html
 http://web-platform.test:8000/css/css-flexbox/aspect-ratio-intrinsic-size-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/aspect-ratio-intrinsic-size-006.html
+http://web-platform.test:8000/css/css-flexbox/aspect-ratio-intrinsic-size-006.html
 http://web-platform.test:8000/css/css-flexbox/aspect-ratio-intrinsic-size-007.html
 http://web-platform.test:8000/css/css-flexbox/aspect-ratio-intrinsic-size-008.html
 # [vacuous-pass:WRITING_MODE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-flexbox/aspect-ratio-intrinsic-size-009.html
@@ -184,7 +184,7 @@ http://web-platform.test:8000/css/css-flexbox/flex-003.htm
 http://web-platform.test:8000/css/css-flexbox/flex-004.htm
 http://web-platform.test:8000/css/css-flexbox/flex-abspos-inset-cross-size-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-abspos-inset-nested-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-abspos-inset-nested-002.html
+http://web-platform.test:8000/css/css-flexbox/flex-abspos-inset-nested-002.html
 http://web-platform.test:8000/css/css-flexbox/flex-align-content-center.html
 http://web-platform.test:8000/css/css-flexbox/flex-align-content-end.html
 http://web-platform.test:8000/css/css-flexbox/flex-align-content-space-around.html
@@ -206,13 +206,13 @@ http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-column-012.h
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-column-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-column-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-column-015.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-column-016.html
+http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-column-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-column-018.html
 http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-001.html
 http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-002.html
 http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-006.html
+http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-006.html
 http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-009.html
@@ -224,7 +224,7 @@ http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-014.html
 http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-017.html
 http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-vert-lr.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-intrinsic-padding-001.html
+http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-intrinsic-padding-001.html
 http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-resize-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-basis-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-basis-002.html
@@ -512,7 +512,7 @@ http://web-platform.test:8000/css/css-flexbox/flexbox-items-as-stacking-contexts
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flexbox-min-width-auto-002c.html
 http://web-platform.test:8000/css/css-flexbox/flexbox-min-width-auto-003.html
 http://web-platform.test:8000/css/css-flexbox/flexbox-min-width-auto-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flexbox-min-width-auto-005.html
+http://web-platform.test:8000/css/css-flexbox/flexbox-min-width-auto-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flexbox-min-width-auto-006.html
 http://web-platform.test:8000/css/css-flexbox/flexbox-order-only-flexitems.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flexbox-overflow-horiz-001.html

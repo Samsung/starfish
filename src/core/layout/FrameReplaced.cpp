@@ -168,6 +168,15 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
 // img maps its width and height attributes to style instead (see
 // HTMLImageElement::styleForPresentationAttribute), so layout must not apply
 // them a second time.
+bool FrameReplaced::isSVGImage()
+{
+    if (!isFrameReplacedImage()) {
+        return false;
+    }
+    NativeImageData* imageData = node()->asHTMLImageElement()->imageData();
+    return imageData && imageData->isSVGNativeImageData();
+}
+
 String* FrameReplaced::sizeAttribute(const QualifiedName& name)
 {
     if (node()->isHTMLImageElement()) {

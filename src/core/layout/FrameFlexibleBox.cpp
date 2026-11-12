@@ -1796,7 +1796,13 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
             }
             return std::make_pair(basisSize, false);
         }
-    } else if (!applyLineClamp && flexBasis.isContent()) {
+    } else if (!applyLineClamp &&
+               (flexBasis.isContent() ||
+                (flexBasis.isAuto() &&
+                 (isMainAxisInInlineAxis ? flexItem->style()->width()
+                                         : flexItem->style()->height())
+                     .isAuto()))) {
+        // An `auto` flex basis with an auto main size is used as `content`.
         if (flexItem->isFrameReplaced()) {
             // B. If the flex item has an intrinsic aspect ratio, a used
             // flex basis of 'content', and a definite cross size.
@@ -1823,16 +1829,64 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
                 ctx, intrinsicWidth, intrinsicHeight, hasAspectRatio,
                 parentContentWidth, parentHeightLength, false);
 
-            if (availableCrossSize != intMaxForLayoutUnit && hasAspectRatio) {
+            // The definite cross size is the item's own: a specified one,
+            // or the line's when the item is stretched to it -- not the
+            // container's for an item that keeps its size.
+            Optional<LayoutUnit> crossSize;
+            ComputedStyle* itemStyle = flexItem->style();
+            Length cross = isMainAxisInInlineAxis ? itemStyle->height()
+                                                  : itemStyle->width();
+            LengthData margin = itemStyle->margin();
+            bool hasAutoCrossMargin =
+                isMainAxisInInlineAxis
+                    ? margin.top().isAuto() || margin.bottom().isAuto()
+                    : margin.left().isAuto() || margin.right().isAuto();
+            if (cross.isDefinite(availableCrossSize != intMaxForLayoutUnit)) {
+                LayoutUnit specified =
+                    cross.specifiedValue(availableCrossSize, flexItem);
+                crossSize = isMainAxisInInlineAxis
+                                ? flexItem->contentHeightAfterApplyingBoxSizing(
+                                      specified)
+                                : flexItem->contentWidthAfterApplyingBoxSizing(
+                                      specified);
+            } else if (cross.isAuto() &&
+                       availableCrossSize != intMaxForLayoutUnit &&
+                       isSingleLine() && !hasAutoCrossMargin &&
+                       itemStyle->alignSelf() == StretchAlignItemValue) {
+                crossSize =
+                    std::max(LayoutUnit(0),
+                             availableCrossSize - (isMainAxisInInlineAxis
+                                                       ? flexItem->mbpHeight()
+                                                       : flexItem->mbpWidth()));
+            }
+
+            // An SVG image reports a ratio even when it has neither a
+            // size nor a viewBox; with an `auto` basis leave it to the
+            // layout below, which knows its default object size.
+            if (!flexBasis.isContent() &&
+                flexItem->asFrameReplaced()->isSVGImage()) {
+                hasAspectRatio = false;
+            }
+
+            if (crossSize && hasAspectRatio && intrinsicWidth > 0 &&
+                intrinsicHeight > 0) {
                 if (isMainAxisInInlineAxis) {
                     basisSize =
-                        availableCrossSize * (intrinsicWidth / intrinsicHeight);
+                        crossSize.value() * (intrinsicWidth.toDouble() /
+                                             intrinsicHeight.toDouble());
                 } else {
                     basisSize =
-                        availableCrossSize * (intrinsicHeight / intrinsicWidth);
+                        crossSize.value() * (intrinsicHeight.toDouble() /
+                                             intrinsicWidth.toDouble());
                 }
+                return std::make_pair(basisSize, false);
             }
-            return std::make_pair(basisSize, false);
+            // Without an aspect ratio or a definite cross size, an explicit
+            // `content` basis has no size to report here; an `auto` one is
+            // measured below.
+            if (flexBasis.isContent()) {
+                return std::make_pair(basisSize, false);
+            }
         }
     }
 

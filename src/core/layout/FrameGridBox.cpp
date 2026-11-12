@@ -1752,13 +1752,19 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
     // css-grid-2 6.2: a grid item with a preferred aspect ratio is not
     // stretched by `normal` alignment; its auto side follows from the other
     // one as for a block-level box. An explicit `stretch` still stretches.
+    // The same holds for a replaced element with a natural size, which
+    // keeps that size in an auto axis.
     bool hasRatio = gridItem->preferredAspectRatio() != 0;
+    bool hasNaturalSize =
+        gridItem->isFrameReplaced() &&
+        gridItem->asFrameReplaced()->intrinsicSize().m_hasAspectRatio;
     bool keepsAutoWidth =
-        hasRatio && style->width().isAuto() && style->height().isSpecified() &&
+        style->width().isAuto() &&
+        (hasNaturalSize || (hasRatio && style->height().isSpecified())) &&
         !(style->justifySelfSpecifiedByUser() &&
           style->justifySelf() == AlignItemValue::StretchAlignItemValue);
     bool keepsAutoHeight =
-        hasRatio && style->height().isAuto() &&
+        (hasRatio || hasNaturalSize) && style->height().isAuto() &&
         !(style->alignSelfSpecifiedByUser() &&
           style->alignSelf() == AlignItemValue::StretchAlignItemValue);
 

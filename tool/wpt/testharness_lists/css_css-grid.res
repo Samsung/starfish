@@ -112,7 +112,7 @@ http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-013.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-014.html
 http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-015.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-016.html
+http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-016.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-017.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-018.html
 http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-019.html
@@ -129,8 +129,8 @@ http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-030.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-031.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-032.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-033.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-034.html
+http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-033.html
+http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-034.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-035.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-implies-size-change-036.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/alignment/grid-alignment-style-changes-001.html
