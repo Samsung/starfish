@@ -75,11 +75,40 @@ void Length::changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
                                                 cs);
                         v.setValue(CSSLength(CSSLength::PX, l.fixed()));
                     }
+                } else if (v.type().isCalcData()) {
+                    // Resolve a nested calc()/min()/max() recursively; a
+                    // nested min()/max() then folds to its compared value
+                    // and the parent sees a plain px term.
+                    CalcData* nested = v.calcDataValue();
+                    Length nestedLength = Length(nested);
+                    nestedLength.changeToFixedIfNeeded(
+                        curFontSize, rootFontSize, font, viewportWidth,
+                        viewportHeight, cs);
+                    if (nested->type() == CalcData::Type::kCalc &&
+                        nested->terms().size() == 1 &&
+                        (*nested->terms().begin())->values().size() == 1 &&
+                        (*nested->terms().begin())
+                            ->values()
+                            .begin()
+                            ->type()
+                            .isLength()) {
+                        v.setType(CalcValueType::ValueKind::kLength);
+                        v.setValue((*nested->terms().begin())
+                                       ->values()
+                                       .begin()
+                                       ->lengthValue());
+                    }
                 }
                 iter2++;
             }
             iter++;
         }
+
+        // css-values-4 "Simplification": once every term is resolved to px,
+        // min()/max() compare their arguments and fold to the compared
+        // value, which the plain-calc fold below then turns into a fixed
+        // length when it stands alone.
+        calcData()->foldResolvedComparison();
 
         // css-values-4: at computed-value time a calc() that simplifies
         // to a single value is that value, not a calc() wrapper. A
