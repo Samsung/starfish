@@ -80,6 +80,48 @@ void Length::changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
             }
             iter++;
         }
+
+        // css-values-4: at computed-value time a calc() that simplifies
+        // to a single value is that value, not a calc() wrapper. A
+        // summation whose terms are all px lengths folds to a fixed
+        // length, one whose terms are all percentages folds to a
+        // percentage; anything that keeps mixing units (or a
+        // min()/max()/clamp() function) stays a calc().
+        CalcData* calc = calcData();
+        if (calc->type() == CalcData::Type::kCalc) {
+            bool allPx = true, allPercent = true;
+            float pxSum = 0, percentSum = 0;
+            auto termIt = data.begin();
+            while (termIt != data.end()) {
+                GCVector<CalcValue>& values = (*termIt)->values();
+                if (values.size() != 1) {
+                    allPx = false;
+                    allPercent = false;
+                    break;
+                }
+                CalcValue& v = *values.begin();
+                if (v.type().isLength() &&
+                    v.lengthValue().kind() == CSSLength::PX) {
+                    pxSum += v.lengthValue().value();
+                    allPercent = false;
+                } else if (v.type().isPercentage()) {
+                    percentSum += v.percentageValue();
+                    allPx = false;
+                } else {
+                    allPx = false;
+                    allPercent = false;
+                    break;
+                }
+                ++termIt;
+            }
+            if (allPx && data.begin() != data.end()) {
+                m_data = pxSum;
+                m_type = Fixed;
+            } else if (allPercent && data.begin() != data.end()) {
+                m_data = percentSum;
+                m_type = Percent;
+            }
+        }
     }
 }
 

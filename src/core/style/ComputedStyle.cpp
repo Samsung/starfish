@@ -1062,6 +1062,16 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
     Window* w = current->window();
     LayoutSize windowSize(w->innerWidth(), w->innerHeight());
 
+    // css-values-4: on properties that take no negative value, a calc()
+    // that resolves negative clamps at computed-value time.
+    auto clampNonNegativeLength = [](Length& length) {
+        if ((length.isFixed() && length.fixed() < 0) ||
+            (length.isPercent() && length.percent() < 0)) {
+            length =
+                Length(length.isFixed() ? Length::Fixed : Length::Percent, 0);
+        }
+    };
+
     if (!letterSpacing().isFixed()) {
         auto v = letterSpacing();
         v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
@@ -1137,6 +1147,9 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             m_rareComputedStyleData.ensureMinWidth()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
+
+            // css-sizing-3: min-width takes no negative value.
+            clampNonNegativeLength(*m_rareComputedStyleData.ensureMinWidth());
         }
         Optional<Length> maxWidth = m_rareComputedStyleData.maxWidth();
         if (maxWidth.hasValue()) {
@@ -1150,6 +1163,9 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             m_rareComputedStyleData.ensureMinHeight()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
+
+            // Same non-negative clamp as min-width.
+            clampNonNegativeLength(*m_rareComputedStyleData.ensureMinHeight());
         }
 
         Optional<Length> maxHeight = m_rareComputedStyleData.maxHeight();
@@ -1187,6 +1203,10 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             outline->checkComputed(curFontSize, rootFontSize, font, windowSize,
                                    this);
             computeCalcLineWidth(outline->border());
+            // outline-width is non-negative like border-width.
+            Length outlineWidth = outline->border().width();
+            clampNonNegativeLength(outlineWidth);
+            outline->border().setWidth(outlineWidth);
         }
 
         BorderRadiusData* borderRadius = m_rareComputedStyleData.borderRadius();
@@ -1260,6 +1280,18 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             computeCalcLineWidth(b->right());
             computeCalcLineWidth(b->bottom());
             computeCalcLineWidth(b->left());
+            // css-backgrounds: border-width takes no negative value; the
+            // calc() fold above can surface one as a fixed length.
+            Length widths[] = { b->top().width(), b->right().width(),
+                                b->bottom().width(), b->left().width() };
+            clampNonNegativeLength(widths[0]);
+            clampNonNegativeLength(widths[1]);
+            clampNonNegativeLength(widths[2]);
+            clampNonNegativeLength(widths[3]);
+            b->top().setWidth(widths[0]);
+            b->right().setWidth(widths[1]);
+            b->bottom().setWidth(widths[2]);
+            b->left().setWidth(widths[3]);
             if (!b->top().hasBorderColor()) {
                 b->top().setColor(color());
             }
@@ -1278,6 +1310,17 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         if (padding) {
             padding->checkComputed(curFontSize, rootFontSize, font, windowSize,
                                    this);
+            // css-box: padding takes no negative value; the calc() fold in
+            // changeToFixedIfNeeded can surface one as a fixed length.
+            Length sides[] = { padding->top(), padding->right(),
+                               padding->bottom(), padding->left() };
+            for (auto& side : sides) {
+                clampNonNegativeLength(side);
+            }
+            padding->setTop(sides[0]);
+            padding->setRight(sides[1]);
+            padding->setBottom(sides[2]);
+            padding->setLeft(sides[3]);
         }
 
         LengthData* margin = m_rareComputedStyleData.margin();

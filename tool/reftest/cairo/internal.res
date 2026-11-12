@@ -333,6 +333,7 @@ tests/assertion/css/values/calc-intrinsic-sizing.html
 tests/assertion/css/values/calc-serialization-order.html
 tests/assertion/css/values/calc-type-check.html
 tests/assertion/css/values/calc-minmax-serialize.html
+tests/assertion/css/values/calc-minwidth-computed.html
 tests/assertion/css/cssom/cssfontfacerule-style.html
 tests/assertion/css/cssom/rule-csstext-custom-properties.html
 tests/assertion/css/cssom/stylerule-keyframerule-csstext.html

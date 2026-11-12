@@ -1,0 +1,72 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>min-width computed values: calc() simplification and non-negative clamping</title>
+<style>
+  #target { font-size: 40px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[calc-minwidth-computed] " + document.title);
+  };
+}
+</script>
+<div id="target"></div>
+<script>
+// css-values-4 computed-value time rules for calc() on a non-negative
+// property (css-sizing-3 min-width):
+//  - a calc() that resolves to a single length (or percentage sum) is that
+//    value, not a calc() wrapper ("calc(30px)" is invalid serialization)
+//  - a calc() that resolves negative is clamped to 0 at computed-value time
+// All expectations cross-checked on Chrome 157.
+var target = document.getElementById("target");
+function computedMinWidth(value) {
+  target.style.minWidth = "10px";
+  target.style.minWidth = value;
+  return getComputedStyle(target).minWidth;
+}
+
+// a fully resolved calc() folds to the plain length (font-size: 40px)
+console.assert(computedMinWidth("calc(10px + 0.5em)") === "30px",
+  "calc(10px + 0.5em) computed: " + computedMinWidth("calc(10px + 0.5em)"));
+
+// a calc() that resolves negative clamps to 0
+console.assert(computedMinWidth("calc(10px - 0.5em)") === "0px",
+  "calc(10px - 0.5em) computed: " + computedMinWidth("calc(10px - 0.5em)"));
+console.assert(computedMinWidth("calc(0px - 10px)") === "0px",
+  "calc(0px - 10px) computed: " + computedMinWidth("calc(0px - 10px)"));
+
+// a calc() that sums percentages clamps to 0% keeping the unit
+console.assert(computedMinWidth("calc(10% - 20%)") === "0%",
+  "calc(10% - 20%) computed: " + computedMinWidth("calc(10% - 20%)"));
+
+// mixed percentage + length stays a calc() summation
+console.assert(computedMinWidth("calc(10% + 40px)") === "calc(10% + 40px)",
+  "calc(10% + 40px) computed: " + computedMinWidth("calc(10% + 40px)"));
+
+// plain values are unaffected
+console.assert(computedMinWidth("20%") === "20%",
+  "20% computed: " + computedMinWidth("20%"));
+console.assert(computedMinWidth("min-content") === "min-content",
+  "min-content computed: " + computedMinWidth("min-content"));
+
+// negative literals are invalid for min-width: the declaration is ignored
+// (css-sizing-3) and the previous value survives
+target.style.minWidth = "10px";
+target.style.minWidth = "-10px";
+console.assert(target.style.minWidth === "10px",
+  "min-width: -10px is rejected, got: " + target.style.minWidth);
+
+// Known gaps (not asserted, engine-divergent):
+//  - calc(-10px): a single negative term is valid (css-values-4) and
+//    Chrome computes it to 0px, but the calc parser rejects it
+//  - min-height shares the non-negative clamp in Chrome; not asserted here
+testEnd();
+</script>
