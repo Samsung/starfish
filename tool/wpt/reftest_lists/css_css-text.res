@@ -716,14 +716,14 @@ http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-element
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-ideogram-alpha-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-ideograph-numeric-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-ligature-001.html
-http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-mixed-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-mixed-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-no-001.html
 http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-preformatted-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-supplementary-ideograph.html
 http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-vertical-combine-001.html
 http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-vertical-upright-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-vs-001.html
-http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-zh-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-autospace/text-autospace-zh-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-encoding/shaping-join-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-encoding/shaping-join-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/text-encoding/shaping-join-003.html

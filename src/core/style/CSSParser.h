@@ -2251,10 +2251,11 @@ public:
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
     void parseFontFaceDeclaration(String* str,
                                   CSSStyleDeclaration* declaration);
-    ParseResult parseStyleDeclarations(CSSStyleDeclaration* declarations,
-                                       bool& valid, bool& invalidDeclaration,
-                                       bool hasSelector, bool validSelector,
-                                       bool isQueryingSelector);
+    ParseResult parseStyleDeclarations(
+        CSSStyleDeclaration* declarations, bool& valid,
+        bool& invalidDeclaration, bool hasSelector, bool validSelector,
+        bool isQueryingSelector,
+        GCVector<StyleRuleBase*>* nestedRules = nullptr);
     ParseResult parseStyleRule(RefPtr<CSSToken> aToken,
                                GCVector<StyleRuleBase*>& rules,
                                AllowedRulesType allowedRules,
@@ -2277,6 +2278,23 @@ public:
     bool parseKeyframeSelectorList(RefPtr<CSSToken>& token,
                                    GCAtomicVector<double>& selectorList);
     void parseSelector(GCVector<CSSSelectorList*>& list, bool& validSelector);
+
+    // CSS Nesting (https://drafts.csswg.org/css-nesting-1/): style rules
+    // nested inside a style rule. Nested selectors are desugared at parse
+    // time into plain top-level-equivalent selectors, so neither the rule
+    // storage nor the style resolver needs nesting awareness.
+    // currentTokenStartsNestedRule() is a cheap pre-filter before the
+    // try-parse in parseNestedStyleRule(); it never skips a declaration
+    // that cannot start a qualified rule.
+    bool currentTokenStartsNestedRule();
+    ParseResult parseNestedStyleRule(GCVector<StyleRuleBase*>& rules);
+    CSSSelector* getNestingSelector();
+    static bool isNestingSelectorItem(CSSSelector* selector);
+    // Splices one nested selector branch into one parent branch: every &
+    // item is replaced by the parent branch's item list, and a nested branch
+    // without & implicitly becomes a descendant of the parent branch.
+    static CSSSelectorList* combineNestedSelectorBranch(
+        CSSSelectorList* parentBranch, CSSSelectorList* nestedBranch);
 
     bool parseSupportsCondition(); // for supports rule
 
@@ -2366,6 +2384,12 @@ private:
     // type/universal selector of its own) -- see
     // stripImplicitDefaultNamespaceFromSubject().
     bool m_lastCompoundAddedImplicitDefaultNamespace;
+
+    // CSS Nesting: stack of the parent style rule's selector branches while
+    // a style rule's block is being parsed. The top entry is the innermost
+    // enclosing rule; an empty stack means a top-level rule, where & is
+    // :scope (see getNestingSelector()).
+    GCVector<GCVector<CSSSelectorList*>*> m_nestingSelectorContexts;
 
     // Media Query
     enum MediaQueryParserType {

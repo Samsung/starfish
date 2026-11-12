@@ -433,6 +433,12 @@ enum EmptyCellsValue ENSURE_ENUM_UNSIGNED {
     HideEmptyCellsValue,
 };
 
+enum ScrollMarkerGroupValue ENSURE_ENUM_UNSIGNED {
+    NoneScrollMarkerGroupValue,
+    BeforeScrollMarkerGroupValue,
+    AfterScrollMarkerGroupValue,
+};
+
 enum TextDecorationLineValue ENSURE_ENUM_UNSIGNED {
     NoneTextDecorationLineValue,
     UnderlineTextDecorationLineValue,
@@ -893,7 +899,8 @@ class CSSFilterFunction;
     F(ContentVisibility, contentVisibility, "content-visibility")              \
     F(WillChange, willChange, "will-change")                                   \
     F(LineClamp, lineClamp, "line-clamp")                                      \
-    F(MixBlendMode, mixBlendMode, "mix-blend-mode")
+    F(MixBlendMode, mixBlendMode, "mix-blend-mode")                            \
+    F(ScrollMarkerGroup, scrollMarkerGroup, "scroll-marker-group")
 
 // font related properties must be followed end of this
 // define(FOR_EACH_STYLE_ATTRIBUTE)
@@ -1277,7 +1284,10 @@ public:
         BlendModeValueKind,
 
         // AnimateMotion
-        AnimateMotionValueKind
+        AnimateMotionValueKind,
+
+        // scroll-marker-group
+        ScrollMarkerGroupValueKind
     };
 
     enum class TransformUnit {
@@ -1476,6 +1486,12 @@ public:
     {
         STARFISH_ASSERT(m_valueKind == ObjectFitValueKind);
         return m_value.m_objectFit;
+    }
+
+    ScrollMarkerGroupValue scrollMarkerGroupValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == ScrollMarkerGroupValueKind);
+        return m_value.m_scrollMarkerGroup;
     }
 
     UnicodeBidiValue unicodeBidiValue() const
@@ -2118,6 +2134,7 @@ public:
         CalcData* m_calc;
         TextTransformValue m_textTransform;
         ObjectFitValue m_objectFit;
+        ScrollMarkerGroupValue m_scrollMarkerGroup;
         ListStylePositionValue m_listStylePosition;
         UserSelectValue m_userSelect;
         HyphensValue m_hyphens;
@@ -2411,6 +2428,11 @@ public:
         }
         ValueData(ObjectFitValue v)
             : m_objectFit(v)
+        {
+        }
+
+        ValueData(ScrollMarkerGroupValue v)
+            : m_scrollMarkerGroup(v)
         {
         }
 
@@ -3583,8 +3605,10 @@ enum PseudoElementType ENSURE_ENUM_UNSIGNED {
     PseudoElementFirstLineInherited,
     PseudoElementFormOnly,
     PseudoElementCounter,
+    PseudoElementScrollMarkerGroup,
+    PseudoElementScrollMarker,
     PseudoElementGeneralTypeStart = PseudoElementFirstLine,
-    PseudoElementGeneralTypeEnd = PseudoElementAfter,
+    PseudoElementGeneralTypeEnd = PseudoElementScrollMarker,
     PseudoElementMappedTypeStart = PseudoElementBefore,
     PseudoElementMappedTypeEnd = PseudoElementAfter,
 };

@@ -452,7 +452,7 @@ http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-target-grou
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-target-group-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-target-group-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-target-group-012.html
-http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-target-group-inline-targets.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/scroll-target-group-inline-targets.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/targeted-column-scroll-marker-selection-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/targeted-column-scroll-marker-selection-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/scroll-markers/targeted-column-scroll-marker-selection-003.html

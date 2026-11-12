@@ -1636,6 +1636,8 @@ CSSSelector* CSSParser::getSimpleSelector()
         selector = getAttributeSelector();
     } else if (token->isSymbol(':')) {
         selector = getPseudoSelector();
+    } else if (token->isSymbol('&')) {
+        selector = getNestingSelector();
     } else {
         return nullptr;
     }
@@ -1645,6 +1647,163 @@ CSSSelector* CSSParser::getSimpleSelector()
     }
 
     return selector;
+}
+
+// CSS Nesting: the nesting selector &. Inside a nested style rule it marks
+// where the parent rule's selector is spliced in (see
+// combineNestedSelectorBranch()); at the top level it is :scope, per
+// https://drafts.csswg.org/css-nesting-1/#nesting-selector.
+CSSSelector* CSSParser::getNestingSelector()
+{
+    getToken(false, true); // consume '&'
+    CSSPseudoSelector* selector =
+        new CSSPseudoSelector(CSSSelector::Type::PseudoClass);
+    if (m_nestingSelectorContexts.size() == 0) {
+        // Top-level & refers to no parent rule: it acts as :scope.
+        selector->updatePseudoType(
+            starfish(), starfish()->staticStrings()->m_scopeSelector, false);
+    } else {
+        selector->updatePseudoType(
+            starfish(), starfish()->staticStrings()->m_nestingSelector, false);
+    }
+    return selector;
+}
+
+bool CSSParser::isNestingSelectorItem(CSSSelector* selector)
+{
+    return selector->type() == CSSSelector::Type::PseudoClass &&
+           selector->asCSSPseudoSelector()->pseudoType() ==
+               CSSSelector::PseudoNesting;
+}
+
+// Splices one nested selector branch into one parent branch. The selector
+// list layout produced by parseComplexSelector() is a flat item list running
+// from the subject compound to the leftmost compound, where item i's
+// relation is the combinator between item i's compound and item i+1's
+// compound (SubSelector = same compound).
+//
+// For an & item at [s..e] (its compound; the compound's boundary relation is
+// carried by item e), the parent branch's items are spliced in:
+//  - & alone in its compound: the parent branch's item list takes over the
+//    compound's boundary relation (on the parent's last item).
+//  - & sharing its compound with other simple selectors: the parent branch's
+//    subject compound merges into that compound, the parent branch's further
+//    compounds follow the merged one (the parent's subject boundary relation
+//    moves to the merged compound's boundary item), and the merged
+//    compound's original boundary relation moves to the parent branch's last
+//    item.
+CSSSelectorList* CSSParser::combineNestedSelectorBranch(
+    CSSSelectorList* parentBranch, CSSSelectorList* nestedBranch)
+{
+    CSSSelectorList* out = new (GC) CSSSelectorList();
+    size_t nestedSize = nestedBranch->size();
+    size_t parentSize = parentBranch->size();
+
+    bool hasNesting = false;
+    for (size_t j = 0; j < nestedSize; j++) {
+        if (isNestingSelectorItem((*nestedBranch)[j].m_selector)) {
+            hasNesting = true;
+            break;
+        }
+    }
+    if (!hasNesting) {
+        // A nested branch without & has an implicit &: its selector is a
+        // descendant of the parent branch's subject.
+        for (size_t i = 0; i < nestedSize; i++) {
+            CSSSelectorListItem item = nestedBranch->at(i);
+            if (i == nestedSize - 1) {
+                item.m_relation = CSSSelectorListItem::Descendant;
+            }
+            out->push_back(item);
+        }
+        for (size_t j = 0; j < parentSize; j++) {
+            out->push_back(parentBranch->at(j));
+        }
+        return out;
+    }
+
+    size_t i = 0;
+    while (i < nestedSize) {
+        CSSSelectorListItem item = nestedBranch->at(i);
+        if (!isNestingSelectorItem(item.m_selector)) {
+            out->push_back(item);
+            i++;
+            continue;
+        }
+
+        // The compound containing &: [s..e], with its boundary relation on
+        // item e (SubSelector only links items within one compound).
+        size_t s = i;
+        while (s > 0 && (*nestedBranch)[s - 1].m_relation ==
+                            CSSSelectorListItem::SubSelector) {
+            s--;
+        }
+        size_t e = i;
+        while (e + 1 < nestedSize && (*nestedBranch)[e].m_relation ==
+                                         CSSSelectorListItem::SubSelector) {
+            e++;
+        }
+        CSSSelectorListItem::RelationType boundary =
+            (*nestedBranch)[e].m_relation;
+
+        // Parent branch subject compound: items [0..subjectEnd].
+        size_t subjectEnd = 0;
+        while (subjectEnd + 1 < parentSize &&
+               (*parentBranch)[subjectEnd].m_relation ==
+                   CSSSelectorListItem::SubSelector) {
+            subjectEnd++;
+        }
+        CSSSelectorListItem::RelationType subjectBoundary =
+            (*parentBranch)[subjectEnd].m_relation;
+
+        bool mergedCompound = i < e;
+        CSSSelectorListItem p0 = parentBranch->at(0);
+        if (mergedCompound) {
+            // The parent's subject compound merges into the &-compound.
+            p0.m_relation = CSSSelectorListItem::SubSelector;
+        } else if (parentSize == 1) {
+            // A single-item parent branch simply takes over the boundary.
+            p0.m_relation = boundary;
+        }
+        out->push_back(p0);
+        // The rest of the parent's subject compound; its boundary relation
+        // is absorbed (or moved below) by the merge.
+        for (size_t j = 1; j <= subjectEnd; j++) {
+            CSSSelectorListItem pj = parentBranch->at(j);
+            pj.m_relation = CSSSelectorListItem::SubSelector;
+            out->push_back(pj);
+        }
+        // The &-compound's remaining simple selectors follow the parent's
+        // subject inside the merged compound.
+        for (size_t j = i + 1; j <= e; j++) {
+            CSSSelectorListItem nj = nestedBranch->at(j);
+            if (mergedCompound && parentSize > subjectEnd + 1 && j == e) {
+                // The parent branch has further compounds: the parent
+                // subject's boundary relation moves onto the merged
+                // compound's boundary item.
+                nj.m_relation = subjectBoundary;
+            }
+            out->push_back(nj);
+        }
+        // The parent branch's remaining compounds, carrying the &-compound's
+        // original boundary relation on their last item.
+        if (!mergedCompound) {
+            for (size_t j = subjectEnd + 1; j < parentSize; j++) {
+                out->push_back(parentBranch->at(j));
+            }
+            if (parentSize > 1) {
+                (*out)[out->size() - 1].m_relation = boundary;
+            }
+        } else {
+            for (size_t j = subjectEnd + 1; j < parentSize; j++) {
+                out->push_back(parentBranch->at(j));
+            }
+            (*out)[out->size() - 1].m_relation = boundary;
+        }
+
+        i = e + 1;
+    }
+    return out;
 }
 
 bool CSSParser::parseName(CSSTokenString& name, bool& hasPrefix,
@@ -2302,9 +2461,127 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
     return ParseResult::Consumed;
 }
 
+bool CSSParser::currentTokenStartsNestedRule()
+{
+    RefPtr<CSSToken> token = currentToken();
+    if (token->isSymbol('&') || token->isSymbol('.') || token->isSymbol('#') ||
+        token->isSymbol('[') || token->isSymbol(':') || token->isSymbol('*') ||
+        token->isSymbol('|')) {
+        return true;
+    }
+    // A bare ident can be a property name or the start of a nested rule with
+    // an implicit & (type selectors are allowed since css-nesting-1 moved to
+    // real syntax parsing). Skip the try-parse for the common
+    // `property :` shape.
+    if (!token->isIdent()) {
+        return false;
+    }
+    preserveState();
+    getToken(true, true);
+    RefPtr<CSSToken> next = currentToken();
+    restoreState();
+    return !next->isSymbol(':');
+}
+
+// Parses a style rule nested inside another style rule's block:
+// https://drafts.csswg.org/css-nesting-1/#defining-nested-rule. The nested
+// selectors are desugared against the enclosing rule's selectors into plain
+// combined selectors, so the result lands in the same rules list as
+// top-level rules. Per the spec's cascade rules the nested rules are pushed
+// before their parent rule (parseStyleRule pushes the parent afterwards),
+// which is what makes nested declarations win over nested `& {}` rules of
+// equal specificity.
+CSSParser::ParseResult CSSParser::parseNestedStyleRule(
+    GCVector<StyleRuleBase*>& rules)
+{
+    STARFISH_ASSERT(m_nestingSelectorContexts.size() > 0);
+    preserveState();
+    m_failedParsing = false;
+
+    GCVector<CSSSelectorList*> nestedList;
+    bool validSelector = false;
+    parseSelector(nestedList, validSelector);
+
+    if (!validSelector || nestedList.size() == 0 || m_failedParsing ||
+        !currentToken()->isSymbol('{')) {
+        restoreState();
+        m_failedParsing = false;
+        return ParseResult::Failed;
+    }
+    getToken(true, false); // consume '{'
+
+    // Desugar every nested branch against every parent branch.
+    GCVector<CSSSelectorList*>* parentBranches =
+        m_nestingSelectorContexts.back();
+    GCVector<CSSSelectorList*>* combined =
+        new (GC) GCVector<CSSSelectorList*>();
+    for (size_t i = 0; i < nestedList.size(); i++) {
+        CSSSelectorList* nestedBranch = nestedList[i];
+        for (size_t j = 0; j < parentBranches->size(); j++) {
+            CSSSelectorList* branch =
+                combineNestedSelectorBranch((*parentBranches)[j], nestedBranch);
+            if (branch->size() > 0) {
+                combined->push_back(branch);
+            }
+        }
+    }
+    if (combined->size() == 0) {
+        restoreState();
+        m_failedParsing = false;
+        return ParseResult::Failed;
+    }
+
+    // Inner nested rules desugar against this rule's combined selectors.
+    m_nestingSelectorContexts.push_back(combined);
+
+    CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
+    while (true) {
+        RefPtr<CSSToken> token = currentToken();
+        if (!token->isNotNull() || token->isSymbol('}')) {
+            break;
+        }
+        if (currentTokenStartsNestedRule()) {
+            ParseResult nested = parseNestedStyleRule(rules);
+            if (nested == ParseResult::Consumed) {
+                // parseNestedStyleRule consumed the closing brace; the
+                // current token is already the one after it.
+                continue;
+            }
+            if (nested == ParseResult::ErrorFounded) {
+                break;
+            }
+            // Failed: it was a declaration after all (or garbage); fall
+            // through to parseDeclaration, which skips it to ; or }.
+        }
+        if (parseDeclaration(token, declarations) ==
+            ParseResult::ErrorFounded) {
+            break;
+        }
+        getToken(true, false);
+    }
+
+    m_nestingSelectorContexts.pop_back();
+
+    RefPtr<CSSToken> token = currentToken();
+    if (!token->isSymbol('}')) {
+        restoreState();
+        m_failedParsing = false;
+        return ParseResult::Failed;
+    }
+    getToken(true, false); // consume '}'
+
+    for (size_t i = 0; i < combined->size(); i++) {
+        rules.push_back(
+            new StyleRule(std::move(*(*combined)[i]), declarations));
+    }
+    forgetState();
+    return ParseResult::Consumed;
+}
+
 CSSParser::ParseResult CSSParser::parseStyleDeclarations(
     CSSStyleDeclaration* declarations, bool& valid, bool& invalidDeclaration,
-    bool hasSelector, bool validSelector, bool isQueryingSelector)
+    bool hasSelector, bool validSelector, bool isQueryingSelector,
+    GCVector<StyleRuleBase*>* nestedRules)
 {
     STARFISH_ASSERT(declarations != nullptr);
     if (hasSelector) {
@@ -2316,6 +2593,23 @@ CSSParser::ParseResult CSSParser::parseStyleDeclarations(
                     valid = true;
                     break;
                 } else {
+                    if (nestedRules && currentTokenStartsNestedRule()) {
+                        ParseResult nested = parseNestedStyleRule(*nestedRules);
+                        if (nested == ParseResult::Consumed) {
+                            // parseNestedStyleRule consumed the closing
+                            // brace; the current token is already the one
+                            // after it.
+                            token = currentToken();
+                            continue;
+                        }
+                        if (nested == ParseResult::ErrorFounded) {
+                            valid = true;
+                            invalidDeclaration = true;
+                            break;
+                        }
+                        // Failed: not a nested rule after all; fall through
+                        // to parseDeclaration.
+                    }
                     if (parseDeclaration(token, declarations) ==
                         ParseResult::ErrorFounded) {
                         valid = true;
@@ -2376,9 +2670,25 @@ CSSParser::ParseResult CSSParser::parseStyleRule(
     bool invalidDeclaration = false;
 
     CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
+
+    // While this rule's block is parsed, its selectors are the parent
+    // context for nested rules (see parseNestedStyleRule()). The selector
+    // above was parsed with an empty stack, so a top-level & became :scope.
+    GCVector<CSSSelectorList*>* nestingContext = nullptr;
+    if (!isQueryingSelector) {
+        nestingContext = new (GC) GCVector<CSSSelectorList*>();
+        for (size_t i = 0; i < list.size(); i++) {
+            nestingContext->push_back(list[i]);
+        }
+        m_nestingSelectorContexts.push_back(nestingContext);
+    }
+
     CSSParser::ParseResult ret = parseStyleDeclarations(
         declarations, valid, invalidDeclaration, list.size() > 0, validSelector,
-        isQueryingSelector);
+        isQueryingSelector, !isQueryingSelector ? &rules : nullptr);
+    if (nestingContext) {
+        m_nestingSelectorContexts.pop_back();
+    }
     if (ret != CSSParser::ParseResult::Consumed) {
         return ret;
     }

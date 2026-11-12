@@ -1017,6 +1017,8 @@ void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
     case PseudoGrammarError:
     case PseudoMarker:
     case PseudoPlaceholder:
+    case PseudoScrollMarker:
+    case PseudoScrollMarkerGroup:
     /*
         case PseudoResizer:
         case PseudoScrollbar:
@@ -1105,6 +1107,7 @@ void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
         case PseudoNoButton:
     */
     case PseudoNot:
+    case PseudoNesting:
     case PseudoNthChild:
     case PseudoNthLastChild:
     case PseudoNthLastOfType:
@@ -1129,6 +1132,12 @@ void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
         case PseudoStart:
     */
     case PseudoTarget:
+    case PseudoTargetCurrent:
+    // CSS Overflow 5: :target-current marks the ::scroll-marker whose
+    // target is the currently active slide. The engine does not generate
+    // marker boxes yet, so nothing can match it; accepting it here keeps
+    // `::scroll-marker:target-current` rules from invalidating their
+    // selector.
     case PseudoTargetWithin:
     case PseudoNone:
     // case PseudoUnresolved:
@@ -1294,6 +1303,9 @@ bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src) const
 
     case EmptyCellsValueKind:
         return m_value.m_emptyCells == src.m_value.m_emptyCells;
+
+    case ScrollMarkerGroupValueKind:
+        return m_value.m_scrollMarkerGroup == src.m_value.m_scrollMarkerGroup;
 
     case OverflowValueKind:
         return m_value.m_overflow == src.m_value.m_overflow;
@@ -2511,6 +2523,18 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("show");
         case HideEmptyCellsValue:
             return String::fromUTF8("hide");
+        default:
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+        break;
+    case CSSStyleValuePair::ValueKind::ScrollMarkerGroupValueKind:
+        switch (scrollMarkerGroupValue()) {
+        case NoneScrollMarkerGroupValue:
+            return String::fromUTF8("none");
+        case BeforeScrollMarkerGroupValue:
+            return String::fromUTF8("before");
+        case AfterScrollMarkerGroupValue:
+            return String::fromUTF8("after");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -4435,6 +4459,34 @@ void StyleResolver::applyProperty(Element* element,
             STARFISH_ASSERT(newCssValue.valueKind() ==
                             CSSStyleValuePair::ValueKind::ResizeValueKind);
             style->setResize(newCssValue.resizeValue());
+        }
+        break;
+    case CSSStyleValuePair::KeyKind::ScrollMarkerGroup:
+        switch (newCssValue.valueKind()) {
+        case CSSStyleValuePair::ValueKind::Inherit:
+            // scroll-marker-group is not inherited, so inherit resolves to
+            // the initial value.
+            style->setScrollMarkerGroup(
+                ScrollMarkerGroupValue::NoneScrollMarkerGroupValue);
+            break;
+        case CSSStyleValuePair::ValueKind::Initial:
+        case CSSStyleValuePair::ValueKind::Unset:
+            style->setScrollMarkerGroup(
+                ScrollMarkerGroupValue::NoneScrollMarkerGroupValue);
+            break;
+        case CSSStyleValuePair::ValueKind::KeywordValueKind:
+            // 'revert' support is scoped to round-tripping the CSS-wide
+            // keyword through declarations; in the author origin it resolves
+            // to the initial value.
+            STARFISH_ASSERT(newCssValue.keywordValue()->equals("revert"));
+            style->setScrollMarkerGroup(
+                ScrollMarkerGroupValue::NoneScrollMarkerGroupValue);
+            break;
+        default:
+            STARFISH_ASSERT(
+                newCssValue.valueKind() ==
+                CSSStyleValuePair::ValueKind::ScrollMarkerGroupValueKind);
+            style->setScrollMarkerGroup(newCssValue.scrollMarkerGroupValue());
         }
         break;
     case CSSStyleValuePair::KeyKind::TextShadow: {
@@ -8386,6 +8438,14 @@ void StyleResolver::addMatchedRuleForPseudoElement(
         ret->m_seenPseudoElementAfter |=
             rule->styleDeclaration()->hasCSSValuePair(
                 CSSStyleValuePair::KeyKind::Content);
+    } else if (rulePseudoType ==
+               PseudoElementType::PseudoElementScrollMarkerGroup) {
+        // The marker group and the markers are UA-generated, so unlike
+        // ::before/::after no content declaration is required to mark them
+        // seen.
+        ret->m_seenPseudoElementScrollMarkerGroup = true;
+    } else if (rulePseudoType == PseudoElementType::PseudoElementScrollMarker) {
+        ret->m_seenPseudoElementScrollMarker = true;
     }
 }
 
@@ -9305,6 +9365,12 @@ bool StyleResolver::checkPseudoClass(Element* element,
                                    : element->document()->documentElement();
         return element == scope;
     }
+    case CSSSelector::PseudoType::PseudoNesting:
+        // CSS Nesting desugars & into the parent rule's selector at parse
+        // time (combineNestedSelectorBranch()), so & never reaches matching
+        // -- except inside :is()/:not() arguments, which are not desugared
+        // yet; such a branch never matches.
+        return false;
     case CSSSelector::PseudoType::PseudoFirstChild:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
@@ -9571,6 +9637,14 @@ bool StyleResolver::checkPseudoElement(Element* element,
         return true;
     case CSSSelector::PseudoType::PseudoAfter:
         result.pseudoType = PseudoElementType::PseudoElementAfter;
+        return true;
+    // CSS Overflow 5: the carousel pseudo-elements. Double-colon only
+    // (::updatePseudoType rejects the single-colon spellings above).
+    case CSSSelector::PseudoType::PseudoScrollMarkerGroup:
+        result.pseudoType = PseudoElementType::PseudoElementScrollMarkerGroup;
+        return true;
+    case CSSSelector::PseudoType::PseudoScrollMarker:
+        result.pseudoType = PseudoElementType::PseudoElementScrollMarker;
         return true;
     case CSSSelector::PseudoType::PseudoSlotted: {
         // ::slotted() matches the element itself (not a generated box, so
@@ -16726,6 +16800,46 @@ bool CSSStyleValuePair::updateValueEmptyCells(Document* document,
         m_value.m_emptyCells = EmptyCellsValue::HideEmptyCellsValue;
     } else {
         return false;
+    }
+    return true;
+}
+
+// CSS Overflow 5: none | before | after. The editor's draft adds the
+// tentative "tabs" switch (`after tabs`), which opts the generated group
+// into the carousel tab semantics; it is accepted here and stored as the
+// plain before/after value until the tab semantics land.
+bool CSSStyleValuePair::updateValueScrollMarkerGroup(
+    Document* document, const CSSTokenVector& tokens)
+{
+    if (tokens.size() == 0 || tokens.size() > 2) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::ScrollMarkerGroupValueKind;
+    if (value.equals("none")) {
+        if (tokens.size() == 2) {
+            return false;
+        }
+        m_value.m_scrollMarkerGroup =
+            ScrollMarkerGroupValue::NoneScrollMarkerGroupValue;
+    } else if (value.equals("before")) {
+        m_value.m_scrollMarkerGroup =
+            ScrollMarkerGroupValue::BeforeScrollMarkerGroupValue;
+    } else if (value.equals("after")) {
+        m_value.m_scrollMarkerGroup =
+            ScrollMarkerGroupValue::AfterScrollMarkerGroupValue;
+    } else if (value.equals("revert") && tokens.size() == 1) {
+        // Round-trip the CSS-wide keyword as a keyword value; applyProperty
+        // resolves it to the initial value.
+        setKeywordValue(String::fromUTF8("revert"));
+    } else {
+        return false;
+    }
+    if (tokens.size() == 2) {
+        if (!tokens[1].equals("tabs")) {
+            return false;
+        }
     }
     return true;
 }

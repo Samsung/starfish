@@ -1735,6 +1735,7 @@ section are supported.
 | [Line height](https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#line-height) | line-height | normal &#124; &lt;number&gt; &#124; &lt;length&gt; &#124; &lt;percentage&gt; | Sets the line height. | |
 | | vertical-align | baseline &#124; sub &#124; super &#124; top &#124; text-top &#124; middle &#124; bottom &#124; text-bottom &#124; &lt;length&gt; &#124; &lt;percentage&gt; | Sets the vertical alignment of an element. | |
 | [Overflow](https://www.w3.org/TR/2011/REC-CSS2-20110607/visufx.html#overflow) | overflow | visible &#124; hidden &#124; auto &#124; scroll | Specifies what happens if content overflows an element's box. | |
+| [Scroll markers](https://drafts.csswg.org/css-overflow-5/#scroll-marker-group-property) | scroll-marker-group | none &#124; before &#124; after | Names the element's scroll-marker group position. Parsing and `getComputedStyle` round-trip only; `::scroll-marker-group`/`::scroll-marker` boxes, the implicit `tablist`/`tab`/`tabpanel` roles, and scroll tracking are not implemented yet. The newer `after tabs` syntax (tentative tests) is not accepted. | |
 | [Visibility](https://www.w3.org/TR/2011/REC-CSS2-20110607/visufx.html#visibility) | visibility | visible &#124; hidden &#124; collapse | Specifies whether or not an element should be visible | |
 | [Content visibility](https://drafts.csswg.org/css-contain-2/#content-visibility) | content-visibility | visible &#124; auto &#124; hidden | Controls whether the contents of an element are rendered. | See the containment runtime caveats below. |
 | [Generated content](https://www.w3.org/TR/2011/REC-CSS2-20110607/generate.html#content) | content | normal &#124; none &#124; [ &lt;string&gt; &#124; counter(&lt;name&gt; [, &lt;style&gt;]) &#124; counters(&lt;name&gt;, &lt;sep&gt; [, &lt;style&gt;]) &#124; attr(&lt;identifier&gt;) &#124; url(...) &#124; open-quote &#124; close-quote &#124; no-open-quote &#124; no-close-quote ]+ | Used with `::before`/`::after` to generate content. **Both `counter()` and `counters()` are parsed**; quote tokens (`open-quote`/`close-quote`/`no-open-quote`/`no-close-quote`) parse but are typically rendered as no-op since the engine has no built-in quote-pair table for `quotes` property (which itself is unsupported). The `<image>` form is `url()` only — `image-set()`, gradients, `linear-gradient()` as content are NOT parsed. | |
@@ -2748,7 +2749,7 @@ The pseudo-class enum lives in `src/StaticStrings.h:244-308`; the matcher is `St
 |--------|--------|
 | `:hover`, `:active`, `:focus`, `:target`, `:link`, `:checked`, `:disabled`, `:enabled`, `:placeholder-shown`, `:root`, `:empty`, `:first-child`, `:last-child`, `:only-child`, `:nth-child(...)`, `:nth-last-child(...)`, `:first-of-type`, `:last-of-type`, `:only-of-type`, `:nth-of-type(...)`, `:nth-last-of-type(...)`, `:scope`, `:lang(...)`, `:dir(ltr|rtl)`, `:defined`, `:host`, `:host(...)`, `:fullscreen` | Implemented. |
 | `:not(...)`, `:is(...)`, `:where(...)` | Implemented over a full complex-selector-list. `:not()` matches when no branch matches and is non-forgiving (an invalid branch drops the whole rule); `:is()`/`:where()` match when any branch does and are forgiving. |
-| **Parses but never matches** (silent — always returns `false`; entry exists in the `STARFISH_ENUM_PSEUDO_SELECTORS` list at `src/StaticStrings.h:244` but no `case` in `checkPseudoClass`) | `:focus-visible`, `:focus-within`, `:required`, `:optional`, `:valid`, `:invalid`, `:in-range`, `:out-of-range`, `:read-only`, `:read-write`, `:default`, `:indeterminate`, `:any-link`, `:local-link`, `:visited`, `:target-within`, `:blank`, `:current`, `:drop`, `:future`, `:past`, `:paused`, `:playing`, `:user-invalid`. |
+| **Parses but never matches** (silent — always returns `false`; entry exists in the `STARFISH_ENUM_PSEUDO_SELECTORS` list at `src/StaticStrings.h:244` but no `case` in `checkPseudoClass`) | `:focus-visible`, `:focus-within`, `:required`, `:optional`, `:valid`, `:invalid`, `:in-range`, `:out-of-range`, `:read-only`, `:read-write`, `:default`, `:indeterminate`, `:any-link`, `:local-link`, `:visited`, `:target-current`, `:target-within`, `:blank`, `:current`, `:drop`, `:future`, `:past`, `:paused`, `:playing`, `:user-invalid`. |
 | **Hard `SyntaxError`** (entire selector dropped at parse) | `:has(...)`, `:popover-open`, `:modal`, `:nth-child(An+B of <selector>)`. Forgiving-selector-list rules don't apply — these break the whole stylesheet rule. |
 | `:scope` | Matches `documentElement` even outside `querySelector(...)` calling context (non-spec). |
 
@@ -3108,17 +3109,22 @@ The following font-related CSS properties are **not in the parser trie** at all 
 
 ### CSS Nesting (`&` selector) — runtime caveats
 
-**Entirely unsupported.** No `&` selector handler in `CSSParser::getSimpleSelector` (falls into `m_failedParsing = true`). No nested-rule entry in `parseStyleRule`. No `@nest` at-rule branch. `CSSStyleRule.cssRules` getter doesn't exist.
+Supported since the CSS Nesting Level 1 desugaring: nested style rules are
+flattened into plain selectors at parse time (`CSSParser::parseNestedStyleRule`
++ `combineNestedSelectorBranch`). The `&` selector, the implicit `&` (a bare
+`.child` rule), merged compounds (`&.primary`, `&:hover`), descendant/child/
+sibling combinators after `&`, and multi-level nesting all desugar; nested
+rules cascade before their parent rule per the spec.
 
 | Form | Status |
 |------|--------|
-| `.parent { & .child { … } }` (Level 1 with `&`) | **Inner rule silently dropped.** Outer declarations *before* the inner block survive; outer declarations after may be lost. |
-| `.parent { .child { … } }` (relaxed form, no `&`) | **🔥 Dangerous: can wipe the entire parent rule's body** — `.a { .b { color: red } }` ends up with an empty body for `.a` (CSSOM `cssText === ""`). Looks like "CSS just didn't load." |
-| `.btn { &:hover { … } }`, `.btn { &.primary { … } }`, `.foo { & + & { … } }` | All silently dropped. |
-| `.box { & @media (min-width:100px) { … } }` (nested `@media`) | Inner block rejected; nested at-rule not recognized. |
-| `@nest .child & { … }` (legacy form) | `@nest` treated as unknown at-rule, swallowed (and may swallow following rules). |
-| Multi-level nesting (`.a { .b { .c { … } } }`) | Entire outer rule emptied. |
-| **Workaround** | Use a build-time preprocessor (PostCSS-nesting / Sass / Lightning CSS) to flatten nested rules to plain CSS before shipping to LWE. |
+| `.parent { & .child { … } }`, `.parent { .child { … } }` | Supported (desugared to `.parent .child`). |
+| `.btn { &:hover { … } }`, `.btn { &.primary { … } }` | Supported. |
+| Multi-level nesting (`.a { .b { .c { … } } }`) | Supported. |
+| `&` inside `:is()` / `:not()` arguments | Parsed but the branch never matches (the desugar does not reach selector arguments). |
+| `.box { @media (min-width:100px) { … } }` (nested `@media` with bare declarations) | Parsed, but the conditional's declarations do not apply yet (host-nesting-002 reftest). |
+| `@nest .child & { … }` (legacy form) | `@nest` treated as unknown at-rule, swallowed. |
+| `CSSStyleRule.cssRules` (nested-rule CSSOM) | Not implemented: nested rules are flattened into top-level rules, so the parent's `cssRules` is empty. |
 
 ### UI properties — runtime caveats
 

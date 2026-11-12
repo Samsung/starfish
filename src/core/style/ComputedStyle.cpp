@@ -2377,6 +2377,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
+    if (newStyle->scrollMarkerGroup() != oldStyle->scrollMarkerGroup()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::ScrollMarkerGroup] = true;
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+    }
+
     float newOpacity = newStyle->opacity();
     float oldOpacity = oldStyle->opacity();
 

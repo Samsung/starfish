@@ -210,7 +210,9 @@ public:
         WillChange,
         PendingColors,
 
-        MixBlendMode
+        MixBlendMode,
+
+        ScrollMarkerGroup
     };
 
     union RareComputedStyleValue {
@@ -262,6 +264,7 @@ public:
         PendingColorList* m_pendingColors;
         MutablePropertyValueList* m_mutablePropertyValueList;
         BlendMode m_blendMode;
+        ScrollMarkerGroupValue m_scrollMarkerGroup;
 
         RareComputedStyleValue()
             : m_int32Value(0)
@@ -426,6 +429,11 @@ public:
 
         RareComputedStyleValue(ResizeValue v)
             : m_resize(v)
+        {
+        }
+
+        RareComputedStyleValue(ScrollMarkerGroupValue v)
+            : m_scrollMarkerGroup(v)
         {
         }
 
@@ -669,6 +677,8 @@ public:
     GETTER_VALUE(Length, length, rowGap, RowGap, 0);
     GETTER_VALUE(BlendMode, blendMode, mixBlendMode, MixBlendMode,
                  BlendMode::Normal);
+    GETTER_VALUE(ScrollMarkerGroupValue, scrollMarkerGroup, scrollMarkerGroup,
+                 ScrollMarkerGroup, NoneScrollMarkerGroupValue);
 #undef GETTER_VALUE
 
 #define GETTER_PTR(RETURN_TYPE, VALUE_NAME, name, Name) \
@@ -970,6 +980,8 @@ class ComputedStyle : public gc {
         m_seenPseudoElementFirstLetter = false;
         m_seenPseudoElementBefore = false;
         m_seenPseudoElementAfter = false;
+        m_seenPseudoElementScrollMarkerGroup = false;
+        m_seenPseudoElementScrollMarker = false;
         m_gotInheritedColor = false;
         m_explicitlyInheritedKeys = 0;
         m_originalDisplay = DisplayValue::InlineDisplayValue;
@@ -994,6 +1006,8 @@ public:
         m_seenPseudoElementFirstLetter = false;
         m_seenPseudoElementBefore = false;
         m_seenPseudoElementAfter = false;
+        m_seenPseudoElementScrollMarkerGroup = false;
+        m_seenPseudoElementScrollMarker = false;
         m_gotInheritedColor = false;
         m_explicitlyInheritedKeys = 0;
 
@@ -1802,6 +1816,27 @@ public:
     void setResize(ResizeValue v)
     {
         *m_rareComputedStyleData.ensureResize() = v;
+    }
+
+    // CSS Overflow 5: scroll-marker-group is not inherited.
+    ScrollMarkerGroupValue scrollMarkerGroup()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return ScrollMarkerGroupValue::NoneScrollMarkerGroupValue;
+        }
+
+        Optional<ScrollMarkerGroupValue> v =
+            rareComputedStyleData()->scrollMarkerGroup();
+        if (v.hasValue()) {
+            return v.getValue();
+        }
+
+        return ScrollMarkerGroupValue::NoneScrollMarkerGroupValue;
+    }
+
+    void setScrollMarkerGroup(ScrollMarkerGroupValue v)
+    {
+        *m_rareComputedStyleData.ensureScrollMarkerGroup() = v;
     }
 
     DirectionValue direction()
@@ -4908,6 +4943,11 @@ public:
         } else if (pseudoId ==
                    PseudoElementType::PseudoElementFirstLineInherited) {
             return seenPseudoElementFirstLine();
+        } else if (pseudoId ==
+                   PseudoElementType::PseudoElementScrollMarkerGroup) {
+            return seenPseudoElementScrollMarkerGroup();
+        } else if (pseudoId == PseudoElementType::PseudoElementScrollMarker) {
+            return seenPseudoElementScrollMarker();
         } else {
             STARFISH_ASSERT_NOT_REACHED();
             return false;
@@ -5329,6 +5369,16 @@ public:
         return m_seenPseudoElementAfter;
     }
 
+    bool seenPseudoElementScrollMarkerGroup() const
+    {
+        return m_seenPseudoElementScrollMarkerGroup;
+    }
+
+    bool seenPseudoElementScrollMarker() const
+    {
+        return m_seenPseudoElementScrollMarker;
+    }
+
     UserSelectValue userSelect()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
@@ -5578,6 +5628,8 @@ protected:
     bool m_seenPseudoElementFirstLetter : 1;
     bool m_seenPseudoElementBefore : 1;
     bool m_seenPseudoElementAfter : 1;
+    bool m_seenPseudoElementScrollMarkerGroup : 1;
+    bool m_seenPseudoElementScrollMarker : 1;
     bool m_gotInheritedColor : 1;
     // The style this one inherits from belongs to a `display: contents`
     // element, i.e. our owner's boxes attach to a further ancestor's frame.
@@ -5605,7 +5657,7 @@ protected:
     AlignItemValue m_justifyItems : 3;
     bool m_justifySelfSpecifiedByUser : 1;
     AlignItemValue m_justifySelf : 3;
-    PseudoElementType m_pseudoId : 3;
+    PseudoElementType m_pseudoId : 4;
     StyleResolver::StyleDamageSource m_styleDamageSource : 6;
     int m_styleDamageSourceNodeStateMap : 5;
     int m_styleDamageSourceNodeStateDOMTreeMap : 5;

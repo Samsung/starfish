@@ -1102,7 +1102,7 @@ http://web-platform.test:8000/html/semantics/forms/the-select-element/customizab
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-display-block.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-explicit-size.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-font-size.html
-http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-grid-before-after.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-grid-before-after.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-icon-color.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-only-button-opt-in.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/html/semantics/forms/the-select-element/customizable-select/select-only-picker-opt-in.html

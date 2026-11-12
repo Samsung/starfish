@@ -47,9 +47,9 @@ http://web-platform.test:8000/css/css-overflow/overflow-replaced-element-001.htm
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/scroll-buttons-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/scroll-markers-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/scroll-markers-computed.tentative.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-overflow/parsing/scroll-markers-invalid.html
+http://web-platform.test:8000/css/css-overflow/parsing/scroll-markers-invalid.html
 http://web-platform.test:8000/css/css-overflow/parsing/scroll-markers-invalid.tentative.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/scroll-markers-valid.html
+http://web-platform.test:8000/css/css-overflow/parsing/scroll-markers-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/scroll-target-group-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-overflow/parsing/scroll-target-group-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/scroll-target-group-valid.html

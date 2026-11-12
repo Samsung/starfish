@@ -1198,6 +1198,7 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
         // grid-template-areas
         // margin-inline-start
         // padding-block-start
+        // scroll-marker-group
         switch (data[0]) {
         case 'a':
 #if defined(STARFISH_ENABLE_ANIMATION)
@@ -1208,6 +1209,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyle(const char* data,
                 return CSSStyleValuePair::KeyKind::AnimationFillMode;
             }
 #endif
+            break;
+        case 's':
+            if (memcmp(data, "scroll-marker-group", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::ScrollMarkerGroup;
+            }
             break;
         case 'b':
             if (memcmp(data, "background-repeat-x", 19) == 0) {
@@ -2583,6 +2589,11 @@ CSSStyleValuePair::KeyKind CSSStyleLookupTrie::lookupCSSStyleCamelCase(
                 return CSSStyleValuePair::KeyKind::FlexDirection;
             }
 #endif
+            break;
+        case 's':
+            if (memcmp(data, "scrollMarkerGroup", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::ScrollMarkerGroup;
+            }
             break;
         case 'b':
             if (memcmp(data, "backgroundPositionX", 19) == 0) {

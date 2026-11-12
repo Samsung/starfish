@@ -888,6 +888,15 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
         for (int i = PseudoElementType::PseudoElementGeneralTypeStart;
              i <= PseudoElementType::PseudoElementGeneralTypeEnd; i++) {
             PseudoElementType type = (PseudoElementType)i;
+            // FirstLineInherited is the derived ::first-line style Frame hands
+            // to inline descendants, not an author pseudo element. Its seen
+            // state aliases ::first-line's, but no rule can match its own
+            // pseudo type, so resolving it here caches a style whose
+            // pseudoType is still None and trips addCachedPseudoStyle's
+            // assertion. ::first-line itself is swept by its own type.
+            if (type == PseudoElementType::PseudoElementFirstLineInherited) {
+                continue;
+            }
             bool o = oldStyle ? oldStyle->seenPseudoElement(type) : false;
             bool n = newStyle->seenPseudoElement(type);
 

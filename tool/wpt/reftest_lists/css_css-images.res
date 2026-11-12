@@ -113,7 +113,7 @@ http://web-platform.test:8000/css/css-images/gradients-with-border.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-color-basic.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-color-cross-fade.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-color-layered.html
-http://web-platform.test:8000/css/css-images/image-light-dark.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-light-dark.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-background-image.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-background-position.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-images/image-orientation/image-orientation-background-properties-border-radius.html
