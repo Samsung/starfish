@@ -316,6 +316,17 @@ public:
 
     CalcValueType calcValueType() const;
 
+    // css-values-4 "Simplification": min()/max() whose arguments are all
+    // comparable absolute values (numbers, absolute lengths, angles, times)
+    // fold to the compared value at parse time; percentages keep min()/max().
+    // Returns true when this data became a plain calc().
+    bool foldComparableArguments();
+
+    // Called after every term resolved to px: min()/max() whose arguments
+    // are all px lengths fold to the compared value. Returns true when this
+    // data became a plain calc().
+    bool foldResolvedComparison();
+
     float numberValue() const;
 
     LayoutUnit specifiedValue(const LayoutUnit& parentContentLength,

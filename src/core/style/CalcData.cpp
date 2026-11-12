@@ -434,6 +434,175 @@ CalcData::CalcData(const std::string& type)
     }
 }
 
+namespace {
+
+    // Canonical scalar kinds for min()/max() comparison: arguments are
+    // comparable at parse time only when they share one kind
+    // (css-values-4 "Simplification").
+    enum class ScalarKind {
+        kNumber,
+        kPx,
+        kDeg,
+        kS,
+    };
+
+    bool canonicalScalar(const CalcValue& value, ScalarKind& kind, float& out)
+    {
+        if (value.type().isNumber()) {
+            kind = ScalarKind::kNumber;
+            out = value.numberValue();
+            return true;
+        }
+        if (value.type().isPercentage()) {
+            // Percentages resolve against the property's base, so they are
+            // not comparable at parse time.
+            return false;
+        }
+        if (value.type().isLength()) {
+            CSSLength length = value.lengthValue();
+            float pixels;
+            switch (length.kind()) {
+            case CSSLength::INCH:
+                pixels = length.value() * 96;
+                break;
+            case CSSLength::CM:
+                pixels = length.value() * 96 / 2.54f;
+                break;
+            case CSSLength::MM:
+                pixels = length.value() * 96 / 25.4f;
+                break;
+            case CSSLength::PT:
+                pixels = length.value() * 96 / 72.f;
+                break;
+            case CSSLength::PC:
+                pixels = length.value() * 16;
+                break;
+            case CSSLength::PX:
+                pixels = length.value();
+                break;
+            default:
+                return false; // relative units are not comparable yet
+            }
+            kind = ScalarKind::kPx;
+            out = pixels;
+            return true;
+        }
+        if (value.type().isAngle()) {
+            kind = ScalarKind::kDeg;
+            out = value.angleValue().toDegreeValue();
+            return true;
+        }
+        if (value.type().isTime()) {
+            kind = ScalarKind::kS;
+            out = value.timeValue().toTimeValue() / 1000.0f;
+            return true;
+        }
+        return false;
+    }
+
+} // namespace
+
+bool CalcData::foldComparableArguments()
+{
+    if (m_type != Type::kMin && m_type != Type::kMax) {
+        return false;
+    }
+
+    // A single-argument min()/max() is equivalent to calc() of that
+    // argument whatever its type is (css-values-4 #comp-func).
+    if (m_argumentsStartPostion.size() == 1 && m_terms.size() >= 1) {
+        m_type = Type::kCalc;
+        return true;
+    }
+
+    // One canonical scalar per argument span; every term must be a bare
+    // value of the same kind across all arguments.
+    std::vector<float> argumentValues;
+    ScalarKind kind = ScalarKind::kNumber;
+    bool foldable = !m_argumentsStartPostion.empty();
+    size_t spanStart = 0;
+    for (size_t boundary = 1;
+         foldable && boundary < m_argumentsStartPostion.size(); ++boundary) {
+        float sum = 0;
+        for (size_t i = spanStart; i < m_argumentsStartPostion[boundary]; ++i) {
+            CalcTerm* term = m_terms[i];
+            ScalarKind termKind = ScalarKind::kNumber;
+            float value = 0;
+            if (term->values().size() != 1 ||
+                !canonicalScalar(*term->values().begin(), termKind, value)) {
+                foldable = false;
+                break;
+            }
+            if (argumentValues.empty() && i == spanStart) {
+                kind = termKind;
+            } else if (termKind != kind) {
+                foldable = false;
+                break;
+            }
+            sum += value;
+        }
+        argumentValues.push_back(sum);
+        spanStart = m_argumentsStartPostion[boundary];
+    }
+    if (foldable) {
+        float sum = 0;
+        for (size_t i = spanStart; i < m_terms.size(); ++i) {
+            CalcTerm* term = m_terms[i];
+            ScalarKind termKind = ScalarKind::kNumber;
+            float value = 0;
+            if (term->values().size() != 1 ||
+                !canonicalScalar(*term->values().begin(), termKind, value)) {
+                foldable = false;
+                break;
+            }
+            if (argumentValues.empty() && i == spanStart) {
+                kind = termKind;
+            } else if (termKind != kind) {
+                foldable = false;
+                break;
+            }
+            sum += value;
+        }
+        if (foldable) {
+            argumentValues.push_back(sum);
+        }
+    }
+    if (!foldable) {
+        return false;
+    }
+
+    float result = argumentValues[0];
+    for (auto it = argumentValues.begin() + 1; it != argumentValues.end();
+         ++it) {
+        result = m_type == Type::kMin ? std::min(result, *it)
+                                      : std::max(result, *it);
+    }
+    if (!m_isPositive) {
+        result = -result;
+        m_isPositive = true;
+    }
+
+    CalcTerm* term = new CalcTerm();
+    switch (kind) {
+    case ScalarKind::kPx:
+        term->appendValue(CalcValue(CSSLength(CSSLength::PX, result)));
+        break;
+    case ScalarKind::kDeg:
+        term->appendValue(CalcValue(CSSAngle(CSSAngle::DEG, result)));
+        break;
+    case ScalarKind::kS:
+        term->appendValue(CalcValue(CSSTime(CSSTime::S, result)));
+        break;
+    default:
+        term->appendValue(CalcValue(result, false));
+        break;
+    }
+    m_terms.clear();
+    m_terms.push_back(term);
+    m_type = Type::kCalc;
+    return true;
+}
+
 CalcValueType CalcData::calcValueType() const
 {
     auto it = m_terms.begin();
@@ -460,6 +629,69 @@ CalcValueType CalcData::calcValueType() const
     return lType;
 }
 
+bool CalcData::foldResolvedComparison()
+{
+    if (m_type != Type::kMin && m_type != Type::kMax) {
+        return false;
+    }
+
+    // All terms are resolved to px here; arguments compare numerically.
+    std::vector<float> argumentValues;
+    bool foldable = !m_argumentsStartPostion.empty();
+    size_t spanStart = 0;
+    for (size_t boundary = 1;
+         foldable && boundary < m_argumentsStartPostion.size(); ++boundary) {
+        float sum = 0;
+        for (size_t i = spanStart; i < m_argumentsStartPostion[boundary]; ++i) {
+            GCVector<CalcValue>& values = m_terms[i]->values();
+            if (values.size() != 1 || !values.begin()->type().isLength() ||
+                values.begin()->lengthValue().kind() != CSSLength::PX) {
+                foldable = false;
+                break;
+            }
+            sum += values.begin()->lengthValue().value();
+        }
+        argumentValues.push_back(sum);
+        spanStart = m_argumentsStartPostion[boundary];
+    }
+    if (foldable) {
+        float sum = 0;
+        for (size_t i = spanStart; i < m_terms.size(); ++i) {
+            GCVector<CalcValue>& values = m_terms[i]->values();
+            if (values.size() != 1 || !values.begin()->type().isLength() ||
+                values.begin()->lengthValue().kind() != CSSLength::PX) {
+                foldable = false;
+                break;
+            }
+            sum += values.begin()->lengthValue().value();
+        }
+        if (foldable) {
+            argumentValues.push_back(sum);
+        }
+    }
+    if (!foldable) {
+        return false;
+    }
+
+    float result = argumentValues[0];
+    for (auto it = argumentValues.begin() + 1; it != argumentValues.end();
+         ++it) {
+        result = m_type == Type::kMin ? std::min(result, *it)
+                                      : std::max(result, *it);
+    }
+    if (!m_isPositive) {
+        result = -result;
+        m_isPositive = true;
+    }
+
+    CalcTerm* term = new CalcTerm();
+    term->appendValue(CalcValue(CSSLength(CSSLength::PX, result)));
+    m_terms.clear();
+    m_terms.push_back(term);
+    m_type = Type::kCalc;
+    return true;
+}
+
 float CalcData::numberValue() const
 {
     auto it = m_terms.begin();
@@ -478,26 +710,32 @@ float CalcData::numberValue() const
 LayoutUnit CalcData::specifiedValue(const LayoutUnit& parentContentLength,
                                     Node* n) const
 {
-    if (m_type == Type::kMax) {
-        STARFISH_ASSERT(m_argumentsStartPostion.size() == 2);
-        LayoutUnit frist, second;
-        for (size_t i = 0; i < m_argumentsStartPostion[1]; i++) {
-            frist += m_terms[i]->specifiedValue(parentContentLength, n);
+    if (m_type == Type::kMax || m_type == Type::kMin) {
+        // min()/max() accept two or more comma-separated arguments
+        // (css-values-4 #comp-func); fold each argument span, then compare.
+        std::vector<LayoutUnit> argumentValues;
+        size_t spanStart = 0;
+        for (size_t boundary = 1; boundary < m_argumentsStartPostion.size();
+             ++boundary) {
+            LayoutUnit sum = 0;
+            for (size_t i = spanStart; i < m_argumentsStartPostion[boundary];
+                 ++i) {
+                sum += m_terms[i]->specifiedValue(parentContentLength, n);
+            }
+            argumentValues.push_back(sum);
+            spanStart = m_argumentsStartPostion[boundary];
         }
-        for (size_t i = m_argumentsStartPostion[1]; i < m_terms.size(); i++) {
-            second += m_terms[i]->specifiedValue(parentContentLength, n);
+        LayoutUnit sum = 0;
+        for (size_t i = spanStart; i < m_terms.size(); ++i) {
+            sum += m_terms[i]->specifiedValue(parentContentLength, n);
         }
-        return std::max(frist.toInt(), second.toInt());
-    } else if (m_type == Type::kMin) {
-        STARFISH_ASSERT(m_argumentsStartPostion.size() == 2);
-        LayoutUnit frist, second;
-        for (size_t i = 0; i < m_argumentsStartPostion[1]; i++) {
-            frist += m_terms[i]->specifiedValue(parentContentLength, n);
+        argumentValues.push_back(sum);
+
+        if (m_type == Type::kMin) {
+            return *std::min_element(argumentValues.begin(),
+                                     argumentValues.end());
         }
-        for (size_t i = m_argumentsStartPostion[1]; i < m_terms.size(); i++) {
-            second += m_terms[i]->specifiedValue(parentContentLength, n);
-        }
-        return std::min(frist.toInt(), second.toInt());
+        return *std::max_element(argumentValues.begin(), argumentValues.end());
     } else if (m_type == Type::kClamp) {
         STARFISH_ASSERT(m_argumentsStartPostion.size() == 3);
         LayoutUnit frist, second, third;
@@ -821,6 +1059,11 @@ String* CalcData::toString()
     for (size_t argIndex = 0; argIndex < starts.size(); ++argIndex) {
         size_t spanEnd = (argIndex + 1 < starts.size()) ? starts[argIndex + 1]
                                                         : canonical.size();
+        // A folded min()/max() keeps its argument boundaries while its
+        // terms reduce to one; spans cannot exceed the remaining terms.
+        if (spanEnd > canonical.size()) {
+            spanEnd = canonical.size();
+        }
         if (spanEnd <= termIndex) {
             continue;
         }
