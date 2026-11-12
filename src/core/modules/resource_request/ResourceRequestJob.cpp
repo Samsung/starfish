@@ -24,7 +24,6 @@
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptEngineInstance.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/dom/WebOrigin.h"
 #include "core/fileapi/Blob.h"
 #include "platform/file/PlatformFile.h"
 #include "core/modules/resource_request/ResourceRequest.h"
@@ -269,11 +268,9 @@ void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
                                                String* filePath)
 {
-    // Navigate is also used by web content, so it grants no file access.
-    if (!request->executionContext()->webOrigin()->canAccessLocalFiles()) {
-        auto s = request->url()->urlString()->toUTF8NonGCString();
-        STARFISH_LOG_WARN("blocked file access from non-file context: %s",
-                          s.data());
+    // Navigate grants no file access. Check in the dispatched job so
+    // asynchronous requests keep asynchronous error notification.
+    if (!request->executionContext()->allowLocalFileAccess(request->url())) {
         request->m_responseData->m_status = 0;
         request->handleError(ProgressState::InError,
                              RequestErrorType::FileError);

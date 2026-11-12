@@ -85,6 +85,7 @@ def internal_test():
     run_test(["basic", "tool/reftest/cairo/internal_manual.res", "common", "--font-dep", "-p8"])
     run_test(["csswg", "tool/pixel_test/svg.res", "cairo", "-p8"])
     run_test(["basic", "tool/reftest/cairo/internal_obsolete.res", "common", "-p8"])
+    _internal_file_origin_test()
     # Tests whose documents load as file:// but fetch subresources over http.
     # ROOT is the resource-only directory so test documents are not exposed via http.
     from http_server import popen_server
@@ -93,6 +94,18 @@ def internal_test():
         run_test(["basic",
                   "tool/reftest/cairo/internal_with_remote_resource.res",
                   "common", "-p8"])
+
+
+def _internal_file_origin_test():
+    # Share URLs and fixtures with product validation, but use the existing
+    # assertion driver and its native testEnd() verdict in internal_test.
+    from product_security_test import cases, server
+    with server() as base:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".res") as manifest:
+            for _, url, _, _ in cases(base):
+                manifest.write(url + "\n")
+            manifest.flush()
+            run_test(["basic", manifest.name, "common", "-p8"])
 
 
 # Khronos WebGL conformance suites (khronos_test) -- see docs/khronos_webgl.md.

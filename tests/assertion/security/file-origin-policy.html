@@ -41,16 +41,19 @@
     });
   } else if (config.action === 'xhr') {
     var xhr = new XMLHttpRequest();
+    var sent = false;
     xhr.open('GET', config.readable);
     xhr.onload = function () {
-      finish(config.allowed &&
+      finish(sent && config.allowed &&
              xhr.responseText.trim() === 'starfish-file-origin-fixture',
              'XHR must follow the initiator origin');
     };
     xhr.onerror = function () {
-      finish(!config.allowed, 'non-file XHR must reject local files');
+      finish(sent && !config.allowed,
+             'non-file XHR must reject local files asynchronously');
     };
     xhr.send();
+    sent = true;
   } else if (config.action === 'frame') {
     var loaded = false;
     addEventListener('message', function (event) {

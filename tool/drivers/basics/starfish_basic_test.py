@@ -102,7 +102,8 @@ def open_subprocess(command, timeout=None):
 def case_runner(tc):
     tc_idx, tc_file = tc
     # Assure TC exist
-    if not (tc_file.startswith("http") or os.path.isfile(tc_file)):
+    if not (tc_file.startswith(("http", "file:", "data:")) or
+            os.path.isfile(tc_file)):
         print("ERROR : TC file does not exist - " + tc_file)
         return __opts.tc_handler(tc_file, "FAIL", "", __opts.show_progress)
 

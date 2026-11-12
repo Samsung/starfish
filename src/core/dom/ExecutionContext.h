@@ -89,6 +89,8 @@ public:
     Starfish* starfish() const;
     WebBase* webBase() const;
 
+    bool allowLocalFileAccess(ResourceURL* url);
+
     ResourceURL* documentURI() const
     {
         return m_documentURI;

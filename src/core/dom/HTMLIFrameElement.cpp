@@ -20,7 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
-#include "core/dom/WebOrigin.h"
+#include "core/dom/ExecutionContext.h"
 #include "browser/history/HistoryManager.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/Event.h"
@@ -319,7 +319,8 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
 {
     // Check the initiator before creating a document with the target's
     // origin; otherwise a file: target would authorize its own load.
-    if (url->isFileURL() && !document()->webOrigin()->canAccessLocalFiles()) {
+    if (url->isFileURL() &&
+        !document()->executionContext()->allowLocalFileAccess(url)) {
         url = ResourceURL::aboutBlankURL();
     }
     // An SVG document used as an image runs no script and loads nothing

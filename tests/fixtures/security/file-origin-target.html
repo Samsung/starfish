@@ -4,4 +4,9 @@
 <script>
 console.log('FILE_ORIGIN_TARGET_LOADED');
 parent.postMessage('file-origin-target-loaded', '*');
+if (parent === window && typeof testEnd === 'function') {
+  var allowed = new URLSearchParams(location.search).get('allowed') === 'true';
+  console.assert(allowed, 'unexpected top-level local file navigation');
+  testEnd();
+}
 </script>

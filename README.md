@@ -693,9 +693,10 @@ xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/product_security_tes
 Use `--webgl off` for a product without WebGL. The runner checks ordinary
 fetch/XHR, iframe/srcdoc, Location, anchor/form, redirect, and WebGL calls
 using harmless checked-in local fixtures and a loopback HTTP server.
-It rejects native test bindings by default. `--allow-test-hooks` lets CI
-also exercise these regressions with its existing Debug test build; that
-run does not verify the absence of product test hooks.
+The runner requires native test bindings to be absent. CI executes the same
+file-origin cases through the existing assertion driver in `internal_test`;
+the WebGL page is also in that suite's active list. The external runner is
+for product-build validation.
 
 ### Khronos WebGL Conformance Tests
 

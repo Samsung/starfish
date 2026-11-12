@@ -202,10 +202,6 @@ jobs:
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a ./tool/runner/test_runner.py internal_test || exit 1
 
-      - name: Run file-origin and WebGL security regressions
-        run: |
-          xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/product_security_test.py --browser out/debug/bin/lightweight-web-engine --allow-test-hooks
-
       # Web Audio output through an isolated PulseAudio null sink; no audio
       # hardware is used. The test skips itself when pulseaudio, pactl or
       # parec is not installed in the image. FFmpeg-only Web Audio checks

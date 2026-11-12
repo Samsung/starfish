@@ -86,12 +86,12 @@ def cases(base):
 
     yield ("local-opaque-child",
            PAGE.as_uri() + "?action=opaque-child", False, False)
-    yield ("native-local-load", TARGET.as_uri(), True, True)
+    yield ("native-local-load", TARGET.as_uri() + "?allowed=true", True, True)
     for action in ("assign", "replace"):
         yield ("local-" + action,
                PAGE.as_uri() + "?" + urlencode({
                    "action": action, "allowed": "true",
-                   "file": TARGET.as_uri(),
+                   "file": TARGET.as_uri() + "?allowed=true",
                }), True, True)
     # A network redirect must not turn an HTTP initiator into a local app.
     yield ("http-file-redirect",
@@ -100,7 +100,7 @@ def cases(base):
                       "file": base + "/redirect-to-file"}), False, False)
 
 
-def run_case(browser, case, timeout, allow_test_hooks):
+def run_case(browser, case, timeout):
     name, url, target_expected, target_allowed = case
     environment = os.environ.copy()
     environment.setdefault("LP_NUM_THREADS", "2")
@@ -134,8 +134,14 @@ def run_case(browser, case, timeout, allow_test_hooks):
             report = reports[0]
             if not report["passed"]:
                 raise AssertionError(json.dumps(report, ensure_ascii=False))
-            if report["testHooks"] and not allow_test_hooks:
+            if report["testHooks"]:
                 raise AssertionError("native test bindings are enabled")
+        if name.startswith(("http-", "data-")) and name != "http-file-redirect":
+            action = name.split("-", 1)[1]
+            blocked = READABLE if action in ("fetch", "xhr", "srcdoc") else TARGET
+            diagnostic = "console.error: Not allowed to load local resource: "
+            if diagnostic + blocked.as_uri() not in output:
+                raise AssertionError("missing local-resource console error")
         return name, True, ""
     except (AssertionError, subprocess.TimeoutExpired, ValueError) as error:
         output = locals().get("output", "")
@@ -148,9 +154,6 @@ def main():
     parser.add_argument("--jobs", type=int, default=4)
     parser.add_argument("--timeout", type=int, default=3)
     parser.add_argument("--webgl", choices=("on", "off"), default="on")
-    parser.add_argument(
-        "--allow-test-hooks", action="store_true",
-        help="permit a test build only for before/after comparison")
     arguments = parser.parse_args()
     browser = arguments.browser.resolve()
     if not browser.is_file():
@@ -176,9 +179,7 @@ console.log('PRODUCT_SECURITY:' + JSON.stringify({
             data_url = ("data:text/html;base64," +
                         base64.b64encode(source.encode()).decode())
             selected.append(("webgl-disabled", data_url, False, False))
-        run = functools.partial(
-            run_case, browser, timeout=arguments.timeout,
-            allow_test_hooks=arguments.allow_test_hooks)
+        run = functools.partial(run_case, browser, timeout=arguments.timeout)
         with concurrent.futures.ThreadPoolExecutor(
                 max_workers=arguments.jobs) as pool:
             results = list(pool.map(run, selected))

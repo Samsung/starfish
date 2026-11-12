@@ -30,6 +30,7 @@
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/dom/WebOrigin.h"
+#include "core/extra/Console.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/networking/WebSocket.h"
@@ -57,6 +58,17 @@ ExecutionContext::ExecutionContext(GlobalScope* globalScope,
     , m_webOrigin(WebOrigin::createDocumentOrigin(uri))
     , m_contentSecurityPolicy(new ContentSecurityPolicy(this))
 {
+}
+
+bool ExecutionContext::allowLocalFileAccess(ResourceURL* url)
+{
+    if (webOrigin()->canAccessLocalFiles()) {
+        return true;
+    }
+    webBase()->console()->error(
+        String::createASCIIString("Not allowed to load local resource: ")
+            ->concat(url->urlString()));
+    return false;
 }
 
 void* ExecutionContext::operator new(size_t size)
