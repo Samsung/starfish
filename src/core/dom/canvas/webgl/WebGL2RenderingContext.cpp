@@ -4862,7 +4862,8 @@ void WebGL2RenderingContext::texImage3D(GLenum target, GLint level,
         texture->setImageLevelInfo(target, level, internalformat, width, height,
                                    depth);
         if (allocated) {
-            zeroTextureLevel(target, level, width, height, depth, format, type);
+            initializeTextureLevel(target, level, width, height, depth, format,
+                                   type);
         }
     }
 }

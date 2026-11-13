@@ -1000,6 +1000,7 @@ tests/assertion/canvas/webgl-draw-buffers-resize.html
 tests/assertion/canvas/webgl-shader-gl-macro-name.html
 tests/assertion/canvas/webgl-shader-builtin-macro-parameters.html
 tests/assertion/canvas/webgl2-texstorage-initial-contents.html
+tests/assertion/canvas/webgl2-depth-texture-initial-contents.html
 tests/assertion/canvas/toDataURL-nocontext.html
 tests/assertion/canvas/dimension-overflow.html
 tests/assertion/canvas/create-image-bitmap-limits.html

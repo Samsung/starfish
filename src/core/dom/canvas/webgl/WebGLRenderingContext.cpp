@@ -3942,8 +3942,8 @@ void WebGLRenderingContext::copyTexImage2D(GLenum target, GLint level,
                     std::min<int64_t>(int64_t(y) + height, fbHeight);
                 if (x0 != x || y0 != y || x1 != int64_t(x) + width ||
                     y1 != int64_t(y) + height) {
-                    zeroTextureLevel(target, level, width, height, 1, format,
-                                     type);
+                    initializeTextureLevel(target, level, width, height, 1,
+                                           format, type);
                     if (x1 > x0 && y1 > y0) {
                         m_gl->copyTexSubImage2D(target, level, x0 - x, y0 - y,
                                                 x0, y0, x1 - x0, y1 - y0);
@@ -9488,23 +9488,59 @@ bool WebGLRenderingContext::validateTexImageSource(GLenum format, GLenum type)
     return checkUnpackBufferBinding(false);
 }
 
-// A null source is a buffer of zeros (WebGL 1.0 §5.14.8), as are the texels
-// copyTexImage2D reads from outside the framebuffer. They go up a bounded
-// chunk of rows at a time, so no buffer of the level's size is made.
-void WebGLRenderingContext::zeroTextureLevel(GLenum target, GLint level,
-                                             GLsizei width, GLsizei height,
-                                             GLsizei depth, GLenum format,
-                                             GLenum type)
+// One texel of a depth or depth-stencil upload that holds depth 1.0 and
+// stencil 0, for each type such an upload takes.
+static std::array<uint8_t, 8> depthOneTexel(GLenum type)
 {
-    const size_t rowBytes =
-        static_cast<size_t>(width) * getBytesPerPixel(format, type);
+    std::array<uint8_t, 8> texel = {};
+    const GLfloat one = 1;
+    // The depth is the high 24 bits.
+    const GLuint oneAndStencil = 0xFFFFFF00;
+    switch (type) {
+    case GL_UNSIGNED_SHORT:
+    case GL_UNSIGNED_INT:
+        texel.fill(0xFF);
+        break;
+    case GL_UNSIGNED_INT_24_8:
+        memcpy(texel.data(), &oneAndStencil, sizeof(oneAndStencil));
+        break;
+    case GL_FLOAT:
+    case GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
+        // The stencil word after the float stays 0.
+        memcpy(texel.data(), &one, sizeof(one));
+        break;
+    }
+    return texel;
+}
+
+// A null source is a buffer of zeros (WebGL 1.0 §5.14.8), as are the texels
+// copyTexImage2D reads from outside the framebuffer. A depth format starts at
+// depth 1.0 and stencil 0 instead (§4.1). That is uploaded too, not cleared:
+// no framebuffer takes a level above the base while the mipmap chain is
+// incomplete. The texels go up a bounded chunk of rows at a time, so no buffer
+// of the level's size is made.
+void WebGLRenderingContext::initializeTextureLevel(GLenum target, GLint level,
+                                                   GLsizei width,
+                                                   GLsizei height,
+                                                   GLsizei depth, GLenum format,
+                                                   GLenum type)
+{
+    const size_t texelBytes = getBytesPerPixel(format, type);
+    const size_t rowBytes = static_cast<size_t>(width) * texelBytes;
     if (!rowBytes || height <= 0 || depth <= 0) {
         return;
     }
     // As bufferData fills a buffer.
     const size_t rowsPerChunk = std::max<size_t>(1, (64 * 1024) / rowBytes);
-    const std::vector<uint8_t> zeros(std::min<size_t>(rowsPerChunk, height) *
-                                     rowBytes);
+    std::vector<uint8_t> texels(std::min<size_t>(rowsPerChunk, height) *
+                                rowBytes);
+    if (isDepthTextureFormat(format)) {
+        const std::array<uint8_t, 8> texel = depthOneTexel(type);
+        STARFISH_ASSERT(texelBytes <= texel.size());
+        for (size_t i = 0; i < texels.size(); i += texelBytes) {
+            memcpy(&texels[i], texel.data(), texelBytes);
+        }
+    }
     ScopedTightUnpackState unpackState(m_gl, isWebGL2RenderingContext());
     // copyTexImage2D may run with a PIXEL_UNPACK_BUFFER bound.
     GLint unpackBuffer = 0;
@@ -9521,10 +9557,10 @@ void WebGLRenderingContext::zeroTextureLevel(GLenum target, GLint level,
                 std::min<size_t>(rowsPerChunk, height - y));
             if (is3D) {
                 m_gl->texSubImage3D(target, level, 0, y, z, width, rows, 1,
-                                    format, type, zeros.data());
+                                    format, type, texels.data());
             } else {
                 m_gl->texSubImage2D(target, level, 0, y, width, rows, format,
-                                    type, zeros.data());
+                                    type, texels.data());
             }
             y += rows;
         }
@@ -9643,12 +9679,12 @@ void WebGLRenderingContext::initializeTextureStorage(
             if (isCubeMap) {
                 for (GLenum face = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
                      face <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z; face++) {
-                    zeroTextureLevel(face, level, levelWidth, levelHeight, 1,
-                                     format, type);
+                    initializeTextureLevel(face, level, levelWidth, levelHeight,
+                                           1, format, type);
                 }
             } else {
-                zeroTextureLevel(target, level, levelWidth, levelHeight,
-                                 levelDepth, format, type);
+                initializeTextureLevel(target, level, levelWidth, levelHeight,
+                                       levelDepth, format, type);
             }
             continue;
         }
@@ -10242,7 +10278,8 @@ void WebGLRenderingContext::texImage2D(GLenum target, GLint level,
                                            0);
             });
         } else if (allocated) {
-            zeroTextureLevel(target, level, width, height, 1, format, type);
+            initializeTextureLevel(target, level, width, height, 1, format,
+                                   type);
         }
     }
 }

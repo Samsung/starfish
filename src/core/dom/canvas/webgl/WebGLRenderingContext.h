@@ -454,9 +454,10 @@ protected:
         // Defines the level for a null source; only overloads that take a
         // null source pass it.
         std::function<void()> allocateImage = nullptr);
-    void zeroTextureLevel(GLenum target, GLint level, GLsizei width,
-                          GLsizei height, GLsizei depth, GLenum format,
-                          GLenum type);
+    // Gives a level made without data its initial contents.
+    void initializeTextureLevel(GLenum target, GLint level, GLsizei width,
+                                GLsizei height, GLsizei depth, GLenum format,
+                                GLenum type);
     void zeroCompressedTextureStorage(GLenum target, GLsizei levels,
                                       GLenum internalformat, GLsizei width,
                                       GLsizei height, GLsizei depth);
