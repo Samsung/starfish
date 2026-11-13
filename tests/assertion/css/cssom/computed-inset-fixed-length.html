@@ -1,0 +1,41 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>getComputedStyle() of a fixed inset before layout is its computed value</title>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[computed-inset-fixed-length] " + document.title);
+  };
+}
+</script>
+<body>
+<script>
+// cssom-1 #resolved-values: a fixed inset of a positioned box that is not
+// over-constrained resolves to its computed value, and so does any inset of
+// a box that is not positioned.
+function inset(css, side) {
+  var element = document.createElement("div");
+  element.style.cssText = css;
+  document.body.appendChild(element);
+  var value = getComputedStyle(element)[side];
+  element.remove();
+  return value;
+}
+
+["top", "right", "bottom", "left"].forEach(function (side) {
+  var value = inset("position: absolute; inset: 10px", side);
+  console.assert(value === "10px", "absolute " + side + ": " + value);
+});
+var folded = inset("position: absolute; top: calc(5px + 5px)", "top");
+console.assert(folded === "10px", "absolute calc() top: " + folded);
+var staticTop = inset("top: 7px", "top");
+console.assert(staticTop === "7px", "static top: " + staticTop);
+testEnd();
+</script>

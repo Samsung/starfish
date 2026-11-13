@@ -1,0 +1,42 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>var() inside min(), max() and clamp() resolves within the same function</title>
+<style>
+  :root { --w: 50px; --n: 0.5; }
+  div { height: 10px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[comparison-function-var] " + document.title);
+  };
+}
+</script>
+<div id="min" style="width: min(var(--w), 100px)"></div>
+<div id="max" style="width: max(10px, var(--w))"></div>
+<div id="clamp" style="width: clamp(10px, var(--w), 100px)"></div>
+<div id="calc" style="width: calc(var(--w) + 10px)"></div>
+<div id="opacity" style="opacity: clamp(0, var(--n), 1)"></div>
+<script>
+// css-variables-1 #substitute-a-var: var() is replaced by its value and the
+// declaration is then parsed as written, so each function keeps its own
+// arguments (css-values-4 #comp-func).
+window.addEventListener("load", function () {
+  function width(id) { return document.getElementById(id).getBoundingClientRect().width; }
+
+  console.assert(width("min") === 50, "min(var(--w), 100px): " + width("min"));
+  console.assert(width("max") === 50, "max(10px, var(--w)): " + width("max"));
+  console.assert(width("clamp") === 50, "clamp(10px, var(--w), 100px): " + width("clamp"));
+  console.assert(width("calc") === 60, "calc(var(--w) + 10px): " + width("calc"));
+  var opacity = getComputedStyle(document.getElementById("opacity")).opacity;
+  console.assert(opacity === "0.5", "clamp(0, var(--n), 1): " + opacity);
+  testEnd();
+});
+</script>

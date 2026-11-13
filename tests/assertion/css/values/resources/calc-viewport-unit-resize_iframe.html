@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; }
+  div { width: 1px; height: 1px; }
+  #width { width: calc(50vw + 10px); }
+  #height { height: calc(50vh + 10px); }
+  #mixed { width: calc(10% + 20vw); }
+  #hidden { display: none; margin-left: calc(50vw + 10px); }
+</style>
+<div id="width"></div>
+<div id="height"></div>
+<div id="mixed"></div>
+<div id="hidden"></div>
+<script>
+function size(id) {
+  var r = document.getElementById(id).getBoundingClientRect();
+  return { width: r.width, height: r.height };
+}
+window.addEventListener('message', function (event) {
+  if (event.data !== 'check') {
+    return;
+  }
+  parent.postMessage({ innerWidth: innerWidth, innerHeight: innerHeight,
+                       width: size('width').width,
+                       height: size('height').height,
+                       mixed: size('mixed').width,
+                       hidden: getComputedStyle(document.getElementById('hidden')).marginLeft }, '*');
+});
+window.addEventListener('load', function () {
+  parent.postMessage('ready', '*');
+});
+</script>

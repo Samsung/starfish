@@ -21,26 +21,11 @@
 #include "core/style/Style.h"
 #include "core/style/CalcData.h"
 #include <algorithm>
+#include <cmath>
 
 namespace Starfish {
-LayoutUnit CalcValue::specifiedValue(const LayoutUnit& parentContentLength,
-                                     Node* n) const
-{
-    if (m_type.isLength()) {
-        return m_data.m_lengthData.toLength().specifiedValue(
-            parentContentLength, n);
-    } else if (m_type.isPercentage()) {
-        return Length(Length::Percent, m_data.m_numberData)
-            .percentValue(parentContentLength);
-    } else if (m_type.isCalcData()) {
-        return m_data.m_calcData->specifiedValue(parentContentLength, n);
-    }
-
-    return LayoutUnit();
-}
-
 // A nested calc() operand is resolved by its own CalcData, like
-// specifiedValue() does for lengths.
+// angleValue() and timeValue() do.
 float CalcValue::numberValue() const
 {
     if (m_type.isCalcData()) {
@@ -68,20 +53,6 @@ CSSTime CalcValue::timeValue() const
     return m_data.m_timeData;
 }
 
-LayoutUnit CalcValue::specifiedFontValue(Node* n) const
-{
-    if (m_type.isLength()) {
-        return m_data.m_lengthData.toLength().specifiedFontValue(n);
-    } else if (m_type.isPercentage()) {
-        return Length(Length::Percent, m_data.m_numberData)
-            .specifiedFontValue(n);
-    } else if (m_type.isCalcData()) {
-        return m_data.m_calcData->specifiedFontValue(n);
-    }
-
-    return LayoutUnit();
-}
-
 String* CalcValue::toString()
 {
     if (m_type.isNumber()) {
@@ -101,10 +72,17 @@ String* CalcValue::toString()
         String* s = m_data.m_calcData->toString();
         if (m_data.m_calcData->type() == CalcData::Type::kCalc) {
             // A nested calc() term serializes parenthesized: "(...)".
-            return s->substring(4, s->length() - 4);
+            s = s->substring(4, s->length() - 4);
         }
-        // min()/max()/clamp() keep their function name and parens.
-        return s;
+        // min()/max()/clamp() keep their function name and parens; a
+        // subtracted one keeps its sign.
+        if (m_data.m_calcData->isPositive()) {
+            return s;
+        }
+        StringBuilder builder;
+        builder.appendChar('-');
+        builder.appendString(s);
+        return builder.finalize();
     }
 
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -181,183 +159,49 @@ CalcValueType CalcTerm::type() const
     return lType;
 }
 
-float CalcTerm::numberValue() const
+// A product of numbers and at most one other value (css-values-4
+// #calc-type-checking), kept in float so that no operand is rounded alone.
+template <typename Leaf>
+float CalcTerm::evaluate(Leaf& leaf) const
 {
     STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
-    auto it = m_values.begin();
-    float n = (*it).numberValue();
-    it++;
-    auto it2 = m_operators.begin();
-    while (it != m_values.end()) {
-        bool operand = *it2;
-
-        if (operand == MUL) {
-            n *= (*it).numberValue();
+    float result = 1;
+    for (size_t i = 0; i < m_values.size(); i++) {
+        const CalcValue& value = m_values[i];
+        float factor;
+        if (value.type().isNumber()) {
+            factor = value.numberValue();
+        } else if (value.type().isCalcData()) {
+            factor = value.calcDataValue()->evaluate(leaf);
         } else {
-            n /= (*it).numberValue();
+            factor = leaf(value);
         }
-
-        it++;
-        it2++;
-    }
-
-    return n;
-}
-
-LayoutUnit CalcTerm::specifiedValue(const LayoutUnit& parentContentLength,
-                                    Node* n) const
-{
-    STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
-    auto it = m_values.begin();
-    CalcValueType lType = (*it).type();
-    LayoutUnit result = 1;
-
-    if (lType.isNumber()) {
-        result = (*it).numberValue();
-    } else {
-        result = (*it).specifiedValue(parentContentLength, n);
-    }
-    it++;
-    auto it2 = m_operators.begin();
-    while (it != m_values.end()) {
-        CalcValueType rType = (*it).type();
-        bool operand = *it2;
-
-        if (operand == MUL) {
-            if (rType.isNumber()) {
-                result *= (*it).numberValue();
-            } else {
-                result *=
-                    (*it).specifiedValue(parentContentLength, n).toFloat();
-            }
+        if (i && m_operators[i - 1] == DIV) {
+            result /= factor;
         } else {
-            if (rType.isNumber()) {
-                result /= (*it).numberValue();
-            } else {
-                result /=
-                    (*it).specifiedValue(parentContentLength, n).toFloat();
-            }
+            result *= factor;
         }
-
-        it++;
-        it2++;
-    }
-
-    return result;
-}
-
-LayoutUnit CalcTerm::specifiedFontValue(Node* n) const
-{
-    STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
-    auto it = m_values.begin();
-    CalcValueType lType = (*it).type();
-    LayoutUnit result = 1;
-
-    if (lType.isNumber()) {
-        result = (*it).numberValue();
-    } else {
-        result = (*it).specifiedFontValue(n);
-    }
-    it++;
-    auto it2 = m_operators.begin();
-    while (it != m_values.end()) {
-        CalcValueType rType = (*it).type();
-        bool operand = *it2;
-
-        if (operand == MUL) {
-            if (rType.isNumber()) {
-                result *= (*it).numberValue();
-            } else {
-                result *= (*it).specifiedFontValue(n).toFloat();
-            }
-        } else {
-            if (rType.isNumber()) {
-                result /= (*it).numberValue();
-            } else {
-                result /= (*it).specifiedFontValue(n).toFloat();
-            }
-        }
-
-        it++;
-        it2++;
-    }
-
-    return result;
-}
-
-CSSAngle CalcTerm::angleValue() const
-{
-    STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
-    auto it = m_values.begin();
-    CalcValueType lType = (*it).type();
-    CSSAngle result;
-    if (lType.isNumber()) {
-        result = (*it).numberValue();
-    } else {
-        result = (*it).angleValue().toDegreeValue();
-    }
-    it++;
-    auto it2 = m_operators.begin();
-    while (it != m_values.end()) {
-        CalcValueType rType = (*it).type();
-        bool operand = *it2;
-
-        if (operand == MUL) {
-            if (rType.isNumber()) {
-                result *= (*it).numberValue();
-            } else {
-                result *= (*it).angleValue().toDegreeValue();
-            }
-        } else {
-            if (rType.isNumber()) {
-                result /= (*it).numberValue();
-            } else {
-                result /= (*it).angleValue().toDegreeValue();
-            }
-        }
-
-        it++;
-        it2++;
     }
     return result;
 }
 
-CSSTime CalcTerm::timeValue() const
+template <typename Leaf>
+CalcTerm* CalcTerm::resolvedCopy(Leaf& leaf) const
 {
-    STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
-    auto it = m_values.begin();
-    CalcValueType lType = (*it).type();
-    CSSTime result;
-    if (lType.isNumber()) {
-        result = (*it).numberValue();
-    } else {
-        result = (*it).timeValue().toTimeValue();
-    }
-    it++;
-    auto it2 = m_operators.begin();
-    while (it != m_values.end()) {
-        CalcValueType rType = (*it).type();
-        bool operand = *it2;
-
-        if (operand == MUL) {
-            if (rType.isNumber()) {
-                result *= (*it).numberValue();
-            } else {
-                result *= (*it).timeValue().toTimeValue();
-            }
+    CalcTerm* copy = new CalcTerm();
+    copy->m_operators = m_operators;
+    for (const CalcValue& value : m_values) {
+        if (value.type().isLength()) {
+            copy->m_values.push_back(
+                CalcValue(CSSLength(CSSLength::PX, leaf(value))));
+        } else if (value.type().isCalcData()) {
+            copy->m_values.push_back(
+                CalcValue(value.calcDataValue()->resolvedCopy(leaf)));
         } else {
-            if (rType.isNumber()) {
-                result /= (*it).numberValue();
-            } else {
-                result /= (*it).timeValue().toTimeValue();
-            }
+            copy->m_values.push_back(value);
         }
-
-        it++;
-        it2++;
     }
-
-    return result;
+    return copy;
 }
 
 String* CalcTerm::toString()
@@ -629,181 +473,207 @@ CalcValueType CalcData::calcValueType() const
     return lType;
 }
 
-bool CalcData::foldResolvedComparison()
+// min()/max()/clamp() compare their comma-separated argument sums
+// (css-values-4 #comp-func); a subtracted function is negated.
+template <typename Leaf>
+float CalcData::evaluate(Leaf& leaf) const
 {
-    if (m_type != Type::kMin && m_type != Type::kMax) {
-        return false;
-    }
-
-    // All terms are resolved to px here; arguments compare numerically.
-    std::vector<float> argumentValues;
-    bool foldable = !m_argumentsStartPostion.empty();
-    size_t spanStart = 0;
-    for (size_t boundary = 1;
-         foldable && boundary < m_argumentsStartPostion.size(); ++boundary) {
+    size_t arguments =
+        m_type == Type::kCalc ? 1 : m_argumentsStartPostion.size();
+    auto argument = [&](size_t k) -> float {
+        size_t end =
+            k + 1 < arguments ? m_argumentsStartPostion[k + 1] : m_terms.size();
         float sum = 0;
-        for (size_t i = spanStart; i < m_argumentsStartPostion[boundary]; ++i) {
-            GCVector<CalcValue>& values = m_terms[i]->values();
-            if (values.size() != 1 || !values.begin()->type().isLength() ||
-                values.begin()->lengthValue().kind() != CSSLength::PX) {
-                foldable = false;
-                break;
-            }
-            sum += values.begin()->lengthValue().value();
+        for (size_t i = k ? m_argumentsStartPostion[k] : 0; i < end; i++) {
+            sum += m_terms[i]->evaluate(leaf);
         }
-        argumentValues.push_back(sum);
-        spanStart = m_argumentsStartPostion[boundary];
-    }
-    if (foldable) {
-        float sum = 0;
-        for (size_t i = spanStart; i < m_terms.size(); ++i) {
-            GCVector<CalcValue>& values = m_terms[i]->values();
-            if (values.size() != 1 || !values.begin()->type().isLength() ||
-                values.begin()->lengthValue().kind() != CSSLength::PX) {
-                foldable = false;
-                break;
-            }
-            sum += values.begin()->lengthValue().value();
-        }
-        if (foldable) {
-            argumentValues.push_back(sum);
+        return sum;
+    };
+    float n = argument(0);
+    if (m_type == Type::kClamp) {
+        STARFISH_ASSERT(arguments == 3);
+        n = std::max(n, std::min(argument(1), argument(2)));
+    } else {
+        for (size_t k = 1; k < arguments; k++) {
+            n = m_type == Type::kMin ? std::min(n, argument(k))
+                                     : std::max(n, argument(k));
         }
     }
-    if (!foldable) {
-        return false;
-    }
+    return m_isPositive ? n : -n;
+}
 
-    float result = argumentValues[0];
-    for (auto it = argumentValues.begin() + 1; it != argumentValues.end();
-         ++it) {
-        result = m_type == Type::kMin ? std::min(result, *it)
-                                      : std::max(result, *it);
+template <typename Leaf>
+CalcData* CalcData::resolvedCopy(Leaf& leaf) const
+{
+    CalcData* copy = new CalcData();
+    copy->m_type = m_type;
+    copy->m_isPositive = m_isPositive;
+    copy->m_argumentsStartPostion = m_argumentsStartPostion;
+    for (CalcTerm* term : m_terms) {
+        copy->m_terms.push_back(term->resolvedCopy(leaf));
     }
-    if (!m_isPositive) {
-        result = -result;
-        m_isPositive = true;
-    }
+    return copy;
+}
 
-    CalcTerm* term = new CalcTerm();
-    term->appendValue(CalcValue(CSSLength(CSSLength::PX, result)));
-    m_terms.clear();
-    m_terms.push_back(term);
-    m_type = Type::kCalc;
-    return true;
+// A top-level calculation that would produce NaN produces 0 instead, and
+// an infinite one the largest representable value of its sign
+// (css-values-4 #top-level-calculation).
+static float censor(float value,
+                    float largest = std::numeric_limits<float>::max())
+{
+    return std::isnan(value) ? 0 : std::max(-largest, std::min(value, largest));
+}
+
+// Lengths are representable as far as layout's LayoutUnit reaches; the
+// float rounds up to 2^25, which LayoutUnit clamps on conversion.
+static float censorLength(float value)
+{
+    return censor(value, static_cast<float>(intMaxForLayoutUnit));
 }
 
 float CalcData::numberValue() const
 {
-    auto it = m_terms.begin();
-    float n = (*it)->numberValue();
-    it++;
-    while (it != m_terms.end()) {
-        n += (*it)->numberValue();
-        it++;
+    auto leaf = [](const CalcValue& value) { return value.numberValue(); };
+    return censor(evaluate(leaf));
+}
+
+static Length leafLength(const CalcValue& value)
+{
+    if (value.type().isPercentage()) {
+        return Length(Length::Percent, value.percentageValue());
     }
-    if (!m_isPositive) {
-        n *= -1;
-    }
-    return n;
+    return value.lengthValue().toLength();
 }
 
 LayoutUnit CalcData::specifiedValue(const LayoutUnit& parentContentLength,
                                     Node* n) const
 {
-    if (m_type == Type::kMax || m_type == Type::kMin) {
-        // min()/max() accept two or more comma-separated arguments
-        // (css-values-4 #comp-func); fold each argument span, then compare.
-        std::vector<LayoutUnit> argumentValues;
-        size_t spanStart = 0;
-        for (size_t boundary = 1; boundary < m_argumentsStartPostion.size();
-             ++boundary) {
-            LayoutUnit sum = 0;
-            for (size_t i = spanStart; i < m_argumentsStartPostion[boundary];
-                 ++i) {
-                sum += m_terms[i]->specifiedValue(parentContentLength, n);
-            }
-            argumentValues.push_back(sum);
-            spanStart = m_argumentsStartPostion[boundary];
-        }
-        LayoutUnit sum = 0;
-        for (size_t i = spanStart; i < m_terms.size(); ++i) {
-            sum += m_terms[i]->specifiedValue(parentContentLength, n);
-        }
-        argumentValues.push_back(sum);
-
-        if (m_type == Type::kMin) {
-            return *std::min_element(argumentValues.begin(),
-                                     argumentValues.end());
-        }
-        return *std::max_element(argumentValues.begin(), argumentValues.end());
-    } else if (m_type == Type::kClamp) {
-        STARFISH_ASSERT(m_argumentsStartPostion.size() == 3);
-        LayoutUnit frist, second, third;
-        for (size_t i = 0; i < m_argumentsStartPostion[1]; i++) {
-            frist += m_terms[i]->specifiedValue(parentContentLength, n);
-        }
-        for (size_t i = m_argumentsStartPostion[1];
-             i < m_argumentsStartPostion[2]; i++) {
-            second += m_terms[i]->specifiedValue(parentContentLength, n);
-        }
-        for (size_t i = m_argumentsStartPostion[2]; i < m_terms.size(); i++) {
-            third += m_terms[i]->specifiedValue(parentContentLength, n);
-        }
-
-        return std::max(frist.toInt(), std::min(second.toInt(), third.toInt()));
-    } else {
-        STARFISH_ASSERT(m_type == Type::kCalc);
-        auto it = m_terms.begin();
-        LayoutUnit l = (*it)->specifiedValue(parentContentLength, n);
-        it++;
-        while (it != m_terms.end()) {
-            l += (*it)->specifiedValue(parentContentLength, n);
-            it++;
-        }
-        if (!m_isPositive) {
-            l *= -1;
-        }
-        return l;
-    }
+    auto leaf = [&](const CalcValue& value) {
+        return leafLength(value).specifiedValue(parentContentLength, n);
+    };
+    return LayoutUnit(censorLength(evaluate(leaf)));
 }
 
 LayoutUnit CalcData::specifiedFontValue(Node* n) const
 {
-    auto it = m_terms.begin();
-    LayoutUnit l = (*it)->specifiedFontValue(n);
-    it++;
-    while (it != m_terms.end()) {
-        l += (*it)->specifiedFontValue(n);
-        it++;
-    }
-
-    return l;
+    auto leaf = [&](const CalcValue& value) {
+        return leafLength(value).specifiedFontValue(n);
+    };
+    return LayoutUnit(censorLength(evaluate(leaf)));
 }
 
 CSSAngle CalcData::angleValue() const
 {
-    auto it = m_terms.begin();
-    CSSAngle a = (*it)->angleValue();
-    it++;
-    while (it != m_terms.end()) {
-        a += (*it)->angleValue();
-        it++;
-    }
-
-    return a;
+    auto leaf = [](const CalcValue& value) {
+        return value.angleValue().toDegreeValue();
+    };
+    return CSSAngle(CSSAngle::DEG, censor(evaluate(leaf)));
 }
 
 CSSTime CalcData::timeValue() const
 {
-    auto it = m_terms.begin();
-    CSSTime t = (*it)->timeValue();
-    it++;
-    while (it != m_terms.end()) {
-        t += (*it)->timeValue();
-        it++;
-    }
+    auto leaf = [](const CalcValue& value) {
+        return value.timeValue().toTimeValue();
+    };
+    return CSSTime(CSSTime::MS, censor(evaluate(leaf)));
+}
 
-    return t;
+namespace {
+
+    // Resolves a leaf at computed-value time: font-relative and viewport
+    // lengths become px, while percentages wait for layout unless their
+    // basis is known.
+    struct ComputedLeaf {
+        ComputedLeaf(const Length& curFontSize, const Length& rootFontSize,
+                     Optional<Font*> font, LayoutUnit viewportWidth,
+                     LayoutUnit viewportHeight, Optional<ComputedStyle*> cs,
+                     Optional<float> percentBasis)
+            : curFontSize(curFontSize)
+            , rootFontSize(rootFontSize)
+            , font(font)
+            , viewportWidth(viewportWidth)
+            , viewportHeight(viewportHeight)
+            , cs(cs)
+            , percentBasis(percentBasis)
+        {
+        }
+
+        const Length& curFontSize;
+        const Length& rootFontSize;
+        Optional<Font*> font;
+        LayoutUnit viewportWidth;
+        LayoutUnit viewportHeight;
+        // Receives the viewport-unit flag that has a resize recompute it.
+        Optional<ComputedStyle*> cs;
+        Optional<float> percentBasis;
+        bool hasPx = false;
+        bool hasPercent = false;
+        bool hasRelative = false;
+        bool unresolved = false;
+
+        float operator()(const CalcValue& value)
+        {
+            if (value.type().isPercentage()) {
+                if (percentBasis) {
+                    hasPx = true;
+                    return value.percentageValue() * percentBasis.value();
+                }
+                hasPercent = true;
+                return value.percentageValue();
+            }
+            Length length = value.lengthValue().toLength();
+            if (length.isFontPercent() || length.isViewportPercent()) {
+                hasRelative = true;
+                length.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
+                                             viewportWidth, viewportHeight, cs);
+            }
+            if (!length.isFixed()) {
+                unresolved = true;
+                return 0;
+            }
+            hasPx = true;
+            return length.fixed();
+        }
+    };
+
+} // namespace
+
+Length CalcData::computedLength(const Length& curFontSize,
+                                const Length& rootFontSize,
+                                Optional<Font*> font, LayoutUnit viewportWidth,
+                                LayoutUnit viewportHeight,
+                                Optional<ComputedStyle*> cs, bool inherited,
+                                Optional<float> percentBasis)
+{
+    ComputedLeaf leaf(curFontSize, rootFontSize, font, viewportWidth,
+                      viewportHeight, cs, percentBasis);
+    float value = censorLength(evaluate(leaf));
+    if (!leaf.unresolved && !leaf.hasPercent) {
+        return Length(Length::Fixed, value);
+    }
+    // Percentages are not compared before layout, as their basis may be
+    // negative (css-values-4 #calc-simplification): min()/max()/clamp() of
+    // them stay.
+    bool hasFunction = m_type != Type::kCalc;
+    for (CalcTerm* term : m_terms) {
+        for (const CalcValue& termValue : term->values()) {
+            hasFunction |= termValue.type().isCalcData();
+        }
+    }
+    if (!leaf.unresolved && !leaf.hasPx && !hasFunction) {
+        return Length(Length::Percent, value);
+    }
+    if (inherited && leaf.hasRelative && !leaf.unresolved) {
+        return Length(resolvedCopy(leaf));
+    }
+    // shortcut: for a property that is not inherited, a calc() that keeps
+    // percentages also keeps its font-relative and viewport lengths, as they
+    // resolve at used time against the same element; a child taking the
+    // value with `inherit` resolves them against its own font instead, and
+    // getComputedStyle() of an element without boxes shows them unresolved.
+    // Copy as for inherited properties if either matters, at a CalcData per
+    // element.
+    return Length(this);
 }
 
 namespace {
@@ -1114,8 +984,23 @@ String* CalcData::toString()
 
 bool CalcData::equals(CalcData* with) const
 {
-    if (m_terms.size() != with->m_terms.size()) {
+    // min()/max()/clamp() of the same terms, or a subtracted one, is a
+    // different value.
+    if (m_type != with->m_type || m_isPositive != with->m_isPositive ||
+        m_terms.size() != with->m_terms.size()) {
         return false;
+    }
+    if (m_type != Type::kCalc) {
+        if (m_argumentsStartPostion.size() !=
+            with->m_argumentsStartPostion.size()) {
+            return false;
+        }
+        for (size_t i = 0; i < m_argumentsStartPostion.size(); i++) {
+            if (m_argumentsStartPostion[i] !=
+                with->m_argumentsStartPostion[i]) {
+                return false;
+            }
+        }
     }
 
     size_t len = m_terms.size();

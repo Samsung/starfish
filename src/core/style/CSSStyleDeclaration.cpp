@@ -2831,8 +2831,10 @@ bool CSSStyleDeclaration::parseUnitPositionShorthand(
     size_t len = 0;
     retx->setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
     rety->setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-    retx->setValueList(new ValueList(Separator::SpaceSeparator));
-    rety->setValueList(new ValueList(Separator::SpaceSeparator));
+    // One position per layer; layers are comma-separated
+    // (css-backgrounds-3 #background-position).
+    retx->setValueList(new ValueList(Separator::CommaSeparator));
+    rety->setValueList(new ValueList(Separator::CommaSeparator));
 
     for (unsigned int i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
@@ -6318,6 +6320,26 @@ void CSSStyleDeclaration::removeGap()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::Gap);
 }
 
+// Splits a serialized list at its top-level commas: a comma inside a
+// function such as min() belongs to that item.
+static void splitTopLevelCommas(String* list, GCVector<StringView>& items)
+{
+    size_t start = 0;
+    size_t depth = 0;
+    for (size_t i = 0; i < list->length(); i++) {
+        char32_t c = list->charAt(i);
+        if (c == '(') {
+            depth++;
+        } else if (c == ')' && depth) {
+            depth--;
+        } else if (c == ',' && !depth) {
+            items.emplace_back(list, start, i);
+            start = i + 1;
+        }
+    }
+    items.emplace_back(list, start, list->length());
+}
+
 String* CSSStyleDeclaration::UnitPosition(CSSStyleValuePair::KeyKind keyKind)
 {
     CSSStyleValuePair::KeyKind xKind, yKind;
@@ -6337,8 +6359,13 @@ String* CSSStyleDeclaration::UnitPosition(CSSStyleValuePair::KeyKind keyKind)
     }
 
     GCVector<StringView> vPositionX, vPositionY;
-    StringUtils::tokenize(positionX, ",", 1, vPositionX);
-    StringUtils::tokenize(positionY, ",", 1, vPositionY);
+    splitTopLevelCommas(positionX, vPositionX);
+    splitTopLevelCommas(positionY, vPositionY);
+    // Each layer pairs an x with a y; lists of different lengths have no
+    // shorthand value.
+    if (vPositionX.size() != vPositionY.size()) {
+        return String::emptyString;
+    }
 
     StringBuilder builder;
     for (size_t i = 0; i < vPositionX.size(); i++) {

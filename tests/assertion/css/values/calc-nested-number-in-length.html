@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A nested calc() resolving to a number scales a length without rounding</title>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[calc-nested-number-in-length] " + document.title);
+  };
+}
+</script>
+<div id="nestedCalc" style="width: calc(100px * calc(1 / 3)); height: 10px"></div>
+<div id="nestedMax" style="width: calc(100px * max(1, 2 * 0.6)); height: 10px"></div>
+<div id="fontSize" style="font-size: calc(12px * calc(4 / 3))">x</div>
+<script>
+// css-values-4 #calc-type-checking: a nested calc() or comparison
+// function of <number> type multiplies the length as that number; the
+// number itself is not rounded to a layout unit first.
+window.addEventListener("load", function () {
+  function width(id) { return document.getElementById(id).getBoundingClientRect().width; }
+
+  console.assert(Math.abs(width("nestedCalc") - 100 / 3) < 0.02,
+    "calc(100px * calc(1 / 3)): " + width("nestedCalc"));
+  console.assert(width("nestedMax") === 120, "calc(100px * max(1, 2 * 0.6)): " + width("nestedMax"));
+  var fontSize = getComputedStyle(document.getElementById("fontSize")).fontSize;
+  console.assert(fontSize === "16px", "font-size calc(12px * calc(4 / 3)): " + fontSize);
+  testEnd();
+});
+</script>

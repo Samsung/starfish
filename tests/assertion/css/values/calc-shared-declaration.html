@@ -1,0 +1,61 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A calc() declaration shared by several elements resolves per element</title>
+<style>
+  #box { width: 400px; }
+  #box > div { height: 10px; }
+  .sum { width: calc(10em + 1px); }
+  .max { width: max(5em, 10px); }
+  .mixed { width: calc(10% + 1em); }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[calc-shared-declaration] " + document.title);
+  };
+}
+</script>
+<div id="box">
+  <div id="sum10" class="sum" style="font-size: 10px"></div>
+  <div id="sum20" class="sum" style="font-size: 20px"></div>
+  <div id="max10" class="max" style="font-size: 10px"></div>
+  <div id="max20" class="max" style="font-size: 20px"></div>
+  <div id="mixed10" class="mixed" style="font-size: 10px"></div>
+  <div id="mixed20" class="mixed" style="font-size: 20px"></div>
+  <div id="inline" style="font-size: 10px; min-width: calc(10% + 1em)"></div>
+</div>
+<script>
+// css-values-4 #calc-computed-value: em resolves against each element's
+// own font size; resolving one element leaves the declaration as written.
+window.addEventListener("load", function () {
+  function el(id) { return document.getElementById(id); }
+  function width(id) { return el(id).getBoundingClientRect().width; }
+  function is(id, expected) {
+    console.assert(width(id) === expected, id + ": " + width(id) + " != " + expected);
+  }
+
+  is("sum10", 101);
+  is("sum20", 201);
+  is("max10", 50);
+  is("max20", 100);
+  is("mixed10", 50);
+  is("mixed20", 60);
+  console.assert(el("inline").style.minWidth === "calc(10% + 1em)",
+    "specified min-width: " + el("inline").style.minWidth);
+
+  el("sum10").style.fontSize = "30px";
+  el("mixed10").style.fontSize = "30px";
+  is("sum10", 301);
+  is("sum20", 201);
+  is("mixed10", 70);
+  is("mixed20", 60);
+  testEnd();
+});
+</script>

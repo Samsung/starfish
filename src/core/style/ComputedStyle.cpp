@@ -39,6 +39,7 @@
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
+#include "core/style/CalcData.h"
 #include "core/style/CSSProperty.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/FilterFunctions.h"
@@ -133,6 +134,9 @@ void* ComputedStyle::InheritedStylesRareData::operator new(size_t size)
         GC_set_bit(
             obj_bitmap,
             GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData, m_stroke));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
+                                  m_textIndent));
         GC_set_bit(obj_bitmap,
                    GC_WORD_OFFSET(ComputedStyle::InheritedStylesRareData,
                                   m_strokeWidth));
@@ -1085,18 +1089,34 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         }
     }
 
-    if (!lineHeight().isComputed()) {
-        auto v = lineHeight();
+    // An inherited calc() resolves its font-relative and viewport lengths
+    // against this element; descendants inherit the result.
+    auto computeInheritedLength = [&](Length v,
+                                      Optional<float> percentBasis = nullptr) {
+        if (v.isCalc()) {
+            return v.calcData()->computedLength(
+                curFontSize, rootFontSize, font, windowSize.width(),
+                windowSize.height(), this, true, percentBasis);
+        }
         v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
                                 windowSize.width(), windowSize.height(), this);
+        return v;
+    };
+
+    if (!lineHeight().isComputed()) {
+        // A line-height calc() percentage refers to the element's own font
+        // size (css-inline-3 #line-height), so it computes to a length.
+        Optional<float> ownFontSize;
+        if (curFontSize.isFixed()) {
+            ownFontSize = curFontSize.fixed();
+        }
+        auto v = computeInheritedLength(lineHeight(), ownFontSize);
+        clampNonNegativeLength(v);
         setLineHeight(v);
     }
 
     if (!textIndent().isComputed()) {
-        auto v = textIndent();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                windowSize.width(), windowSize.height(), this);
-        setTextIndent(v);
+        setTextIndent(computeInheritedLength(textIndent()));
     }
 
     if (!textIndent().isComputed()) {
@@ -1121,10 +1141,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
     }
 
     if (!strokeWidth().isComputed()) {
-        auto v = strokeWidth();
-        v.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                windowSize.width(), windowSize.height(), this);
-        setStrokeWidth(v);
+        setStrokeWidth(computeInheritedLength(strokeWidth()));
     }
 
     if (hasRareComputeStyleData()) {
@@ -1133,6 +1150,8 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             m_rareComputedStyleData.ensureWidth()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
+            // css-sizing-3: sizes take no negative value.
+            clampNonNegativeLength(*m_rareComputedStyleData.ensureWidth());
         }
 
         Optional<Length> height = m_rareComputedStyleData.height();
@@ -1140,6 +1159,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             m_rareComputedStyleData.ensureHeight()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
+            clampNonNegativeLength(*m_rareComputedStyleData.ensureHeight());
         }
 
         Optional<Length> minWidth = m_rareComputedStyleData.minWidth();
@@ -1156,6 +1176,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             m_rareComputedStyleData.ensureMaxWidth()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
+            clampNonNegativeLength(*m_rareComputedStyleData.ensureMaxWidth());
         }
 
         Optional<Length> minHeight = m_rareComputedStyleData.minHeight();
@@ -1173,6 +1194,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
             m_rareComputedStyleData.ensureMaxHeight()->changeToFixedIfNeeded(
                 curFontSize, rootFontSize, font, windowSize.width(),
                 windowSize.height(), this);
+            clampNonNegativeLength(*m_rareComputedStyleData.ensureMaxHeight());
         }
 
         Optional<Length> verticalAlignLength =

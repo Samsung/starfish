@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A comparison function keeps its commas inside a background-position</title>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[comparison-function-position-list] " + document.title);
+  };
+}
+</script>
+<div id="one" style="background-position: min(1%, 2%) 0px"></div>
+<div id="two" style="background-position: 0px max(1px, 2%, 3px)"></div>
+<script>
+// css-backgrounds-3 #background-position: layers are separated by commas at
+// the top level; a comma inside min()/max() (css-values-4 #comp-func)
+// separates that function's arguments, not layers.
+window.addEventListener("load", function () {
+  var one = document.getElementById("one").style.backgroundPosition;
+  console.assert(one === "min(1%, 2%) 0px", "one layer: " + one);
+  var two = document.getElementById("two").style.backgroundPosition;
+  console.assert(two === "0px max(1px, 2%, 3px)", "three arguments: " + two);
+  testEnd();
+});
+</script>

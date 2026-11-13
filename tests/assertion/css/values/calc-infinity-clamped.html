@@ -1,0 +1,58 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>An infinite calc() result is clamped to a finite length</title>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[calc-infinity-clamped] " + document.title);
+  };
+}
+</script>
+<div style="width: 400px"><div id="target" style="height: 5px"></div></div>
+<script>
+// css-values-4 #top-level-calculation: an infinite result becomes the
+// largest representable value of its sign, then the property's range
+// applies (#calc-range): width and line-height take no negative value.
+window.addEventListener("load", function () {
+  var target = document.getElementById("target");
+  var INF = "calc(1e30px * 1e30)";
+  var NEG_INF = "calc(1e30px * -1e30)";
+  function computed(property, value) {
+    target.style[property] = value;
+    var result = getComputedStyle(target)[property];
+    target.style[property] = "";
+    return result;
+  }
+  function huge(property, value, sign) {
+    var result = computed(property, value);
+    var px = parseFloat(result);
+    console.assert(isFinite(px) && px * sign > 1e7,
+      property + ": " + value + " computed to " + result);
+  }
+
+  huge("width", INF, 1);
+  huge("width", "calc(10% + 1e30px * 1e30)", 1);
+  huge("marginLeft", INF, 1);
+  huge("marginLeft", NEG_INF, -1);
+  huge("textIndent", INF, 1);
+  huge("textIndent", NEG_INF, -1);
+  huge("lineHeight", INF, 1);
+  console.assert(computed("width", NEG_INF) === "0px", "width: " + NEG_INF);
+  console.assert(computed("lineHeight", NEG_INF) === "0px", "line-height: " + NEG_INF);
+
+  target.style.width = INF;
+  var width = target.getBoundingClientRect().width;
+  console.assert(isFinite(width) && width > 1e7, "laid-out width " + width);
+  target.style.width = NEG_INF;
+  console.assert(target.getBoundingClientRect().width === 0,
+    "laid-out negative width " + target.getBoundingClientRect().width);
+  testEnd();
+});
+</script>

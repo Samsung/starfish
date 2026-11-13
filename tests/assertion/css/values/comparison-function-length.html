@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>min(), max() and clamp() in a length: sign, argument count and precision</title>
+<style>
+  #box { width: 400px; }
+  #box > div { height: 10px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[comparison-function-length] " + document.title);
+  };
+}
+</script>
+<div id="box">
+  <div id="minusMin" style="width: calc(100px - min(10%, 20px))"></div>
+  <div id="minusMaxProduct" style="width: calc(100px - max(10%, 20px) * 2)"></div>
+  <div id="minusClamp" style="width: calc(100px - clamp(10px, 10%, 30px))"></div>
+  <div id="min3" style="width: 7px; width: min(10%, 30px, 25px)"></div>
+  <div id="max3" style="width: 7px; width: max(10%, 30px, 50px)"></div>
+  <div id="max3Fixed" style="width: 7px; width: max(1px, 2px, 3px)"></div>
+  <div id="nested3" style="width: 7px; width: calc(1px + min(10%, 50px, 30px))"></div>
+  <div id="clampFraction" style="width: clamp(10px, 20.5px, 30px)"></div>
+  <div id="clampMinFraction" style="width: clamp(10.5px, 1%, 300px)"></div>
+  <div id="flipSign" style="width: calc(100px - min(10%, 20px))"></div>
+  <div id="flipFunction" style="width: min(10%, 50px)"></div>
+</div>
+<script>
+// css-values-4 #comp-func: min() and max() take one or more arguments and
+// clamp(MIN, VAL, MAX) is max(MIN, min(VAL, MAX)); a subtracted function
+// is negated like any other term of the sum.
+window.addEventListener("load", function () {
+  function el(id) { return document.getElementById(id); }
+  function width(id) { return el(id).getBoundingClientRect().width; }
+  function is(id, expected) {
+    console.assert(width(id) === expected, id + ": " + width(id) + " != " + expected);
+  }
+
+  is("minusMin", 80);
+  is("minusMaxProduct", 20);
+  is("minusClamp", 70);
+  console.assert(el("minusMin").style.width === "calc(100px - min(10%, 20px))",
+    "serialized: " + el("minusMin").style.width);
+  is("min3", 25);
+  is("max3", 50);
+  is("max3Fixed", 3);
+  is("nested3", 31);
+  is("clampFraction", 20.5);
+  is("clampMinFraction", 10.5);
+
+  // A changed sign or function is a changed value.
+  el("flipSign").style.width = "calc(100px + min(10%, 20px))";
+  is("flipSign", 120);
+  el("flipFunction").style.width = "max(10%, 50px)";
+  is("flipFunction", 50);
+  testEnd();
+});
+</script>

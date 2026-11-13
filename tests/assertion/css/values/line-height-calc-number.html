@@ -1,0 +1,53 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A unitless calc() line-height or opacity resolves as an unrounded number</title>
+<style>
+  div { font-family: sans-serif; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[line-height-calc-number] " + document.title);
+  };
+}
+</script>
+<div id="div24" style="font-size: 24px; line-height: calc(32 / 24)">x</div>
+<div id="div20" style="font-size: 20px; line-height: calc(28 / 20)">x</div>
+<div id="min" style="font-size: 20px; line-height: min(1.2, 2 * 0.7)">x</div>
+<div id="clamp" style="font-size: 20px; line-height: clamp(1, 1.5, 2)">x</div>
+<div id="negatedMin" style="font-size: 20px; line-height: calc(1 - min(0.5, 2 * 0.3))">x</div>
+<div style="font-size: 24px; line-height: calc(32 / 24)"><div id="child" style="font-size: 12px">x</div></div>
+<div id="opacityClamp" style="opacity: clamp(0.2, 0.5, 0.8)">x</div>
+<div id="opacityNestedClamp" style="opacity: calc(0.25 * clamp(1, 2, 3))">x</div>
+<script>
+// css-values-4 #calc-computed-value: a calc() resolving to a <number>
+// computes to that number, and line-height multiplies it by the font size
+// (css-inline-3 #line-height-property); nothing rounds the number itself.
+window.addEventListener("load", function () {
+  function lineHeight(id) { return getComputedStyle(document.getElementById(id)).lineHeight; }
+
+  console.assert(lineHeight("div24") === "32px", "calc(32 / 24) at 24px: " + lineHeight("div24"));
+  console.assert(document.getElementById("div24").getBoundingClientRect().height === 32,
+    "one line at calc(32 / 24) x 24px: " + document.getElementById("div24").getBoundingClientRect().height);
+  console.assert(lineHeight("div20") === "28px", "calc(28 / 20) at 20px: " + lineHeight("div20"));
+  console.assert(lineHeight("min") === "24px", "min(1.2, 2 * 0.7) at 20px: " + lineHeight("min"));
+  console.assert(lineHeight("clamp") === "30px", "clamp(1, 1.5, 2) at 20px: " + lineHeight("clamp"));
+  console.assert(lineHeight("negatedMin") === "10px",
+    "calc(1 - min(0.5, 2 * 0.3)) at 20px: " + lineHeight("negatedMin"));
+  // The number, not the parent's length, is inherited.
+  console.assert(lineHeight("child") === "16px", "inherited calc(32 / 24) at 12px: " + lineHeight("child"));
+  // Opacity resolves the same number calc(), comparisons included.
+  function opacity(id) { return getComputedStyle(document.getElementById(id)).opacity; }
+  console.assert(opacity("opacityClamp") === "0.5", "opacity clamp(0.2, 0.5, 0.8): " + opacity("opacityClamp"));
+  console.assert(opacity("opacityNestedClamp") === "0.5",
+    "opacity calc(0.25 * clamp(1, 2, 3)): " + opacity("opacityNestedClamp"));
+  testEnd();
+});
+</script>

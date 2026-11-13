@@ -1,0 +1,29 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Empty, unclosed or padded math functions are handled without a crash</title>
+<style>
+  #rule { opacity: max(); width: min(); height: clamp(); }
+</style>
+<div id="rule">x</div>
+<div id="script" style="--a: 50px">x</div>
+<script>
+// css-values-4 #comp-func: min() and max() need at least one argument and
+// clamp() exactly three, so these declarations are invalid; the test passes
+// if they are dropped without crashing.
+var el = document.getElementById("script");
+["min()", "max()", "clamp()", "calc()", "min(", "max(", "clamp(", "calc("].forEach(function (value) {
+  el.style.width = value;
+  el.style.opacity = value;
+});
+getComputedStyle(document.getElementById("rule")).opacity;
+getComputedStyle(el).width;
+// A math function holding var() is substituted when the style is computed:
+// one left open at the end of the value (css-syntax-3 #consume-function) or
+// followed by whitespace must not crash either.
+[["color", "calc(var(--a) + 1"], ["color", "calc(var(--a)) "], ["width", "calc(var(--a)) "],
+ ["width", "calc(var(--a) + 1px"], ["width", "min(var(--a), 30px) "]].forEach(function (c) {
+  el.style.setProperty(c[0], c[1]);
+  getComputedStyle(el).getPropertyValue(c[0]);
+});
+if (typeof testEnd === "function") testEnd();
+</script>

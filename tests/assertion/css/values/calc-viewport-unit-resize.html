@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>A calc() with viewport units follows a viewport resize</title>
+<style>
+iframe { border: 0; }
+</style>
+</head>
+<body>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0;
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (cond, msg) {
+    if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[calc-viewport-unit-resize] ' + verdict);
+    document.title = verdict;
+  };
+}
+
+// Viewport units are absolute lengths resolved against the current viewport
+// (css-values-4 #viewport-relative-lengths), also inside calc(): resizing the
+// iframe's viewport must update them.
+var steps = [
+  { width: 200, height: 100 },
+  { width: 300, height: 200 },
+  { width: 200, height: 100 }
+];
+var current = 0;
+
+function check() {
+  var frame = document.getElementById('frame');
+  frame.width = steps[current].width;
+  frame.height = steps[current].height;
+  frame.getBoundingClientRect();
+  frame.contentWindow.postMessage('check', '*');
+}
+
+function near(a, b) {
+  return Math.abs(a - b) < 0.1;
+}
+
+window.addEventListener('message', function (event) {
+  if (event.data === 'ready') {
+    check();
+    return;
+  }
+  var expected = steps[current];
+  var seen = event.data;
+  var tag = 'viewport ' + expected.width + 'x' + expected.height + ': ';
+  console.assert(seen.innerWidth === expected.width &&
+                 seen.innerHeight === expected.height,
+                 tag + 'inner size ' + seen.innerWidth + 'x' + seen.innerHeight);
+  console.assert(near(seen.width, expected.width / 2 + 10),
+                 tag + 'calc(50vw + 10px) ' + seen.width);
+  console.assert(near(seen.height, expected.height / 2 + 10),
+                 tag + 'calc(50vh + 10px) ' + seen.height);
+  console.assert(near(seen.mixed, expected.width * 0.3),
+                 tag + 'calc(10% + 20vw) ' + seen.mixed);
+  // With no box, the resolved value is the computed value, an absolute
+  // length (css-values-4 #calc-computed-value).
+  console.assert(seen.hidden === (expected.width / 2 + 10) + 'px',
+                 tag + 'computed calc(50vw + 10px) ' + seen.hidden);
+  current++;
+  if (current < steps.length) {
+    check();
+  } else {
+    testEnd();
+  }
+});
+</script>
+<iframe id="frame" width="200" height="100"
+        src="resources/calc-viewport-unit-resize_iframe.html"></iframe>
+</body>
+</html>

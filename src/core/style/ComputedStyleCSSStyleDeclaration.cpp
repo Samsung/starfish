@@ -778,10 +778,6 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::Bottom:
     case CSSStyleValuePair::KeyKind::Left: {
         CSSStyleValuePair t, b, l, r;
-        t.setKeyKind(CSSStyleValuePair::KeyKind::Top);
-        b.setKeyKind(CSSStyleValuePair::KeyKind::Bottom);
-        l.setKeyKind(CSSStyleValuePair::KeyKind::Left);
-        r.setKeyKind(CSSStyleValuePair::KeyKind::Right);
         if (frame && frame->isFrameBox() && frame->isPositioned()) {
             FrameBox* cb = containingBlock(frame);
             FrameBox* self = frame->asFrameBox();
@@ -865,7 +861,18 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                     }
                 }
             }
+        } else {
+            // cssom-1 #resolved-values: without a positioned layout box the
+            // resolved value is the computed value.
+            t = lengthToCSSStyleValue(style->top());
+            b = lengthToCSSStyleValue(style->bottom());
+            l = lengthToCSSStyleValue(style->left());
+            r = lengthToCSSStyleValue(style->right());
         }
+        t.setKeyKind(CSSStyleValuePair::KeyKind::Top);
+        b.setKeyKind(CSSStyleValuePair::KeyKind::Bottom);
+        l.setKeyKind(CSSStyleValuePair::KeyKind::Left);
+        r.setKeyKind(CSSStyleValuePair::KeyKind::Right);
 
         if (keyKind == CSSStyleValuePair::KeyKind::Top) {
             addValuePair(t);

@@ -1,0 +1,49 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>calc() is evaluated as one value: a leading number is not rounded alone</title>
+<style>
+  #box { width: 300px; }
+  #box > div { height: 10px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[calc-leading-number-operand] " + document.title);
+  };
+}
+</script>
+<div id="box">
+  <div id="leading" style="width: calc(1 / 3 * 100px)"></div>
+  <div id="trailing" style="width: calc(100px / 3)"></div>
+  <div id="sum" style="width: calc(2 / 3 * 100px + 1px)"></div>
+  <div id="percent" style="width: calc(1 / 3 * 30%)"></div>
+  <div id="nan" style="width: calc(1px * (1e400 - 1e400))"></div>
+  <div id="opacity" style="opacity: calc(1e400 - 1e400)"></div>
+</div>
+<script>
+// css-values-4 #calc-computed-value: a math function resolves to one
+// value; a number operand is not rounded to layout precision on its own,
+// and a top-level NaN acts as zero (#top-level-calculation).
+window.addEventListener("load", function () {
+  function width(id) { return document.getElementById(id).getBoundingClientRect().width; }
+  function near(id, expected) {
+    console.assert(Math.abs(width(id) - expected) < 0.02, id + ": " + width(id) + " != " + expected);
+  }
+
+  near("leading", 100 / 3);
+  near("trailing", 100 / 3);
+  near("sum", 200 / 3 + 1);
+  near("percent", 30);
+  console.assert(width("nan") === 0, "NaN width: " + width("nan"));
+  var opacity = getComputedStyle(document.getElementById("opacity")).opacity;
+  console.assert(opacity === "0", "NaN opacity: " + opacity);
+  testEnd();
+});
+</script>

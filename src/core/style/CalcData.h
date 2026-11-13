@@ -221,10 +221,6 @@ public:
         return m_data.m_lengthData;
     }
 
-    LayoutUnit specifiedValue(const LayoutUnit& parentContentLength,
-                              Node* n) const;
-    LayoutUnit specifiedFontValue(Node* n) const;
-
     CSSAngle angleValue() const;
     CSSTime timeValue() const;
 
@@ -272,16 +268,11 @@ public:
 
     CalcValueType type() const;
 
-    float numberValue() const;
+    template <typename Leaf>
+    float evaluate(Leaf& leaf) const;
 
-    LayoutUnit specifiedValue(const LayoutUnit& parentContentLength,
-                              Node* n) const;
-
-    LayoutUnit specifiedFontValue(Node* n) const;
-
-    CSSAngle angleValue() const;
-
-    CSSTime timeValue() const;
+    template <typename Leaf>
+    CalcTerm* resolvedCopy(Leaf& leaf) const;
 
     String* toString();
     bool equals(CalcTerm* with) const;
@@ -322,10 +313,27 @@ public:
     // Returns true when this data became a plain calc().
     bool foldComparableArguments();
 
-    // Called after every term resolved to px: min()/max() whose arguments
-    // are all px lengths fold to the compared value. Returns true when this
-    // data became a plain calc().
-    bool foldResolvedComparison();
+    // Evaluates in float; |leaf| gives each value that is not a number in
+    // its canonical unit.
+    template <typename Leaf>
+    float evaluate(Leaf& leaf) const;
+
+    // A copy whose lengths are px as |leaf| resolves them.
+    template <typename Leaf>
+    CalcData* resolvedCopy(Leaf& leaf) const;
+
+    // The computed value of a length calc(): font-relative and viewport
+    // lengths resolve to px, and a calc() left with only px or only
+    // percentages is that value (css-values-4 #calc-computed-value).
+    // Descendants inherit the computed value (css-cascade-4 #inheriting),
+    // so for an |inherited| property a calc() that keeps percentages is
+    // copied with those lengths in px. |percentBasis| resolves percentages
+    // too, for a property whose percentages refer to the element itself.
+    Length computedLength(const Length& curFontSize, const Length& rootFontSize,
+                          Optional<Font*> font, LayoutUnit viewportWidth,
+                          LayoutUnit viewportHeight,
+                          Optional<ComputedStyle*> cs, bool inherited = false,
+                          Optional<float> percentBasis = nullptr);
 
     float numberValue() const;
 
@@ -345,6 +353,11 @@ public:
     void setSign(bool isPositive)
     {
         m_isPositive = isPositive;
+    }
+
+    bool isPositive() const
+    {
+        return m_isPositive;
     }
 
     size_t requiredArguemntsCount();

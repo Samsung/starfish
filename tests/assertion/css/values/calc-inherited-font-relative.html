@@ -1,0 +1,66 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>An inherited calc() resolves its font-relative lengths on the declaring element</title>
+<style>
+  .parent { font-size: 10px; width: 400px; }
+  .child { font-size: 30px; width: 400px; }
+  #lh { line-height: calc(100% + 1em); }
+  #lhRef { line-height: 20px; }
+  #ti { text-indent: calc(10% + 2em); }
+  #sw { stroke-width: calc(10% + 1em); }
+  .strut { display: inline-block; width: 1px; height: 1px; vertical-align: top; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[calc-inherited-font-relative] " + document.title);
+  };
+}
+</script>
+<div id="lh" class="parent"><div id="lhChild" class="child"><span class="strut"></span></div></div>
+<div id="lhRef" class="parent"><div id="lhRefChild" class="child"><span class="strut"></span></div></div>
+<div id="ti" class="parent"><span id="tiText">X</span><div id="tiChild" class="child"><span id="tiChildText">X</span></div></div>
+<div id="sw" class="parent"><div id="swChild" class="child"></div></div>
+<div id="hidden" style="display: none; font-size: 10px; text-indent: calc(10% + 2em)"></div>
+<script>
+// css-cascade-4 #inheriting: a child inherits its parent's computed value,
+// in which font-relative lengths are already absolute
+// (css-values-4 #calc-computed-value).
+window.addEventListener("load", function () {
+  function el(id) { return document.getElementById(id); }
+  function cs(id) { return getComputedStyle(el(id)); }
+  function indent(id, box) {
+    return el(id).getBoundingClientRect().left - el(box).getBoundingClientRect().left;
+  }
+  function is(actual, expected, what) {
+    console.assert(actual === expected, what + ": " + actual + " != " + expected);
+  }
+
+  // line-height percentages refer to the element's own font size, so the
+  // calc() computes to 10px + 10px on the parent.
+  is(cs("lh").lineHeight, "20px", "parent line-height");
+  is(cs("lhChild").lineHeight, "20px", "inherited line-height");
+  is(el("lhChild").getBoundingClientRect().height,
+     el("lhRefChild").getBoundingClientRect().height, "inherited line box");
+
+  is(indent("tiText", "ti"), 60, "parent text-indent");
+  is(indent("tiChildText", "ti"), 60, "inherited text-indent");
+  is(cs("ti").textIndent, "calc(10% + 20px)", "parent computed text-indent");
+  is(cs("tiChild").textIndent, "calc(10% + 20px)", "inherited computed text-indent");
+  is(cs("hidden").textIndent, "calc(10% + 20px)", "text-indent without a box");
+
+  is(cs("swChild").strokeWidth, "calc(10% + 10px)", "inherited stroke-width");
+
+  el("ti").style.fontSize = "20px";
+  is(indent("tiChildText", "ti"), 80, "inherited text-indent after font change");
+  is(cs("tiChild").textIndent, "calc(10% + 40px)", "computed text-indent after font change");
+  testEnd();
+});
+</script>

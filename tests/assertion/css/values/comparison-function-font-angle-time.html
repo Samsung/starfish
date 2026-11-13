@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>min(), max() and clamp() compare their arguments in font-size, angles and times</title>
+<style>
+  #box { font-size: 16px; }
+  #box > div { height: 10px; width: 10px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[comparison-function-font-angle-time] " + document.title);
+  };
+}
+</script>
+<div id="box">
+  <div id="fontMin" style="font-size: min(20px, 2em)">x</div>
+  <div id="fontMax" style="font-size: max(10px, 1em)">x</div>
+  <div id="fontClamp" style="font-size: clamp(10px, 2em, 25px)">x</div>
+  <div id="fontMinus" style="font-size: calc(30px - min(1em, 10px))">x</div>
+  <div id="angleClamp" style="transform: rotate(clamp(10deg, 50deg, 30deg))"></div>
+  <div id="angleMin" style="transform: rotate(min(10deg * 2, 30deg))"></div>
+  <div id="angleMinus" style="transform: rotate(calc(90deg - min(10deg * 2, 30deg)))"></div>
+  <div id="timeClamp" style="transition-duration: clamp(1s, 5s, 2s)"></div>
+  <div id="timeMin" style="transition-duration: min(1s * 2, 3s)"></div>
+</div>
+<script>
+// css-values-4 #comp-func: the comparison functions pick one argument,
+// whatever the type they resolve to.
+window.addEventListener("load", function () {
+  function cs(id) { return getComputedStyle(document.getElementById(id)); }
+  function rotation(id) {
+    var m = cs(id).transform.match(/matrix\(([^,]+), ([^,]+)/);
+    return m ? Math.atan2(parseFloat(m[2]), parseFloat(m[1])) * 180 / Math.PI : NaN;
+  }
+
+  console.assert(cs("fontMin").fontSize === "20px", "font-size min(): " + cs("fontMin").fontSize);
+  console.assert(cs("fontMax").fontSize === "16px", "font-size max(): " + cs("fontMax").fontSize);
+  console.assert(cs("fontClamp").fontSize === "25px", "font-size clamp(): " + cs("fontClamp").fontSize);
+  console.assert(cs("fontMinus").fontSize === "20px", "font-size - min(): " + cs("fontMinus").fontSize);
+  console.assert(Math.abs(rotation("angleClamp") - 30) < 0.01, "rotate clamp(): " + rotation("angleClamp"));
+  console.assert(Math.abs(rotation("angleMin") - 20) < 0.01, "rotate min(): " + rotation("angleMin"));
+  console.assert(Math.abs(rotation("angleMinus") - 70) < 0.01, "rotate - min(): " + rotation("angleMinus"));
+  console.assert(cs("timeClamp").transitionDuration === "2s", "duration clamp(): " + cs("timeClamp").transitionDuration);
+  console.assert(cs("timeMin").transitionDuration === "2s", "duration min(): " + cs("timeMin").transitionDuration);
+  testEnd();
+});
+</script>

@@ -3486,12 +3486,35 @@ CSSTokenValue StyleResolver::resolveVarReferencedValue(
         cssValuePair.varFunctionValue()->toOptionalUTF8String();
     size_t startIndex = 0;
     size_t size = utf8String.m_bufferSize;
+    CSSTokenValue header;
     if (cssValuePair.temporaryValueKind() ==
         CSSStyleValuePair::ValueKind::CalcValueKind) {
-        // This is the length of "calc(".
-        startIndex = 5;
-        // consider ')' too
-        size -= 6;
+        // A single "<name>(...)" (calc, min, max or clamp) has its arguments
+        // resolved alone and put back into the same function; the end of the
+        // value closes it if it is still open (css-syntax-3
+        // #consume-function). Anything else is substituted as is.
+        const char* buffer = utf8String.m_buffer;
+        const char* open = static_cast<const char*>(memchr(buffer, '(', size));
+        if (open) {
+            size_t begin = open + 1 - buffer;
+            size_t end = begin;
+            for (size_t depth = 1; end < size; end++) {
+                if (buffer[end] == '(') {
+                    depth++;
+                } else if (buffer[end] == ')' && !--depth) {
+                    break;
+                }
+            }
+            size_t rest = end < size ? end + 1 : size;
+            while (rest < size && String::isSpaceOrNewline(buffer[rest])) {
+                rest++;
+            }
+            if (rest == size) {
+                header.assign(buffer, begin);
+                startIndex = begin;
+                size = end - begin;
+            }
+        }
     }
     // we should keep reference of utf8String.m_buffer
     // for bdwgc find the pointer of `utf8String.m_buffer`
@@ -3501,9 +3524,8 @@ CSSTokenValue StyleResolver::resolveVarReferencedValue(
     CSSTokenValue newCssValue =
         resolveVarReferencedValue(node, utf8String, cssCustomValues());
 
-    if (cssValuePair.temporaryValueKind() ==
-        CSSStyleValuePair::ValueKind::CalcValueKind) {
-        newCssValue = "calc(" + newCssValue + ")";
+    if (!header.empty()) {
+        newCssValue = header + newCssValue + ")";
     }
     return newCssValue;
 }
@@ -6016,7 +6038,7 @@ void StyleResolver::applyProperty(Element* element,
                     // value.
                     style->setLineHeight(
                         Length(Length::InheritableNumber,
-                               value.calcData()->specifiedValue(0, element)));
+                               value.calcData()->numberValue()));
                 } else {
                     style->setLineHeight(length.getValue());
                 }
@@ -13857,11 +13879,20 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                    parser.consumeIfNext(',')) {
             isPlus = true;
             currentArgc++;
-            if (currentArgc > data->requiredArguemntsCount()) {
+            // min()/max() take any number of arguments (css-values-4
+            // #comp-func); clamp() takes three.
+            if (data->type() == CalcData::Type::kClamp &&
+                currentArgc > data->requiredArguemntsCount()) {
                 return false;
             }
             data->addArgumentsStartPostion(data->terms().size());
         } else if (parser.consumeIfNext(')')) {
+            // clamp() takes exactly three arguments (css-values-4
+            // #funcdef-clamp); fewer makes the whole declaration invalid.
+            if (data->type() == CalcData::Type::kClamp &&
+                currentArgc != data->requiredArguemntsCount()) {
+                return false;
+            }
             break;
         }
 
@@ -13909,6 +13940,8 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
         if (!parser.consumeIfNext('(')) {
             return false;
         }
+        // "calc(", "min(", "max(" or "clamp(".
+        size_t headerSize = parser.curPos() - token.data();
 
         CalcData* data = new CalcData(name);
         bool result =
@@ -13920,12 +13953,15 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
             return true;
         }
 
+        // The arguments alone are checked for var() references, without the
+        // function header and the closing ")".
+        if (token.size() <= headerSize || token.back() != ')') {
+            return false;
+        }
         CSSTokenVector tokens;
-        // The css token will be parsed except for "calc(" and ")".
-        size_t calcHeaderSize = strlen(calcHeader) + 1;
-        CSSStyleDeclaration::tokenizeCSSValue(
-            tokens, token.c_str() + calcHeaderSize,
-            token.size() - (calcHeaderSize + 1));
+        CSSStyleDeclaration::tokenizeCSSValue(tokens,
+                                              token.c_str() + headerSize,
+                                              token.size() - (headerSize + 1));
         if (updateValueVarReferences(tokens)) {
             m_valueKind = CSSStyleValuePair::ValueKind::VarFunctionValueKind;
             m_temporaryValueKind = CSSStyleValuePair::ValueKind::CalcValueKind;

@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>clamp() with fewer than three arguments is an invalid declaration</title>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[clamp-argument-count] " + document.title);
+  };
+}
+</script>
+<div id="opacity" style="opacity: 0.25; opacity: clamp(0.1, 0.5)">x</div>
+<div id="lineHeight" style="font-size: 10px; line-height: 3; line-height: clamp(1, 2)">x</div>
+<div id="width" style="width: 30px; width: clamp(10px, 20px)">x</div>
+<script>
+// css-values-4 #funcdef-clamp: clamp() takes exactly three arguments, so
+// each second declaration is invalid and the first one stays in effect.
+window.addEventListener("load", function () {
+  function el(id) { return document.getElementById(id); }
+
+  console.assert(el("opacity").style.opacity === "0.25", "specified opacity: " + el("opacity").style.opacity);
+  console.assert(getComputedStyle(el("opacity")).opacity === "0.25",
+    "computed opacity: " + getComputedStyle(el("opacity")).opacity);
+  console.assert(el("lineHeight").style.lineHeight === "3", "specified line-height: " + el("lineHeight").style.lineHeight);
+  console.assert(getComputedStyle(el("lineHeight")).lineHeight === "30px",
+    "computed line-height: " + getComputedStyle(el("lineHeight")).lineHeight);
+  console.assert(el("width").style.width === "30px", "specified width: " + el("width").style.width);
+  console.assert(el("width").getBoundingClientRect().width === 30,
+    "used width: " + el("width").getBoundingClientRect().width);
+  testEnd();
+});
+</script>
