@@ -1943,7 +1943,7 @@ RTCRtpTransceiver* RTCPeerConnection::addTransceiver(
 }
 
 // https://w3c.github.io/webrtc-pc/#widl-RTCPeerConnection-getStats-Promise-RTCStatsReport--MediaStreamTrack-selector
-Promise* RTCPeerConnection::getStats(MediaStreamTrack* selector)
+Promise* RTCPeerConnection::getStats(Optional<MediaStreamTrack*> selector)
 {
     Promise* promise = new Promise(scriptBindingInstance());
     m_getStatsObserver->addPromise(promise);
@@ -1953,13 +1953,13 @@ Promise* RTCPeerConnection::getStats(MediaStreamTrack* selector)
         RTCRtpSender* sender = nullptr;
         RTCRtpReceiver* receiver = nullptr;
         for (auto transceiver : m_transceivers) {
-            if (transceiver->sender()->track() == selector) {
+            if (transceiver->sender()->track() == selector.value()) {
                 count++;
                 if (!sender) {
                     sender = transceiver->sender();
                 }
             }
-            if (transceiver->receiver()->track() == selector) {
+            if (transceiver->receiver()->track() == selector.value()) {
                 count++;
                 if (!receiver) {
                     receiver = transceiver->receiver();
@@ -2081,10 +2081,18 @@ bool RTCPeerConnection::isValidRemoteState(RTCSdpType type)
     return false;
 }
 
-void RTCPeerConnection::addStream(MediaStream* stream)
+void RTCPeerConnection::addStream(Optional<MediaStream*> stream)
 {
+    // Legacy, non-standard method. Its IDL argument is nullable, but Chromium
+    // (the only shipping implementation) takes a non-nullable MediaStream, so
+    // null throws the TypeError its argument conversion would.
+    if (!stream) {
+        throw new DOMException(executionContext(),
+                               DOMException::SCRIPT_TYPE_ERR,
+                               "parameter 1 is not of type 'MediaStream'.");
+    }
     GCVector<MediaStream*> streams;
-    streams.push_back(stream);
+    streams.push_back(stream.value());
     for (const auto& track : stream->getTracks()) {
         addTrack(track, streams);
     }

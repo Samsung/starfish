@@ -568,16 +568,18 @@ String* HTMLMediaElement::src()
     return getAttributeOrEmpty(starfish()->staticStrings()->m_src);
 }
 
+#if defined(STARFISH_ENABLE_WEBRTC)
 // https://w3c.github.io/mediacapture-main/#mediastreams-in-media-elements
-void HTMLMediaElement::setSrcObject(MediaProvider* provider)
+void HTMLMediaElement::setSrcObject(Optional<MediaProvider*> provider)
 {
     // On setting, it must set the element's assigned media provider object to
     // the new value,
-    m_mediaProvider = provider;
+    m_mediaProvider = provider.valueOrNull();
 
     // and then invoke the element's media element load algorithm.
     load();
 }
+#endif
 
 MediaProvider* HTMLMediaElement::srcObject()
 {

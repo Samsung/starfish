@@ -31,6 +31,7 @@ tests/assertion/webaudio/media-audio-decode.html
 # tests/assertion/webaudio/media-element-source-pcm.html # FFmpeg player: setOriginClean(isMSE()) marks Blob PCM not origin-clean
 # tests/assertion/webaudio/media-audio-error.html # FFmpeg player: data: URLs never reach a demuxer
 tests/assertion/webaudio/media-audio-source-replace.html
+tests/assertion/webrtc/nullable-arguments.html
 tests/assertion/observable-array/write_through.html
 tests/assertion/observable-array/whole_assignment.html
 tests/assertion/observable-array/length_truncation.html

@@ -301,7 +301,9 @@ public:
 
     void setSrc(String* src);
     String* src();
-    virtual void setSrcObject(MediaProvider* provider);
+#if defined(STARFISH_ENABLE_WEBRTC)
+    virtual void setSrcObject(Optional<MediaProvider*> provider);
+#endif
     NULLABLE virtual MediaProvider* srcObject();
 
     String* currentSrc();

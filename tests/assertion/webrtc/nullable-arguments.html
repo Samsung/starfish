@@ -1,0 +1,48 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebRTC nullable interface arguments</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "WebRTC nullable arguments complete";
+    };
+}
+
+function withTimeout(promise, ms) {
+    return Promise.race([promise, new Promise(function (resolve, reject) {
+        setTimeout(function () { reject(new Error("timed out")); }, ms);
+    })]);
+}
+
+if (typeof RTCPeerConnection !== "function") {
+    testEnd();
+} else {
+    const pc = new RTCPeerConnection();
+    // Legacy method; Chromium declares its argument non-nullable.
+    if (typeof pc.addStream === "function") {
+        let error = null;
+        try {
+            pc.addStream(null);
+        } catch (e) {
+            error = e;
+        }
+        console.assert(error instanceof TypeError,
+                       "addStream(null) throws TypeError: " + error);
+    }
+
+    const video = document.createElement("video");
+    video.srcObject = null;
+    console.assert(video.srcObject === null,
+                   "srcObject = null leaves no media provider");
+
+    withTimeout(pc.getStats(null), 5000).then(function (report) {
+        console.assert(report instanceof RTCStatsReport,
+                       "getStats(null) resolves with a report");
+    }, function (error) {
+        console.assert(false, "getStats(null) rejected: " + error);
+    }).then(function () {
+        pc.close();
+        testEnd();
+    });
+}
+</script>

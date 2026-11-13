@@ -204,7 +204,7 @@ RTCRtpSendParameters RTCRtpSender::getParameters()
 }
 
 // https://w3c.github.io/webrtc-pc/#dom-rtcrtpsender-replacetrack
-Promise* RTCRtpSender::replaceTrack(MediaStreamTrack* withTrack)
+Promise* RTCRtpSender::replaceTrack(Optional<MediaStreamTrack*> withTrack)
 {
     Promise* promise = new Promise(scriptBindingInstance());
 
@@ -262,7 +262,7 @@ Promise* RTCRtpSender::replaceTrack(MediaStreamTrack* withTrack)
     Params* p = new Params();
     p->self = this;
     p->promise = promise;
-    p->withTrack = withTrack;
+    p->withTrack = withTrack.valueOrNull();
     p->sending = sending;
 
     m_executionContext->webBase()->messageLoop()->addIdler(

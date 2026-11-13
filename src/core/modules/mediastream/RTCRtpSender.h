@@ -54,7 +54,7 @@ public:
 
     RTCRtpSendParameters getParameters();
 
-    Promise* replaceTrack(MediaStreamTrack* withTrack);
+    Promise* replaceTrack(Optional<MediaStreamTrack*> withTrack);
 
     void setStreams(GCVector<MediaStream*>& streams);
 

@@ -403,7 +403,7 @@ public:
         DOMStringOrMediaStreamTrack trackOrKind,
         RTCRtpTransceiverInit init = RTCRtpTransceiverInit());
 
-    Promise* getStats(MediaStreamTrack* selector = nullptr);
+    Promise* getStats(Optional<MediaStreamTrack*> selector = nullptr);
 
     libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnection> backend();
     bool initializePeerConnection();
@@ -417,7 +417,7 @@ public:
     DOMException* toDomException(std::string type);
 
     bool isClosed();
-    void addStream(MediaStream* stream);
+    void addStream(Optional<MediaStream*> stream);
     GCVector<MediaStream*> getRemoteStreams();
 
 private:
