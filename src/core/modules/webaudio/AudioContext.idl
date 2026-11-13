@@ -49,6 +49,7 @@ dictionary AudioTimestamp {
 interface AudioContext : BaseAudioContext {
   readonly attribute double baseLatency;
   readonly attribute double outputLatency;
+  attribute EventHandler onerror;
   AudioTimestamp getOutputTimestamp ();
   Promise<void> resume ();
   Promise<void> suspend ();

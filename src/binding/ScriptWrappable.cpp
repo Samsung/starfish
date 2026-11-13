@@ -2583,6 +2583,30 @@ void detachArrayBuffer(ScriptBindingInstance* instance,
         buffer);
 }
 
+ValueRef* callPromiseOperation(ExecutionStateRef* state, ValueRef* thisValue,
+                               size_t argc, ValueRef** argv,
+                               bool isNewExpression,
+                               ScriptNativeFunctionPointer steps)
+{
+    // Nested under |state| to keep GENERATE_WINDOW's resolution of an
+    // undefined this, which needs a parent state. It resolves to the
+    // caller's global, a known deviation: Web IDL uses the operation's realm.
+    auto result = Evaluator::execute(
+        state,
+        [](ExecutionStateRef* state, ScriptNativeFunctionPointer steps,
+           ValueRef* thisValue, size_t argc, ValueRef** argv,
+           bool isNewExpression) -> ValueRef* {
+            return steps(state, thisValue, argc, argv, isNewExpression);
+        },
+        steps, thisValue, argc, argv, isNewExpression);
+    if (!result.error.hasValue()) {
+        return result.result;
+    }
+    PromiseObjectRef* promise = PromiseObjectRef::create(state);
+    promise->reject(state, result.error.value());
+    return promise;
+}
+
 void enqueueMicrotask(ScriptBindingInstance* instance, void (*callback)(void*),
                       void* data)
 {

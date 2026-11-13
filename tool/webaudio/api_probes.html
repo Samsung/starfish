@@ -1121,8 +1121,8 @@ const groups = {
     // AudioBufferSourceNode plays nothing, a ConvolverNode renders silence
     // and a ScriptProcessorNode outputs silence for that event. Each graph
     // also runs without that detach and must then be audible.
-    // ArrayBuffer.prototype.transfer() detaches; postMessage() transfer does
-    // not yet, which keeps WPT transferred-buffer-output.html tracked.
+    // ArrayBuffer.prototype.transfer() detaches here; WPT
+    // transferred-buffer-output.html covers a postMessage() transfer.
     'detached-channel': async () => {
         const filled = (detached) => {
             const buffer = new AudioBuffer({length: 1024, sampleRate: 8000});

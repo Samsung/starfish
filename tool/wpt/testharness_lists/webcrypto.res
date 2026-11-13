@@ -99,7 +99,7 @@ https://web-platform.test:8443/WebCryptoAPI/generateKey/successes_X25519.https.a
 http://web-platform.test:8000/WebCryptoAPI/getRandomValues.any.html
 http://web-platform.test:8000/WebCryptoAPI/getRandomValues.any.worker.html
 # http://web-platform.test:8000/WebCryptoAPI/historical.any.html # Needs [SecureContext] support in the binding generator.
-# https://web-platform.test:8443/WebCryptoAPI/idlharness.https.any.html # Crashed in the generated Window attribute getter, fixed by #5400. Not enabled yet: #5404 (WC-04).
+https://web-platform.test:8443/WebCryptoAPI/idlharness.https.any.html
 # https://web-platform.test:8443/WebCryptoAPI/idlharness.tentative.https.any.html # Tentative. Not in the WebCrypto spec.
 # https://web-platform.test:8443/WebCryptoAPI/import_export/AES-OCB_importKey.tentative.https.any.html # Tentative. Not in the WebCrypto spec.
 # https://web-platform.test:8443/WebCryptoAPI/import_export/Argon2_importKey.tentative.https.any.html # Tentative. Not in the WebCrypto spec.

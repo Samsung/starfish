@@ -314,9 +314,9 @@ private:
             this, arrayObject);
 
         if (!result.isSuccessful()) {
-            throw new DOMException(m_executionContext,
-                                   DOMException::DATA_CLONE_ERR,
-                                   "Failed to serialize an array object.");
+            // A getter's exception is rethrown as it is.
+            throwScriptException(m_executionContext->scriptBindingInstance(),
+                                 result.error.value());
         }
 
         writeTag(ScriptValueSerializerTag::EndArrayObject);
@@ -403,10 +403,8 @@ private:
             this, object);
 
         if (!result.isSuccessful()) {
-            throw new DOMException(m_executionContext,
-                                   DOMException::DATA_CLONE_ERR,
-                                   "Failed to serialize an object.");
-            return;
+            throwScriptException(m_executionContext->scriptBindingInstance(),
+                                 result.error.value());
         }
 
         writeTag(ScriptValueSerializerTag::EndObject);

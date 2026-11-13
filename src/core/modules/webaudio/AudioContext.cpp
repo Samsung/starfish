@@ -159,6 +159,8 @@ ScriptBindingInstance* AudioContext::scriptBindingInstance()
     return executionContext()->scriptBindingInstance();
 }
 
+DEFINE_EVENT_LISTENER(AudioContext, error);
+
 // https://webaudio.github.io/web-audio-api/#dom-audiocontext-baselatency
 double AudioContext::baseLatency() const
 {

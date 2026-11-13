@@ -532,10 +532,17 @@ static SerializedTypedData* serializeInternal(
     } else if (value->isString()) {
         type = SerializedTypedData::StringPrimitive;
         data = new SerializedStringData(value->asString()->toStdUTF8String());
+    } else if (value->isSymbol()) {
+        // "If value is a Symbol, then throw a DataCloneError."
+        return nullptr;
     } else if (value->isObject()) {
         primitive = false;
         ScriptObject obj = value->asObject();
-        if (obj->isBooleanObject()) {
+        if (obj->isProxyObject()) {
+            // An exotic object that is not a platform object is a
+            // DataCloneError, found without running a trap.
+            return nullptr;
+        } else if (obj->isBooleanObject()) {
             type = SerializedTypedData::Boolean;
             data = new SerializedPrimitiveValueData(
                 obj->asBooleanObject()->primitiveValue());
@@ -770,7 +777,13 @@ SerializedTypedData* Serializer::serialize(ExecutionContext* executionContext,
         },
         &data, executionContext, value, &memory);
 
-    if (!result.error.hasValue() && data) {
+    if (result.error.hasValue()) {
+        // "? value.[[Get]](key, value)" lets an abrupt completion through as
+        // it is.
+        throwScriptException(executionContext->scriptBindingInstance(),
+                             result.error.value());
+    }
+    if (data) {
         return data;
     } else {
         COMPOSE_MESSAGE(
@@ -853,11 +866,10 @@ void Serializer::serializeWithTransfer(
             initialMap.insert(std::make_pair(item, placeHolder));
             result.m_serializedTransfer.push_back(placeHolder);
         } else if (item->isArrayBufferObject()) {
-            SerializedTypedData* serialized = new SerializedTypedData(
-                SerializedTypedData::ArrayBuffer,
-                new SerializedArrayBufferData(executionContext,
-                                              item->asArrayBufferObject()));
-            initialMap.insert(std::make_pair(item, serialized));
+            // Its bytes are taken after serialization, as the transfer step.
+            initialMap.insert(std::make_pair(
+                item, new SerializedTypedData(SerializedTypedData::ArrayBuffer,
+                                              nullptr)));
             result.m_serializedTransfer.push_back(nullptr);
         } else {
             throw new DOMException(executionContext,
@@ -893,6 +905,14 @@ void Serializer::serializeWithTransfer(
                 tf->setDetached();
                 placeHolder->setPlatformObjectData(dataHolder);
             }
+        } else {
+            // Serialization may have detached or rewritten it, so it is
+            // checked and copied only now; the copy throws DataCloneError for
+            // a detached buffer.
+            ScriptArrayBuffer buffer = item->asArrayBufferObject();
+            initialMap.find(item)->second->setArrayBufferData(
+                new SerializedArrayBufferData(executionContext, buffer));
+            buffer->detachArrayBuffer();
         }
     }
     result.m_serialized = serialized;

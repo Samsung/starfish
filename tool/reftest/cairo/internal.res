@@ -21,6 +21,7 @@ tests/assertion/webaudio/oscillator-basic.html
 tests/assertion/webaudio/waveshaper-curve.html
 tests/assertion/webaudio/compressor-tail.html
 tests/assertion/webaudio/buffer-acquire.html
+tests/assertion/webaudio/webidl-operations.html
 tests/assertion/webaudio/audio-listener.html
 tests/assertion/webaudio/audio-context-output-latency.html
 tests/assertion/webaudio/decode-navigation.html
@@ -952,6 +953,8 @@ tests/assertion/window/execution-order.html
 tests/assertion/window/structuredClone_01.html
 tests/assertion/window/structuredClone_02.html
 tests/assertion/window/structuredClone_03.html
+tests/assertion/window/transfer-arraybuffer.html
+tests/assertion/window/structured-clone-errors.html
 tests/assertion/window/performance-basic.html
 tests/assertion/window/location-fragment-navigation.html
 tests/assertion/url/URLsearchParams.html

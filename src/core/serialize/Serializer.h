@@ -696,6 +696,12 @@ public:
         m_data = data;
     }
 
+    void setArrayBufferData(SerializedArrayBufferData* data)
+    {
+        STARFISH_ASSERT(m_type == ArrayBuffer);
+        m_data = data;
+    }
+
     enum Type {
         Undefined,
         Null,

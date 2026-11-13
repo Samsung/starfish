@@ -393,6 +393,15 @@ ScriptArrayObject createArray(ScriptBindingInstance* instance,
 void detachArrayBuffer(ScriptBindingInstance* instance,
                        ScriptArrayBuffer buffer);
 
+// https://webidl.spec.whatwg.org/#dfn-create-operation-function
+// Runs a promise-returning operation's steps; whatever they throw (the this
+// check, overload resolution, argument conversion or the operation itself)
+// becomes a promise rejected with it.
+Escargot::ValueRef* callPromiseOperation(
+    Escargot::ExecutionStateRef* state, Escargot::ValueRef* thisValue,
+    size_t argc, Escargot::ValueRef** argv, bool isNewExpression,
+    Escargot::ScriptNativeFunctionPointer steps);
+
 void enqueueMicrotask(ScriptBindingInstance* instance, void (*fn)(void*),
                       void* data);
 

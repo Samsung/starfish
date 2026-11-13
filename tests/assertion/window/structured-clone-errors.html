@@ -1,0 +1,113 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Structured clone errors</title>
+<script>
+// https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializeinternal
+// "? value.[[Get]](key, value)" lets a getter's exception through unchanged;
+// a Symbol and a Proxy are DataCloneErrors, found without running a trap.
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "structured clone errors complete";
+    };
+}
+
+const thrown = new RangeError("from a getter");
+const throwing = {
+    get b() {
+        throw thrown;
+    }
+};
+
+function caught(fn) {
+    try {
+        fn();
+    } catch (e) {
+        return e;
+    }
+    return "no exception";
+}
+
+function name(value) {
+    return value && value.name ? value.name : String(value);
+}
+
+const callers = {
+    "structuredClone()": v => structuredClone(v),
+    "structuredClone() of an array": v => structuredClone([1, v]),
+    "structuredClone() of a Map": v => structuredClone(new Map([[1, v]])),
+    "window.postMessage()": v => window.postMessage(v, "*"),
+    "MessagePort.postMessage()": v => new MessageChannel().port1.postMessage(v),
+    "history.replaceState()": v => history.replaceState(v, "")
+};
+for (const caller in callers) {
+    const e = caught(() => callers[caller](throwing));
+    console.assert(e === thrown,
+                   caller + " rethrows a getter's exception: " + name(e));
+}
+
+// The getter runs before the transfer list is checked for a detached buffer.
+const detached = new ArrayBuffer(4);
+structuredClone(detached, {transfer: [detached]});
+let e = caught(() => structuredClone(throwing, {transfer: [detached]}));
+console.assert(e === thrown,
+               "serialization throws before a detached buffer is found: " +
+                   name(e));
+
+e = caught(() => structuredClone(Symbol()));
+console.assert(name(e) === "DataCloneError", "a Symbol: " + name(e));
+e = caught(() => structuredClone({s: Symbol()}));
+console.assert(name(e) === "DataCloneError", "a Symbol property: " + name(e));
+
+let trapped = false;
+const proxy = new Proxy({}, {
+    ownKeys() {
+        trapped = true;
+        return [];
+    }
+});
+e = caught(() => structuredClone(proxy));
+console.assert(name(e) === "DataCloneError", "a Proxy: " + name(e));
+console.assert(!trapped, "cloning a Proxy runs no trap");
+
+if (typeof Worker === "function") {
+    const worker = new Worker(URL.createObjectURL(
+        new Blob([""], {type: "text/javascript"})));
+    e = caught(() => worker.postMessage(throwing));
+    console.assert(e === thrown,
+                   "Worker.postMessage() rethrows a getter's exception: " +
+                       name(e));
+    worker.terminate();
+}
+
+function request(r) {
+    return new Promise((resolve, reject) => {
+        r.onsuccess = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+    });
+}
+
+// IndexedDB put(): "Let clone be a clone of value ... Rethrow any exceptions."
+async function indexedDBPut() {
+    if (typeof indexedDB === "undefined") {
+        return;
+    }
+    // Nothing is stored, so the database is kept for the next run.
+    const open = indexedDB.open("structured-clone-errors");
+    open.onupgradeneeded = () => open.result.createObjectStore("store");
+    const db = await request(open);
+    const store = db.transaction("store", "readwrite").objectStore("store");
+    e = caught(() => store.put(throwing, 1));
+    console.assert(e === thrown,
+                   "IDBObjectStore.put() rethrows a getter's exception: " +
+                       name(e));
+    e = caught(() => store.put([throwing], 2));
+    console.assert(e === thrown,
+                   "IDBObjectStore.put() of an array rethrows it: " + name(e));
+    db.close();
+}
+
+indexedDBPut().then(testEnd, (error) => {
+    console.assert(false, "unexpected exception " + error);
+    testEnd();
+});
+</script>

@@ -107,6 +107,16 @@ public:
     double outputLatency() const;
     AudioTimestamp getOutputTimestamp() const;
 
+#define VIRTUAL
+#define OVERRIDE
+    // https://webaudio.github.io/web-audio-api/#dom-audiocontext-onerror
+    // Never fired: a context without a working output device renders on a
+    // silent clock instead of failing to acquire it, and device loss is not
+    // reported, so none of the cases that dispatch error arises.
+    DECLARE_EVENT_LISTENER(error);
+#undef VIRTUAL
+#undef OVERRIDE
+
 #if defined(STARFISH_ENABLE_AUDIO_WORKLET)
     void renderOnMainThread() override;
 #endif

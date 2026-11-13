@@ -323,6 +323,7 @@ http://web-platform.test:8000/html/obsolete/requirements-for-implementations/oth
 http://web-platform.test:8000/html/infrastructure/conformance-requirements/extensibility/foreign.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/infrastructure/safe-passing-of-structured-data/window-postmessage.window.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/html/infrastructure/safe-passing-of-structured-data/messagechannel.any.html
+# [auto-fail:SUBTESTS_FAILED] createImageBitmap() of an undrawn canvas rejects with InvalidStateError, ImageBitmap is not transferable and OffscreenCanvas is not implemented, so the eight ImageBitmap/OffscreenCanvas subtests fail: http://web-platform.test:8000/html/infrastructure/safe-passing-of-structured-data/transfer-errors.window.html
 http://web-platform.test:8000/html/interaction/focus/focus-management/focus-event-targets-simple.html
 # [auto-fail] http://web-platform.test:8000/html/interaction/focus/focus-management/focus-events.html
 # [auto-fail] http://web-platform.test:8000/html/editing/editing-0/making-entire-documents-editable-the-designmode-idl-attribute/user-interaction-editing-designMode.html

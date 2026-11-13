@@ -1,0 +1,88 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Web Audio WebIDL operations</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Web Audio WebIDL operations complete";
+    };
+}
+
+// https://webidl.spec.whatwg.org/#dfn-create-operation-function
+// An operation returning a promise rejects it with what its steps throw.
+async function outcome(call) {
+    let promise;
+    try {
+        promise = call();
+    } catch (e) {
+        return "threw " + e.name;
+    }
+    if (!(promise instanceof Promise)) {
+        return "no promise";
+    }
+    try {
+        await promise;
+    } catch (e) {
+        return e.name;
+    }
+    return "resolved";
+}
+
+async function run() {
+    const context = new OfflineAudioContext(1, 128, 8000);
+    const calls = [
+        [() => AudioContext.prototype.resume.call(context),
+         "AudioContext resume() on an OfflineAudioContext"],
+        [() => OfflineAudioContext.prototype.startRendering.call({}),
+         "startRendering() on a plain object"],
+        [() => OfflineAudioContext.prototype.suspend.call({}, 0),
+         "suspend() on a plain object"],
+        [() => context.suspend(), "suspend() without a time"],
+        [() => context.suspend(Infinity), "suspend(Infinity)"],
+        [() => context.decodeAudioData(), "decodeAudioData() without data"],
+        // An overloaded operation and a Window operation.
+        [() => createImageBitmap(), "createImageBitmap() without an image"],
+        [() => fetch.call({}, "data:,"), "fetch() on a plain object"],
+    ];
+    for (const [call, label] of calls) {
+        const result = await outcome(call);
+        console.assert(result === "TypeError",
+                       label + " rejects with TypeError: " + result);
+    }
+
+    // https://webidl.spec.whatwg.org/#es-operations: the shortest overload.
+    console.assert(AudioNode.prototype.connect.length === 1,
+                   "AudioNode connect.length: " +
+                       AudioNode.prototype.connect.length);
+    // https://webidl.spec.whatwg.org/#interface-object: the shortest
+    // constructor overload.
+    console.assert(OfflineAudioContext.length === 1,
+                   "OfflineAudioContext.length: " + OfflineAudioContext.length);
+
+    // https://webidl.spec.whatwg.org/#js-iterable, #js-maplike
+    const iterators = [NodeList];
+    if (typeof AudioParamMap === "function") {
+        iterators.push(AudioParamMap);
+    }
+    for (const type of iterators) {
+        const descriptor = Object.getOwnPropertyDescriptor(type.prototype,
+                                                           Symbol.iterator);
+        console.assert(descriptor && !descriptor.enumerable,
+                       type.name + " @@iterator is not enumerable");
+    }
+
+    const onerror = Object.getOwnPropertyDescriptor(AudioContext.prototype,
+                                                    "onerror");
+    console.assert(onerror && onerror.get && onerror.set,
+                   "AudioContext.prototype.onerror is an accessor");
+}
+
+if (typeof OfflineAudioContext !== "function") {
+    testEnd();
+} else {
+    run().then(testEnd, (e) => {
+        console.assert(false, "unexpected exception " + e);
+        testEnd();
+    });
+}
+</script>

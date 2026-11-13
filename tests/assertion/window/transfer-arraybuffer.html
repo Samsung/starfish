@@ -1,0 +1,107 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>ArrayBuffer transfer</title>
+<script>
+// https://html.spec.whatwg.org/multipage/structured-data.html#structuredserializewithtransfer
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "ArrayBuffer transfer complete";
+    };
+}
+
+function errorName(fn) {
+    try {
+        fn();
+    } catch (e) {
+        return e.name;
+    }
+    return "no exception";
+}
+
+function filled(length) {
+    const buffer = new ArrayBuffer(length);
+    new Uint8Array(buffer).fill(7);
+    return buffer;
+}
+
+function received(target) {
+    return new Promise(resolve => {
+        target.addEventListener("message", event => resolve(event.data),
+                                {once: true});
+    });
+}
+
+let buffer = filled(16);
+let copy = structuredClone(buffer, {transfer: [buffer]});
+console.assert(buffer.byteLength === 0,
+               "structuredClone() detaches a transferred buffer");
+console.assert(copy.byteLength === 16 && new Uint8Array(copy)[15] === 7,
+               "structuredClone() hands over the bytes");
+console.assert(errorName(() => structuredClone(buffer, {transfer: [buffer]})) ===
+                   "DataCloneError",
+               "a detached buffer cannot be transferred again");
+
+buffer = filled(8);
+structuredClone(1, {transfer: [buffer]});
+console.assert(buffer.byteLength === 0,
+               "a transferred buffer the message does not reference is detached");
+
+// The bytes are taken after serialization.
+buffer = filled(4);
+copy = structuredClone({
+    get first() {
+        new Uint8Array(buffer)[0] = 9;
+        return buffer;
+    }
+}, {transfer: [buffer]}).first;
+console.assert(copy.byteLength === 4 && new Uint8Array(copy)[0] === 9,
+               "the transfer takes the bytes serialization left");
+buffer = filled(4);
+console.assert(errorName(() => structuredClone({
+                   get first() {
+                       buffer.transfer();
+                       return 1;
+                   }
+               }, {transfer: [buffer]})) === "DataCloneError",
+               "a buffer detached during serialization cannot be transferred");
+
+buffer = filled(4);
+console.assert(errorName(() => structuredClone({buffer, f() {}},
+                                               {transfer: [buffer]})) ===
+                       "DataCloneError" &&
+                   buffer.byteLength === 4,
+               "a failed serialization leaves the buffer attached");
+
+async function messages() {
+    const channel = new MessageChannel();
+    channel.port2.start();
+    let pending = received(channel.port2);
+    buffer = filled(16);
+    channel.port1.postMessage(buffer, [buffer]);
+    console.assert(buffer.byteLength === 0,
+                   "MessagePort.postMessage() detaches a transferred buffer");
+    console.assert(errorName(() => channel.port1.postMessage(buffer, [buffer])) ===
+                       "DataCloneError",
+                   "MessagePort.postMessage() rejects a detached buffer");
+    copy = await pending;
+    console.assert(copy.byteLength === 16 && new Uint8Array(copy)[0] === 7,
+                   "MessagePort delivers the bytes");
+
+    pending = received(window);
+    buffer = filled(16);
+    window.postMessage(buffer, "*", [buffer]);
+    console.assert(buffer.byteLength === 0,
+                   "window.postMessage() detaches a transferred buffer");
+    console.assert(errorName(() => window.postMessage(buffer, "*", [buffer])) ===
+                       "DataCloneError",
+                   "window.postMessage() rejects a detached buffer");
+    copy = await pending;
+    console.assert(copy.byteLength === 16 && new Uint8Array(copy)[0] === 7,
+                   "window.postMessage() delivers the bytes");
+}
+
+messages().then(testEnd, (e) => {
+    console.assert(false, "unexpected exception " + e);
+    testEnd();
+});
+</script>
