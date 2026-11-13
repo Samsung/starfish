@@ -1,0 +1,81 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebRTC setLocalDescription before any offer or answer</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "WebRTC SLD empty SDP complete";
+    };
+}
+
+// Resolves with how |promise| settled, or "timeout" so a hang fails fast.
+function outcome(promise) {
+    return Promise.race([
+        promise.then(function (value) {
+            return { state: "fulfilled", value: value };
+        }, function (error) {
+            return { state: "rejected", error: error };
+        }),
+        new Promise(function (resolve) {
+            setTimeout(function () { resolve({ state: "timeout" }); }, 5000);
+        })
+    ]);
+}
+
+function rejectedWith(result, name) {
+    return result.state === "rejected" && result.error.name === name;
+}
+
+async function run() {
+    const source = new RTCPeerConnection();
+    source.addTransceiver("audio");
+    const foreignOffer = await outcome(source.createOffer());
+    console.assert(foreignOffer.state === "fulfilled",
+                   "createOffer resolves: " + foreignOffer.state);
+
+    // No offer or answer has been created on |pc| yet.
+    const pc = new RTCPeerConnection();
+    const answer = await outcome(pc.setLocalDescription({
+        type: "answer", sdp: foreignOffer.value.sdp
+    }));
+    console.assert(rejectedWith(answer, "InvalidStateError"),
+                   "answer in stable rejects with InvalidStateError: " +
+                   answer.state);
+    const emptyAnswer = await outcome(
+        pc.setLocalDescription({ type: "answer" }));
+    console.assert(rejectedWith(emptyAnswer, "InvalidStateError"),
+                   "answer without SDP in stable rejects: " +
+                   emptyAnswer.state);
+    const emptyPranswer = await outcome(
+        pc.setLocalDescription({ type: "pranswer" }));
+    console.assert(rejectedWith(emptyPranswer, "InvalidStateError"),
+                   "pranswer without SDP in stable rejects: " +
+                   emptyPranswer.state);
+    // webrtc-pc setLocalDescription step 4.4 would create an offer here;
+    // engines that don't must still settle.
+    const emptyOffer = await outcome(
+        pc.setLocalDescription({ type: "offer" }));
+    console.assert(emptyOffer.state !== "timeout",
+                   "offer without SDP settles: " + emptyOffer.state);
+
+    const offer = await outcome(pc.createOffer());
+    console.assert(offer.state === "fulfilled",
+                   "createOffer still resolves: " + offer.state);
+    const sld = await outcome(pc.setLocalDescription(offer.value));
+    console.assert(sld.state === "fulfilled",
+                   "setLocalDescription still resolves: " + sld.state);
+
+    source.close();
+    pc.close();
+}
+
+if (typeof RTCPeerConnection !== "function") {
+    testEnd();
+} else {
+    run().catch(function (error) {
+        console.assert(false, "unexpected exception: " + error);
+    }).then(function () {
+        testEnd();
+    });
+}
+</script>

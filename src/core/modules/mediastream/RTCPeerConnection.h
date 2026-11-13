@@ -452,8 +452,8 @@ private:
     SetLocalDescriptionObserver* m_setLocalDescriptionObserver = nullptr;
     SetRemoteDescriptionObserver* m_setRemoteDescriptionObserver = nullptr;
     GetStatsObserver* m_getStatsObserver = nullptr;
-    String* m_lastCreatedOffer;
-    String* m_lastCreatedAnswer;
+    String* m_lastCreatedOffer = String::emptyString;
+    String* m_lastCreatedAnswer = String::emptyString;
     GCVector<RTCRtpTransceiver*> m_transceivers;
     GCVector<RTCDataChannel*> m_dataChannels;
     Mutex* m_disposeLock = nullptr;

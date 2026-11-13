@@ -1023,6 +1023,9 @@ Promise* RTCPeerConnection::setLocalDescription(
         return promise;
     }
 
+    // 4.4 and 4.5 create an offer or answer when none was created yet. That
+    // is not implemented, so an empty last-created SDP goes on to the state
+    // check and the sdp-syntax-error rejection in setRtcSessionDescription.
     // 4.4
     if ((description.m_type == RTCSdpType::Offer) &&
         description.m_sdp->equals("")) {
