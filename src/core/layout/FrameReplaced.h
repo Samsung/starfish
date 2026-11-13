@@ -153,6 +153,14 @@ public:
         return ratio;
     }
 
+    // css-flexbox-1 4.5: the content-based minimum main size of this box
+    // as a flex item. Empty without a natural aspect ratio, where the
+    // generic measurement applies.
+    Optional<LayoutUnit> flexContentBasedMinimumSize(LayoutContext& ctx,
+                                                     bool mainIsWidth,
+                                                     LayoutUnit parentMainSize,
+                                                     bool parentMainIsDefinite);
+
     // An <img> whose resource is an SVG document.
     bool isSVGImage();
 

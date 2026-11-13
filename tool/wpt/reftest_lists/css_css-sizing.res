@@ -532,7 +532,7 @@ http://web-platform.test:8000/css/css-sizing/stretch/fixed-table-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/flexbox-auto-minimum-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/flexbox-flex-base-size-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/flexbox-flex-base-size-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/flexbox-stretch-minimum-001.html
+http://web-platform.test:8000/css/css-sizing/stretch/flexbox-stretch-minimum-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/flexbox-stretch-minimum-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/min-width-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/positioned-non-replaced-1.html

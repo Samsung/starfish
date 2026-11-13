@@ -1,0 +1,78 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Minimum and maximum sizes of an image flex item</title>
+<style>
+  body { margin: 0; }
+  .row { display: flex; align-items: flex-start; width: 400px; }
+  .column { display: flex; flex-direction: column; align-items: flex-start; width: 400px; }
+  .narrow { width: 10px; }
+  .short { height: 10px; }
+  .tall { height: 100px; align-items: stretch; }
+  #max-height { max-height: 20px; }
+  #min-height { min-height: 100px; }
+  #max-width { max-width: 20px; }
+  #min-width { min-width: 100px; }
+  #clamped-width { width: 500px; max-width: 100px; }
+  #percent-basis { flex: 0 0 0%; width: 100px; height: 500px; min-height: 0; }
+  #border { border-left: 10px solid; }
+  #margin { margin-bottom: 20px; }
+  #auto-min-max-height { max-height: 20px; }
+  #auto-min-specified { width: 100%; flex: 0 0 5px; }
+  #auto-min-column { max-width: 20px; }
+  #min-above-max { max-width: 5px; min-width: 30px; }
+</style>
+<!-- The image is 50x50. -->
+<div class="row"><img id="max-height" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="row"><img id="min-height" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="column"><img id="max-width" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="column"><img id="min-width" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="column"><img id="clamped-width" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="column"><img id="percent-basis" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="row tall"><img id="border" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="row tall"><img id="margin" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="row narrow"><img id="auto-min-max-height" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="row" style="width: 100px"><img id="auto-min-specified" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="column short"><img id="auto-min-column" src="../minmaxwidthheight/lime50x50.png"></div>
+<div class="row short"><img id="min-above-max" src="../minmaxwidthheight/lime50x50.png"></div>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[replaced-flex-item-min-max] " + document.title);
+  };
+}
+
+function size(id, width, height) {
+  var r = document.getElementById(id).getBoundingClientRect();
+  console.assert(r.width === width && r.height === height,
+    id + " should be " + width + "x" + height + ", got " + r.width + "x" + r.height);
+}
+
+window.onload = function () {
+  // A cross-axis limit reaches the main size through the natural ratio.
+  size("max-height", 20, 20);
+  size("min-height", 100, 100);
+  size("max-width", 20, 20);
+  size("min-width", 100, 100);
+  size("clamped-width", 100, 100);
+  // A percentage basis with nothing to resolve against is `content`.
+  size("percent-basis", 100, 100);
+  // Stretching: borders and margins stay out of the ratio.
+  size("border", 110, 100);
+  size("margin", 80, 80);
+  // The automatic minimum is the content size within the cross-axis
+  // limits, capped by a definite main size.
+  size("auto-min-max-height", 20, 20);
+  size("auto-min-specified", 50, 50);
+  size("auto-min-column", 20, 20);
+  // A minimum above the maximum wins.
+  size("min-above-max", 30, 30);
+  testEnd();
+};
+</script>

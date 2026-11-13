@@ -30,6 +30,7 @@
 #include <algorithm>
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameFlexibleBox.h"
+#include "core/layout/FrameReplaced.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/StackingContext.h"
 #include "core/layout/ComputeOverflow.h"
@@ -5397,39 +5398,51 @@ LayoutUnit FrameBox::widthAfterApplyingMinMaxWidths(
         if (!underComputingPreferredWidth &&
             layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis() &&
             appliedOverflowX() == VisibleOverflow) {
-            if (!isFrameReplaced() && style->width().isSpecified()) {
-                LayoutUnit width =
-                    style->width().specifiedValue(parentWidth, this);
-                width = contentWidthAfterApplyingBoxSizing(width);
-
-                minWidth = width;
+            Optional<LayoutUnit> replacedMinimum;
+            if (isFrameReplaced()) {
+                replacedMinimum =
+                    asFrameReplaced()->flexContentBasedMinimumSize(
+                        ctx, true, parentWidth, true);
             }
+            if (replacedMinimum) {
+                minWidth = replacedMinimum.value();
+            } else {
+                if (!isFrameReplaced() && style->width().isSpecified()) {
+                    LayoutUnit width =
+                        style->width().specifiedValue(parentWidth, this);
+                    width = contentWidthAfterApplyingBoxSizing(width);
 
-            PreferredWidthContext p(ctx, nullptr, this, this,
-                                    parentWidth - mbpWidth());
-            p.setIgnoresOwnerAspectRatio(true);
-            p.computePreferredWidth();
-            LayoutUnit contentSuggestion = p.preferredMinWidth();
-
-            // css-flexbox-1 4.5: with a preferred aspect ratio the
-            // min-content width is at least what a definite height gives,
-            // and the suggestion is clamped by the min and max heights
-            // carried over through the ratio.
-            double ratio = preferredAspectRatio();
-            if (ratio) {
-                FrameBox* cb = containingBlock(this);
-                Optional<LayoutUnit> definiteHeight =
-                    definiteContentHeight(ctx, cb);
-                if (definiteHeight) {
-                    contentSuggestion = std::max(
-                        contentSuggestion, contentWidthFromAspectRatio(
-                                               ratio, definiteHeight.value()));
+                    minWidth = width;
                 }
-                contentSuggestion = widthAfterApplyingAspectRatioConstraints(
-                    ctx, cb, ratio, contentSuggestion, parentWidth - mbpWidth(),
-                    false);
+
+                PreferredWidthContext p(ctx, nullptr, this, this,
+                                        parentWidth - mbpWidth());
+                p.setIgnoresOwnerAspectRatio(true);
+                p.computePreferredWidth();
+                LayoutUnit contentSuggestion = p.preferredMinWidth();
+
+                // css-flexbox-1 4.5: with a preferred aspect ratio the
+                // min-content width is at least what a definite height gives,
+                // and the suggestion is clamped by the min and max heights
+                // carried over through the ratio.
+                double ratio = preferredAspectRatio();
+                if (ratio) {
+                    FrameBox* cb = containingBlock(this);
+                    Optional<LayoutUnit> definiteHeight =
+                        definiteContentHeight(ctx, cb);
+                    if (definiteHeight) {
+                        contentSuggestion =
+                            std::max(contentSuggestion,
+                                     contentWidthFromAspectRatio(
+                                         ratio, definiteHeight.value()));
+                    }
+                    contentSuggestion =
+                        widthAfterApplyingAspectRatioConstraints(
+                            ctx, cb, ratio, contentSuggestion,
+                            parentWidth - mbpWidth(), false);
+                }
+                minWidth = std::min(minWidth, contentSuggestion);
             }
-            minWidth = std::min(minWidth, contentSuggestion);
         }
 
         if (minWidth != intMaxForLayoutUnit && minWidth > width) {
@@ -5496,9 +5509,17 @@ LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
         LayoutUnit minHeight = intMaxForLayoutUnit;
         auto flexibleBox = layoutParent()->asFrameFlexibleBox();
 
-        if (!flexibleBox->shouldApplyLineClamp(this) &&
-            !flexibleBox->isMainAxisInInlineAxis() &&
+        Optional<LayoutUnit> replacedMinimum;
+        if (isFrameReplaced() && !flexibleBox->isMainAxisInInlineAxis() &&
             appliedOverflowY() == VisibleOverflow) {
+            replacedMinimum = asFrameReplaced()->flexContentBasedMinimumSize(
+                ctx, false, parentHeight, parentHasFixedValue);
+        }
+        if (replacedMinimum) {
+            minHeight = replacedMinimum.value();
+        } else if (!flexibleBox->shouldApplyLineClamp(this) &&
+                   !flexibleBox->isMainAxisInInlineAxis() &&
+                   appliedOverflowY() == VisibleOverflow) {
             // lookupFirstLineOrDefiniteHeight() scans the item's whole
             // subtree; reuse the previous scan while the subtree is clean and
             // the item's width is unchanged. A full layoutFlexItem() run

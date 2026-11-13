@@ -177,6 +177,100 @@ bool FrameReplaced::isSVGImage()
     return imageData && imageData->isSVGNativeImageData();
 }
 
+Optional<LayoutUnit> FrameReplaced::flexContentBasedMinimumSize(
+    LayoutContext& ctx, bool mainIsWidth, LayoutUnit parentMainSize,
+    bool parentMainIsDefinite)
+{
+    FrameBox* cb = containingBlock(this);
+    LayoutUnit naturalWidth, naturalHeight;
+    bool hasAspectRatio;
+    bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
+    LayoutUnit parentFixedHeight;
+    if (parentHasFixedHeight) {
+        parentFixedHeight = ctx.parentFixedHeight(this);
+    }
+    Length parentHeight = parentHasFixedHeight
+                              ? Length(Length::Fixed, parentFixedHeight)
+                              : Length(Length::Auto);
+    computeIntrinsicSize(ctx, naturalWidth, naturalHeight, hasAspectRatio,
+                         cb->contentWidth(), parentHeight, false);
+    // An SVG image reports a ratio even when it has neither a size nor a
+    // viewBox, so it stays with the generic measurement.
+    if (!hasAspectRatio || naturalWidth <= 0 || naturalHeight <= 0 ||
+        isSVGImage()) {
+        return Optional<LayoutUnit>();
+    }
+
+    ComputedStyle* style = Frame::style();
+    LayoutUnit contentSuggestion;
+    Length main;
+    if (mainIsWidth) {
+        // The content size suggestion is the min-content width: what the
+        // ratio gives for the height the item has, a definite one or else
+        // the natural one within the min and max heights.
+        Optional<LayoutUnit> height = definiteContentHeight(ctx, cb);
+        if (!height) {
+            LayoutUnit clamped = naturalHeight;
+            Length maxHeight = style->maxHeight();
+            if (maxHeight.isSpecified() &&
+                maxHeight.isDefinite(parentHasFixedHeight)) {
+                clamped = std::min(clamped, contentHeightAfterApplyingBoxSizing(
+                                                maxHeight.specifiedValue(
+                                                    parentFixedHeight, this)));
+            }
+            Length minHeight = style->minHeight();
+            if (minHeight.isSpecified() &&
+                minHeight.isDefinite(parentHasFixedHeight)) {
+                clamped = std::max(clamped, contentHeightAfterApplyingBoxSizing(
+                                                minHeight.specifiedValue(
+                                                    parentFixedHeight, this)));
+            }
+            height = clamped;
+        }
+        contentSuggestion = height.value() * (naturalWidth.toDouble() /
+                                              naturalHeight.toDouble());
+        main = style->width();
+    } else {
+        LayoutUnit parentWidth = cb->contentWidth();
+        LayoutUnit width = naturalWidth;
+        LengthData margin = style->margin();
+        if (style->width().isSpecified()) {
+            width = contentWidthAfterApplyingBoxSizing(
+                style->width().specifiedValue(parentWidth, this));
+        } else if (style->width().isAuto() &&
+                   style->alignSelf() == StretchAlignItemValue &&
+                   !margin.left().isAuto() && !margin.right().isAuto() &&
+                   layoutParent()->asFrameFlexibleBox()->isSingleLine()) {
+            width = std::max(LayoutUnit(0), parentWidth - mbpWidth());
+        }
+        Length maxWidth = style->maxWidth();
+        if (maxWidth.isSpecified()) {
+            width = std::min(width,
+                             contentWidthAfterApplyingBoxSizing(
+                                 maxWidth.specifiedValue(parentWidth, this)));
+        }
+        Length minWidth = style->minWidth();
+        if (minWidth.isSpecified()) {
+            width = std::max(width,
+                             contentWidthAfterApplyingBoxSizing(
+                                 minWidth.specifiedValue(parentWidth, this)));
+        }
+        contentSuggestion =
+            width * (naturalHeight.toDouble() / naturalWidth.toDouble());
+        main = style->height();
+    }
+
+    // The specified size suggestion caps it when the main size is definite.
+    if (main.isSpecified() && main.isDefinite(parentMainIsDefinite)) {
+        LayoutUnit specified = main.specifiedValue(parentMainSize, this);
+        specified = mainIsWidth
+                        ? contentWidthAfterApplyingBoxSizing(specified)
+                        : contentHeightAfterApplyingBoxSizing(specified);
+        contentSuggestion = std::min(contentSuggestion, specified);
+    }
+    return Optional<LayoutUnit>(contentSuggestion);
+}
+
 String* FrameReplaced::sizeAttribute(const QualifiedName& name)
 {
     if (node()->isHTMLImageElement()) {
@@ -204,6 +298,9 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
         hasAspectRatio = false;
     }
 
+    // Kept as doubles: a LayoutUnit quotient rounds the ratio itself.
+    double widthPerHeight = hasAspectRatio ? w.toDouble() / h.toDouble() : 0;
+    double heightPerWidth = hasAspectRatio ? h.toDouble() / w.toDouble() : 0;
     LayoutUnit newWidth = w;
     LayoutUnit newHeight = h;
     Length width = style()->width();
@@ -229,18 +326,18 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
             if (width.isAuto() && height.isAuto()) {
                 if (hasAspectRatio) {
                     if (newWidth > newHeight) {
-                        newHeight = newWidth * (h / w);
+                        newHeight = newWidth * heightPerWidth;
                     } else if (newWidth < newHeight) {
-                        newWidth = newHeight * (w / h);
+                        newWidth = newHeight * widthPerHeight;
                     }
                 }
             } else if (width.isAuto()) {
                 if (hasAspectRatio && newWidth < newHeight) {
-                    newWidth = newHeight * (w / h);
+                    newWidth = newHeight * widthPerHeight;
                 }
             } else if (height.isAuto()) {
                 if (hasAspectRatio && newWidth > newHeight) {
-                    newHeight = newWidth * (h / w);
+                    newHeight = newWidth * heightPerWidth;
                 }
             }
         } else if (canApplyMaxHeight) {
@@ -251,7 +348,7 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
                                 maxHeight.specifiedValue(parentHeight, this)));
         } else {
             if (hasAspectRatio && height.isAuto()) {
-                newHeight = newWidth * (h / w);
+                newHeight = newWidth * heightPerWidth;
             }
         }
     } else if (canApplyMaxWidth) {
@@ -270,29 +367,29 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
             if (width.isAuto() && height.isAuto()) {
                 if (hasAspectRatio) {
                     if (newWidth > newHeight) {
-                        newWidth = newHeight * (w / h);
+                        newWidth = newHeight * widthPerHeight;
                     } else if (newWidth < newHeight) {
-                        newHeight = newWidth * (h / w);
+                        newHeight = newWidth * heightPerWidth;
                     }
                 }
             } else if (width.isAuto()) {
                 if (hasAspectRatio && newWidth > newHeight) {
-                    newWidth = newHeight * (w / h);
+                    newWidth = newHeight * widthPerHeight;
                 } else if (hasAspectRatio && width.isAuto() &&
                            height.isAuto()) {
-                    newHeight = newWidth * (h / w);
+                    newHeight = newWidth * heightPerWidth;
                 }
             } else if (height.isAuto()) {
                 if (hasAspectRatio && newWidth < newHeight) {
-                    newHeight = newWidth * (h / w);
+                    newHeight = newWidth * heightPerWidth;
                 } else if (hasAspectRatio && width.isAuto() &&
                            height.isAuto()) {
-                    newWidth = newHeight * (w / h);
+                    newWidth = newHeight * widthPerHeight;
                 }
             }
         } else {
             if (hasAspectRatio && height.isAuto()) {
-                newHeight = newWidth * (h / w);
+                newHeight = newWidth * heightPerWidth;
             }
         }
     } else {
@@ -301,14 +398,14 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
                 std::max(h, contentHeightAfterApplyingBoxSizing(
                                 minHeight.specifiedValue(parentHeight, this)));
             if (hasAspectRatio && width.isAuto()) {
-                newWidth = newHeight * (w / h);
+                newWidth = newHeight * widthPerHeight;
             }
         } else if (canApplyMaxHeight) {
             newHeight =
                 std::min(h, contentHeightAfterApplyingBoxSizing(
                                 maxHeight.specifiedValue(parentHeight, this)));
             if (hasAspectRatio && width.isAuto()) {
-                newWidth = newHeight * (w / h);
+                newWidth = newHeight * widthPerHeight;
             }
         }
     }
@@ -330,6 +427,24 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
 
     Length width = style()->width();
     Length height = style()->height();
+    // Flex layout hands the flexed main size over as the border-box size
+    // of the item, whatever its 'box-sizing' is.
+    if (ctx.isModifiedStyleFlexItem(this) &&
+        style()->boxSizing() == BoxSizingValue::ContentBoxBoxSizingValue) {
+        if (layoutParent()->asFrameFlexibleBox()->isMainAxisInInlineAxis()) {
+            if (width.isFixed()) {
+                width = Length(Length::Fixed,
+                               std::max(LayoutUnit(0),
+                                        LayoutUnit(width.fixed()) -
+                                            paddingWidth() - borderWidth()));
+            }
+        } else if (height.isFixed()) {
+            height = Length(Length::Fixed,
+                            std::max(LayoutUnit(0), LayoutUnit(height.fixed()) -
+                                                        paddingHeight() -
+                                                        borderHeight()));
+        }
+    }
     LayoutUnit intrinsicWidth, intrinsicHeight;
     LayoutUnit parentContentWidth, parentContentHeight;
     Length parentHeightLength;

@@ -124,10 +124,10 @@ http://web-platform.test:8000/css/css-flexbox/column-reverse-gap.html
 http://web-platform.test:8000/css/css-flexbox/columns-height-set-via-top-bottom.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/dynamic-grid-flex-abspos.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/fieldset-as-container-justify-center.tentative.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-column-011.html
+http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-column-011.html
 http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-column-017.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-005.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-013.html
+http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-005.html
+http://web-platform.test:8000/css/css-flexbox/flex-aspect-ratio-img-row-013.html
 http://web-platform.test:8000/css/css-flexbox/flex-baseline-overflow-hidden.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/flex-basis-009.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/flex-basis-013.html
@@ -172,7 +172,7 @@ http://web-platform.test:8000/css/css-flexbox/flexbox_justifycontent-center-over
 http://web-platform.test:8000/css/css-flexbox/flexbox_width-change-and-relayout-children.html
 http://web-platform.test:8000/css/css-flexbox/flexbox_width-wrapping-column.html
 http://web-platform.test:8000/css/css-flexbox/flexitem-no-margin-collapsing.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/flexitem-stretch-image.html
+http://web-platform.test:8000/css/css-flexbox/flexitem-stretch-image.html
 http://web-platform.test:8000/css/css-flexbox/gap-017.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/gap-018.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/getcomputedstyle/flexbox_computedstyle_align-items-invalid.html

@@ -1411,10 +1411,15 @@ void FlexFormattingContext::computeCrossSize()
                 newCrossSize = flexLine.m_lineHeight - flexItem->marginHeight();
                 shouldResizeFlexItem = flexItem->height() != newCrossSize;
             }
+            // Margins larger than the line leave nothing to stretch to.
+            newCrossSize = std::max(LayoutUnit(0), newCrossSize);
 
             if (shouldResizeFlexItem) {
+                // A replaced box computes both sides at ResolveWidth.
                 layoutFlexItem(flexItem,
-                               Frame::LayoutWantToResolve::ResolveHeight,
+                               flexItem->isFrameReplaced()
+                                   ? Frame::LayoutWantToResolve::ResolveAll
+                                   : Frame::LayoutWantToResolve::ResolveHeight,
                                newCrossSize);
             }
         } else {
@@ -1796,13 +1801,16 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
             }
             return std::make_pair(basisSize, false);
         }
-    } else if (!applyLineClamp &&
-               (flexBasis.isContent() ||
-                (flexBasis.isAuto() &&
-                 (isMainAxisInInlineAxis ? flexItem->style()->width()
-                                         : flexItem->style()->height())
-                     .isAuto()))) {
-        // An `auto` flex basis with an auto main size is used as `content`.
+    }
+    // An `auto` flex basis with an auto main size is used as `content`, and
+    // so is a percentage one that has nothing definite to resolve against
+    // (css-flexbox-1 7.2.3).
+    if (!applyLineClamp &&
+        (flexBasis.isContent() || flexBasis.isWidth() ||
+         (flexBasis.isAuto() &&
+          (isMainAxisInInlineAxis ? flexItem->style()->width()
+                                  : flexItem->style()->height())
+              .isAuto()))) {
         if (flexItem->isFrameReplaced()) {
             // B. If the flex item has an intrinsic aspect ratio, a used
             // flex basis of 'content', and a definite cross size.
@@ -1860,10 +1868,58 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
                                                        : flexItem->mbpWidth()));
             }
 
+            // The ratio works on the cross size the item ends up with, so
+            // its cross-axis minimum and maximum apply first (CSS 2 10.4);
+            // only the main-axis ones are ignored for the flex base size.
+            // An item that keeps its natural cross size is measured by the
+            // layout below unless they change it.
+            bool hasNaturalRatio =
+                hasAspectRatio && intrinsicWidth > 0 && intrinsicHeight > 0;
+            bool crossIsNatural = !crossSize && cross.isAuto();
+            if (crossIsNatural && hasNaturalRatio) {
+                crossSize =
+                    isMainAxisInInlineAxis ? intrinsicHeight : intrinsicWidth;
+            }
+            bool crossIsClamped = false;
+            if (crossSize) {
+                bool percentIsDefinite =
+                    availableCrossSize != intMaxForLayoutUnit;
+                auto resolve = [&](const Length& length) {
+                    LayoutUnit value =
+                        length.specifiedValue(availableCrossSize, flexItem);
+                    return isMainAxisInInlineAxis
+                               ? flexItem->contentHeightAfterApplyingBoxSizing(
+                                     value)
+                               : flexItem->contentWidthAfterApplyingBoxSizing(
+                                     value);
+                };
+                Length crossMin = isMainAxisInInlineAxis
+                                      ? itemStyle->minHeight()
+                                      : itemStyle->minWidth();
+                Length crossMax = isMainAxisInInlineAxis
+                                      ? itemStyle->maxHeight()
+                                      : itemStyle->maxWidth();
+                LayoutUnit clamped = crossSize.value();
+                if (crossMax.isSpecified() &&
+                    crossMax.isDefinite(percentIsDefinite)) {
+                    clamped = std::min(clamped, resolve(crossMax));
+                }
+                if (crossMin.isSpecified() &&
+                    crossMin.isDefinite(percentIsDefinite)) {
+                    clamped = std::max(clamped, resolve(crossMin));
+                }
+                crossIsClamped = clamped != crossSize.value();
+                if (crossIsNatural && !crossIsClamped) {
+                    crossSize = Optional<LayoutUnit>();
+                } else {
+                    crossSize = clamped;
+                }
+            }
+
             // An SVG image reports a ratio even when it has neither a
             // size nor a viewBox; with an `auto` basis leave it to the
             // layout below, which knows its default object size.
-            if (!flexBasis.isContent() &&
+            if (!flexBasis.isContent() && !crossIsClamped &&
                 flexItem->asFrameReplaced()->isSVGImage()) {
                 hasAspectRatio = false;
             }

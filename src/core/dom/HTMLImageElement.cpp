@@ -98,8 +98,11 @@ public:
 
         m_element->m_imageData = imageData;
         if (m_element->frame() && sizeBefore != sizeNow) {
+            // A flex item's base and minimum sizes follow the natural
+            // ratio even when both sides are specified.
             if (!m_element->frame()->style()->width().isDefinite(false) ||
-                !m_element->frame()->style()->height().isDefinite(false)) {
+                !m_element->frame()->style()->height().isDefinite(false) ||
+                m_element->frame()->isFlexItem()) {
                 m_element->setNeedsLayout();
             }
         }
