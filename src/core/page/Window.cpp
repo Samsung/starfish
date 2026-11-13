@@ -877,8 +877,11 @@ String* Window::getA11yFocusedElementId()
 
 uint32_t Window::setTimeout(TimerHandler handler, int32_t delay, void* data)
 {
-    return webView()->timer()->addTimer(std::max(0, delay), this, handler, data,
-                                        false);
+    Timer* timer = webView()->timer();
+    if (!document()->isFullyActive()) {
+        return ++timer->m_timeoutCounter;
+    }
+    return timer->addTimer(std::max(0, delay), this, handler, data, false);
 }
 
 void Window::clearTimeout(int32_t id)
@@ -888,8 +891,11 @@ void Window::clearTimeout(int32_t id)
 
 uint32_t Window::setInterval(TimerHandler handler, int32_t delay, void* data)
 {
-    return webView()->timer()->addTimer(std::max(0, delay), this, handler, data,
-                                        true);
+    Timer* timer = webView()->timer();
+    if (!document()->isFullyActive()) {
+        return ++timer->m_timeoutCounter;
+    }
+    return timer->addTimer(std::max(0, delay), this, handler, data, true);
 }
 
 void Window::clearInterval(int32_t id)
@@ -1260,7 +1266,11 @@ void Window::screenShot(std::string filePath, void (*callback)(void*),
 
 uint32_t Window::requestAnimationFrame(TimerHandler handler, void* data)
 {
-    return webView()->timer()->requestAnimationFrame(this, handler, data);
+    Timer* timer = webView()->timer();
+    if (!document()->isFullyActive()) {
+        return ++timer->m_requestAnimationFrameCounter;
+    }
+    return timer->requestAnimationFrame(this, handler, data);
 }
 
 void Window::cancelAnimationFrame(int32_t reqID)

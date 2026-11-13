@@ -891,6 +891,7 @@ tests/assertion/iframe/iframe-focus-mouse-event.html
 tests/assertion/iframe/fixed-iframe-click-in-scrolled-document.html
 tests/assertion/iframe/svg-image-iframe-no-script.html
 tests/assertion/iframe/cross-realm-implicit-this.html
+tests/assertion/iframe/removed-iframe-window-callbacks.html
 tests/assertion/fullscreen/fullscreen-element-above-sibling-stacking-context.html
 tests/assertion/event/click-on-scrolled-document.html
 tests/assertion/event/touch-generates-pointer-events.html
@@ -955,6 +956,7 @@ tests/crash/gif-frame-off-screen.html
 tests/crash/chartjs.html
 tests/crash/js-module-01.html
 tests/crash/svg-gradient-href-crash.html
+tests/crash/removed-iframe-window-callbacks-gc.html
 tests/pixel/css/scroll/scroll-into-view-options.html
 tests/assertion/css/scroll/scrollLeft_setter_and_event.html
 tests/assertion/css/scroll/scrollTop_setter_and_event.html

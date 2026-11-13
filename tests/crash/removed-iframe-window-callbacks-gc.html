@@ -1,0 +1,48 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Callbacks armed on a removed iframe's window survive a GC</title>
+<body>
+<p>This test should not crash.</p>
+<script>
+// Arms a timeout, an interval and an animation frame on the window of a
+// removed iframe, then drops every reference to that window and makes
+// garbage, so a GC may collect the window before the callbacks are due.
+// Some engines throw instead of returning a handle; that is fine here. The
+// callback is declared out here so that it holds no scope with the window.
+function callback() {}
+
+(function () {
+  var frame = document.createElement("iframe");
+  document.body.appendChild(frame);
+  var win = frame.contentWindow;
+  frame.remove();
+  try {
+    win.setTimeout(callback, 300);
+  } catch (e) {
+  }
+  try {
+    win.setInterval(callback, 300);
+  } catch (e) {
+  }
+  try {
+    win.requestAnimationFrame(callback);
+  } catch (e) {
+  }
+})();
+
+var rounds = 0;
+var churn = setInterval(function () {
+  var garbage = [];
+  for (var i = 0; i < 50000; i++) {
+    garbage.push({ i: i });
+  }
+  if (++rounds === 40) {
+    clearInterval(churn);
+    setTimeout(function () {
+      if (typeof testEnd === "function") {
+        testEnd();
+      }
+    }, 500);
+  }
+}, 5);
+</script>

@@ -1,0 +1,77 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A removed iframe's window runs no timers or animation frames</title>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[removed-iframe-window-callbacks] " + document.title);
+  };
+}
+</script>
+<body>
+<script>
+// HTML: a task is runnable only if its document is fully active, and
+// "update the rendering" runs animation frame callbacks only for fully
+// active documents. The document of a removed iframe is not fully active,
+// so nothing armed on its window may run. That holds whether a script of
+// another window arms the callbacks or a script of the iframe does so after
+// it has removed its iframe. Only whether a callback runs is checked: some
+// engines throw instead of returning a handle when one is armed.
+var ran = [];
+function mark(name) {
+  if (ran.indexOf(name) < 0) {
+    ran.push(name);
+  }
+}
+var frame = document.createElement("iframe");
+document.body.appendChild(frame);
+var win = frame.contentWindow;
+
+// A script of the iframe's own document: it removes the iframe, then arms
+// callbacks on its own window.
+var doc = frame.contentDocument;
+var script = doc.createElement("script");
+script.textContent =
+  "var mark = parent.mark;" +
+  "parent.frame.remove();" +
+  "try { setTimeout(function () { mark('own setTimeout'); }, 0); } catch (e) {}" +
+  "try { requestAnimationFrame(function () { mark('own requestAnimationFrame'); }); } catch (e) {}";
+(doc.body || doc.documentElement).appendChild(script);
+
+function attempt(arm) {
+  try {
+    return arm();
+  } catch (e) {
+    return 0;
+  }
+}
+
+// This window's script arms callbacks on the removed iframe's window.
+attempt(function () {
+  return win.setTimeout(function () { mark("setTimeout"); }, 0);
+});
+var interval = attempt(function () {
+  return win.setInterval(function () { mark("setInterval"); }, 0);
+});
+attempt(function () {
+  return win.requestAnimationFrame(function () { mark("requestAnimationFrame"); });
+});
+
+// The frame that runs this window's callback would also have run those of
+// the removed iframe, and the timeout below gives its timers room to fire.
+requestAnimationFrame(function () {
+  setTimeout(function () {
+    attempt(function () { win.clearInterval(interval); });
+    console.assert(ran.length === 0,
+      "callbacks ran on a removed iframe's window: " + ran.join(", "));
+    testEnd();
+  }, 200);
+});
+</script>
