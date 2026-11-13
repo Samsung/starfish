@@ -560,6 +560,8 @@ xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py 
 
 # Wait for running JS in a worker and its nested worker before unloading.
 # Each script runs beyond the former 1-second forced-cancellation deadline.
+# Also unloads while an AudioContext's output thread is still connecting to
+# a stand-in PulseAudio socket (skipped with a warning without libpulse).
 xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/runner/impl_unload_test.py \
   --impl out/debug/lib/liblightweight-web-engine-impl.so \
   --wait-for-worker --cycles 1

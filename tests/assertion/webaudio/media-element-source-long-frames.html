@@ -1,0 +1,156 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Media element PCM in long codec frames reaches the graph</title>
+<link rel="help" href="https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceNode">
+<body>
+<script src="resources/pcm-recorder.js"></script>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Long frames complete";
+    };
+}
+
+// FLAC allows frames of up to 65535 samples; one decoded frame arriving
+// while the graph still plays the previous one must not cut that one short.
+// The stream is built here: 16-bit mono FLAC in VERBATIM (uncompressed)
+// frames of 32768 samples at the context rate, ramping from 0.1 to 0.9 so
+// every sample tells its media time. The rate is fixed: the frame header
+// stores it in tens of Hz.
+const blockSize = 32768;
+const seconds = 1.5;
+const low = 0.1;
+const high = 0.9;
+const context = new AudioContext({ sampleRate: 48000 });
+const rate = context.sampleRate;
+const samples = Math.round(seconds * rate);
+
+const crc16Table = new Uint16Array(256);
+for (let i = 0; i < 256; i++) {
+    let c = i << 8;
+    for (let k = 0; k < 8; k++)
+        c = c & 0x8000 ? (c << 1) ^ 0x8005 : c << 1;
+    crc16Table[i] = c;
+}
+function crc8(bytes) {
+    let c = 0;
+    for (const b of bytes) {
+        c ^= b;
+        for (let k = 0; k < 8; k++)
+            c = (c & 0x80 ? (c << 1) ^ 0x07 : c << 1) & 0xff;
+    }
+    return c;
+}
+function crc16(bytes) {
+    let c = 0;
+    for (const b of bytes)
+        c = ((c << 8) ^ crc16Table[(c >> 8) ^ b]) & 0xffff;
+    return c;
+}
+const streamInfo = [
+    0x80, 0, 0, 34, // last metadata block, STREAMINFO, 34 bytes
+    blockSize >> 8, blockSize & 255, blockSize >> 8, blockSize & 255,
+    0, 0, 0, 0, 0, 0, // frame sizes unknown
+    (rate >> 12) & 255, (rate >> 4) & 255,
+    ((rate & 15) << 4) | (0 << 1) | (15 >> 4), // mono, 16 bits per sample
+    ((15 & 15) << 4), (samples >>> 24) & 255, (samples >>> 16) & 255,
+    (samples >>> 8) & 255, samples & 255,
+    ...new Array(16).fill(0), // MD5 unknown
+];
+const parts = [Uint8Array.from([0x66, 0x4c, 0x61, 0x43, ...streamInfo])]; // "fLaC"
+for (let first = 0, index = 0; first < samples; first += blockSize, index++) {
+    const count = Math.min(blockSize, samples - first);
+    // Fixed blocking; block size - 1 and sample rate / 10 follow as 16 bits.
+    const header = [0xff, 0xf8, 0x7e, 0x08, index,
+                    (count - 1) >> 8, (count - 1) & 255,
+                    (rate / 10) >> 8, (rate / 10) & 255];
+    header.push(crc8(header));
+    const frame = new Uint8Array(header.length + 1 + count * 2 + 2);
+    frame.set(header);
+    frame[header.length] = 0x02; // VERBATIM subframe
+    const view = new DataView(frame.buffer);
+    for (let i = 0; i < count; i++) {
+        const value = low + (high - low) * (first + i) / samples;
+        view.setInt16(header.length + 1 + i * 2, Math.round(value * 32767));
+    }
+    view.setUint16(frame.length - 2, crc16(frame.subarray(0, frame.length - 2)));
+    parts.push(frame);
+}
+
+const audio = document.createElement("audio");
+const source = context.createMediaElementSource(audio);
+const blocks = [];
+const mediaURL = URL.createObjectURL(new Blob(parts, { type: "audio/flac" }));
+function mediaTime(value) {
+    return (value - low) / (high - low) * seconds;
+}
+let finished = false;
+function finish() {
+    if (finished)
+        return;
+    finished = true;
+    audio.pause();
+    context.close();
+    URL.revokeObjectURL(mediaURL);
+    testEnd();
+}
+function check() {
+    // Runs of continuous ramp: a gap or a skip starts a new one.
+    const runs = [];
+    let run = null;
+    let silent = 0;
+    for (const block of blocks) {
+        for (const value of block) {
+            if (Math.abs(value) <= low / 2) {
+                ++silent;
+                run = null;
+                continue;
+            }
+            if (!run || Math.abs(value - run.last) > 0.0005) {
+                run = { first: value, last: value, frames: 0, silenceBefore: silent };
+                runs.push(run);
+            }
+            run.last = value;
+            ++run.frames;
+            silent = 0;
+        }
+    }
+    console.log("runs " + runs.map(r => mediaTime(r.first).toFixed(4) + "-" +
+        mediaTime(r.last).toFixed(4) + "/" + r.frames + "@" + r.silenceBefore).join(" "));
+    console.assert(runs.length === 1, "no part of a long frame is skipped");
+    if (runs.length === 1) {
+        const r = runs[0];
+        console.assert(mediaTime(r.first) < 0.005 && mediaTime(r.last) > seconds - 0.005,
+                       "the graph hears the media from start to end");
+        console.assert(Math.abs(r.frames - samples) <= samples * 0.02,
+                       "every frame reaches the graph once");
+    }
+    finish();
+}
+audio.addEventListener("ended", function () {
+    // Leave room for the recorder's latency.
+    setTimeout(check, 300);
+});
+audio.addEventListener("error", function () {
+    console.assert(false, "the FLAC stream must load");
+    finish();
+});
+audio.addEventListener("loadedmetadata", function () {
+    audio.play().then(null, function () {
+        console.assert(false, "play must succeed");
+        finish();
+    });
+}, { once: true });
+setTimeout(function () {
+    console.assert(finished, "long frames test must finish");
+    finish();
+}, 8000);
+recordPCM(context, source, blocks).then(function () {
+    audio.src = mediaURL;
+    audio.load();
+}, function (error) {
+    console.assert(false, "the recorder must start: " + error);
+    finish();
+});
+</script>
+</body>

@@ -948,7 +948,8 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
     }
 }
 
-void MediaPlayerTizen::didProbeResponseURL(ResourceURL* url)
+void MediaPlayerTizen::didProbeResponseURL(ResourceURL* url,
+                                           const std::string& corsLocation)
 {
     prepareNativePlayer(url);
 }

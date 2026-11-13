@@ -1,0 +1,151 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Video element PCM reaches the graph without gaps</title>
+<link rel="help" href="https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceNode">
+<body>
+<script src="resources/pcm-recorder.js"></script>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Video element source complete";
+    };
+}
+
+// A <video>'s audio reaches the graph as an <audio>'s does: every frame
+// once and in order, interrupted only by pause() and seeks. A seek into the
+// middle of an audio frame keeps the audio in step with the element: what
+// lies before the first frame it decodes is silence, never audio moved
+// early. resources/ramp-av.mp4
+// stores each audio frame right after the video frame of the same time
+// (1.5 s, 64x64 h264 at 23.4375 fps, 24 kHz FLAC in 1024-sample frames
+// ramping from 0.1 to 0.9, so every sample tells its media time), made with
+//   ffmpeg -f lavfi -i testsrc2=size=64x64:rate=375/16:duration=1.5
+//     -f lavfi -i aevalsrc=0.1+0.8*t/1.5:s=24000:c=mono:d=1.5
+//     -map 0:v -map 1:a -c:v libx264 -bf 0 -g 1000 -pix_fmt yuv420p
+//     -c:a flac -frame_size 1024 -sample_fmt s16 -movflags +faststart
+//     ramp-av.mp4
+const seconds = 1.5;
+// Inside the frame starting at 0.768 s; the next starts at 0.8107 s.
+const seekTarget = 0.79;
+const low = 0.1;
+const high = 0.9;
+function mediaTime(value) {
+    return (value - low) / (high - low) * seconds;
+}
+const video = document.createElement("video");
+const context = new AudioContext();
+const source = context.createMediaElementSource(video);
+const blocks = [];
+let finished = false;
+function finish() {
+    if (finished)
+        return;
+    finished = true;
+    video.pause();
+    context.close();
+    testEnd();
+}
+function check() {
+    // Runs of continuous ramp: a pause, a seek, a gap or a skip of one
+    // render quantum starts a new one.
+    let runs = [];
+    let run = null;
+    let silent = 0;
+    for (const block of blocks) {
+        for (const value of block) {
+            if (Math.abs(value) <= low / 2) {
+                ++silent;
+                run = null;
+                continue;
+            }
+            if (!run || Math.abs(value - run.last) > 0.0005) {
+                run = { first: value, last: value, frames: 0, silenceBefore: silent };
+                runs.push(run);
+            }
+            run.last = value;
+            ++run.frames;
+            silent = 0;
+        }
+    }
+    // A resampler may ring for a few samples where the media starts or stops;
+    // those samples belong to the gap before the next run.
+    let carried = 0;
+    runs = runs.filter(r => {
+        if (r.frames < 64) {
+            carried += r.silenceBefore + r.frames;
+            return false;
+        }
+        r.silenceBefore += carried;
+        carried = 0;
+        return true;
+    });
+    console.log("runs " + runs.map(r => mediaTime(r.first).toFixed(4) + "-" +
+        mediaTime(r.last).toFixed(4) + "/" + r.frames + "@" + r.silenceBefore).join(" "));
+    console.assert(runs.length === 3,
+                   "only pause() and the seek interrupt the media PCM");
+    if (runs.length === 3) {
+        const rate = context.sampleRate;
+        console.assert(mediaTime(runs[0].first) < 0.005 &&
+                       mediaTime(runs[2].last) > seconds - 0.005,
+                       "the graph hears the media from start to end");
+        console.assert(Math.abs(mediaTime(runs[1].first) - mediaTime(runs[0].last)) < 0.005,
+                       "playback resumes where the pause stopped it");
+        console.assert(mediaTime(runs[2].first) >= seekTarget - 0.005 &&
+                       mediaTime(runs[2].first) <= seekTarget + 0.05,
+                       "the seek resumes at its target");
+        console.assert(runs[2].silenceBefore / rate >=
+                       mediaTime(runs[2].first) - seekTarget - 0.005,
+                       "the media between the target and the first frame is silent, not moved early");
+        for (const r of runs) {
+            const span = (mediaTime(r.last) - mediaTime(r.first)) * rate;
+            console.assert(Math.abs(r.frames - span) <= span * 0.02 + 64,
+                           "a run holds every frame of its media span once");
+        }
+    }
+    finish();
+}
+video.addEventListener("ended", function () {
+    // Leave room for the recorder's latency.
+    setTimeout(check, 300);
+});
+video.addEventListener("error", function () {
+    console.assert(false, "the video must load");
+    finish();
+});
+video.addEventListener("loadedmetadata", function () {
+    video.play().then(function () {
+        setTimeout(function () {
+            video.pause();
+            setTimeout(function () {
+                video.play();
+                setTimeout(function () {
+                    video.currentTime = seekTarget;
+                }, 100);
+            }, 200);
+        }, 500);
+    }, function () {
+        console.assert(false, "play must succeed");
+        finish();
+    });
+}, { once: true });
+setTimeout(function () {
+    console.assert(finished, "video source test must finish");
+    finish();
+}, 8000);
+recordPCM(context, source, blocks).then(function () {
+    // A Blob keeps the media CORS-same-origin when the page itself is a
+    // file.
+    fetch("resources/ramp-av.mp4").then(function (response) {
+        return response.blob();
+    }).then(function (blob) {
+        video.src = URL.createObjectURL(blob);
+    }, function () {
+        console.assert(false, "the video must load");
+        finish();
+    });
+}, function (error) {
+    console.assert(false, "the recorder must start: " + error);
+    finish();
+});
+</script>
+</body>

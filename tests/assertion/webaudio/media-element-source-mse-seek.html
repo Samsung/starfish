@@ -1,0 +1,165 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>MediaSource PCM follows a seek in the graph</title>
+<link rel="help" href="https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceNode">
+<link rel="help" href="https://html.spec.whatwg.org/multipage/media.html#seeking">
+<body>
+<script src="resources/pcm-recorder.js"></script>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "MediaSource seek complete";
+    };
+}
+
+// A seek of MediaSource media reaches the graph as it does unrouted: after
+// it the graph hears the media from the target on and none of the audio
+// queued for the old position, also while the seek waits for the page to
+// append the target's data (as players do for an unbuffered target). AAC
+// (the codec MediaSource plays here) smears a ramp, so the media is a 1 kHz
+// tone whose level names its media time: step k (level 0.1 + 0.04 k) lasts
+// from k / 10 s to (k + 1) / 10 s.
+// resources/tone-steps.mp4 (18844 bytes) was made with FFmpeg 8.0.1:
+//   ffmpeg -f lavfi
+//     -i "aevalsrc=(0.1+0.04*floor(10*t))*sin(2*PI*1000*t):s=48000:d=2"
+//     -c:a aac -b:a 64k
+//     -movflags frag_keyframe+empty_moov+default_base_moof
+//     -frag_duration 200000 tone-steps.mp4
+const steps = 20;
+const seekTarget = 1.2;
+const audio = document.createElement("audio");
+const context = new AudioContext();
+const source = context.createMediaElementSource(audio);
+const blocks = [];
+let finished = false;
+function finish() {
+    if (finished)
+        return;
+    finished = true;
+    audio.pause();
+    context.close();
+    testEnd();
+}
+
+let playedBeforeSeek = 0;
+function check() {
+    // The level of each 10 ms window names its step (a sine's RMS is its
+    // amplitude / sqrt(2)); runs of one step shorter than 30 ms are where AAC
+    // blends two steps.
+    const samples = [];
+    for (const block of blocks)
+        for (const value of block)
+            samples.push(value);
+    const window = Math.round(context.sampleRate / 100);
+    let runs = [];
+    for (let i = 0; i + window <= samples.length; i += window) {
+        let energy = 0;
+        for (let j = i; j < i + window; ++j)
+            energy += samples[j] * samples[j];
+        const level = Math.sqrt(2 * energy / window);
+        if (level < 0.05)
+            continue;
+        const step = Math.round((level - 0.1) / 0.04);
+        const last = runs[runs.length - 1];
+        if (last && last.step === step)
+            ++last.windows;
+        else
+            runs.push({ step: step, windows: 1 });
+    }
+    console.log("runs " + runs.map(r => r.step + "x" + r.windows).join(" ") +
+                " playedBeforeSeek=" + playedBeforeSeek.toFixed(3));
+    runs = runs.filter(r => r.windows >= 3);
+    const jump = runs.findIndex((r, i) => i > 0 && r.step > runs[i - 1].step + 1);
+    console.assert(runs.length && runs[0].step === 0, "the media plays from its start");
+    console.assert(jump > 0, "the seek skips ahead");
+    if (jump > 0) {
+        let before = 0;
+        for (let i = 0; i < jump; ++i)
+            before += runs[i].windows;
+        console.assert(before / 100 <= playedBeforeSeek + 0.1,
+                       "no audio queued before the seek plays after it: " +
+                       before / 100 + " s heard, " + playedBeforeSeek.toFixed(3) + " s played");
+        // HTML resumes at the target once its data is there (step 12).
+        // shortcut: this engine completes a MediaSource seek at once and its
+        // clock runs on while the data is missing, so it resumes later; check
+        // the landing exactly once that seek waits.
+        console.assert(runs[jump].step >= Math.round(seekTarget * 10),
+                       "nothing before the seek target plays after it: step " +
+                       runs[jump].step);
+        const after = runs.slice(jump);
+        console.assert(after.every((r, i) => !i || r.step >= after[i - 1].step),
+                       "after the seek the media plays on in order");
+        console.assert(after[after.length - 1].step === steps - 1,
+                       "playback after the seek reaches the end");
+    }
+    finish();
+}
+
+// The seek fires "playing" again, so that handler clears itself.
+audio.onerror = function () {
+    console.assert(false, "the MediaSource media must play");
+    finish();
+};
+setTimeout(function () {
+    console.assert(finished, "MediaSource seek test must finish");
+    finish();
+}, 10000);
+
+// The file's fragments start every 0.2 s; |split| is where the one at
+// |seconds| starts.
+function fragmentOffset(bytes, seconds) {
+    const view = new DataView(bytes);
+    let fragments = 0;
+    for (let offset = 0; offset < bytes.byteLength; offset += view.getUint32(offset)) {
+        if (view.getUint32(offset + 4) === 0x6d6f6f66 /* moof */ &&
+            fragments++ === Math.round(seconds / 0.2))
+            return offset;
+    }
+    return bytes.byteLength;
+}
+const buffered = 0.8;
+recordPCM(context, source, blocks).then(function () {
+    return fetch("resources/tone-steps.mp4");
+}).then(function (response) {
+    return response.arrayBuffer();
+}).then(function (bytes) {
+    const split = fragmentOffset(bytes, buffered);
+    const mediaSource = new MediaSource();
+    // Fires once.
+    mediaSource.addEventListener("sourceopen", function () {
+        const buffer = mediaSource.addSourceBuffer('audio/mp4; codecs="mp4a.40.2"');
+        mediaSource.duration = steps / 10;
+        let appends = 0;
+        buffer.addEventListener("updateend", function () {
+            if (++appends === 2) {
+                mediaSource.endOfStream();
+                // The rest of the media, then room for the recorder's latency.
+                setTimeout(check, (steps / 10 - seekTarget) * 1000 + 600);
+                return;
+            }
+            audio.onplaying = function () {
+                audio.onplaying = null;
+                const playStart = performance.now();
+                setTimeout(function () {
+                    playedBeforeSeek = (performance.now() - playStart) / 1000;
+                    // Past what is buffered: the seek waits for the append.
+                    audio.currentTime = seekTarget;
+                    setTimeout(function () {
+                        buffer.appendBuffer(bytes.slice(split));
+                    }, 400);
+                }, 400);
+            };
+            audio.play().catch(function () {
+                console.assert(false, "play must succeed");
+                finish();
+            });
+        });
+        buffer.appendBuffer(bytes.slice(0, split));
+    });
+    audio.src = URL.createObjectURL(mediaSource);
+}).catch(function (error) {
+    console.assert(false, "the test must start: " + error);
+    finish();
+});
+</script>
+</body>

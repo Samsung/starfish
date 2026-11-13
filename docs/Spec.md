@@ -2110,7 +2110,7 @@ The [X-Frame-Options](https://tools.ietf.org/html/rfc7034) HTTP response header 
 | [sameorigin]() | The page cannot be displayed in a frame, regardless of the site attempting to do so. | |
 | [allow-from uri]() | The page cannot be displayed in a frame, regardless of the site attempting to do so. | |
 
-Note: CORS handling is wired through the network stack and runs for `XMLHttpRequest`, the (partial) `fetch()` implementation and `<img crossorigin>` loads: an image that fails the check fires `error`, one that passes stays readable from a 2D canvas or a WebGL texture. `<script>`, `<link>` and media elements still fetch without CORS whatever their `crossorigin` attribute, so `<script>` and `<link>` send cookies to other origins even with `crossorigin="anonymous"`, and media requests carry whatever credentials the platform media player sends. `@font-face` fonts are fetched the same way: a cross-origin font loads without the CORS check CSS Fonts requires, and its request carries cookies. The `fetch()` global is exposed but parts of the Fetch spec (streaming response bodies, `Request.body.getReader()`) remain incomplete; for production paths prefer `XMLHttpRequest`.
+Note: CORS handling is wired through the network stack and runs for `XMLHttpRequest`, the (partial) `fetch()` implementation and `<img crossorigin>` loads: an image that fails the check fires `error`, one that passes stays readable from a 2D canvas or a WebGL texture. `<script>` and `<link>` still fetch without CORS whatever their `crossorigin` attribute, so they send cookies to other origins even with `crossorigin="anonymous"`. Media elements fetch through their player, which sends no CORS headers and whatever credentials the platform player sends; with the FFmpeg player a `crossorigin` element first sends a CORS-mode HEAD request of the engine's own (with the attribute's credentials mode) to judge the response (see Video texture sources). `@font-face` fonts are fetched the same way: a cross-origin font loads without the CORS check CSS Fonts requires, and its request carries cookies. The `fetch()` global is exposed but parts of the Fetch spec (streaming response bodies, `Request.body.getReader()`) remain incomplete; for production paths prefer `XMLHttpRequest`.
 
 ### Content Security Policy
 
@@ -2417,7 +2417,8 @@ Worker exposure is not a claim that the Worker test variants were verified.
 Local-file policy is independent of `ENABLE_TEST`: a `file:` origin,
 including an inherited `about:blank` or `srcdoc` origin, may read local
 resources. Other origins cannot fetch local files or navigate to them
-through Location, links/forms, or iframes. Native embedding calls can still
+through Location, links/forms, or iframes, or play them as media with the
+FFmpeg player. Native embedding calls can still
 load local apps. File checks run before native file I/O callbacks.
 Blocked access reports `Not allowed to load local resource: <URL>` through
 the requesting context's console.
@@ -2482,7 +2483,7 @@ Apps relying on the right-hand list get **no protection** — the directive is p
 
 **Union arguments:** a `Float32List`, `Int32List`, `Uint32List`, `AllowSharedBufferSource` or `TexImageSource` argument that matches none of its types (a number, a string, a plain object, `null`, `undefined`) throws `TypeError` before anything else happens (Web IDL), and leaves no GL error: `uniform*v`, `uniformMatrix*v`, `vertexAttrib*fv`, `vertexAttribI4*v`, `clearBuffer*v`, the three-argument `bufferSubData`, and the six- and seven-argument `texImage2D`/`texSubImage2D`.
 
-**Video texture sources** (multimedia builds): every `texImage2D`/`texSubImage2D`/`texImage3D`/`texSubImage3D` overload that takes a `TexImageSource` takes an `HTMLVideoElement` and uploads its current frame at the frame's size (the explicit-size overloads upload the given sub-rectangle of the frame). With the FFmpeg player the frame is copied from the decoder's memory and converted like any other source (every format/type pair of the table below, `UNPACK_FLIP_Y_WEBGL`, `UNPACK_PREMULTIPLY_ALPHA_WEBGL`, the WebGL 2 sub-rectangle and image parameters). A player that keeps no frame in memory (Tizen's zero-copy decoders) has it copied on the GPU, by the WebGL 1 overloads only and only for `RGB`/`RGBA` with `UNSIGNED_BYTE` (other combinations fail with `INVALID_OPERATION`); its explicit-size and 3D uploads upload nothing. A video is uploaded only when its media data is CORS-same-origin: `data:` and `blob:` (e.g. MSE) sources always are, and with the FFmpeg player so is network media requested from a URL same-origin with the document and never redirected (the player reports only the final URL, not the hops Fetch judges, so any redirect taints, including a same-origin one and one on a later request for the same media). The players fetch without CORS, so a cross-origin video stays tainted even with `crossorigin` set. The Tizen player cannot report where its data came from, so the engine first sends a HEAD request of its own to the media URL and vouches for it only when that response came back unredirected with a success status (a server that rejects HEAD leaves the media tainted) and is not a playlist (HLS and DASH sources stay tainted, as with the FFmpeg player, since their segments are fetched separately); the player's own request is separate, so a server that answers the two differently is not caught (the same trade-off Chromium makes for platform players). A tainted source throws `SecurityError`, unless the embedder sets `WebSecurityMode::Disable` (`--disable-web-security` in the shells). Nothing is uploaded while the video has no frame, or while it is shown on the HW overlay plane (`videoOverlayEnabled`).
+**Video texture sources** (multimedia builds): every `texImage2D`/`texSubImage2D`/`texImage3D`/`texSubImage3D` overload that takes a `TexImageSource` takes an `HTMLVideoElement` and uploads its current frame at the frame's size (the explicit-size overloads upload the given sub-rectangle of the frame). With the FFmpeg player the frame is copied from the decoder's memory and converted like any other source (every format/type pair of the table below, `UNPACK_FLIP_Y_WEBGL`, `UNPACK_PREMULTIPLY_ALPHA_WEBGL`, the WebGL 2 sub-rectangle and image parameters). A player that keeps no frame in memory (Tizen's zero-copy decoders) has it copied on the GPU, by the WebGL 1 overloads only and only for `RGB`/`RGBA` with `UNSIGNED_BYTE` (other combinations fail with `INVALID_OPERATION`); its explicit-size and 3D uploads upload nothing. A video is uploaded only when its media data is CORS-same-origin: `data:` and `blob:` (e.g. MSE) sources are, and with the FFmpeg player so is network media requested from a URL same-origin with the document and never redirected (the player reports only the final URL, not the hops Fetch judges, so any redirect taints, including a same-origin one and one on a later request for the same media). With the FFmpeg player both hold only for a container read from that one resource — AAC, FLAC, Matroska/WebM, MP4/MOV, MP3, MPEG-TS, Ogg, or WAVE (MSE always qualifies) — and only once the player has identified it; anything else its demuxer may play (HLS playlists, and for `file:` media DASH playlists, concat lists, ...) fetches other resources itself and stays tainted, whatever its URL. With the FFmpeg player, `crossorigin` media is CORS-same-origin when a CORS-mode HEAD request the engine sends first (with the attribute's credentials mode) passes the CORS check and the player's own request, and every later one for the same media, ends at the same final URL; redirects are judged as the engine's loader judges `fetch()` (only the final response's CORS headers are checked). The approval comes from that HEAD response for the final URL, while the player plays what its own GET requests receive, which nothing checks: a server that answers HEAD and GET differently there has what it serves on GET read as approved. If the check fails, the media still plays but stays tainted, where Fetch would fail the load; a server that rejects HEAD, or does not complete it within 10 s, redirects included, keeps cross-origin media tainted. Other players fetch without CORS, so a cross-origin video stays tainted even with `crossorigin` set. The Tizen player cannot report where its data came from, so the engine first sends a HEAD request of its own to the media URL and vouches for it only when that response came back unredirected with a success status (a server that rejects HEAD, or does not complete it within 10 s, redirects included, leaves the media tainted) and is not a playlist (HLS and DASH sources stay tainted, since their segments are fetched separately); the player's own request is separate, so a server that answers the two differently is not caught (the same trade-off Chromium makes for platform players). A tainted source throws `SecurityError`, unless the embedder sets `WebSecurityMode::Disable` (`--disable-web-security` in the shells). Nothing is uploaded while the video has no frame, or while it is shown on the HW overlay plane (`videoOverlayEnabled`).
 
 #### WebGL 2.0 Implementation Status
 
@@ -3297,6 +3298,7 @@ The JavaScript runtime is [Escargot](https://github.com/Samsung/escargot). Verif
 |  | **`[Unimplemented]`:** `fastSeek`, `getStartDate`, `defaultMuted`, `audioTracks`, `videoTracks`. |
 |  | Note: `canPlayType` returns a static answer (`"probably"`/`"maybe"`/`""`); when built with `STARFISH_USE_MOCK_MEDIAPLAYER` (the default Linux non-ffmpeg path), it still returns `"probably"` for mp4 even though no real decoding occurs. |
 |  | Resolution limit: the embedder setting `maxVideoDecodeSize` (default `1920x1080`) is the largest coded frame a media player decodes. A larger stream fails resource selection with `MEDIA_ERR_SRC_NOT_SUPPORTED`, and `MediaCapabilities.decodingInfo()` reports it `supported: false`, so pages can pick a smaller rendition. |
+|  | Media URLs: a `blob:` URL created by another origin fails resource selection with `MEDIA_ERR_SRC_NOT_SUPPORTED` (opaque origins count as one; not checked when web security is disabled). The FFmpeg player fetches only `http:`, `https:`, `data:` and `blob:` URLs, and `file:` URLs from `file:` documents (see the local-file policy); other schemes fail the same way without a connection. A redirect of the media URL itself to a URL that is not `http:`/`https:` fails the load too, though libavformat has already requested that URL's host and path over HTTP; a playlist, segment or key request redirected that way is still followed over HTTP (the media stays tainted). Media other than `file:` media plays from AAC, FLAC, Matroska/WebM, MP4/MOV, MP3, MPEG-TS, Ogg and WAVE resources and HLS playlists of them (WebVTT subtitle renditions included), whose playlists, segments and keys are fetched over `http:`/`https:`/`data:` only; other containers (DASH, concat lists, image sequences, ...) fail the load. `file:` media keeps every container FFmpeg has, reading only `file:`/`data:` URLs. HTTPS media verifies certificates as the engine's own requests do (an FFmpeg built on OpenSSL before 8.0 checks the chain but not the host name). A read that receives nothing for 10 s fails: before metadata the load fails (several such reads can hold the page longer while it loads), during playback it ends with `MEDIA_ERR_NETWORK`. |
 | `HTMLVideoElement` | Adds: `poster`. **`[Unimplemented]`:** `playsInline`, `getVideoPlaybackQuality()`. `VideoPlaybackQuality` interface not exposed. |
 | `HTMLAudioElement` | Named constructor `new Audio(optional src)` exposed. |
 | `HTMLSourceElement` | **`[Unimplemented]`:** `srcset`, `sizes`, `media` — `<picture>`-style source selection is not supported. |
@@ -3641,7 +3643,8 @@ is assigned after `start()`), detaching old channel views and copying only
 when script next modifies the AudioBuffer.
 `MediaElementAudioSourceNode` rejects a second source for the same media
 element. On Tizen, `<audio>` keeps playing through the platform player and
-its audio is not routed into the graph. On Linux, an `<audio src>` resource
+its audio is not routed into the graph. On Linux builds without the FFmpeg
+player, an `<audio src>` resource
 is decoded off the main thread and its PCM is routed into the Web Audio
 graph; the element's volume, mute, rate, seeking, and loop state continue to
 apply. Creation of the source suppresses the element's direct audio output.
@@ -3651,18 +3654,36 @@ the decoder, not copied.
 Decoded PCM is capped at 32 MiB (8M float samples) per element. The graph
 receives silence for opaque cross-origin and redirected resources because the
 media loader does not yet provide a trustworthy final CORS label. This also means
-that a CORS-approved cross-origin resource or a same-origin redirect remains
-silent in the graph. With the Linux FFmpeg player, MediaSource decoded audio
-on a `<video>` element also feeds this node. The `<audio>` resource-selection
-path does not yet select the MSE player. Streaming
-PCM storage is allocated only when a source is attached and bounded to 1 MiB
-and 64 chunks per element. Volume, mute, pause and seeking apply to this path;
-MSE playback-rate changes are not yet supported by the player's clock.
+that, with that player, a CORS-approved cross-origin resource or a same-origin
+redirect remains silent in the graph. With the Linux FFmpeg player, the decoded audio of
+`<audio>` and `<video>` elements also feeds this node when the media data is
+CORS-same-origin (the rule video texture uploads follow: a container that
+opens no other resource, from `data:` or `blob:` sources, MediaSource
+included, from network media requested same-origin and never redirected,
+or `crossorigin` media that passes the engine's CORS check — see Video
+texture sources — whose failure silences the graph while the element keeps
+playing):
+every decoded frame reaches the graph once and in order, resampled linearly
+when the media and context rates differ; a graph that falls more than 0.15 s
+behind the element skips ahead to catch up. File and URL media fire `ended`
+once the graph has rendered the last frame, or, when the graph is not
+rendering the node (a suspended context, a node feeding nothing, a silenced
+cross-origin resource), when unrouted media would; a graph that stops
+rendering the node during playback can delay `ended` by up to about 0.2 s.
+The `<audio>` resource-selection path does not yet select the MSE player.
+Streaming PCM storage is allocated only when a source is attached and holds
+only the audio not yet rendered (about 0.25 s for file and URL media, 0.45 s
+for MediaSource); past 0.75 s (for longer codec frames such as large FLAC
+blocks, the decode lead — 0.15 s for file and URL media, 0.4 s for
+MediaSource — plus twice the incoming frame), 1 MiB or 512 chunks per element
+the oldest audio is dropped.
+Volume, mute, pause and seeking apply to this path; FFmpeg player
+playback-rate changes are not yet applied to this path.
 Attaching during playback can initially produce silence until the existing
 decode-lookahead window passes (400 ms by default); previously delivered
 device samples are not copied back into the graph.
-Progressive video, MediaStream, and Tizen media-player PCM routes are not yet
-connected to this node.
+MediaStream and Tizen media-player PCM routes are not yet connected to this
+node.
 
 > **Build flag:** WebAudio is gated by `STARFISH_ENABLE_WEBAUDIO` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port and the Tizen x86_64 emulator; also implicitly enabled when `WEBRTC=1`). Without it, `AudioContext`/`BaseAudioContext`/`AudioBuffer*`/`AudioNode` globals are not exposed. See [Build-Conditional Surface](#build-conditional-surface).
 

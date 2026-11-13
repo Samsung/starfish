@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Media src failure before metadata leaves no source</title>
+<link rel="help" href="https://html.spec.whatwg.org/multipage/media.html#dedicated-media-source-failure-steps">
+<body>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Media src failure network state complete";
+    };
+}
+
+// A src resource found unusable before metadata (an unsupported format, or a
+// fetch that fails) runs the dedicated media source failure steps: error
+// code MEDIA_ERR_SRC_NOT_SUPPORTED, networkState NETWORK_NO_SOURCE, and one
+// error event.
+const elements = [];
+function check(name, src) {
+    return new Promise(function (resolve) {
+        const audio = document.createElement("audio");
+        elements.push(audio);
+        let errors = 0;
+        const timer = setTimeout(function () {
+            console.assert(false, name + ": must dispatch error");
+            resolve();
+        }, 5000);
+        audio.addEventListener("error", function () {
+            if (++errors > 1)
+                return;
+            clearTimeout(timer);
+            console.assert(audio.error &&
+                           audio.error.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED,
+                           name + ": reports an unsupported source");
+            console.assert(audio.networkState === audio.NETWORK_NO_SOURCE,
+                           name + ": leaves no source");
+            setTimeout(function () {
+                console.assert(errors === 1, name + ": fires one error event");
+                resolve();
+            }, 500);
+        });
+        audio.src = src;
+        audio.load();
+    });
+}
+
+const revokedURL = URL.createObjectURL(new Blob(["x"], { type: "audio/wav" }));
+URL.revokeObjectURL(revokedURL);
+check("invalid data: URL", "data:audio/wav,invalid").then(function () {
+    return check("revoked Blob URL", revokedURL);
+}).then(testEnd);
+</script>
+</body>

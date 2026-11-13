@@ -29,6 +29,10 @@ public:
     // least two of them.
     static std::unique_ptr<AudioOutputDevice> create(uint32_t sampleRate,
                                                      size_t quantumFrames);
+    // Waits for the writer threads of destroyed devices, which may still be
+    // in an audio server call. Called before the engine library is unloaded,
+    // when no device remains; it waits as long as the server takes.
+    static void joinRetiredWriters();
     virtual void submit(const AudioBus& bus, uint64_t firstFrame) = 0;
     virtual bool failed() const = 0;
     virtual double outputLatency() const

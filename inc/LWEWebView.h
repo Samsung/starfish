@@ -161,6 +161,7 @@ public:
      * For a host-thread instance, use the initialization thread. Dynamic
      * loading releases supported implementations so Initialize starts fresh;
      * check CanUnload before the caller closes this API library itself.
+     * Unloading waits for Web Audio output: ~30 s if the server never answers.
      *
      * \code{.cpp}
      *     LWE::LWE::Finalize();

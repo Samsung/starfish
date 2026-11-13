@@ -1,4 +1,5 @@
 #include "core/modules/webaudio/render/AudioGraph.h"
+#include "core/modules/profiling/Profiling.h"
 #include "core/modules/webaudio/render/AudioParamTimeline.h"
 #include "platform/webaudio/AudioOutputDevice.h"
 
@@ -6,7 +7,18 @@
 #include <cstdio>
 #include <thread>
 
+#include <sys/time.h>
+
 namespace Starfish {
+
+// AudioGraph.cpp records the device-less clock with longTickCount(), which
+// lives in Profiling.cpp; the harness does not link that file.
+uint64_t longTickCount()
+{
+    struct timeval now;
+    gettimeofday(&now, nullptr);
+    return static_cast<uint64_t>(now.tv_sec) * 1000000 + now.tv_usec;
+}
 
 // Exercise the real graph worker without a device, DOM, or a GC runtime.
 std::unique_ptr<AudioOutputDevice> AudioOutputDevice::create(uint32_t, size_t)

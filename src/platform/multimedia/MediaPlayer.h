@@ -61,9 +61,15 @@ class URL;
 class WebOrigin;
 class Window;
 class MediaPlayerWebRtc;
+enum class RequestCredentials;
 #if defined(STARFISH_ENABLE_WEBAUDIO)
 class MediaAudioPlaybackState;
 #endif
+
+// How long a media fetch has before it fails: each read of the FFmpeg
+// player's own requests, and the whole of MediaPlayer::probeResponseURL()'s,
+// redirects included.
+static const uint32_t kMediaFetchTimeoutMs = 10 * 1000;
 
 class MediaPlayer : public gc {
     friend class ResponseURLProbeClient;
@@ -142,20 +148,35 @@ public:
     // its media data is CORS-same-origin
     // (https://html.spec.whatwg.org/multipage/media.html#media-data-is-cors-same-origin).
     // Empty until a backend vouches for the requested URL, and empty again
-    // once it saw the request redirected anywhere (it can't report the hops
-    // Fetch judges one by one): the element then treats the media data as
-    // cross-origin, the safe side. Backends differ only in their evidence:
-    // the FFmpeg player reads libavformat's response location, the Tizen
-    // player relies on probeResponseURL().
+    // once a later request of the media ended anywhere else (it can't report
+    // the hops Fetch judges one by one): the element then treats the media
+    // data as cross-origin, the safe side. Backends differ only in their
+    // evidence: the FFmpeg player reads libavformat's response location (for
+    // `crossorigin` media, against where a CORS probe's response came from),
+    // the Tizen player relies on probeResponseURL().
     Optional<ResourceURL*> responseURL();
-    // Whether responseURL() is same-origin with `origin`. Judged once per
-    // response: the texture upload path asks for every frame.
-    bool responseIsSameOrigin(WebOrigin* origin);
+    // Whether the vouched response is CORS-same-origin for a document of
+    // `origin`: approved through CORS, or same-origin with it. Judged once
+    // per response: the texture upload path asks for every frame.
+    bool responseIsCORSSameOrigin(WebOrigin* origin);
+    // Whether the media data comes only from the resource the element
+    // selected, so that resource alone decides whether the data is
+    // CORS-same-origin. The FFmpeg player answers once prepare has
+    // identified the demuxer, and never for one that opens other resources
+    // itself (playlists, concat lists).
+    // shortcut: other backends keep the earlier behaviour (true); whether
+    // Tizen's memory-buffer Blob path fetches more is unverified.
+    virtual bool readsOneResource()
+    {
+        return true;
+    }
     // Called by a backend (or its native wrapper) with what its network
     // stack tells it. Vouching happens on the main thread once the resource
-    // is prepared; revoking may come from a decoding thread.
-    void vouchResponseURL(ResourceURL* url);
-    void revokeResponseURL();
+    // is prepared; revoking may come from a decoding thread. `corsApproved`:
+    // the response passed the CORS check of a CORS-mode request, which makes
+    // it CORS-same-origin whatever its origin.
+    void vouchResponseURL(ResourceURL* url, bool corsApproved = false);
+    virtual void revokeResponseURL();
     bool responseURLVouched() const
     {
         return m_responseURLVouched.load();
@@ -274,13 +295,22 @@ protected:
     // like the player's own (no CORS, no credentials), vouches for `url`
     // when the response came back from it unredirected, with a success
     // status (a server rejecting HEAD leaves the media tainted) and not as
-    // a playlist. The player's request is a separate one, so a server
-    // answering the two differently defeats the check; platform players in
-    // Chromium carry the same trade-off. didProbeResponseURL() follows on
-    // the main thread whether or not the probe vouched, unless the player
-    // died meanwhile.
-    void probeResponseURL(ResourceURL* url);
-    virtual void didProbeResponseURL(ResourceURL* url)
+    // a playlist. With `cors` (the credentials mode a `crossorigin` element
+    // asks for) it is a CORS request instead and vouches for nothing:
+    // didProbeResponseURL() gets the URL a CORS-same-origin response with a
+    // success status, not a playlist, came from after its redirects (empty
+    // otherwise), for a backend that can tell where its own request ended
+    // to vouch only when that is the same URL. The player's request is a
+    // separate one, so a server answering the two differently defeats the
+    // check; platform players in Chromium carry the same trade-off.
+    // didProbeResponseURL() follows on the main thread whether or not the
+    // probe vouched, unless the player died meanwhile. A probe that does
+    // not complete within kMediaFetchTimeoutMs, redirects included, fails
+    // like a network error.
+    void probeResponseURL(ResourceURL* url,
+                          Optional<RequestCredentials> cors = NullOption);
+    virtual void didProbeResponseURL(ResourceURL* url,
+                                     const std::string& corsLocation)
     {
     }
     void cancelResponseURLProbe();
@@ -297,6 +327,7 @@ protected:
     volatile unsigned long m_videoWidth, m_videoHeight;
     ResourceURL* m_judgedResponseURL{ nullptr };
     bool m_judgedSameOrigin{ false };
+    bool m_responseCORSApproved{ false };
     Optional<ResourceURL*> m_vouchedResponseURL;
     std::atomic<bool> m_responseURLVouched{ false };
     Optional<Resource*> m_responseURLProbe;

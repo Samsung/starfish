@@ -28,9 +28,17 @@ tests/assertion/webaudio/decode-pending-unload.html
 tests/assertion/webaudio/decode-pending-unload-microtask.html
 tests/assertion/webaudio/cycle-reconnection.html
 tests/assertion/webaudio/media-audio-decode.html
-# tests/assertion/webaudio/media-element-source-pcm.html # FFmpeg player: setOriginClean(isMSE()) marks Blob PCM not origin-clean
-# tests/assertion/webaudio/media-audio-error.html # FFmpeg player: data: URLs never reach a demuxer
+tests/assertion/webaudio/media-element-source-pcm.html
+tests/assertion/webaudio/media-audio-error.html
+tests/assertion/webaudio/media-element-source-worklet.html
+tests/assertion/webaudio/media-src-failure-network-state.html
+tests/assertion/webaudio/media-element-source-continuity.html
+tests/assertion/webaudio/media-element-source-seek.html
+tests/assertion/webaudio/media-element-source-video.html
+tests/assertion/webaudio/media-element-source-video-interleave.html
+tests/assertion/webaudio/media-element-source-long-frames.html
 tests/assertion/webaudio/media-audio-source-replace.html
+tests/assertion/webaudio/media-element-source-mse-seek.html
 tests/assertion/webrtc/nullable-arguments.html
 tests/assertion/webrtc/ice-servers-limit.html
 tests/assertion/webrtc/operation-promises.html
@@ -957,6 +965,7 @@ tests/crash/chartjs.html
 tests/crash/js-module-01.html
 tests/crash/svg-gradient-href-crash.html
 tests/crash/removed-iframe-window-callbacks-gc.html
+tests/crash/media-image-url.html
 tests/pixel/css/scroll/scroll-into-view-options.html
 tests/assertion/css/scroll/scrollLeft_setter_and_event.html
 tests/assertion/css/scroll/scrollTop_setter_and_event.html

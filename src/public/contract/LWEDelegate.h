@@ -53,6 +53,7 @@ public:
     // or from a different thread than the host-owned initialization thread.
     // After shutting down an existing loop, unload before initializing: its
     // process globals can still refer to the old thread's GC heap.
+    // Waits for Web Audio output threads: ~30 s if the server never answers.
     static bool ShutdownForUnload();
 };
 

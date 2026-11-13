@@ -144,8 +144,11 @@ bool EXPORT_UNMANAGED_API LWEImplTest_Exercise(const char* url)
             g_main_context_iteration(nullptr, FALSE);
         }
 #endif
-        if (container->EvaluateJavaScript("String(unloadWorkerReady)") ==
-            "true") {
+        // The --wait-for-worker page's AudioContext must be running too, so
+        // its output device exists when document disposal starts.
+        if (container->EvaluateJavaScript(
+                "String(unloadWorkerReady && (!window.unloadAudio || "
+                "unloadAudio.state === 'running'))") == "true") {
             workerReady = true;
             break;
         }

@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Media URLs that name images do not crash the player</title>
+<p>This test should not crash.</p>
+<script>
+// A media URL that looks like an image name (a "?" before an image
+// extension, or a %d numbered sequence) makes libavformat pick its image
+// demuxer, which opens the images without options. Each load has to end in
+// an error or metadata, never in a crash.
+// media-image-sequence-1.png: a 1x1 grey PNG, the sequence's only image.
+const sources = ['data:,?.jpg', 'media-image-sequence-%d.png'];
+
+function load(src) {
+    return new Promise((resolve) => {
+        const audio = document.createElement('audio');
+        audio.onerror = resolve;
+        audio.onloadedmetadata = resolve;
+        setTimeout(resolve, 5000);
+        audio.src = src;
+        audio.load();
+    });
+}
+
+function testStart() {
+    sources.reduce((done, src) => done.then(() => load(src)),
+                   Promise.resolve()).then(() => testEnd());
+}
+</script>

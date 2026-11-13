@@ -158,26 +158,57 @@ static bool isPlaylistResponse(Resource* resource, ResourceURL* url)
     return path->endsWith(".m3u8", false) || path->endsWith(".mpd", false);
 }
 
+// The probe runs on one of the loader's few shared network workers, so a
+// server that never answers it would stall the page's other loads until
+// curl's default timeout; the request gives up (and frees the worker) sooner.
+class ResponseURLProbeResource : public HeaderResource {
+public:
+    ResponseURLProbeResource(ResourceURL* url, ResourceLoader* loader)
+        : HeaderResource(url, loader)
+    {
+    }
+
+    virtual void prepare()
+    {
+        HeaderResource::prepare();
+        m_resourceRequest->setTimeout(kMediaFetchTimeoutMs);
+    }
+};
+
 class ResponseURLProbeClient : public ResourceClient {
 public:
     ResponseURLProbeClient(Resource* resource, MediaPlayer* player,
-                           ResourceURL* url)
+                           ResourceURL* url, bool cors)
         : ResourceClient(resource)
         , m_player(player)
         , m_url(url)
+        , m_cors(cors)
     {
     }
 
     void didLoadFinished() override
     {
         ResourceRequest* request = m_resource->resourceRequest().value();
-        finish(!request->isRedirected() && request->status() / 100 == 2 &&
-               !isPlaylistResponse(m_resource, m_url));
+        bool succeeded = request->status() / 100 == 2 &&
+                         !isPlaylistResponse(m_resource, m_url);
+        if (!m_cors) {
+            finish(succeeded && !request->isRedirected(), std::string());
+            return;
+        }
+        // The loader judged every hop (CORS check, tainting); a backend only
+        // learns where the response ended, as curl reports it.
+        std::string location;
+        if (succeeded && request->isCORSSameOrigin()) {
+            location = request->isRedirected()
+                           ? request->lastEffectiveURL()
+                           : m_url->urlString()->toUTF8NonGCString();
+        }
+        finish(false, location);
     }
 
     void didLoadFailed() override
     {
-        finish(false);
+        finish(false, std::string());
     }
 
     // The player disowns the probe before canceling it from its teardown;
@@ -189,11 +220,11 @@ public:
         if (!probe || probe.value() != m_resource) {
             return;
         }
-        finish(false);
+        finish(false, std::string());
     }
 
 private:
-    void finish(bool vouched)
+    void finish(bool vouched, const std::string& corsLocation)
     {
         m_player->m_responseURLProbe = nullptr;
         if (!m_player->alive()) {
@@ -202,30 +233,35 @@ private:
         if (vouched) {
             m_player->vouchResponseURL(m_url);
         }
-        m_player->didProbeResponseURL(m_url);
+        m_player->didProbeResponseURL(m_url, corsLocation);
     }
 
     MediaPlayer* m_player;
     ResourceURL* m_url;
+    bool m_cors;
 };
 
-void MediaPlayer::probeResponseURL(ResourceURL* url)
+void MediaPlayer::probeResponseURL(ResourceURL* url,
+                                   Optional<RequestCredentials> cors)
 {
     STARFISH_ASSERT(!m_responseURLProbe);
     revokeResponseURL();
     Document* document = m_container->document();
-    HeaderResource* resource = document->resourceLoader().fetchHeader(url);
+    HeaderResource* resource =
+        new ResponseURLProbeResource(url, &document->resourceLoader());
     resource->markThisResourceIsDoesNotAffectWindowOnLoad();
     resource->addResourceClient(
-        new ResponseURLProbeClient(resource, this, url));
+        new ResponseURLProbeClient(resource, this, url, cors.hasValue()));
     m_responseURLProbe = resource;
 
     RequestData* request = new RequestData();
     request->m_url = url;
     request->m_referrer = new ReferrerURL(document->documentURI());
     request->m_method = String::createASCIIString("HEAD");
-    request->m_mode = RequestMode::NoCORS;
-    request->m_credentials = RequestCredentials::Omit;
+    request->m_mode = cors ? RequestMode::CORS : RequestMode::NoCORS;
+    request->m_credentials = cors.valueOr(RequestCredentials::Omit);
+    // No destination: the loader exempts audio/video destinations from the
+    // CORS check (it gates only <img crossorigin> among subresources).
     request->m_syncLevel = RequestSyncLevel::NeverSync;
     resource->request(request, false);
 }
@@ -250,9 +286,10 @@ Optional<ResourceURL*> MediaPlayer::responseURL()
     return m_vouchedResponseURL;
 }
 
-void MediaPlayer::vouchResponseURL(ResourceURL* url)
+void MediaPlayer::vouchResponseURL(ResourceURL* url, bool corsApproved)
 {
     m_vouchedResponseURL = url;
+    m_responseCORSApproved = corsApproved;
     m_responseURLVouched = true;
 }
 
@@ -261,11 +298,14 @@ void MediaPlayer::revokeResponseURL()
     m_responseURLVouched = false;
 }
 
-bool MediaPlayer::responseIsSameOrigin(WebOrigin* origin)
+bool MediaPlayer::responseIsCORSSameOrigin(WebOrigin* origin)
 {
     Optional<ResourceURL*> response = responseURL();
     if (!response) {
         return false;
+    }
+    if (m_responseCORSApproved) {
+        return true;
     }
     if (response.value() != m_judgedResponseURL) {
         WebOrigin* responseOrigin =

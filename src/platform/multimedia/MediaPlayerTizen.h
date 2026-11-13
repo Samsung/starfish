@@ -170,7 +170,8 @@ public:
     void setLoop(bool loop) override;
 
     virtual void prepare(ResourceURL* url);
-    void didProbeResponseURL(ResourceURL* url) override;
+    void didProbeResponseURL(ResourceURL* url,
+                             const std::string& corsLocation) override;
     void prepareNativePlayer(ResourceURL* url);
     void startNativePrepare();
     virtual void setNativePlayerDefaultOptions(ResourceURL* url);

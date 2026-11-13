@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "PlatformIntegrationData.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Event.h"
@@ -31,6 +32,7 @@
 #include "core/dom/TextTrackList.h"
 #include "core/dom/DOMTokenList.h"
 #include "core/dom/MediaError.h"
+#include "core/dom/WebOrigin.h"
 #include "core/extra/MimeType.h"
 #include "core/extra/TimeRanges.h"
 #include "core/modules/mediasource/MediaSource.h"
@@ -422,16 +424,14 @@ void HTMLMediaElement::dedicatedMediaSourceFailure()
     m_delayingTheLoadEvent = false;
 }
 
-void HTMLMediaElement::giveupFetchingResource(bool shouldSetError,
-                                              MediaError::Code errorCode)
+void HTMLMediaElement::giveupFetchingResource(bool shouldSetError)
 {
     if (shouldSetError) {
         // STARFISH_ASSERT(m_readyState > HAVE_NOTHING);
-        // Set the error attribute to a new MediaError object. The media
-        // pipeline mostly surfaces a single failure flag, so network and
-        // decode failures both default to MEDIA_ERR_NETWORK; a player that
-        // can tell (a format it refuses) passes the spec'd code.
-        m_error = new MediaError(executionContext(), errorCode);
+        // Set the error attribute to a new MediaError object whose code is
+        // MEDIA_ERR_NETWORK; mid-stream failures only.
+        m_error =
+            new MediaError(executionContext(), MediaError::MEDIA_ERR_NETWORK);
 
         // Set the element's networkState attribute to the NETWORK_IDLE value.
         m_networkState = NETWORK_IDLE;
@@ -893,22 +893,29 @@ void HTMLMediaElement::setCrossOrigin(Optional<String*> crossOrigin)
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#media-data-is-cors-same-origin
-// The players fetch through their own network stacks, without CORS, so a
-// cross-origin response can't be verified and stays opaque even when
-// `crossorigin` is set: only a response from the document's own origin is
-// CORS-same-origin. Fetch judges that hop by hop along the redirects; the
-// players can't report the hops, so they vouch for a response only when
-// they saw no redirect at all (a same-origin redirect taints too, the
-// conservative side of that deviation). data: and blob: media
-// (script-supplied bytes, e.g. MSE) carry no cross-origin data.
+// The players fetch through their own network stacks, without CORS. A
+// response is CORS-same-origin when it comes from the document's own origin
+// or, for `crossorigin` media with the FFmpeg player, when a CORS request of
+// the engine's own passed the check and ended where the player's request
+// did; other cross-origin responses stay opaque. Fetch judges same-origin
+// hop by hop along the redirects; the players can't report the hops, so
+// without that check they vouch for a response only when they saw no
+// redirect at all (a same-origin redirect taints too, the conservative side
+// of that deviation). data: and blob: media (script-supplied bytes, e.g.
+// MSE) carry no cross-origin data. All of these hold only while the player
+// reads that one resource: data a container makes it fetch from elsewhere
+// comes from responses nobody judged.
 bool HTMLMediaElement::mediaDataIsCORSSameOrigin()
 {
+    MediaPlayer* player = activeMediaPlayer();
+    if (!player || !player->readsOneResource()) {
+        return false;
+    }
     if (m_currentSrc->startsWith("data:", false) ||
         m_currentSrc->startsWith("blob:", false)) {
         return true;
     }
-    MediaPlayer* player = activeMediaPlayer();
-    return player && player->responseIsSameOrigin(document()->webOrigin());
+    return player->responseIsCORSSameOrigin(document()->webOrigin());
 }
 
 void HTMLMediaElement::setPreload(String* preload)
@@ -1262,6 +1269,26 @@ void HTMLMediaElement::mediaPlayerNotifySeekFailureItsContainer()
     closeMediaPlayer();
 }
 
+// The user agent gave up fetching after media data had arrived (the
+// connection was interrupted): MEDIA_ERR_NETWORK with the element idle.
+// The error event goes through the operation queue, so that a page which
+// restarts the load from its handler is not undone by these steps. Only the
+// element's current player reports this: one it has dropped (a new src
+// during a pending seek leaves that player running) must not set the error
+// of the resource that replaced it.
+// https://html.spec.whatwg.org/multipage/media.html#media-data-processing-steps-list
+void HTMLMediaElement::mediaPlayerNotifyNetworkErrorItsContainer(
+    MediaPlayer* player)
+{
+    if (player != m_mediaPlayer) {
+        return;
+    }
+    m_error = new MediaError(executionContext(), MediaError::MEDIA_ERR_NETWORK);
+    m_networkState = NETWORK_IDLE;
+    m_delayingTheLoadEvent = false;
+    dispatchErrorEvent();
+}
+
 void HTMLMediaElement::mediaPlayerNotifyEndedItsContainer()
 {
     m_isPaused = true;
@@ -1551,6 +1578,23 @@ void ResourceSelectionContext::failedWithElements(Element* candidate)
     m_mediaElement->addEventToOperationQueue(candidate, e);
 }
 
+// A blob: URL resolves only for the origin that created it (File API "obtain
+// a blob object", the same-partition check), so another origin's Blob URL is
+// a network error unless the embedder turned web security off. Opaque
+// origins all serialize to "null" and count as one origin, as everywhere in
+// the engine (WebOrigin::isSameOrigin(), URL.revokeObjectURL()), so file:
+// pages keep their own Blob media.
+// https://w3c.github.io/FileAPI/#blob-url-obtain-object
+// https://fetch.spec.whatwg.org/#scheme-fetch
+static bool isOtherOriginBlobURL(ResourceURL* url, ExecutionContext* context)
+{
+    BlobURLStore store;
+    return WebBase::stringToBlobURLString(url->urlString(), store) &&
+           !store.m_origin->equals(context->webOrigin()->serialize()) &&
+           context->webBase()->getWebSecurityMode() !=
+               LWE::WebSecurityMode::Disable;
+}
+
 // https://html.spec.whatwg.org/multipage/media.html#concept-media-load-algorithm
 void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
 {
@@ -1646,6 +1690,10 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
         // If urlString was obtained successfully, set the currentSrc attribute
         // to urlString.
         self->m_currentSrc = url->urlString();
+        if (isOtherOriginBlobURL(url, self->executionContext())) {
+            self->dedicatedMediaSourceFailure();
+            return;
+        }
         // End the synchronous section, continuing the remaining steps in
         // parallel.
         self->initMediaPlayer(url);
@@ -1694,6 +1742,12 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
             return;
         }
         self->m_currentSrc = url->urlString();
+        if (isOtherOriginBlobURL(url, self->executionContext())) {
+            context->failedWithElements(candidate);
+            self->appendToOperationQueue(
+                new MediaOperationQueueDataRequestResourceSelection(self));
+            return;
+        }
         // End the synchronous section, continuing the remaining steps in
         // parallel.
         self->initMediaPlayer(url);

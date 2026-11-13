@@ -26,6 +26,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/HTMLVideoElement.h"
+#include "core/fetch/RequestData.h"
 #include "core/fileapi/Blob.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/canvas/Canvas.h"
@@ -47,7 +48,9 @@
 #include "core/modules/webaudio/render/AudioHandlers.h"
 #endif
 
+#include <atomic>
 #include <chrono>
+#include <curl/curl.h>
 #include <time.h>
 
 namespace Starfish {
@@ -81,6 +84,14 @@ static uint64_t decodeLookaheadMs()
     return STARFISH_DECODE_LOOKAHEAD_MS_DEFAULT;
 }
 
+// How far ahead of the media clock audio routed into the Web Audio graph is
+// queued for it (the graph reads it in order): one PCM demuxer packet
+// (~100 ms) plus a render catch-up burst, so neither drains the queue.
+#define STARFISH_ROUTED_AUDIO_LEAD_MS 150
+// How long a graph that renders slowly may hold back the end of routed media
+// beyond the end of its audio.
+#define STARFISH_ROUTED_AUDIO_DRAIN_GRACE_MS 250
+
 #define RETURN_WHEN_PLAYER_ERROR(...) \
     if (ret != PLAYER_ERROR_NONE) {   \
         PLAYER_LOGE(__VA_ARGS__);     \
@@ -111,19 +122,141 @@ static void completeCallback(void* data)
     player->handleEnded();
 }
 
+// Defined in platform/network/http/HTTPTransaction.cpp: the rule curl follows
+// for skipping certificate verification. Forward declared, as SocketLWS does,
+// to keep HTTPTransaction.h's header chain out of this file.
+bool shouldIgnoreSSLVerify();
+
+// A read that gets nothing from the peer for this long fails. prepare() opens
+// and probes on the main thread, so this bounds how long a server that stops
+// answering freezes the page; during playback such a stall ends playback
+// with an error instead of hanging silently.
+// shortcut: bounds each read, not the whole prepare (a peer trickling a byte
+// every few seconds, or a slow DNS lookup, still blocks the main thread);
+// move prepare off the main thread to fix it.
+static const int64_t kReadTimeoutUs = kMediaFetchTimeoutMs * int64_t(1000);
+
+// libavformat gives every context the same default io_open.
+static std::atomic<decltype(AVFormatContext::io_open)> s_defaultIOOpen{
+    nullptr
+};
+
+// The CA bundle the engine's curl verifies against, if libcurl names one.
+// FFmpeg's OpenSSL backend loads no default store without it (its GnuTLS
+// backend falls back to the system store). FFmpeg has no CA directory option,
+// so a curl that only has a capath is not followed.
+static const char* curlCABundle()
+{
+    static const char* const bundle = []() -> const char* {
+        const curl_version_info_data* info = curl_version_info(CURLVERSION_NOW);
+        return info->age >= CURLVERSION_SEVENTH ? info->cainfo : nullptr;
+    }();
+    return bundle;
+}
+
+// Every URL libavformat opens through a context's io_open (the input, HLS
+// playlists, segments and keys) has one of |schemes|, verifies TLS as the
+// engine's own requests do and gives up on a silent peer. Runs on the main
+// thread (prepare) and on the decoding thread (later segments), so it reads
+// process-wide state only.
+static int openWithEnginePolicy(AVFormatContext* ctx, AVIOContext** pb,
+                                const char* url, int flags,
+                                AVDictionary** options, const char* schemes)
+{
+    // The protocol whitelist keeps tcp/tls/httpproxy for http's own
+    // connections, which don't come here, and HLS opens playlists (variants,
+    // renditions) without the scheme check it gives segments: so the scheme
+    // is judged here, after the crypto wrapper of encrypted segments.
+    // https://fetch.spec.whatwg.org/#scheme-fetch
+    const char* inner = url;
+    if (!av_strstart(url, "crypto+", &inner)) {
+        av_strstart(url, "crypto:", &inner);
+    }
+    const char* protocol = avio_find_protocol_name(inner);
+    if (!protocol || av_match_list(protocol, schemes, ',') <= 0) {
+        return AVERROR(EPERM);
+    }
+    // Some opens pass no options (image2 reading its images).
+    AVDictionary* own = nullptr;
+    if (!options) {
+        options = &own;
+    }
+    bool verify = !shouldIgnoreSSLVerify();
+    int result;
+    // Fails closed: unset, tls_verify defaults to 0 in libavformat < 63.
+    if (av_dict_set(options, "tls_verify", verify ? "1" : "0", 0) < 0 ||
+        av_dict_set_int(options, "rw_timeout", kReadTimeoutUs, 0) < 0 ||
+        (verify && curlCABundle() &&
+         av_dict_set(options, "ca_file", curlCABundle(), 0) < 0)) {
+        result = AVERROR(ENOMEM);
+    } else {
+        result = s_defaultIOOpen.load()(ctx, pb, url, flags, options);
+    }
+    av_dict_free(&own);
+    return result;
+}
+
+static int openForWebInput(AVFormatContext* ctx, AVIOContext** pb,
+                           const char* url, int flags, AVDictionary** options)
+{
+    return openWithEnginePolicy(ctx, pb, url, flags, options,
+                                "http,https,data");
+}
+
+static int openForFileInput(AVFormatContext* ctx, AVIOContext** pb,
+                            const char* url, int flags, AVDictionary** options)
+{
+    return openWithEnginePolicy(ctx, pb, url, flags, options, "file,data");
+}
+
+// The containers the engine plays that read all of their media data from
+// the one resource the element named; mov keeps its external data
+// references (enable_drefs) off, the default.
+#define STARFISH_SINGLE_RESOURCE_FORMATS \
+    "aac,flac,matroska,webm,mov,mp3,mpegts,ogg,wav"
+
+// Whether the input's demuxer reads all of its media data from the one
+// resource the element named. Other demuxers (HLS, and for file: media
+// DASH, concat lists, ...) open further URLs or files themselves, through
+// contexts of their own, whose responses this player never sees, so their
+// data is never CORS-same-origin.
+static bool demuxerReadsOneResource(AVFormatContext* ctx)
+{
+    return ctx->iformat &&
+           av_match_list(ctx->iformat->name, STARFISH_SINGLE_RESOURCE_FORMATS,
+                         ',') > 0;
+}
+
+// Whether libavformat followed a redirect of an http(s) input to a URL of
+// another scheme. Fetch follows redirects to http(s) URLs only, anything
+// else is a network error; libavformat's http requests any Location's host
+// and path over http, so the request has been made, but its response must
+// not be used. Asked through av_opt_get(), as responseLocationIs() does.
+// https://fetch.spec.whatwg.org/#http-redirect-fetch
+static bool redirectedAwayFromHTTP(AVFormatContext* ctx)
+{
+    uint8_t* location = nullptr;
+    if (!ctx->pb || av_opt_get(ctx->pb, "location", AV_OPT_SEARCH_CHILDREN,
+                               &location) < 0) {
+        return false;
+    }
+    bool http = av_stristart((const char*)location, "http:", nullptr) ||
+                av_stristart((const char*)location, "https:", nullptr);
+    av_free(location);
+    return !http;
+}
+
 // Whether the input's http(s) context still reads from the URL it was
 // opened with. libavformat rewrites the context's "location" on every
 // redirect, so a mismatch means a redirect happened. False when nothing
-// can be vouched for: a playlist format (HLS, DASH) fetches its segments
-// through contexts of its own, so the playlist's location says nothing
-// about where the media bytes come from, and only the http(s) protocol
-// has a "location" (a file: or rtsp: input stays cross-origin to the
-// element). Asked through av_opt_get(), which hands out a copy, so nothing
-// here points into libavformat's private state.
+// can be vouched for: a demuxer that opens other resources (see
+// demuxerReadsOneResource()), or a protocol other than http(s), which has no
+// "location" (a file: or rtsp: input stays cross-origin to the element).
+// Asked through av_opt_get(), which hands out a copy, so nothing here
+// points into libavformat's private state.
 static bool responseLocationIs(AVFormatContext* ctx, const char* requested)
 {
-    if (!ctx->pb ||
-        (ctx->iformat && av_match_name(ctx->iformat->name, "hls,dash"))) {
+    if (!ctx->pb || !demuxerReadsOneResource(ctx)) {
         return false;
     }
     uint8_t* location = nullptr;
@@ -379,19 +512,53 @@ bool FfmpegWrapperPlayer::prepare(
             return ((FfmpegWrapperPlayer*)data)->m_stopRequested.load();
         };
         m_fmtCtx->interrupt_callback.opaque = this;
+        bool localFile = m_url && m_url->isFileURL();
+        // What the input names (playlist entries, segments, keys) stays within
+        // the schemes the input itself was allowed: http(s) and data for web
+        // content (tcp/tls/httpproxy carry http(s), crypto/data HLS keys),
+        // local files only for file: media.
+        m_fmtCtx->protocol_whitelist =
+            av_strdup(localFile ? "file,crypto,data"
+                                : "http,https,tls,tcp,crypto,httpproxy,data");
+        if (!m_fmtCtx->protocol_whitelist) {
+            return false;
+        }
+        // Web content plays the containers browsers play, and HLS playlists
+        // of them (nested contexts inherit this list, so it also names the
+        // WebVTT of subtitle renditions, which FFmpeg 8 opens with the
+        // rest). Other demuxers open what they name in ways io_open doesn't
+        // see (DASH segments, concat entries, image2's file checks), so they
+        // are left to local apps.
+        if (!localFile) {
+            m_fmtCtx->format_whitelist =
+                av_strdup(STARFISH_SINGLE_RESOURCE_FORMATS ",hls,webvtt");
+            if (!m_fmtCtx->format_whitelist) {
+                return false;
+            }
+        }
+        s_defaultIOOpen.store(m_fmtCtx->io_open);
+        m_fmtCtx->io_open = localFile ? openForFileInput : openForWebInput;
 
         if (m_hasMemoryInput) {
             if (!openMemoryInput()) {
                 return false;
             }
-        } else if (avformat_open_input(
-                       &m_fmtCtx,
-                       m_url->urlString()->toUTF8NonGCString().c_str(), nullptr,
-                       nullptr) < 0) {
-            PLAYER_LOGI(
-                "[FfmpegWrapperPlayer] Error: Could not open source url: %s\n",
-                m_url->urlString()->toUTF8NonGCString().c_str());
-            return false;
+        } else {
+            // openWithEnginePolicy() adds options a protocol may leave unused
+            // (tls_verify for http:); avformat_open_input() only hands those
+            // back, to be freed, through a dictionary of the caller's.
+            AVDictionary* unused = nullptr;
+            int opened = avformat_open_input(
+                &m_fmtCtx, m_url->urlString()->toUTF8NonGCString().c_str(),
+                nullptr, &unused);
+            av_dict_free(&unused);
+            if (opened < 0) {
+                PLAYER_LOGI(
+                    "[FfmpegWrapperPlayer] Error: Could not open source url: "
+                    "%s\n",
+                    m_url->urlString()->toUTF8NonGCString().c_str());
+                return false;
+            }
         }
         PLAYER_LOGI("[FfmpegWrapperPlayer] url opened successfully\n");
 
@@ -423,12 +590,21 @@ bool FfmpegWrapperPlayer::prepare(
             (m_videoStreamIndex < 0 && m_audioStreamIndex < 0)) {
             return false;
         }
+        m_readsOneResource = demuxerReadsOneResource(m_fmtCtx);
         // Checked after probing, which may itself re-request the input (an
         // MP4 with its moov after the media data seeks back to the start).
+        // A CORS probe that approved the response (crossorigin media) has
+        // already named where it must end; otherwise it is the URL itself.
         if (m_url) {
-            m_requestedLocation = m_url->urlString()->toUTF8NonGCString();
+            if (redirectedAwayFromHTTP(m_fmtCtx)) {
+                return false;
+            }
+            const bool corsApproved = !m_requestedLocation.empty();
+            if (!corsApproved) {
+                m_requestedLocation = m_url->urlString()->toUTF8NonGCString();
+            }
             if (responseLocationIs(m_fmtCtx, m_requestedLocation.c_str())) {
-                m_owner->vouchResponseURL(m_url);
+                m_owner->vouchResponseURL(m_url, corsApproved);
             }
         }
     }
@@ -652,13 +828,15 @@ double FfmpegWrapperPlayer::getDuration()
     return std::numeric_limits<double>::quiet_NaN();
 }
 
-// Any redirect, at open or on a later request of the input (a seek, or
-// the demuxer hopping between interleaved chunks, re-requests over http),
-// taints the media for the element. libavformat follows redirects itself
-// and keeps only the final URL, so a chain that merely passed through
-// another origin can't be told from one that stayed home; Fetch keeps a
-// no-cors response opaque after any cross-origin hop, and this errs the
-// same way for the same-origin hops it can't see.
+// Any request of the input that ends anywhere but where the vouched
+// response came from (a seek, or the demuxer hopping between interleaved
+// chunks, re-requests over http) taints the media for the element; so does
+// any redirect, at open or later, of media not checked through CORS.
+// libavformat follows redirects itself and keeps only the final URL, so a
+// chain that merely passed through another origin can't be told from one
+// that stayed home; Fetch keeps a no-cors response opaque after any
+// cross-origin hop, and this errs the same way for the same-origin hops it
+// can't see.
 void FfmpegWrapperPlayer::noteResponseLocation()
 {
     if (m_hasMemoryInput) {
@@ -676,10 +854,20 @@ void FfmpegWrapperPlayer::decodingThread()
 {
     AVPacket* packet = av_packet_alloc();
     AVFrame* frame = av_frame_alloc();
+    // Routed media only: the decoded video frame waiting for its time while
+    // the thread reads on, so audio stored after it in the file is still
+    // queued ahead of the clock. It is shown before the next video packet is
+    // decoded, so no more decoded frames wait than without it.
+    // shortcut: it shows only once the next read returns, so a read stalled
+    // on the network freezes the picture one frame early; give it a wait of
+    // its own if that matters.
+    AVFrame* heldVideo = av_frame_alloc();
+    int64_t heldVideoMs = 0;
     SwsContext* scale = nullptr;
-    if (!packet || !frame) {
+    if (!packet || !frame || !heldVideo) {
         av_packet_free(&packet);
         av_frame_free(&frame);
+        av_frame_free(&heldVideo);
         return;
     }
     auto epoch = std::chrono::steady_clock::now();
@@ -687,6 +875,106 @@ void FfmpegWrapperPlayer::decodingThread()
     bool resetClock = true;
     bool eof = false;
     int64_t seekFloorMs = 0;
+    // Routed media only: where the last audio frame released early starts
+    // and ends, -1 when there is none since the last seek.
+    int64_t earlyAudioMs = -1;
+    int64_t earlyAudioEndMs = -1;
+    auto clockMs = [&]() {
+        return offsetMs + std::chrono::duration_cast<std::chrono::milliseconds>(
+                              std::chrono::steady_clock::now() - epoch)
+                              .count();
+    };
+    // Paces both audio-only and video streams by their timestamps: waits
+    // until the clock reaches |dueMs|. Control changes interrupt the wait,
+    // including paused seeks. Unrouted media gives up on a pause. Routed
+    // media holds its place (the Web Audio graph must hear every frame
+    // once), and its clock resumes where the pause stopped it, so the
+    // graph's queue keeps its lead. False on stop, seek or unrouted pause.
+    auto waitForClock = [&](std::unique_lock<std::mutex>& lock, int64_t dueMs,
+                            bool routed) {
+        while (true) {
+            if (resetClock) {
+                epoch = std::chrono::steady_clock::now();
+                offsetMs = m_currentPositionMs.load();
+                resetClock = false;
+            }
+            m_statecv.wait_until(
+                lock, epoch + std::chrono::milliseconds(dueMs - offsetMs),
+                [this]() {
+                    return m_stopRequested || m_seekRequested ||
+                           m_state != State::PLAYING;
+                });
+            if (m_stopRequested || m_seekRequested ||
+                (m_state != State::PLAYING && !routed)) {
+                resetClock = true;
+                return false;
+            }
+            if (m_state == State::PLAYING) {
+                return true;
+            }
+            const int64_t pausedAtMs = clockMs();
+            m_statecv.wait(lock, [this]() {
+                return m_stopRequested || m_seekRequested ||
+                       m_state == State::PLAYING;
+            });
+            epoch = std::chrono::steady_clock::now();
+            offsetMs = pausedAtMs;
+        }
+    };
+    auto presentVideo = [&](AVFrame* video) {
+        int width = video->width;
+        int height = video->height;
+        // Nobody takes the frame (headless), so skip the RGBA copy.
+        if (!m_framedecodedCallback || width <= 0 || height <= 0) {
+            av_frame_unref(video);
+            return;
+        }
+        // A stream that grows past the limit mid-way is scaled to fit
+        // rather than dropped: dropping would leave a stream the element
+        // reports as playing with nothing on screen.
+        int outWidth = width;
+        int outHeight = height;
+        if (m_maxFrameWidth > 0 && m_maxFrameHeight > 0 &&
+            (width > m_maxFrameWidth || height > m_maxFrameHeight)) {
+            double ratio = std::min((double)m_maxFrameWidth / width,
+                                    (double)m_maxFrameHeight / height);
+            outWidth = std::max(1, (int)lround(width * ratio));
+            outHeight = std::max(1, (int)lround(height * ratio));
+        }
+        scale = sws_getCachedContext(scale, width, height,
+                                     static_cast<AVPixelFormat>(video->format),
+                                     outWidth, outHeight, AV_PIX_FMT_RGBA,
+                                     SWS_BILINEAR, nullptr, nullptr, nullptr);
+        uint8_t* buffer =
+            static_cast<uint8_t*>(malloc(outWidth * outHeight * 4));
+        if (scale && buffer) {
+            uint8_t* planes[] = { buffer, nullptr, nullptr, nullptr };
+            int strides[] = { outWidth * 4, 0, 0, 0 };
+            sws_scale(scale, video->data, video->linesize, 0, height, planes,
+                      strides);
+            FFmpegMediaPacket* decoded =
+                new FFmpegMediaPacket(outWidth, outHeight, outWidth * 4);
+            decoded->setBuffer(buffer);
+            if (m_framedecodedCallback) {
+                m_framedecodedCallback(decoded, m_framedecodedCallbackData);
+            }
+        } else {
+            free(buffer);
+        }
+        av_frame_unref(video);
+    };
+    // Shows the held video frame at its time; false on stop or seek.
+    auto showHeldVideo = [&]() {
+        {
+            std::unique_lock<std::mutex> lock(m_stateMutex);
+            if (!waitForClock(lock, heldVideoMs, true)) {
+                return false;
+            }
+        }
+        m_currentPositionMs.store(heldVideoMs);
+        presentVideo(heldVideo);
+        return true;
+    };
     auto deliver = [&](AVCodecContext* codec, int index) {
         while (avcodec_receive_frame(codec, frame) >= 0) {
             int64_t timestamp = frame->best_effort_timestamp;
@@ -704,78 +992,58 @@ void FfmpegWrapperPlayer::decodingThread()
                 av_frame_unref(frame);
                 continue;
             }
+            // The Web Audio graph reads routed audio in order instead of
+            // a device playing it on time, so it is queued early. A video
+            // frame does not hold that back: it waits for its time while
+            // the thread reads on.
+            const bool routed =
+                m_audioQueuedCallback && m_audioQueuedCallback() >= 0;
+            const bool audio = index == m_audioStreamIndex;
+            const int64_t leadMs =
+                routed && audio ? STARFISH_ROUTED_AUDIO_LEAD_MS : 0;
+            if (heldVideo->buf[0] &&
+                (!audio || heldVideoMs <= position - leadMs) &&
+                !showHeldVideo()) {
+                av_frame_unref(frame);
+                return;
+            }
+            if (routed && !audio) {
+                av_frame_move_ref(heldVideo, frame);
+                heldVideoMs = position;
+                continue;
+            }
             {
                 std::unique_lock<std::mutex> lock(m_stateMutex);
-                if (resetClock) {
-                    epoch = std::chrono::steady_clock::now();
-                    offsetMs = m_currentPositionMs.load();
-                    resetClock = false;
-                }
-                // Pace both audio-only and video streams by their timestamps.
-                // Control changes interrupt the wait, including paused seeks.
-                m_statecv.wait_until(
-                    lock,
-                    epoch + std::chrono::milliseconds(position - offsetMs),
-                    [this]() {
-                        return m_stopRequested || m_seekRequested ||
-                               m_state != State::PLAYING;
-                    });
-                if (m_stopRequested || m_seekRequested ||
-                    m_state != State::PLAYING) {
+                if (!waitForClock(lock, position - leadMs, routed)) {
                     av_frame_unref(frame);
-                    resetClock = true;
                     return;
                 }
             }
-            m_currentPositionMs.store(position);
-            if (index == m_audioStreamIndex) {
-                // The common PCM publisher uses milliseconds for MSE frames.
-                frame->best_effort_timestamp = position;
-                if (m_audioDecodedCallback) {
-                    m_audioDecodedCallback(frame);
-                }
-            } else {
-                int width = frame->width;
-                int height = frame->height;
-                // Nobody takes the frame (headless), so skip the RGBA copy.
-                if (!m_framedecodedCallback || width <= 0 || height <= 0) {
-                    av_frame_unref(frame);
-                    continue;
-                }
-                // A stream that grows past the limit mid-way is scaled to
-                // fit rather than dropped: dropping would leave a stream the
-                // element reports as playing with nothing on screen.
-                int outWidth = width;
-                int outHeight = height;
-                if (m_maxFrameWidth > 0 && m_maxFrameHeight > 0 &&
-                    (width > m_maxFrameWidth || height > m_maxFrameHeight)) {
-                    double ratio = std::min((double)m_maxFrameWidth / width,
-                                            (double)m_maxFrameHeight / height);
-                    outWidth = std::max(1, (int)lround(width * ratio));
-                    outHeight = std::max(1, (int)lround(height * ratio));
-                }
-                scale = sws_getCachedContext(
-                    scale, width, height,
-                    static_cast<AVPixelFormat>(frame->format), outWidth,
-                    outHeight, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr,
-                    nullptr);
-                uint8_t* buffer =
-                    static_cast<uint8_t*>(malloc(outWidth * outHeight * 4));
-                if (scale && buffer) {
-                    uint8_t* planes[] = { buffer, nullptr, nullptr, nullptr };
-                    int strides[] = { outWidth * 4, 0, 0, 0 };
-                    sws_scale(scale, frame->data, frame->linesize, 0, height,
-                              planes, strides);
-                    FFmpegMediaPacket* decoded = new FFmpegMediaPacket(
-                        outWidth, outHeight, outWidth * 4);
-                    decoded->setBuffer(buffer);
-                    if (m_framedecodedCallback) {
-                        m_framedecodedCallback(decoded,
-                                               m_framedecodedCallbackData);
-                    }
-                } else {
-                    free(buffer);
-                }
+            if (!audio) {
+                m_currentPositionMs.store(position);
+                presentVideo(frame);
+                continue;
+            }
+            // Early audio reports the clock, not where the frame starts.
+            m_currentPositionMs.store(
+                leadMs ? std::max<int64_t>(m_currentPositionMs.load(),
+                                           position - leadMs)
+                       : position);
+            if (leadMs) {
+                earlyAudioMs = position;
+                earlyAudioEndMs =
+                    position + (frame->sample_rate > 0
+                                    ? frame->nb_samples * INT64_C(1000) /
+                                          frame->sample_rate
+                                    : 0);
+            }
+            if (m_audioDecodedCallback) {
+                m_audioDecodedCallback(
+                    frame,
+                    timestamp == AV_NOPTS_VALUE
+                        ? std::numeric_limits<double>::quiet_NaN()
+                        : timestamp *
+                              av_q2d(m_fmtCtx->streams[index]->time_base));
             }
             av_frame_unref(frame);
         }
@@ -804,8 +1072,11 @@ void FfmpegWrapperPlayer::decodingThread()
                     avcodec_flush_buffers(m_audioCodecCtx);
                 }
                 if (m_audioFlushCallback) {
-                    m_audioFlushCallback();
+                    m_audioFlushCallback(target / 1000.0);
                 }
+                av_frame_unref(heldVideo);
+                earlyAudioMs = -1;
+                earlyAudioEndMs = -1;
                 m_currentPositionMs.store(target);
                 seekFloorMs = target;
                 eof = false;
@@ -838,6 +1109,39 @@ void FfmpegWrapperPlayer::decodingThread()
                     avcodec_send_packet(m_audioCodecCtx, nullptr);
                     deliver(m_audioCodecCtx, m_audioStreamIndex);
                 }
+                // The held video frame still shows at its time; a stop ends
+                // the loop and a seek is taken above.
+                if (heldVideo->buf[0] && !showHeldVideo()) {
+                    continue;
+                }
+                // Routed audio was queued ahead of the clock. The media ends
+                // when the clock reaches its last frame, as unrouted media
+                // does, and not before the graph has rendered that frame
+                // when it is playing it; currentTime keeps advancing
+                // meanwhile. A paused element keeps its tail waiting.
+                // https://html.spec.whatwg.org/multipage/media.html#reaches-the-end
+                if (earlyAudioMs >= 0) {
+                    std::unique_lock<std::mutex> lock(m_stateMutex);
+                    bool ended = false;
+                    while (!ended && waitForClock(lock, clockMs() + 5, true)) {
+                        const int64_t nowMs = clockMs();
+                        m_currentPositionMs.store(std::max<int64_t>(
+                            m_currentPositionMs.load(),
+                            std::min(nowMs, earlyAudioEndMs)));
+                        if (nowMs >= earlyAudioMs) {
+                            lock.unlock();
+                            ended =
+                                m_audioQueuedCallback() <= 0 ||
+                                nowMs >=
+                                    earlyAudioEndMs +
+                                        STARFISH_ROUTED_AUDIO_DRAIN_GRACE_MS;
+                            lock.lock();
+                        }
+                    }
+                    if (!ended) {
+                        continue;
+                    }
+                }
                 // Keep the thread available for a replay seek.
                 eof = true;
                 {
@@ -859,6 +1163,13 @@ void FfmpegWrapperPlayer::decodingThread()
                                 : index == m_audioStreamIndex ? m_audioCodecCtx
                                                               : nullptr;
         if (codec) {
+            // The held frame is shown before the next one is decoded. A stop
+            // ends the loop and a seek is taken above.
+            if (index == m_videoStreamIndex && heldVideo->buf[0] &&
+                !showHeldVideo()) {
+                av_packet_unref(packet);
+                continue;
+            }
             result = avcodec_send_packet(codec, packet);
             if (result == AVERROR(EAGAIN)) {
                 deliver(codec, index);
@@ -871,6 +1182,7 @@ void FfmpegWrapperPlayer::decodingThread()
         av_packet_unref(packet);
     }
     sws_freeContext(scale);
+    av_frame_free(&heldVideo);
     av_frame_free(&frame);
     av_packet_free(&packet);
 }
@@ -1103,6 +1415,12 @@ MediaPlayerFFmpeg::MediaPlayerFFmpeg(HTMLMediaElement* element)
 #endif
 }
 
+bool MediaPlayerFFmpeg::readsOneResource()
+{
+    // MSE data is appended by script, and nothing else is opened.
+    return isMSE() || m_nativePlayer->m_readsOneResource;
+}
+
 #if defined(STARFISH_ENABLE_WEBAUDIO)
 MediaAudioPlaybackState* MediaPlayerFFmpeg::audioPlaybackState()
 {
@@ -1113,10 +1431,13 @@ MediaAudioPlaybackState* MediaPlayerFFmpeg::audioPlaybackState()
             currentTime(), playbackState() == PLAYBACK_STATE_PLAYING);
         m_audioPlaybackState->setVolume(m_container->volume());
         m_audioPlaybackState->setMuted(m_container->muted());
-        // MSE bytes are supplied by script. Progressive network media must
-        // remain opaque until its final CORS response label is available.
-        // https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceNode-security
-        m_audioPlaybackState->setOriginClean(isMSE());
+        // The graph hears the media only when its data is CORS-same-origin
+        // (the canvas taint rule); read under m_audioWriteMutex so a
+        // revocation on the decoding thread is never overwritten by a
+        // stale label.
+        // https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceOptions-security
+        m_audioPlaybackState->setOriginClean(
+            m_container->mediaDataIsCORSSameOrigin());
         // Only subsequent decoded frames can enter the graph: frames already
         // sent to the old sink are unavailable. Late attachment may therefore
         // be silent for the remaining decode-lookahead interval.
@@ -1143,7 +1464,20 @@ void MediaPlayerFFmpeg::syncAudioPlaybackState()
             currentTime(), playbackState() == PLAYBACK_STATE_PLAYING);
         m_audioPlaybackState->setVolume(m_container->volume());
         m_audioPlaybackState->setMuted(m_container->muted());
-        m_audioPlaybackState->setOriginClean(isMSE());
+        m_audioPlaybackState->setOriginClean(
+            m_container->mediaDataIsCORSSameOrigin());
+    }
+}
+
+// Called on the decoding thread before it decodes the re-requested
+// bytes, so none of them, nor PCM already queued, reach the graph.
+// https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceOptions-security
+void MediaPlayerFFmpeg::revokeResponseURL()
+{
+    MediaPlayer::revokeResponseURL();
+    std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+    if (m_audioPlaybackState) {
+        m_audioPlaybackState->setOriginClean(false);
     }
 }
 #endif
@@ -1287,6 +1621,13 @@ void MediaPlayerFFmpeg::seekOperation(int timeInMS)
             if (activeSourceBuffer(StreamTypeVideo) != nullptr) {
                 activeSourceBuffer(StreamTypeVideo)->clearPacketAccessCache();
             }
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+            // Under the feed lock: the graph's next PCM is the target's.
+            std::lock_guard<std::mutex> lk(m_audioWriteMutex);
+            if (m_audioPlaybackState) {
+                m_audioPlaybackState->flushStreamingPCM(timeInMS / 1000.0);
+            }
+#endif
         }
         // Drop decoded video frames queued for the old position.
         {
@@ -1305,11 +1646,6 @@ void MediaPlayerFFmpeg::seekOperation(int timeInMS)
         // Drop pending audio so no stale pre-seek samples play out.
         {
             std::lock_guard<std::mutex> lk(m_audioWriteMutex);
-#if defined(STARFISH_ENABLE_WEBAUDIO)
-            if (m_audioPlaybackState) {
-                m_audioPlaybackState->clearStreamingPCM();
-            }
-#endif
             for (auto& item : m_audioWriteQueue) {
                 if (item.first != nullptr) {
                     av_free(item.first);
@@ -1441,9 +1777,12 @@ void MediaPlayerFFmpeg::destroy()
     }
 
     m_alive = false;
-    // Dispatch error event when found error
+    // shortcut: every failure after prepare (a read or decode error, a native
+    // play or seek failure, an MSE failure) is reported as a network error,
+    // though HTML wants MEDIA_ERR_DECODE for corrupt media; pass the failure's
+    // kind up to tell them apart.
     if (m_foundError == true) {
-        m_container->dispatchErrorEvent();
+        m_container->mediaPlayerNotifyNetworkErrorItsContainer(this);
     }
 
     pause();
@@ -1514,10 +1853,11 @@ void MediaPlayerFFmpeg::play()
     if (isMSE()) {
         m_clockStartMs = monotonicMilliseconds();
     }
-    m_nativePlayer->play();
 #if defined(STARFISH_ENABLE_WEBAUDIO)
+    // Before the decoder starts, so its first PCM finds the current label.
     syncAudioPlaybackState();
 #endif
+    m_nativePlayer->play();
     m_container->executionContext()->addPointerInRootSet(this);
     m_currentTimeUpdateTimer = m_container->window()->setInterval(
         updateTimeCallback, isMSE() ? 16 : 250, this);
@@ -1606,16 +1946,18 @@ void MediaPlayerFFmpeg::closePreparingMode()
     }
 }
 
-void MediaPlayerFFmpeg::failPreparingBlobURL()
+void MediaPlayerFFmpeg::failPreparingURL()
 {
-    // A missing or malformed Blob URL fails fetching before media is usable.
+    // A URL that can't be fetched (a scheme Fetch doesn't serve, a file: URL
+    // the document may not read, a missing or malformed Blob URL) fails
+    // before media is usable.
     // HTML returns this failure to resource selection, which reports code 4.
+    // https://fetch.spec.whatwg.org/#scheme-fetch
     // https://w3c.github.io/FileAPI/#blob-url-resolve
     // https://html.spec.whatwg.org/multipage/media.html#media-data-processing-steps-list
     // https://html.spec.whatwg.org/multipage/media.html#dedicated-media-source-failure-steps
-    m_container->giveupFetchingResource(
-        true, MediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
-    // giveupFetchingResource() already dispatched the sole error event.
+    notifyMediaSourceFailure();
+    // notifyMediaSourceFailure() already dispatched the sole error event.
     m_foundError = false;
     destroy();
 }
@@ -1628,11 +1970,27 @@ void MediaPlayerFFmpeg::prepare(ResourceURL* url)
         (int)m_container->webView()->maxVideoDecodeWidth();
     m_nativePlayer->m_maxFrameHeight =
         (int)m_container->webView()->maxVideoDecodeHeight();
-    m_nativePlayer->m_audioDecodedCallback = [this](AVFrame* frame) {
-        publishDecodedAudioFrame(frame,
-                                 m_nativePlayer->getPlayPosition() / 1000.0);
+    m_nativePlayer->m_audioDecodedCallback = [this](AVFrame* frame,
+                                                    double position) {
+        publishDecodedAudioFrame(frame, position,
+                                 STARFISH_ROUTED_AUDIO_LEAD_MS / 1000.0);
     };
-    m_nativePlayer->m_audioFlushCallback = [this]() { flushAudioSink(); };
+    m_nativePlayer->m_audioFlushCallback = [this](double target) {
+        flushAudioSink();
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+        std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+        if (m_audioPlaybackState) {
+            m_audioPlaybackState->flushStreamingPCM(target);
+        }
+#endif
+    };
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    m_nativePlayer->m_audioQueuedCallback = [this]() {
+        std::lock_guard<std::mutex> lock(m_audioWriteMutex);
+        return m_audioPlaybackState ? m_audioPlaybackState->queuedSeconds()
+                                    : -1.0;
+    };
+#endif
     m_nativePlayer->setVolume(m_container->volume());
     m_nativePlayer->mute(m_container->muted());
     m_nativePlayer->setLooping(m_isLooping);
@@ -1657,7 +2015,7 @@ void MediaPlayerFFmpeg::prepare(ResourceURL* url)
         if (WebBase::stringToBlobURLString(url->urlString(), store) == false) {
             PLAYER_LOGE(
                 "MediaPlayerFFmpeg::prepare, seturl, FAIL - INVALID BLOB URL");
-            failPreparingBlobURL();
+            failPreparingURL();
             return;
         }
         if (m_container->webView()->isValidBlobURL(store) == true) {
@@ -1681,14 +2039,53 @@ void MediaPlayerFFmpeg::prepare(ResourceURL* url)
             processNextOperationQueueInContainer();
             return;
         } else {
-            failPreparingBlobURL();
+            failPreparingURL();
             return;
         }
     } else {
-        // Play with URL
+        // Media is fetched (HTML resource fetch algorithm), and Fetch's scheme
+        // fetch serves only these schemes, file: as far as the engine's
+        // local-file rule allows; anything else is a network error. Compared
+        // exactly: libavformat opens "httpproxy:" (which ResourceURL counts as
+        // http) or "tcp:" as protocols of their own.
+        // https://fetch.spec.whatwg.org/#scheme-fetch
+        String* scheme = url->protocol();
+        if (!scheme->equals("http:") && !scheme->equals("https:") &&
+            !scheme->equals("data:") &&
+            !(scheme->equals("file:") &&
+              m_container->executionContext()->allowLocalFileAccess(url))) {
+            failPreparingURL();
+            return;
+        }
         m_nativePlayer->setUrl(url);
+        // `crossorigin` media is fetched in CORS mode, which libavformat's
+        // own client can't do, so the engine's loader checks the response
+        // first. A failed check leaves the media playing but
+        // CORS-cross-origin (Fetch makes it a network error; a server
+        // rejecting HEAD keeps working media this way).
+        // https://html.spec.whatwg.org/multipage/media.html#concept-media-load-resource
+        Optional<String*> crossOrigin = m_container->crossOrigin();
+        if (crossOrigin &&
+            (scheme->equals("http:") || scheme->equals("https:"))) {
+            probeResponseURL(
+                url, crossOrigin.value()->equalsIgnoreCase("use-credentials")
+                         ? RequestCredentials::Include
+                         : RequestCredentials::SameOrigin);
+            return;
+        }
     }
+    startNativePrepare();
+}
 
+void MediaPlayerFFmpeg::didProbeResponseURL(ResourceURL* url,
+                                            const std::string& corsLocation)
+{
+    m_nativePlayer->m_requestedLocation = corsLocation;
+    startNativePrepare();
+}
+
+void MediaPlayerFFmpeg::startNativePrepare()
+{
     // The wrapper's prepare() runs handlePrepared() synchronously, and that
     // may destroy() this player (e.g. an oversized stream), so nothing may
     // touch m_nativePlayer after it returns.
@@ -1716,14 +2113,17 @@ void MediaPlayerFFmpeg::handlePrepared()
     PLAYER_LOGI("MediaPlayerFFmpeg::handlePrepared in MainThread");
     closePreparingMode();
     if (m_foundError == true) {
+        // notifyMediaSourceFailure() acts only for a player still alive(),
+        // which a raised m_foundError is not; it raises the flag again.
+        m_foundError = false;
         if (m_container != nullptr) {
-            // A Blob has no network leg: an unusable resource is unsupported.
+            // Failed before the resource was usable (network or format):
+            // HTML "failed with attribute" runs the dedicated media source
+            // failure steps.
             // https://html.spec.whatwg.org/multipage/media.html#media-data-processing-steps-list
-            m_container->giveupFetchingResource(
-                true, m_memoryBlob ? MediaError::MEDIA_ERR_SRC_NOT_SUPPORTED
-                                   : MediaError::MEDIA_ERR_NETWORK);
+            notifyMediaSourceFailure();
         }
-        // The failure steps fire one error event; giveupFetchingResource()
+        // The failure steps fire one error event; notifyMediaSourceFailure()
         // already dispatched it, so destroy() must not repeat it.
         // https://html.spec.whatwg.org/multipage/media.html#dedicated-media-source-failure-steps
         m_foundError = false;
@@ -1784,10 +2184,8 @@ void MediaPlayerFFmpeg::handlePrepared()
             "%ux%u",
             (int)m_videoWidth, (int)m_videoHeight,
             webView->maxVideoDecodeWidth(), webView->maxVideoDecodeHeight());
-        m_foundError = true;
-        m_container->giveupFetchingResource(
-            true, MediaError::MEDIA_ERR_SRC_NOT_SUPPORTED);
-        // giveupFetchingResource() already dispatched the error event.
+        notifyMediaSourceFailure();
+        // notifyMediaSourceFailure() already dispatched the error event.
         m_foundError = false;
         destroy();
         return;
@@ -1836,6 +2234,7 @@ void MediaPlayerFFmpeg::handlePrepared()
 void MediaPlayerFFmpeg::dispose()
 {
     PLAYER_LOGI("MediaPlayerFFmpeg::dispose");
+    cancelResponseURLProbe();
 
     if (m_playerDeadFlag != nullptr) {
         *m_playerDeadFlag = true;
@@ -1879,6 +2278,10 @@ void MediaPlayerFFmpeg::dispose()
     teardownAudioSink();
 #if defined(STARFISH_ENABLE_WEBAUDIO)
     if (m_audioPlaybackState) {
+        // The graph may keep the state until a new source attaches; what
+        // this player queued never plays.
+        m_audioPlaybackState->flushStreamingPCM(
+            std::numeric_limits<double>::quiet_NaN());
         m_audioPlaybackState->release();
         m_audioPlaybackState = NullOption;
     }
@@ -2878,7 +3281,7 @@ void MediaPlayerFFmpeg::teardownAudioSink()
 }
 
 void MediaPlayerFFmpeg::publishDecodedAudioFrame(AVFrame* frame,
-                                                 double fallbackPosition)
+                                                 double position, double lead)
 {
     if (frame == nullptr || frame->nb_samples <= 0) {
         return;
@@ -2975,15 +3378,9 @@ void MediaPlayerFFmpeg::publishDecodedAudioFrame(AVFrame* frame,
 
 #if defined(STARFISH_ENABLE_WEBAUDIO)
     if (routed) {
-        int64_t timestamp = frame->best_effort_timestamp;
-        if (timestamp == AV_NOPTS_VALUE) {
-            timestamp = frame->pts;
-        }
-        double position =
-            timestamp == AV_NOPTS_VALUE ? fallbackPosition : timestamp / 1000.0;
         playback.state->appendStreamingPCM(
             reinterpret_cast<const int16_t*>(outBuf), converted, channels,
-            sampleRate, position);
+            sampleRate, position, lead);
         av_free(outBuf);
         return;
     }
@@ -3075,7 +3472,17 @@ void MediaPlayerFFmpeg::decodeAndDeliverPacket(MediaPlayerSourceStream* stream,
         if (stream->isVideo()) {
             publishDecodedFrame(frame);
         } else if (stream->isAudio()) {
-            publishDecodedAudioFrame(frame, packet->m_pts / 1000.0);
+            // MediaSource timestamps are milliseconds; the feed decodes up
+            // to the lookahead ahead of the clock.
+            int64_t timestamp = frame->best_effort_timestamp;
+            if (timestamp == AV_NOPTS_VALUE) {
+                timestamp = frame->pts;
+            }
+            publishDecodedAudioFrame(frame,
+                                     timestamp == AV_NOPTS_VALUE
+                                         ? packet->m_pts / 1000.0
+                                         : timestamp / 1000.0,
+                                     decodeLookaheadMs() / 1000.0);
         }
         av_frame_free(&frame);
     }

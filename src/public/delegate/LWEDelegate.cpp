@@ -28,6 +28,7 @@
 #include "core/dom/ExecutionContext.h"
 
 #include "core/page/Window.h"
+#include "platform/webaudio/AudioOutputDevice.h"
 
 #include "binding/ScriptEngineInstance.h"
 
@@ -247,10 +248,15 @@ bool LWE::IsUsingSeparateThread()
 
 bool LWE::ShutdownForUnload()
 {
-    if (IsInitialized()) {
+    if (IsInitialized() ||
+        !ThreadedCallHelper::Instance()->ShutdownForUnload()) {
         return false;
     }
-    return ThreadedCallHelper::Instance()->ShutdownForUnload();
+#if defined(STARFISH_ENABLE_WEBAUDIO)
+    // No code of this library may run once it is unmapped.
+    Starfish::AudioOutputDevice::joinRetiredWriters();
+#endif
+    return true;
 }
 
 } // namespace LWEDelegate

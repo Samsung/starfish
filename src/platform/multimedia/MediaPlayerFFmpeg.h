@@ -163,9 +163,11 @@ public:
     // The player this wrapper feeds; it holds the origin vouch for the
     // element and outlives the decoding thread.
     MediaPlayer* m_owner;
-    // The URL the input was opened with, for the element's origin check
-    // against the response location libavformat reports (released in
-    // destroy(), since the destructor never runs under PointerFreeGC).
+    // Where the input's response must come from for the element's origin
+    // check against the response location libavformat reports: the URL it
+    // was opened with, or where a CORS probe the response passed ended
+    // (crossorigin media). Released in destroy(), since the destructor never
+    // runs under PointerFreeGC.
     std::string m_requestedLocation;
     // Largest frame handed to the element (the WebView's max video decode
     // size). prepare() refuses larger streams up front; this only guards a
@@ -177,8 +179,16 @@ public:
     int m_videoStreamIndex;
     AVCodecContext* m_audioCodecCtx{ nullptr };
     int m_audioStreamIndex{ -1 };
-    std::function<void(AVFrame*)> m_audioDecodedCallback;
-    std::function<void()> m_audioFlushCallback;
+    // Set by prepare() once the demuxer is known: it reads its media data
+    // from the opened input only.
+    bool m_readsOneResource{ false };
+    // Takes the frame's media time in seconds (NaN when unknown).
+    std::function<void(AVFrame*, double)> m_audioDecodedCallback;
+    // Takes the seek target in seconds.
+    std::function<void(double)> m_audioFlushCallback;
+    // Seconds of audio queued for the Web Audio graph, or a negative value
+    // when the element's audio does not go to the graph.
+    std::function<double()> m_audioQueuedCallback;
 
 private:
     // Internal methods
@@ -355,12 +365,16 @@ public:
     void setVolume(double volume);
     void setMuted(bool muted);
     void setLoop(bool loop) override;
+    bool readsOneResource() override;
 #if defined(STARFISH_ENABLE_WEBAUDIO)
     MediaAudioPlaybackState* audioPlaybackState() override;
     void syncAudioPlaybackState();
+    void revokeResponseURL() override;
 #endif
 
     virtual void prepare(ResourceURL* url);
+    void didProbeResponseURL(ResourceURL* url,
+                             const std::string& corsLocation) override;
     virtual void setNativePlayerDefaultOptions(ResourceURL* url);
     virtual void printNativePlayerError(int errorCode);
 
@@ -474,7 +488,7 @@ public:
     void decodeAndDeliverPacket(MediaPlayerSourceStream* stream,
                                 MediaPacket* packet);
     void publishDecodedFrame(AVFrame* frame);
-    void publishDecodedAudioFrame(AVFrame* frame, double fallbackPosition);
+    void publishDecodedAudioFrame(AVFrame* frame, double position, double lead);
     void promoteVideoFrameForCurrentTime();
     void ensureAudioSink(int channels, int sampleRate);
     void teardownAudioSink();
@@ -555,7 +569,8 @@ protected:
     void setPlayerDisplayVideoAtPausedState(int& ret);
 
 private:
-    void failPreparingBlobURL();
+    void failPreparingURL();
+    void startNativePrepare();
 };
 
 } // namespace Starfish

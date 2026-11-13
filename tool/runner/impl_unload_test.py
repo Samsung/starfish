@@ -10,12 +10,15 @@ explicit shutdown, and DOM/JS after every reload.
 """
 
 import argparse
+import ctypes
 import os
 from pathlib import Path
 import re
 import shlex
+import socket
 import subprocess
 import tempfile
+import threading
 
 
 def make_legacy_impl(temp, name, compiler):
@@ -64,7 +67,8 @@ def main():
     parser.add_argument("--compiler", default=os.environ.get("CXX", "c++"))
     parser.add_argument("--incremental", action="store_true")
     parser.add_argument("--wait-for-worker", action="store_true",
-                        help="verify shutdown waits for running finite JS")
+                        help="verify shutdown waits for running finite JS "
+                        "and audio output threads")
     parser.add_argument("--host-thread", action="store_true",
                         help="unload/reload on the same GLib host thread")
     parser.add_argument("--legacy", action="store_true",
@@ -101,6 +105,12 @@ def main():
                 "var child = new Worker('unload-child.js');"
                 "child.onmessage = function(e) { postMessage(e.data);"
                 "while (Date.now() < e.data) {} };")
+            # Its output thread is still connecting to the audio server
+            # below when the impl unloads.
+            fixtures["unload-page.html"] = (
+                "<!doctype html><title>Unload test</title><script>"
+                "if (window.AudioContext) var unloadAudio = new AudioContext();"
+                "</script>")
         for name, source in fixtures.items():
             (Path(temp) / name).write_text(source)
         executable = Path(temp) / "impl-unload-test"
@@ -121,6 +131,23 @@ def main():
         if args.api:
             command.append(str(args.api.resolve(strict=True)))
         if args.wait_for_worker:
+            # An audio server that accepts and never answers, then drops the
+            # connection: 5 s outlasts the ~2 s from page load to unload and
+            # stays under libpulse's 30 s connection timeout.
+            pulse = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            pulse.bind(str(Path(temp) / "pulse"))
+            pulse.listen(8)
+            connections = []
+
+            def hold():
+                while True:
+                    connection = pulse.accept()[0]
+                    connections.append(connection)
+                    timer = threading.Timer(5, connection.close)
+                    timer.daemon = True
+                    timer.start()
+            threading.Thread(target=hold, daemon=True).start()
+            env["PULSE_SERVER"] = "unix:" + str(Path(temp) / "pulse")
             result = subprocess.run(command, env=env,
                                     timeout=180 + 4 * args.cycles,
                                     stdout=subprocess.PIPE,
@@ -132,6 +159,15 @@ def main():
                 result.stdout)
             if not any(int(remaining) > 1000 for _, remaining in waits):
                 raise RuntimeError("test did not observe running JS past 1s")
+            try:
+                ctypes.CDLL("libpulse-simple.so.0")
+            except OSError:
+                print("::warning::libpulse-simple.so.0 is unavailable; "
+                      "audio output threads were not covered")
+            else:
+                if not connections:
+                    raise RuntimeError(
+                        "no audio output connected before unload")
         else:
             subprocess.run(command, env=env, check=True, timeout=180)
 

@@ -35,6 +35,71 @@ async function limitAddressSpace() {
     } catch (e) {
     }
 }
+// test_api_probes.py answers this request with the number of thread stacks
+// the browser maps beyond its live threads; elsewhere, or when it cannot
+// count them, this gives null.
+async function deadThreadStacks() {
+    try {
+        const response = await fetch('/thread-stacks');
+        const stacks = response.ok ? Number(await response.text()) : NaN;
+        return Number.isInteger(stacks) ? stacks : null;
+    } catch (e) {
+        return null;
+    }
+}
+// A Blob URL of media that a frame of the other origin (localhost) made.
+async function otherOriginBlobURL() {
+    const url = await new Promise((resolve) => {
+        window.onmessage = (event) => resolve(event.data);
+        const frame = document.createElement('iframe');
+        frame.src = 'http://localhost:' + location.port +
+                    '/media/blob-maker.html';
+        document.documentElement.appendChild(frame);
+    });
+    check(url.startsWith('blob:http://localhost:'),
+          'the other origin made the URL: ' + url);
+    return url;
+}
+// Plays |src| into a MediaElementAudioSourceNode, with the `crossorigin`
+// attribute |crossOrigin| if given. |outcome| is 'playing' or 'error';
+// peak(ms) is the largest sample the graph got over the next |ms|.
+async function playThroughGraph(src, crossOrigin) {
+    const context = new AudioContext();
+    const audio = document.createElement('audio');
+    const analyser = context.createAnalyser();
+    context.createMediaElementSource(audio).connect(analyser);
+    analyser.connect(context.destination);
+    const failed = new Promise((resolve) => {
+        audio.onerror = () => resolve('error');
+    });
+    if (crossOrigin) {
+        audio.crossOrigin = crossOrigin;
+    }
+    audio.src = src;
+    audio.load();
+    const outcome = await Promise.race(
+        [audio.play().then(() => 'playing', () => 'error'), failed]);
+    const values = new Float32Array(analyser.fftSize);
+    return {
+        audio,
+        outcome,
+        peak: async (ms) => {
+            let max = 0;
+            for (const end = performance.now() + ms; performance.now() < end;) {
+                await new Promise((resolve) => setTimeout(resolve, 20));
+                analyser.getFloatTimeDomainData(values);
+                for (const value of values) {
+                    max = Math.max(max, Math.abs(value));
+                }
+            }
+            return max;
+        },
+        close: async () => {
+            audio.pause();
+            await context.close();
+        },
+    };
+}
 
 const groups = {
     // WebIDL rejects SharedArrayBuffer views without [AllowShared], which no
@@ -250,6 +315,490 @@ const groups = {
                 audio.load();
                 URL.revokeObjectURL(url);
             }
+        }
+    },
+
+    // The graph hears an element's media only while its media data is
+    // CORS-same-origin, else the node outputs silence. The /media/ resources
+    // are served by test_api_probes.py; localhost is another origin.
+    // https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceOptions-security
+    'media-source-same-origin': async () => {
+        const media = await playThroughGraph('/media/tone.wav');
+        check(media.outcome === 'playing', 'same-origin WAV plays');
+        const peak = await media.peak(1500);
+        check(peak > 0.1, 'same-origin WAV reaches the graph: ' + peak);
+        await media.close();
+    },
+
+    // The media stack reaches the other origin, so the silence the cases
+    // below expect comes from the CORS rule rather than from a failed fetch.
+    'media-source-other-origin': async () => {
+        const media = await playThroughGraph(
+            'http://localhost:' + location.port + '/media/other.wav');
+        check(media.outcome === 'playing', 'the other origin serves media');
+        const peak = await media.peak(500);
+        check(peak === 0, 'cross-origin media is silenced: ' + peak);
+        await media.close();
+    },
+
+    // Silenced media still plays in real time: though its audio is handed
+    // to the graph ahead of the clock, it ends when it would unrouted.
+    'media-source-other-origin-ended': async () => {
+        const src = 'http://localhost:' + location.port + '/media/short.wav';
+        async function secondsToEnd(routed) {
+            const audio = document.createElement('audio');
+            const context = routed ? new AudioContext() : null;
+            if (context) {
+                context.createMediaElementSource(audio).connect(
+                    context.destination);
+            }
+            audio.src = src;
+            // From `playing`, so loading and preparing the media do not count.
+            let start = 0;
+            audio.onplaying = () => {
+                start = performance.now();
+            };
+            const ended = new Promise((resolve, reject) => {
+                audio.onended = resolve;
+                audio.onerror = () => reject(new Error('media error'));
+            });
+            await audio.play();
+            await ended;
+            const seconds = (performance.now() - start) / 1000;
+            if (context) {
+                await context.close();
+            }
+            return seconds;
+        }
+        const unrouted = await secondsToEnd(false);
+        const routed = await secondsToEnd(true);
+        check(Math.abs(routed - unrouted) < 0.05,
+              'silenced media ends when unrouted media does: ' + routed +
+              ' s, unrouted ' + unrouted + ' s');
+    },
+
+    // A same-origin, unredirected concat list whose entry redirects to
+    // another origin: the list's own response says nothing about the data.
+    // Web media has no concat lists, so it fails to load instead.
+    'media-source-nested-redirect': async () => {
+        const media = await playThroughGraph('/media/list.ffconcat');
+        if (media.outcome === 'playing') {
+            const peak = await media.peak(1500);
+            check(peak === 0, 'cross-origin entry is silenced: ' + peak);
+        }
+        await media.close();
+    },
+
+    // Script-supplied bytes cannot make the player open a resource the page
+    // could not fetch (a file in the browser's working directory): a concat
+    // list is not a container web media plays.
+    'media-source-blob-nested-file': async () => {
+        const url = URL.createObjectURL(
+            new Blob(["ffconcat version 1.0\nfile 'local.wav'\n"]));
+        const media = await playThroughGraph(url);
+        check(media.outcome === 'error' && media.audio.error &&
+              media.audio.error.code === 4,
+              'a Blob naming a local file fails to load: ' + media.outcome);
+        await media.close();
+        URL.revokeObjectURL(url);
+    },
+
+    // Media that starts same-origin stops being CORS-same-origin once a
+    // later request for it (a seek) is redirected to another origin. Only
+    // samples decoded before the revocation (0.25) may still be heard.
+    'media-source-seek-redirect': async () => {
+        const media = await playThroughGraph('/media/seek-redirect.wav');
+        check(media.outcome === 'playing', 'seekable WAV plays');
+        const before = await media.peak(1000);
+        check(before > 0.1, 'unredirected media reaches the graph: ' + before);
+        await fetch('/media/redirect-seeks');
+        const seeked = await Promise.race([
+            new Promise((resolve) => {
+                media.audio.onseeked = () => resolve(true);
+                media.audio.currentTime = 0.2;
+            }),
+            new Promise((resolve) => setTimeout(() => resolve(false), 5000)),
+        ]);
+        check(seeked, 'seek completes');
+        const after = await media.peak(1000);
+        check(after < 0.3, 'no sample of the other origin is heard: ' + after);
+        const later = await media.peak(500);
+        check(later === 0, 'redirected media stays silenced: ' + later);
+        await media.close();
+    },
+
+    // `crossorigin` media is fetched in CORS mode, and a response the server
+    // approves is CORS-same-origin: here one redirected within the other
+    // origin (localhost). The engine checks that with a CORS request of its
+    // own before the player's. Engine policy where they part: a failed
+    // check, a network error in Fetch (browsers fail the load), leaves the
+    // media playing but silenced, and so does a player request that ends
+    // elsewhere than the check (browsers make one request).
+    // https://html.spec.whatwg.org/multipage/media.html#media-data-is-cors-same-origin
+    'media-source-crossorigin': async () => {
+        const other = 'http://localhost:' + location.port + '/media/';
+        for (const [src, crossOrigin, audible, label] of [
+            [other + 'cors-redirect.wav', 'anonymous', true,
+             'CORS-approved media'],
+            [other + 'other.wav', 'anonymous', false,
+             'media failing the CORS check'],
+            [other + 'cors-split.wav', 'anonymous', false,
+             'media the player fetches from elsewhere than the check'],
+            [other + 'cors-other.wav', null, false,
+             'cross-origin media without crossorigin'],
+            ['/media/cors-nohead.wav', 'anonymous', true,
+             'same-origin media whose server rejects HEAD'],
+            // `Access-Control-Allow-Origin: *` approves no credentialed
+            // request.
+            [other + 'cors-other.wav', 'use-credentials', false,
+             'credentialed media the server allows only with *'],
+            // The check approves the playlist; its segments come separately.
+            [other + 'cors-hls', 'anonymous', false,
+             'an HLS playlist passing the check'],
+        ]) {
+            const media = await playThroughGraph(src, crossOrigin);
+            check(media.outcome === 'playing', label + ' plays');
+            const peak = await media.peak(audible ? 1500 : 500);
+            check(audible ? peak > 0.3 : peak === 0,
+                  label + (audible ? ' reaches the graph: '
+                                   : ' is silenced: ') + peak);
+            await media.close();
+        }
+        // Approved media stops being CORS-same-origin once a later request
+        // for it (a seek) ends elsewhere than the check did.
+        const media = await playThroughGraph(
+            other + 'cors-seek-redirect.wav', 'anonymous');
+        const before = await media.peak(1000);
+        check(before > 0.1, 'approved seekable media reaches the graph: ' +
+                            before);
+        await fetch('/media/redirect-seeks');
+        const seeked = await Promise.race([
+            new Promise((resolve) => {
+                media.audio.onseeked = () => resolve(true);
+                media.audio.currentTime = 0.2;
+            }),
+            new Promise((resolve) => setTimeout(() => resolve(false), 5000)),
+        ]);
+        check(seeked, 'approved media seeks');
+        const after = await media.peak(1000);
+        check(after < 0.3, 'no sample of the redirect target is heard: ' +
+                           after);
+        const later = await media.peak(500);
+        check(later === 0, 'redirected approved media stays silenced: ' +
+                           later);
+        await media.close();
+    },
+
+    // Engine policy, not a spec rule (Fetch sets no timeout): the CORS check
+    // of `crossorigin` media fails like a network error when it does not
+    // complete within 10 s, redirects included, so the media plays, silenced.
+    // Each check holds one of the loader's six shared network workers until
+    // then: six of them hold up a same-origin fetch for that long, and no
+    // longer.
+    'media-source-crossorigin-unanswered': async () => {
+        const src = 'http://localhost:' + location.port +
+                    '/media/cors-unanswered.wav';
+        const start = performance.now();
+        const seconds = () => (performance.now() - start) / 1000;
+        const held = [];
+        for (let i = 0; i < 5; ++i) {
+            const audio = document.createElement('audio');
+            audio.crossOrigin = 'anonymous';
+            audio.src = src;
+            audio.load();
+            held.push(audio);
+        }
+        const routed = playThroughGraph(src, 'anonymous').then(
+            (media) => ({media, at: seconds()}));
+        // Fetches once the six checks have reached the server
+        // (test_api_probes.py counts them).
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+        const fetchedAt = await Promise.race([
+            fetch('/media/fetched-while-unanswered').then(seconds),
+            new Promise((resolve) => setTimeout(() => resolve(null), 12000)),
+        ]);
+        check(fetchedAt !== null && fetchedAt < 15,
+              'a fetch made meanwhile completes by the timeout: ' +
+              fetchedAt + ' s');
+        const {media, at} = await routed;
+        check(media.outcome === 'playing' && at > 9 && at < 15,
+              'media whose check is never answered plays at the timeout: ' +
+              media.outcome + ' after ' + at + ' s');
+        const peak = await media.peak(500);
+        check(peak === 0, 'that media is silenced: ' + peak);
+        await media.close();
+        for (const audio of held) {
+            audio.removeAttribute('src');
+            audio.load();
+        }
+    },
+
+    // Video uploads follow the same rule (WebGL ORIGIN_RESTRICTIONS).
+    'media-source-crossorigin-webgl': async () => {
+        const gl = document.createElement('canvas').getContext('webgl');
+        check(gl, 'WebGL is available');
+        if (!gl) {
+            return;
+        }
+        gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+        const other = 'http://localhost:' + location.port + '/media/';
+        for (const [file, crossOrigin, clean] of [
+            ['cors-redirect.wav', 'anonymous', true],
+            ['cors-other.wav', null, false],
+        ]) {
+            const video = document.createElement('video');
+            if (crossOrigin) {
+                video.crossOrigin = crossOrigin;
+            }
+            const loaded = await new Promise((resolve) => {
+                video.onloadedmetadata = () => resolve(true);
+                video.onerror = () => resolve(false);
+                video.src = other + file;
+                video.load();
+            });
+            check(loaded, file + ' loads');
+            let error = null;
+            try {
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+                              gl.UNSIGNED_BYTE, video);
+            } catch (e) {
+                error = e.name;
+            }
+            check(clean ? error === null : error === 'SecurityError',
+                  file + (crossOrigin ? ' with' : ' without') +
+                  ' crossorigin uploads: ' + error);
+            video.removeAttribute('src');
+            video.load();
+        }
+    },
+
+    // A context whose output device failed to connect keeps rendering on its
+    // own clock; the writer thread that failed has exited and must not keep
+    // its stack until the context goes away.
+    'failed-output-writers': async () => {
+        const before = await deadThreadStacks();
+        if (before === null) {
+            console.log('API_PROBE_SKIP no thread stack count');
+            return;
+        }
+        // Every live thread's stack is counted, or the count proves nothing.
+        check(before >= -1, 'thread stacks are counted: ' + before);
+        const contexts = [];
+        for (let i = 0; i < 16; i++) {
+            const context = new AudioContext();
+            contexts.push(context);
+            // Created one at a time, so the device limit never applies:
+            // the render clock stands in once the device has failed.
+            for (const start = performance.now();
+                 context.getOutputTimestamp().contextTime === 0 &&
+                 performance.now() - start < 2000;) {
+                await new Promise((resolve) => setTimeout(resolve, 5));
+            }
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        const after = await deadThreadStacks();
+        if (after === null) {
+            console.log('API_PROBE_SKIP no thread stack count');
+        } else {
+            check(after - before < contexts.length / 2,
+                  'failed writers are joined: ' + before + ' -> ' + after +
+                  ' unjoined stacks');
+        }
+        await Promise.all(contexts.map((context) => context.close()));
+    },
+
+    // Media is fetched, and Fetch serves only http(s), data, blob and (for
+    // local pages) file URLs: the others fail as network errors before any
+    // connection (test_api_probes.py checks that its listeners stayed idle),
+    // as does a redirect to them. Nor does web media play the containers
+    // that open other resources themselves (DASH, concat lists, image
+    // sequences), whatever those name.
+    // https://fetch.spec.whatwg.org/#scheme-fetch
+    // https://fetch.spec.whatwg.org/#http-redirect-fetch
+    'media-source-blocked-schemes': async () => {
+        const targets = await (await fetch('/media/blocked-targets')).json();
+        for (const [name, src] of Object.entries(targets)) {
+            const audio = document.createElement('audio');
+            let errors = 0;
+            let metadata = 0;
+            audio.onloadedmetadata = () => { metadata++; };
+            await new Promise((resolve) => {
+                const timer = setTimeout(resolve, 5000);
+                audio.onerror = () => {
+                    errors++;
+                    clearTimeout(timer);
+                    resolve();
+                };
+                audio.src = src;
+                audio.load();
+            });
+            // Allow a second queued error or a late metadata event to run.
+            await new Promise((resolve) => setTimeout(resolve, 150));
+            check(errors === 1 && audio.error && audio.error.code === 4 &&
+                  metadata === 0,
+                  name + ' media is a network error: errors=' + errors +
+                  ' code=' + (audio.error && audio.error.code) +
+                  ' metadata=' + metadata);
+            audio.removeAttribute('src');
+            audio.load();
+        }
+    },
+
+    // A Blob URL resolves only for the origin that made it; here a frame of
+    // the other origin (localhost) makes one and hands it over. As a
+    // <source>, it fails that candidate and the next one is tried.
+    // https://w3c.github.io/FileAPI/#blob-url-obtain-object
+    'media-source-other-origin-blob': async () => {
+        const url = await otherOriginBlobURL();
+        const media = await playThroughGraph(url);
+        check(media.outcome === 'error' && media.audio.error &&
+              media.audio.error.code === 4,
+              'another origin\'s Blob URL fails to load: ' + media.outcome);
+        await media.close();
+
+        const audio = document.createElement('audio');
+        let sourceErrors = 0;
+        let elementErrors = 0;
+        audio.onerror = () => { elementErrors++; };
+        for (const src of [url, '/media/tone.wav']) {
+            const source = document.createElement('source');
+            source.src = src;
+            source.onerror = () => { sourceErrors++; };
+            audio.appendChild(source);
+        }
+        const loaded = await new Promise((resolve) => {
+            audio.onloadedmetadata = () => resolve(true);
+            setTimeout(() => resolve(false), 5000);
+            audio.load();
+        });
+        check(loaded && sourceErrors === 1 && elementErrors === 0 &&
+              audio.currentSrc.endsWith('/media/tone.wav'),
+              'the next <source> plays: loaded=' + loaded + ' source errors=' +
+              sourceErrors + ' element errors=' + elementErrors +
+              ' currentSrc=' + audio.currentSrc);
+    },
+
+    // test_api_probes.py runs this group with web security turned off by
+    // the embedder, which skips the check as it does the other origin
+    // checks (a browser running it as is fails it).
+    'media-source-other-origin-blob-insecure': async () => {
+        const media = await playThroughGraph(await otherOriginBlobURL());
+        check(media.outcome === 'playing',
+              'without web security another origin\'s Blob URL plays: ' +
+              media.outcome);
+        await media.close();
+    },
+
+    // Engine policy, not a spec rule (Chrome waits): a media server that
+    // takes the request and sends nothing fails the load once the player's
+    // 10 s read timeout passes, and the page runs again.
+    'media-source-stalled-server': async () => {
+        let ticks = 0;
+        const timer = setInterval(() => { ticks++; }, 50);
+        const audio = document.createElement('audio');
+        const start = performance.now();
+        const outcome = await new Promise((resolve) => {
+            audio.onerror = () =>
+                resolve('error ' + (audio.error && audio.error.code));
+            audio.onloadedmetadata = () => resolve('metadata');
+            audio.src = '/media/stall';
+            audio.load();
+        });
+        const seconds = (performance.now() - start) / 1000;
+        check(outcome === 'error 4' &&
+              audio.networkState === audio.NETWORK_NO_SOURCE,
+              'a server that never answers fails the load: ' + outcome +
+              ' networkState=' + audio.networkState);
+        check(seconds > 5 && seconds < 15,
+              'it fails at the read timeout: ' + seconds + ' s');
+        const before = ticks;
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        check(ticks > before, 'timers run after the failure');
+        clearInterval(timer);
+        audio.removeAttribute('src');
+        audio.load();
+    },
+
+    // A server that stops sending during playback makes the player give up
+    // after the same timeout: HTML reports that as a network error with
+    // the element idle, not as a failed load.
+    // https://html.spec.whatwg.org/multipage/media.html#media-data-processing-steps-list
+    'media-source-stalled-playback': async () => {
+        const audio = document.createElement('audio');
+        let errors = 0;
+        let metadataAt = 0;
+        audio.onloadedmetadata = () => { metadataAt = performance.now(); };
+        const failed = new Promise((resolve) => {
+            audio.onerror = () => {
+                errors++;
+                resolve(performance.now());
+            };
+        });
+        audio.src = '/media/stall-midway.wav';
+        await audio.play().catch(() => {});
+        const errorAt = await failed;
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        check(metadataAt && errorAt > metadataAt,
+              'the error follows metadata: ' + metadataAt + ' ' + errorAt);
+        check(errors === 1 && audio.error &&
+              audio.error.code === audio.error.MEDIA_ERR_NETWORK &&
+              audio.networkState === audio.NETWORK_IDLE,
+              'a stall during playback is a network error: errors=' + errors +
+              ' code=' + (audio.error && audio.error.code) +
+              ' networkState=' + audio.networkState);
+        audio.removeAttribute('src');
+        audio.load();
+    },
+
+    // A new src while a seek is pending makes the element drop its player
+    // (here one whose seek /media/stall-seek.wav never answers); that
+    // player giving up later (after two read timeouts, ~21 s) must not
+    // touch the new resource.
+    'media-source-replaced-stall': async () => {
+        const audio = document.createElement('audio');
+        let errors = 0;
+        audio.onerror = () => { errors++; };
+        audio.src = '/media/stall-seek.wav';
+        await audio.play().catch(() => {});
+        const seeking = new Promise((resolve) => { audio.onseeking = resolve; });
+        audio.currentTime = 8;
+        await seeking;
+        // The case under test: the seek still pending when the src changes.
+        check(audio.seeking, 'the seek is pending');
+        const loaded = new Promise((resolve) => {
+            audio.onloadedmetadata = () => resolve(true);
+            setTimeout(() => resolve(false), 5000);
+        });
+        audio.src = '/media/tone.wav';
+        check(await loaded, 'the new src loads');
+        await new Promise((resolve) => setTimeout(resolve, 24000));
+        check(errors === 0 && audio.error === null &&
+              audio.currentSrc.endsWith('/media/tone.wav'),
+              'the dropped player leaves the new resource alone: errors=' +
+              errors + ' code=' + (audio.error && audio.error.code) +
+              ' currentSrc=' + audio.currentSrc);
+        audio.removeAttribute('src');
+        audio.load();
+    },
+
+    // HLS plays with or without a WebVTT subtitles rendition in its master
+    // playlist (FFmpeg 8 opens that rendition as well; 6.1 skips it), and
+    // with one on a scheme Fetch doesn't serve, which is left unopened
+    // (test_api_probes.py checks that its listener stayed idle).
+    'media-source-hls-subtitles': async () => {
+        for (const src of ['/hls/audio.m3u8', '/hls/master.m3u8',
+                           '/media/blocked-subtitles.m3u8']) {
+            const audio = document.createElement('audio');
+            const outcome = await new Promise((resolve) => {
+                audio.onloadedmetadata = () => resolve('metadata');
+                audio.onerror = () => resolve('error ' + audio.error.code);
+                setTimeout(() => resolve('timeout'), 5000);
+                audio.src = src;
+                audio.load();
+            });
+            check(outcome === 'metadata', src + ' loads: ' + outcome);
+            audio.removeAttribute('src');
+            audio.load();
         }
     },
 

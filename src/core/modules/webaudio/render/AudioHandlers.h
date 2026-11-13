@@ -37,10 +37,17 @@ public:
     void release();
     void setPCM(AudioBufferData* pcm);
     void setStreamingPosition(double position, bool playing);
+    // Queues decoded PCM for the graph, which reads it in order. |position|
+    // is its media time (NaN: it follows the queue), |lead| how far ahead
+    // of the media clock the producer queues.
     void appendStreamingPCM(const int16_t* samples, size_t frames,
                             size_t channels, uint32_t sampleRate,
-                            double position);
-    void clearStreamingPCM();
+                            double position, double lead);
+    // Drops the queue; the next PCM is placed against |position|.
+    void flushStreamingPCM(double position);
+    // Seconds of PCM the graph has yet to hear, 0 when nothing will play it
+    // (unrouted, not origin-clean, or the graph stopped rendering it).
+    double queuedSeconds() const;
     void setPlaying(bool playing);
     void seek(double time);
     void setVolume(double volume);
@@ -66,13 +73,17 @@ public:
     bool ended() const;
     size_t channels() const;
     void render(AudioBus& bus, size_t frames, double outputRate,
-                double position, bool forGraph) const;
+                double position, bool forGraph);
 
 private:
     struct StreamingData;
     double currentTimeLocked() const;
-    void renderStreamingLocked(AudioBus& bus, size_t frames, double outputRate,
-                               double position) const;
+    double queuedLocked() const;
+    void clearStreamingLocked(double end);
+    // Consumes |frames| output frames of the queue; |out| absent consumes
+    // them silently.
+    void readStreamingLocked(Optional<AudioBus*> out, size_t frames,
+                             double outputRate);
 
     std::atomic<unsigned> m_references{ 1 };
     mutable std::mutex m_mutex;
@@ -102,6 +113,15 @@ public:
     {
         return false;
     }
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // https://webaudio.github.io/web-audio-api/#AudioNode-actively-processing
+    // "... if and only if its mediaElement is playing for at least part of
+    // the current rendering quantum", heard or silenced.
+    bool isActivelyProcessing(uint64_t) const override
+    {
+        return m_state && m_playing;
+    }
+#endif
 
 protected:
     void process(uint64_t frameStart, size_t frames) override;
@@ -114,6 +134,10 @@ private:
     double m_cursor{ 0 };
     uint64_t m_generation{ 0 };
     bool m_hasCursor{ false };
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    // Whether the media clock was playing in the quantum process() rendered.
+    bool m_playing{ false };
+#endif
 };
 
 class AudioSilentSourceHandler final : public AudioHandler {

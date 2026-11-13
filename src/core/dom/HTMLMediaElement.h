@@ -379,6 +379,7 @@ public:
     void mediaPlayerNotifyUpdateReadyStateItsContainer(ReadyState state);
     void mediaPlayerNotifySeekedItsContainer(double currentTime);
     void mediaPlayerNotifySeekFailureItsContainer();
+    void mediaPlayerNotifyNetworkErrorItsContainer(MediaPlayer* player);
     void mediaPlayerNotifyEndedItsContainer();
     void mediaPlayerRequestRestartItsContainer();
     void addEventToOperationQueue(EventTarget* t, Event* e);
@@ -414,9 +415,7 @@ public:
     ADD_DISPATCH_EVENT_DECL(Volumechange)
 #undef ADD_DISPATCH_EVENT_DECL
 
-    void giveupFetchingResource(
-        bool shouldSetError = true,
-        MediaError::Code errorCode = MediaError::MEDIA_ERR_NETWORK);
+    void giveupFetchingResource(bool shouldSetError = true);
     void setNetworkStateAsHaveNothing();
 
     void dispose()

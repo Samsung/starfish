@@ -1,0 +1,204 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Video element PCM stored behind later video frames</title>
+<link rel="help" href="https://webaudio.github.io/web-audio-api/#MediaElementAudioSourceNode">
+<body>
+<script src="resources/pcm-recorder.js"></script>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "Video interleave complete";
+    };
+}
+
+// A <video>'s audio reaches the graph without gaps even where the file
+// stores it behind a video frame of a later time: the element plays that
+// audio before the frame is due. The movie is built here, uncompressed, so
+// the file order is exact: audio [0, T - D) first, then each video frame of
+// time kT followed by the audio [kT - D, (k + 1)T - D). Video: 16x16 'raw '
+// RGB24 at 1/T fps. Audio: 'sowt' 16-bit mono at the context rate, ramping
+// from 0.1 to 0.9 so every sample tells its media time. The rate is fixed:
+// the sound description stores it as 16.16 fixed point.
+const T = 0.2;
+const D = 0.03;
+const seconds = 1.6;
+const width = 16;
+const height = 16;
+const low = 0.1;
+const high = 0.9;
+const context = new AudioContext({ sampleRate: 48000 });
+const rate = context.sampleRate;
+
+function u32(v) { return [(v >>> 24) & 255, (v >>> 16) & 255, (v >>> 8) & 255, v & 255]; }
+function u16(v) { return [(v >>> 8) & 255, v & 255]; }
+function str(s) { return Array.from(s, c => c.charCodeAt(0)); }
+function concat(parts) {
+    const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+    let offset = 0;
+    for (const p of parts) {
+        out.set(p, offset);
+        offset += p.length;
+    }
+    return out;
+}
+function box(type, ...parts) {
+    const body = concat(parts.map(p => p instanceof Uint8Array ? p : Uint8Array.from(p)));
+    return concat([Uint8Array.from([...u32(body.length + 8), ...str(type)]), body]);
+}
+function fullBox(type, flags, ...parts) { return box(type, [0, 0, 0, flags], ...parts); }
+const matrix = [0x10000, 0, 0, 0, 0x10000, 0, 0, 0, 0x40000000].flatMap(u32);
+
+const frames = Math.round(seconds / T);
+const samples = Math.round(seconds * rate);
+const pcm = new Uint8Array(samples * 2);
+for (let i = 0; i < samples; i++) {
+    const v = Math.round((low + (high - low) * i / samples) * 32767);
+    pcm[2 * i] = v & 255;
+    pcm[2 * i + 1] = (v >> 8) & 255;
+}
+// Audio chunk k covers [kT - D, (k + 1)T - D); chunk 0 starts at 0.
+const bounds = [0];
+for (let k = 1; k <= frames; k++)
+    bounds.push(Math.min(samples, Math.round((k * T - D) * rate)));
+bounds.push(samples);
+const chunks = [];
+for (let c = 0; c + 1 < bounds.length; c++) {
+    if (bounds[c + 1] > bounds[c])
+        chunks.push([bounds[c], bounds[c + 1]]);
+}
+const order = [["a", 0], ["v", 0]];
+for (let k = 1; k < frames; k++)
+    order.push(["v", k], ["a", k]);
+for (let c = frames; c < chunks.length; c++)
+    order.push(["a", c]);
+const ftyp = box("ftyp", str("qt  "), u32(0x200), str("qt  "));
+const pieces = [];
+const videoOffsets = [];
+const audioOffsets = [];
+let offset = ftyp.length + 8;
+for (const [kind, k] of order) {
+    const data = kind === "v"
+        ? new Uint8Array(width * height * 3).fill((k * 30) & 255)
+        : pcm.subarray(chunks[k][0] * 2, chunks[k][1] * 2);
+    (kind === "v" ? videoOffsets : audioOffsets)[k] = offset;
+    pieces.push(data);
+    offset += data.length;
+}
+const mdat = box("mdat", concat(pieces));
+function trak(id, video) {
+    const tkhd = fullBox("tkhd", 0xf, u32(0), u32(0), u32(id), u32(0), u32(seconds * 1000), u32(0), u32(0),
+                         u16(0), u16(0), u16(video ? 0 : 0x100), u16(0), matrix,
+                         u32(video ? width << 16 : 0), u32(video ? height << 16 : 0));
+    const mdhd = fullBox("mdhd", 0, u32(0), u32(0), u32(video ? 1000 : rate),
+                         u32(video ? frames * T * 1000 : samples), u16(0), u16(0));
+    const hdlr = fullBox("hdlr", 0, str("mhlr"), str(video ? "vide" : "soun"), u32(0), u32(0), u32(0), [0]);
+    const header = video ? fullBox("vmhd", 1, u16(0), u16(0), u16(0), u16(0)) : fullBox("smhd", 0, u16(0), u16(0));
+    const dinf = box("dinf", fullBox("dref", 0, u32(1), fullBox("url ", 1)));
+    let stbl;
+    if (video) {
+        stbl = box("stbl",
+            fullBox("stsd", 0, u32(1), box("raw ", [0, 0, 0, 0, 0, 0], u16(1), u16(0), u16(0), u32(0), u32(0), u32(0),
+                                           u16(width), u16(height), u32(72 << 16), u32(72 << 16), u32(0), u16(1),
+                                           new Array(32).fill(0), u16(24), u16(0xffff))),
+            fullBox("stts", 0, u32(1), u32(frames), u32(T * 1000)),
+            fullBox("stsc", 0, u32(1), u32(1), u32(1), u32(1)),
+            fullBox("stsz", 0, u32(width * height * 3), u32(frames)),
+            fullBox("stco", 0, u32(frames), ...videoOffsets.map(u32)));
+    } else {
+        const runs = [];
+        chunks.forEach(([a, b], c) => {
+            if (!runs.length || runs[runs.length - 1][1] !== b - a)
+                runs.push([c + 1, b - a]);
+        });
+        stbl = box("stbl",
+            fullBox("stsd", 0, u32(1), box("sowt", [0, 0, 0, 0, 0, 0], u16(1), u16(0), u16(0), u32(0),
+                                           u16(1), u16(16), u16(0), u16(0), u32(rate * 65536))),
+            fullBox("stts", 0, u32(1), u32(samples), u32(1)),
+            fullBox("stsc", 0, u32(runs.length), ...runs.map(([c, n]) => [...u32(c), ...u32(n), ...u32(1)])),
+            fullBox("stsz", 0, u32(2), u32(samples)),
+            fullBox("stco", 0, u32(chunks.length), ...audioOffsets.map(u32)));
+    }
+    return box("trak", tkhd, box("mdia", mdhd, hdlr, box("minf", header, dinf, stbl)));
+}
+const mvhd = fullBox("mvhd", 0, u32(0), u32(0), u32(1000), u32(seconds * 1000), u32(0x10000), u16(0x100),
+                     new Array(10).fill(0), matrix, new Array(24).fill(0), u32(3));
+const movie = concat([ftyp, mdat, box("moov", mvhd, trak(1, true), trak(2, false))]);
+
+const video = document.createElement("video");
+const source = context.createMediaElementSource(video);
+const blocks = [];
+const mediaURL = URL.createObjectURL(new Blob([movie], { type: "video/quicktime" }));
+function mediaTime(value) {
+    return (value - low) / (high - low) * seconds;
+}
+let finished = false;
+function finish() {
+    if (finished)
+        return;
+    finished = true;
+    video.pause();
+    context.close();
+    URL.revokeObjectURL(mediaURL);
+    testEnd();
+}
+function check() {
+    // Runs of continuous ramp: a gap or a skip starts a new one.
+    const runs = [];
+    let run = null;
+    let silent = 0;
+    for (const block of blocks) {
+        for (const value of block) {
+            if (Math.abs(value) <= low / 2) {
+                ++silent;
+                run = null;
+                continue;
+            }
+            if (!run || Math.abs(value - run.last) > 0.0005) {
+                run = { first: value, last: value, frames: 0, silenceBefore: silent };
+                runs.push(run);
+            }
+            run.last = value;
+            ++run.frames;
+            silent = 0;
+        }
+    }
+    console.log("runs " + runs.map(r => mediaTime(r.first).toFixed(4) + "-" +
+        mediaTime(r.last).toFixed(4) + "/" + r.frames + "@" + r.silenceBefore).join(" "));
+    console.assert(runs.length === 1,
+                   "audio stored behind a later video frame plays without a gap");
+    if (runs.length === 1) {
+        const r = runs[0];
+        console.assert(mediaTime(r.first) < 0.005 && mediaTime(r.last) > seconds - 0.005,
+                       "the graph hears the media from start to end");
+        console.assert(Math.abs(r.frames - samples) <= samples * 0.02,
+                       "every audio frame reaches the graph once");
+    }
+    finish();
+}
+video.addEventListener("ended", function () {
+    // Leave room for the recorder's latency.
+    setTimeout(check, 300);
+});
+video.addEventListener("error", function () {
+    console.assert(false, "the movie must load");
+    finish();
+});
+video.addEventListener("loadedmetadata", function () {
+    video.play().then(null, function () {
+        console.assert(false, "play must succeed");
+        finish();
+    });
+}, { once: true });
+setTimeout(function () {
+    console.assert(finished, "video interleave test must finish");
+    finish();
+}, 8000);
+recordPCM(context, source, blocks).then(function () {
+    video.src = mediaURL;
+    video.load();
+}, function (error) {
+    console.assert(false, "the recorder must start: " + error);
+    finish();
+});
+</script>
+</body>

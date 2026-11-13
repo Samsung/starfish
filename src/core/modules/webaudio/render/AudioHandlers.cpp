@@ -28,11 +28,31 @@ struct MediaAudioPlaybackState::StreamingData {
         std::vector<int16_t> samples;
         size_t channels;
         uint32_t sampleRate;
-        double position;
+        size_t frames() const
+        {
+            return samples.size() / channels;
+        }
     };
+    // Consecutive in media time; the graph pops what it has read.
     std::deque<Chunk> chunks;
     size_t bytes{ 0 };
     size_t channels{ 1 };
+    // Read cursor: the next frame of chunks.front(), and the fraction
+    // towards the frame after it (non-zero only while resampling).
+    size_t readFrame{ 0 };
+    double phase{ 0 };
+    // Media time just past the last queued frame; NaN until known.
+    double end{ std::numeric_limits<double>::quiet_NaN() };
+    // How far ahead of the media clock the producer queues.
+    double lead{ 0 };
+    // When the graph last rendered this source.
+    std::chrono::steady_clock::time_point lastPull;
+
+    void popFront()
+    {
+        bytes -= chunks.front().samples.size() * sizeof(int16_t);
+        chunks.pop_front();
+    }
 };
 
 MediaAudioPlaybackState::MediaAudioPlaybackState() = default;
@@ -44,10 +64,10 @@ void MediaAudioPlaybackState::setStreamingPosition(double position,
     if (!m_streaming) {
         m_streaming.reset(new StreamingData);
     }
+    // The graph reads streamed PCM in order; this clock only places the
+    // first PCM queued after the source attaches.
     m_positionAtStart = position;
     m_startedAt = std::chrono::steady_clock::now();
-    // Periodic position reports only correct drift; a pause or resume is a
-    // discontinuity the graph cursor must follow immediately.
     if (m_playing != playing) {
         m_generation++;
     }
@@ -57,84 +77,201 @@ void MediaAudioPlaybackState::setStreamingPosition(double position,
 void MediaAudioPlaybackState::appendStreamingPCM(const int16_t* samples,
                                                  size_t frames, size_t channels,
                                                  uint32_t sampleRate,
-                                                 double position)
+                                                 double position, double lead)
 {
     constexpr size_t MaxBytes = 1024 * 1024;
-    constexpr size_t MaxChunks = 64;
-    if (channels == 0 || channels > 32 || sampleRate == 0 || frames == 0 ||
+    // Short codec frames (2.7 ms Vorbis blocks) still fill MaxSeconds.
+    constexpr size_t MaxChunks = 512;
+    // Above the steady queue (lead plus a chunk, about 0.45 s for
+    // MediaSource), so only a graph that stops reading reaches it.
+    constexpr double MaxSeconds = 0.75;
+    // Closer than this to the queue's end continues it (MediaSource rounds
+    // timestamps to milliseconds).
+    constexpr double Contiguous = 0.0015;
+    // A longer gap or overlap is a jump in the source, not lost audio.
+    constexpr double MaxGap = 0.5;
+    if (channels == 0 || channels > 32 || sampleRate == 0 ||
+        sampleRate > 768000 || frames == 0 ||
         frames > MaxBytes / (channels * sizeof(int16_t)) ||
-        !std::isfinite(position)) {
+        std::isinf(position)) {
         return;
     }
     std::lock_guard<std::mutex> lock(m_mutex);
     if (!m_streaming || !m_routed || !m_originClean) {
         return;
     }
-    const size_t bytes = frames * channels * sizeof(int16_t);
     auto& stream = *m_streaming;
+    // Queue the chunk after the last one: trim an overlap and fill a gap
+    // with silence. The first chunk is placed against the media clock and
+    // only ever delayed, so a late attachment starts in sync.
+    double start = stream.end;
+    size_t skip = 0;
+    size_t silence = 0;
+    if (!std::isnan(position)) {
+        const bool first = std::isnan(stream.end);
+        const double delta =
+            position - (first ? currentTimeLocked() : stream.end);
+        if (delta > Contiguous && delta <= MaxGap) {
+            silence = static_cast<size_t>(std::lround(delta * sampleRate));
+        }
+        if (first || delta > Contiguous || delta < -MaxGap) {
+            start = position;
+        } else if (delta < -Contiguous) {
+            skip = std::min<size_t>(frames, std::lround(-delta * sampleRate));
+        }
+    }
+    if (skip == frames) {
+        return;
+    }
+    if ((silence + frames) * channels * sizeof(int16_t) > MaxBytes) {
+        silence = 0;
+    }
+    const size_t length = silence + frames - skip;
+    const size_t bytes = length * channels * sizeof(int16_t);
+    const double seconds = length / static_cast<double>(sampleRate);
+    // A codec frame longer than the steady queue (FLAC allows 65535
+    // samples) needs room for itself and for the frame being read.
+    const double maxSeconds = std::max(MaxSeconds, lead + 2 * seconds);
     while (!stream.chunks.empty() && (stream.bytes + bytes > MaxBytes ||
-                                      stream.chunks.size() >= MaxChunks)) {
-        stream.bytes -= stream.chunks.front().samples.size() * sizeof(int16_t);
-        stream.chunks.pop_front();
+                                      stream.chunks.size() >= MaxChunks ||
+                                      queuedLocked() + seconds > maxSeconds)) {
+        stream.popFront();
+        stream.readFrame = 0;
+        stream.phase = 0;
     }
     StreamingData::Chunk chunk;
-    chunk.samples.assign(samples, samples + frames * channels);
+    chunk.samples.reserve(length * channels);
+    chunk.samples.resize(silence * channels);
+    chunk.samples.insert(chunk.samples.end(), samples + skip * channels,
+                         samples + frames * channels);
     chunk.channels = channels;
     chunk.sampleRate = sampleRate;
-    chunk.position = position;
     stream.chunks.push_back(std::move(chunk));
     stream.bytes += bytes;
     stream.channels = channels;
+    stream.end = start + (frames - skip) / static_cast<double>(sampleRate);
+    stream.lead = lead;
 }
 
-void MediaAudioPlaybackState::clearStreamingPCM()
+void MediaAudioPlaybackState::flushStreamingPCM(double position)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     if (m_streaming) {
-        m_streaming->chunks.clear();
-        m_streaming->bytes = 0;
+        clearStreamingLocked(position);
     }
 }
 
-void MediaAudioPlaybackState::renderStreamingLocked(AudioBus& bus,
-                                                    size_t frames,
-                                                    double outputRate,
-                                                    double position) const
+void MediaAudioPlaybackState::clearStreamingLocked(double end)
 {
-    bool wrote = false;
-    for (const auto& chunk : m_streaming->chunks) {
-        const size_t available = chunk.samples.size() / chunk.channels;
-        const double last = position + (frames - 1) * m_rate / outputRate;
-        if (chunk.position > std::max(position, last) ||
-            chunk.position +
-                    available / static_cast<double>(chunk.sampleRate) <=
-                std::min(position, last)) {
-            continue;
-        }
-        for (size_t i = 0; i < frames; i++) {
-            const double frame =
-                (position + i * m_rate / outputRate - chunk.position) *
-                chunk.sampleRate;
-            if (frame < 0 || frame >= available) {
-                continue;
+    auto& stream = *m_streaming;
+    stream.chunks.clear();
+    stream.bytes = 0;
+    stream.readFrame = 0;
+    stream.phase = 0;
+    stream.end = end;
+}
+
+double MediaAudioPlaybackState::queuedLocked() const
+{
+    const auto& stream = *m_streaming;
+    if (stream.chunks.empty()) {
+        return 0;
+    }
+    double seconds =
+        -(stream.readFrame + stream.phase) / stream.chunks.front().sampleRate;
+    for (const auto& chunk : stream.chunks) {
+        seconds += chunk.frames() / static_cast<double>(chunk.sampleRate);
+    }
+    return seconds;
+}
+
+double MediaAudioPlaybackState::queuedSeconds() const
+{
+    // A graph that stopped rendering this source (a suspended context, or
+    // the node feeds nothing) is not going to play what is queued.
+    constexpr auto Idle = std::chrono::milliseconds(200);
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (!m_streaming || !m_routed || !m_originClean ||
+        std::chrono::steady_clock::now() - m_streaming->lastPull > Idle) {
+        return 0;
+    }
+    return queuedLocked();
+}
+
+void MediaAudioPlaybackState::readStreamingLocked(Optional<AudioBus*> out,
+                                                  size_t frames,
+                                                  double outputRate)
+{
+    // The producer queues |lead| ahead of the media clock, so a queue longer
+    // than that plus its newest chunk means the graph fell behind (a render
+    // stall or a late decode): skip what it missed to stay with the element.
+    constexpr double MaxLag = 0.15;
+    auto& stream = *m_streaming;
+    if (stream.chunks.empty()) {
+        return;
+    }
+    const auto& newest = stream.chunks.back();
+    double lag = queuedLocked() -
+                 newest.frames() / static_cast<double>(newest.sampleRate) -
+                 stream.lead;
+    if (lag > MaxLag) {
+        while (stream.chunks.size() > 1) {
+            const auto& front = stream.chunks.front();
+            const double left =
+                (front.frames() - stream.readFrame - stream.phase) /
+                front.sampleRate;
+            if (left > lag) {
+                stream.readFrame += static_cast<size_t>(lag * front.sampleRate);
+                break;
             }
-            const size_t first = static_cast<size_t>(frame);
-            const size_t second = std::min(first + 1, available - 1);
-            const double fraction = frame - first;
-            for (size_t channel = 0; channel < bus.channels(); channel++) {
-                if (channel >= chunk.channels) {
-                    continue;
-                }
-                const float a = chunk.samples[first * chunk.channels + channel];
+            lag -= left;
+            stream.popFront();
+            stream.readFrame = 0;
+            stream.phase = 0;
+        }
+    }
+    bool wrote = false;
+    for (size_t i = 0; i < frames && !stream.chunks.empty(); i++) {
+        const auto& chunk = stream.chunks.front();
+        if (out) {
+            AudioBus& bus = *out;
+            // The frame after the cursor may be in the next chunk; at the
+            // end of the queue the last frame is held.
+            const bool inChunk = stream.readFrame + 1 < chunk.frames();
+            const bool held = !inChunk && stream.chunks.size() == 1;
+            const auto& next = inChunk || held ? chunk : stream.chunks[1];
+            const size_t nextFrame = inChunk ? stream.readFrame + 1
+                                     : held  ? stream.readFrame
+                                             : 0;
+            for (size_t channel = 0;
+                 channel < bus.channels() && channel < chunk.channels;
+                 channel++) {
+                const float a =
+                    chunk.samples[stream.readFrame * chunk.channels + channel];
                 const float b =
-                    chunk.samples[second * chunk.channels + channel];
+                    channel < next.channels
+                        ? next.samples[nextFrame * next.channels + channel]
+                        : a;
                 bus.channel(channel)[i] = static_cast<float>(
-                    (a + (b - a) * fraction) * m_volume / 32768.0);
+                    (a + (b - a) * stream.phase) * m_volume / 32768.0);
             }
             wrote = true;
         }
+        // Equal rates step whole frames: phase stays 0 and the samples are
+        // copied exactly.
+        stream.phase += chunk.sampleRate / outputRate;
+        const double whole = std::floor(stream.phase);
+        stream.phase -= whole;
+        stream.readFrame += static_cast<size_t>(whole);
+        while (!stream.chunks.empty() &&
+               stream.readFrame >= stream.chunks.front().frames()) {
+            stream.readFrame -= stream.chunks.front().frames();
+            stream.popFront();
+        }
     }
-    bus.setSilent(!wrote);
+    if (wrote) {
+        out->setSilent(false);
+    }
 }
 
 MediaAudioPlaybackState::~MediaAudioPlaybackState()
@@ -248,12 +385,20 @@ void MediaAudioPlaybackState::setOriginClean(bool clean)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_originClean = clean;
+    // PCM queued ahead of a revoked label never plays, even if the label
+    // comes back.
+    if (!clean && m_streaming) {
+        clearStreamingLocked(std::numeric_limits<double>::quiet_NaN());
+    }
 }
 
 void MediaAudioPlaybackState::setRouted(bool routed)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     m_routed = routed;
+    if (!routed && m_streaming) {
+        clearStreamingLocked(std::numeric_limits<double>::quiet_NaN());
+    }
 }
 
 bool MediaAudioPlaybackState::routed() const
@@ -319,15 +464,24 @@ size_t MediaAudioPlaybackState::channels() const
 
 void MediaAudioPlaybackState::render(AudioBus& bus, size_t frames,
                                      double outputRate, double position,
-                                     bool forGraph) const
+                                     bool forGraph)
 {
     std::lock_guard<std::mutex> lock(m_mutex);
-    if (!m_playing || (!m_pcm && !m_streaming) || m_muted || m_volume == 0 ||
-        (forGraph && !m_originClean)) {
+    if (m_streaming) {
+        // Rendered even while paused: the queue still waits to be heard.
+        m_streaming->lastPull = std::chrono::steady_clock::now();
+        // Playing media is read in order even while muted or at volume 0,
+        // so it never plays stale PCM later.
+        if (m_playing) {
+            const bool heard =
+                forGraph && m_originClean && !m_muted && m_volume != 0;
+            readStreamingLocked(heard ? Optional<AudioBus*>(&bus) : NullOption,
+                                frames, outputRate);
+        }
         return;
     }
-    if (m_streaming) {
-        renderStreamingLocked(bus, frames, outputRate, position);
+    if (!m_playing || !m_pcm || m_muted || m_volume == 0 ||
+        (forGraph && !m_originClean)) {
         return;
     }
     const double length = m_pcm->frames() / 48000.0;
@@ -405,6 +559,9 @@ void MediaElementSourceHandler::process(uint64_t, size_t frames)
     // Follow it only across discontinuities or when drift becomes audible.
     constexpr double MaxDrift = 0.05;
     const MediaAudioPlaybackState::Clock clock = m_state->clock();
+#if defined(STARFISH_ENABLE_AUDIO_WORKLET)
+    m_playing = clock.playing;
+#endif
     double cursor = m_cursor;
     if (clock.loop && clock.length > 0) {
         cursor = std::fmod(cursor, clock.length);

@@ -206,10 +206,16 @@ public:
         spec.format = PA_SAMPLE_S16LE;
         spec.rate = sampleRate;
         spec.channels = channels;
+        // PulseAudio's default buffer prebuffers about two seconds, which
+        // would delay the start and every resume after a flush (pause, seek,
+        // loop); request 20 ms, as Web Audio output does.
+        const uint32_t targetBytes = sampleRate / 50 * channels * 2;
+        pa_buffer_attr buffer{ UINT32_MAX, targetBytes, UINT32_MAX, UINT32_MAX,
+                               UINT32_MAX };
         int error = 0;
         m_stream = m_api->pa_simple_new(nullptr, "Starfish", PA_STREAM_PLAYBACK,
                                         nullptr, "media", &spec, nullptr,
-                                        nullptr, &error);
+                                        &buffer, &error);
         return m_stream != nullptr;
     }
 

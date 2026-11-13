@@ -30,6 +30,7 @@
 #include <chrono>
 #include <cmath>
 #include <condition_variable>
+#include <forward_list>
 #include <mutex>
 #include <new>
 #include <system_error>
@@ -197,8 +198,8 @@ namespace {
     };
 #endif
 
-    // Shared by the owning device and its detached writer thread, so either
-    // may go away first.
+    // Shared by the owning device and its writer thread, so either may go
+    // away first.
     struct OutputState {
         OutputState(uint32_t sampleRate, size_t quantumFrames)
             : sampleRate(sampleRate)
@@ -306,20 +307,70 @@ namespace {
         g_outputDevices.fetch_sub(1);
     }
 
+    // A writer whose device is gone, kept joinable because it may still be
+    // in an audio server call that closing must not wait for.
+    struct RetiredWriter {
+        std::thread thread;
+        // Expires when the writer drops its state at the end of writeLoop(),
+        // so joining an expired writer only waits for its thread to exit.
+        std::weak_ptr<OutputState> state;
+    };
+
+    struct RetiredWriters {
+        // Process exit without an unload: the library stays mapped, so the
+        // writers may finish on their own.
+        ~RetiredWriters()
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            for (RetiredWriter& writer : list) {
+                writer.thread.detach();
+            }
+        }
+
+        // Called with |mutex| held whenever a device comes or goes.
+        void joinFinished()
+        {
+            list.remove_if([](RetiredWriter& writer) {
+                if (!writer.state.expired()) {
+                    return false;
+                }
+                writer.thread.join();
+                return true;
+            });
+        }
+
+        std::mutex mutex;
+        std::forward_list<RetiredWriter> list;
+    };
+    RetiredWriters g_retiredWriters;
+
     class QueuedAudioOutputDevice final : public AudioOutputDevice {
     public:
+        // Throws std::bad_alloc or std::system_error.
         explicit QueuedAudioOutputDevice(std::shared_ptr<OutputState> state)
             : m_state(std::move(state))
+            , m_writer(1)
         {
+            m_writer.front().state = m_state;
+            m_writer.front().thread = std::thread(writeLoop, m_state);
         }
 
         ~QueuedAudioOutputDevice() override
         {
-            // Never join: the writer may be blocked in the server. It exits
-            // after its current call and owns the connection until then.
+            // Joining here would hold navigation, close() and suspend() for
+            // as long as the audio server takes to answer. The writer stops
+            // after its current call and is joined at the next device
+            // creation or destruction after it has finished, or at the latest
+            // before this library is unloaded.
             m_state->stop.store(true);
-            std::lock_guard<std::mutex> lock(m_state->wakeMutex);
-            m_state->wake.notify_one();
+            {
+                std::lock_guard<std::mutex> lock(m_state->wakeMutex);
+                m_state->wake.notify_one();
+            }
+            std::lock_guard<std::mutex> lock(g_retiredWriters.mutex);
+            g_retiredWriters.joinFinished();
+            g_retiredWriters.list.splice_after(
+                g_retiredWriters.list.before_begin(), m_writer);
         }
 
         // Called by a single producer thread.
@@ -327,6 +378,13 @@ namespace {
         {
             OutputState& state = *m_state;
             if (state.failed.load(std::memory_order_relaxed)) {
+                // A failed writer exits on its own. Once it has dropped its
+                // state, joining only waits for the thread to end, and frees
+                // its stack now instead of when the context goes away.
+                if (!m_writer.empty() && m_state.use_count() == 1) {
+                    m_writer.front().thread.join();
+                    m_writer.clear();
+                }
                 return;
             }
             for (size_t frame = 0; frame < bus.frames(); frame++) {
@@ -393,6 +451,9 @@ namespace {
 
     private:
         std::shared_ptr<OutputState> m_state;
+        // One node, so the destructor hands the writer over without
+        // allocating.
+        std::forward_list<RetiredWriter> m_writer;
         // Frames written to the slot at head, which is published when full.
         size_t m_chunkFill{ 0 };
     };
@@ -404,6 +465,10 @@ std::unique_ptr<AudioOutputDevice> AudioOutputDevice::create(
     uint32_t sampleRate, size_t quantumFrames)
 {
 #if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN)
+    {
+        std::lock_guard<std::mutex> lock(g_retiredWriters.mutex);
+        g_retiredWriters.joinFinished();
+    }
 #if defined(STARFISH_LINUX)
     void* handle = nullptr;
     PulseSimpleApi* api = loadPulseSimple(handle);
@@ -420,10 +485,8 @@ std::unique_ptr<AudioOutputDevice> AudioOutputDevice::create(
 #if defined(STARFISH_LINUX)
         state->api = api;
 #endif
-        std::unique_ptr<AudioOutputDevice> device(
-            new QueuedAudioOutputDevice(state));
-        std::thread(writeLoop, std::move(state)).detach();
-        return device;
+        return std::unique_ptr<AudioOutputDevice>(
+            new QueuedAudioOutputDevice(std::move(state)));
     } catch (const std::bad_alloc&) {
     } catch (const std::system_error&) {
     }
@@ -431,6 +494,20 @@ std::unique_ptr<AudioOutputDevice> AudioOutputDevice::create(
     return nullptr;
 #else
     return nullptr;
+#endif
+}
+
+void AudioOutputDevice::joinRetiredWriters()
+{
+#if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN)
+    std::forward_list<RetiredWriter> writers;
+    {
+        std::lock_guard<std::mutex> lock(g_retiredWriters.mutex);
+        writers.swap(g_retiredWriters.list);
+    }
+    for (RetiredWriter& writer : writers) {
+        writer.thread.join();
+    }
 #endif
 }
 
