@@ -102,9 +102,11 @@ void RTCErrorInit::setErrorDetail(String* errorDetail)
     }
 }
 
+// https://w3c.github.io/webrtc-pc/#dom-rtcerror-constructor
 RTCError::RTCError(ExecutionContext* executionContext, RTCErrorInit init,
                    String* message)
-    : DOMException(executionContext, Code::DOM_EXCEPTION, "")
+    : DOMException(executionContext, message,
+                   String::createASCIIString("OperationError"))
     , m_executionContext(executionContext)
 {
     m_errorDetail = init.m_errorDetail;

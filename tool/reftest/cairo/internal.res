@@ -33,6 +33,7 @@ tests/assertion/webaudio/media-audio-decode.html
 tests/assertion/webaudio/media-audio-source-replace.html
 tests/assertion/webrtc/nullable-arguments.html
 tests/assertion/webrtc/ice-servers-limit.html
+tests/assertion/webrtc/operation-promises.html
 tests/assertion/observable-array/write_through.html
 tests/assertion/observable-array/whole_assignment.html
 tests/assertion/observable-array/length_truncation.html

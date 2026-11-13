@@ -136,14 +136,18 @@ public:
         m_promises.push_back(promise);
     }
 
-    Promise* popPromise();
-
     void removePromise(Promise* promise);
 
     ExecutionContext* executionContext();
 
 protected:
-    void postCallback(std::function<void()> callback);
+    void postCallback(std::function<void()> callback)
+    {
+        postCallback(nullptr, callback);
+    }
+
+    // Runs |callback| on the main thread, then unroots |promise|.
+    void postCallback(Promise* promise, std::function<void()> callback);
 
     RTCPeerConnection* m_peerConnection = nullptr;
     GCVector<Promise*> m_promises;
@@ -198,9 +202,10 @@ class CreateOfferAnswerObserver : public ObserverBase {
 public:
     CreateOfferAnswerObserver(RTCPeerConnection* peerConnection);
 
-    void OnSuccess(const libwebrtc::string sdp, const libwebrtc::string type);
+    void OnSuccess(Promise* promise, const libwebrtc::string sdp,
+                   const libwebrtc::string type);
 
-    void OnFailure(const std::string& error);
+    void OnFailure(Promise* promise, const std::string& error);
 
     virtual bool isCreateOffer()
     {
@@ -245,9 +250,9 @@ class SetLocalRemoteDescriptionObserver : public ObserverBase {
 public:
     SetLocalRemoteDescriptionObserver(RTCPeerConnection* peerConnection);
 
-    void OnSuccess();
+    void OnSuccess(Promise* promise);
 
-    void OnFailure(const std::string& error);
+    void OnFailure(Promise* promise, const std::string& error);
 
     virtual bool isLocalDescription()
     {
@@ -292,11 +297,12 @@ class GetStatsObserver : public ObserverBase {
 public:
     GetStatsObserver(RTCPeerConnection* peerConnection);
 
-    void OnSuccess(const libwebrtc::vector<
-                   libwebrtc::scoped_refptr<libwebrtc::MediaRTCStats>>
+    void OnSuccess(Promise* promise,
+                   const libwebrtc::vector<
+                       libwebrtc::scoped_refptr<libwebrtc::MediaRTCStats>>
                        reports);
 
-    void OnFailure(const std::string& error);
+    void OnFailure(Promise* promise, const std::string& error);
 
     virtual bool isLocalDescription()
     {
@@ -313,8 +319,7 @@ public:
 // in the order in which they were added.
 class ChainedPromiseManager : public gc {
 public:
-    using ChainedOperation =
-        std::pair<Promise*, std::pair<ObserverBase*, std::function<void()>>>;
+    using ChainedOperation = std::pair<Promise*, std::function<void()>>;
 
     ChainedPromiseManager(RTCPeerConnection* peerConnection)
         : m_peerConnection(peerConnection)

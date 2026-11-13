@@ -1,0 +1,99 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebRTC operations settle their own promises</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "WebRTC operation promises complete";
+    };
+}
+
+// Resolves with how |promise| settled, or "timeout" so a hang fails fast.
+function outcome(promise) {
+    return Promise.race([
+        promise.then(function (value) {
+            return { state: "fulfilled", value: value };
+        }, function (error) {
+            return { state: "rejected", error: error };
+        }),
+        new Promise(function (resolve) {
+            setTimeout(function () { resolve({ state: "timeout" }); }, 5000);
+        })
+    ]);
+}
+
+async function run() {
+    // A rejected operation must not take over the next one's result.
+    const pcA = new RTCPeerConnection();
+    pcA.addTransceiver("audio");
+    const rollback = await outcome(
+        pcA.setLocalDescription({ type: "rollback" }));
+    console.assert(rollback.state === "rejected",
+                   "rollback in stable rejects: " + rollback.state);
+    const offer = await outcome(pcA.createOffer());
+    console.assert(offer.state === "fulfilled",
+                   "createOffer resolves: " + offer.state);
+    const sld = await outcome(pcA.setLocalDescription(offer.value));
+    console.assert(sld.state === "fulfilled",
+                   "setLocalDescription after a rejection resolves: " +
+                   sld.state);
+
+    // A synchronous rejection inside the chain runs the next operation.
+    const pcB = new RTCPeerConnection();
+    const results = await Promise.all([
+        outcome(pcB.createAnswer()), outcome(pcB.createOffer())
+    ]);
+    console.assert(results[0].state === "rejected" &&
+                   results[0].error.name === "InvalidStateError",
+                   "createAnswer in stable rejects with InvalidStateError: " +
+                   results[0].state);
+    console.assert(results[1].state === "fulfilled",
+                   "chained createOffer resolves: " + results[1].state);
+
+    const invalid = await outcome(
+        pcB.setRemoteDescription({ type: "offer", sdp: "Invalid SDP" }));
+    console.assert(invalid.state === "rejected" &&
+                   invalid.error instanceof RTCError &&
+                   invalid.error.errorDetail === "sdp-syntax-error" &&
+                   invalid.error.name === "OperationError",
+                   "invalid SDP rejects with an sdp-syntax-error RTCError: " +
+                   invalid.state);
+    const srd = await outcome(pcB.setRemoteDescription(offer.value));
+    console.assert(srd.state === "fulfilled",
+                   "valid setRemoteDescription resolves: " + srd.state);
+    const answer = await outcome(pcB.createAnswer());
+    console.assert(answer.state === "fulfilled",
+                   "createAnswer after a rejection resolves: " +
+                   answer.state);
+
+    // webrtc-pc getStats() step 4: a selector that matches nothing rejects
+    // its own promise, not another pending getStats().
+    const pcC = new RTCPeerConnection();
+    const other = new RTCPeerConnection();
+    other.addTransceiver("audio");
+    const foreignTrack = other.getReceivers()[0].track;
+    const stats = await Promise.all([
+        outcome(pcC.getStats()), outcome(pcC.getStats(foreignTrack))
+    ]);
+    console.assert(stats[0].state === "fulfilled",
+                   "getStats() resolves: " + stats[0].state);
+    console.assert(stats[1].state === "rejected" &&
+                   stats[1].error.name === "InvalidAccessError",
+                   "getStats(foreign track) rejects with InvalidAccessError: " +
+                   stats[1].state);
+
+    for (const pc of [pcA, pcB, pcC, other]) {
+        pc.close();
+    }
+}
+
+if (typeof RTCPeerConnection !== "function") {
+    testEnd();
+} else {
+    run().catch(function (error) {
+        console.assert(false, "unexpected exception: " + error);
+    }).then(function () {
+        testEnd();
+    });
+}
+</script>
