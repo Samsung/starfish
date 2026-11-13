@@ -48,8 +48,6 @@ public:
     libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnectionFactory>
     peerConnectionFactory();
 
-    libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnection> createPeerConnection(
-        const libwebrtc::RTCConfiguration& configuration);
     void deletePeerConnection(RTCPeerConnection* peerConnection);
 
     libwebrtc::scoped_refptr<libwebrtc::RTCAudioTrack> createAudioTrack(
@@ -71,7 +69,7 @@ public:
     }
 
 private:
-    void deletePeerConnectionFactory(bool force = false);
+    void deletePeerConnectionFactory();
 
     GCUnorderedSet<RTCPeerConnection*> m_peerConnections;
     GCVector<MediaStream*> m_mediaStreams;

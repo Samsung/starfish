@@ -1,0 +1,127 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebRTC RTCPeerConnection after close()</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "WebRTC close complete";
+    };
+}
+
+// Resolves with how |promise| settled, or "timeout" after |ms|.
+function outcome(promise, ms) {
+    return Promise.race([
+        promise.then(function (value) {
+            return { state: "fulfilled", value: value };
+        }, function (error) {
+            return { state: "rejected", error: error };
+        }),
+        new Promise(function (resolve) {
+            setTimeout(function () { resolve({ state: "timeout" }); },
+                       ms || 5000);
+        })
+    ]);
+}
+
+function rejectedWith(result, name) {
+    return result.state === "rejected" && result.error.name === name;
+}
+
+function throwsInvalidState(f) {
+    try {
+        f();
+    } catch (e) {
+        return e.name === "InvalidStateError";
+    }
+    return false;
+}
+
+function tick() {
+    return new Promise(function (resolve) { setTimeout(resolve, 0); });
+}
+
+async function run() {
+    const pc = new RTCPeerConnection();
+    pc.addTransceiver("audio");
+    const offer = await outcome(pc.createOffer());
+    console.assert(offer.state === "fulfilled",
+                   "createOffer resolves: " + offer.state);
+    pc.close();
+
+    console.assert(pc.signalingState === "closed" &&
+                   pc.connectionState === "closed",
+                   "states are closed: " + pc.signalingState + " " +
+                   pc.connectionState);
+    console.assert(Array.isArray(pc.getSenders()) &&
+                   Array.isArray(pc.getReceivers()) &&
+                   Array.isArray(pc.getTransceivers()),
+                   "getSenders/getReceivers/getTransceivers return arrays");
+
+    // webrtc-pc "chain an operation": a closed connection rejects.
+    const results = await Promise.all([
+        outcome(pc.setLocalDescription(offer.value)),
+        outcome(pc.setRemoteDescription(offer.value)),
+        outcome(pc.addIceCandidate({
+            candidate: "candidate:1 1 udp 2113929471 203.0.113.1 10000 typ host",
+            sdpMid: "0"
+        })),
+        outcome(pc.createOffer()),
+        outcome(pc.createAnswer())
+    ]);
+    const names = ["setLocalDescription", "setRemoteDescription",
+                   "addIceCandidate", "createOffer", "createAnswer"];
+    for (let i = 0; i < names.length; i++) {
+        console.assert(rejectedWith(results[i], "InvalidStateError"),
+                       names[i] + " after close rejects: " + results[i].state);
+    }
+    console.assert(throwsInvalidState(function () {
+        pc.createDataChannel("x");
+    }), "createDataChannel after close throws InvalidStateError");
+    console.assert(throwsInvalidState(function () {
+        pc.addTransceiver("video");
+    }), "addTransceiver after close throws InvalidStateError");
+    const stats = await outcome(pc.getStats());
+    console.assert(stats.state === "fulfilled",
+                   "getStats after close resolves: " + stats.state);
+    pc.close();
+    console.assert(pc.signalingState === "closed", "second close is a no-op");
+
+    // webrtc-pc: closing during setRemoteDescription neither resolves nor
+    // rejects it.
+    const source = new RTCPeerConnection();
+    source.addTransceiver("audio");
+    const remoteOffer = await outcome(source.createOffer());
+    source.close();
+    const pending = new RTCPeerConnection();
+    const srd = outcome(pending.setRemoteDescription(remoteOffer.value), 200);
+    pending.close();
+    const srdResult = await srd;
+    console.assert(srdResult.state === "timeout",
+                   "setRemoteDescription closed mid-flight stays pending: " +
+                   srdResult.state);
+
+    // Closed connections with callbacks in flight are released safely.
+    for (let i = 0; i < 50; i++) {
+        const churn = new RTCPeerConnection();
+        churn.addTransceiver("audio");
+        churn.getStats();
+        churn.close();
+        const garbage = [];
+        for (let j = 0; j < 2000; j++) {
+            garbage.push({ index: j, text: "garbage " + j });
+        }
+    }
+    await tick();
+    await tick();
+}
+
+if (typeof RTCPeerConnection !== "function") {
+    testEnd();
+} else {
+    run().catch(function (error) {
+        console.assert(false, "unexpected exception: " + error);
+    }).then(function () {
+        testEnd();
+    });
+}
+</script>

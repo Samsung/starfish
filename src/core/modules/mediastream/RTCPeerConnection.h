@@ -39,6 +39,7 @@
 #include "rtc_types.h"
 #include "rtc_ice_candidate.h"
 #include "rtc_peerconnection.h"
+#include "rtc_peerconnection_factory.h"
 
 #include <EscargotPublic.h>
 
@@ -131,10 +132,7 @@ public:
     {
     }
 
-    void addPromise(Promise* promise)
-    {
-        m_promises.push_back(promise);
-    }
+    void addPromise(Promise* promise);
 
     void removePromise(Promise* promise);
 
@@ -335,6 +333,7 @@ private:
 };
 
 class RTCPeerConnection : public EventTarget {
+    friend class ObserverBase;
     friend class PeerConnectionObserver;
     friend class CreateOfferAnswerObserver;
     friend class SetLocalRemoteDescriptionObserver;
@@ -433,6 +432,8 @@ private:
 
     bool isValidRemoteState(RTCSdpType type);
 
+    void releaseIfIdle();
+
     Promise* setRtcSessionDescription(RTCSessionDescriptionInit description,
                                       Promise* promise, bool isRemote);
     RTCRtpTransceiver* getOrCreateRTCRtpTransceiver(
@@ -447,6 +448,10 @@ private:
     RTCConfiguration m_configuration;
     PeerConnectionObserver* m_peerConnectionObserver = nullptr;
     libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnection> m_backend;
+    // Keeps libwebrtc's threads alive until dispose() has released the
+    // native objects this connection and its transceivers own, which can
+    // happen in a finalizer after the window has dropped its factory.
+    libwebrtc::scoped_refptr<libwebrtc::RTCPeerConnectionFactory> m_factory;
     CreateOfferObserver* m_createOfferObserver = nullptr;
     CreateAnswerObserver* m_createAnswerObserver = nullptr;
     SetLocalDescriptionObserver* m_setLocalDescriptionObserver = nullptr;
@@ -459,6 +464,9 @@ private:
     Mutex* m_disposeLock = nullptr;
     bool m_closed = false;
     bool m_wait = false;
+    // Promises handed to libwebrtc plus callbacks posted from its threads;
+    // both hold raw pointers to this connection and its observers.
+    std::atomic<size_t> m_nativeCallbacks{ 0 };
 
     String* m_signalingState = String::emptyString;
     String* m_iceGatheringState = String::emptyString;

@@ -80,12 +80,20 @@ ExecutionContext* ObserverBase::executionContext()
     return m_peerConnection->executionContext();
 }
 
+void ObserverBase::addPromise(Promise* promise)
+{
+    m_promises.push_back(promise);
+    m_peerConnection->m_nativeCallbacks++;
+}
+
 void ObserverBase::removePromise(Promise* promise)
 {
     auto iter = m_promises.begin();
     while (iter != m_promises.end()) {
         if (*iter == promise) {
             m_promises.erase(iter);
+            m_peerConnection->m_nativeCallbacks--;
+            m_peerConnection->releaseIfIdle();
             break;
         }
         iter++;
@@ -112,6 +120,7 @@ void ObserverBase::postCallback(Promise* promise,
         p->self = this;
         p->promise = promise;
         p->callback = callback;
+        m_peerConnection->m_nativeCallbacks++;
         executionContext()
             ->webBase()
             ->messageLoop()
@@ -121,7 +130,11 @@ void ObserverBase::postCallback(Promise* promise,
                     Params* p = static_cast<Params*>(data);
                     p->callback(); // Execute callback safety.
                     p->self->removePromise(p->promise);
+                    RTCPeerConnection* peerConnection =
+                        p->self->m_peerConnection;
                     delete p;
+                    peerConnection->m_nativeCallbacks--;
+                    peerConnection->releaseIfIdle();
                 },
                 p);
     }
@@ -467,7 +480,9 @@ void CreateOfferAnswerObserver::OnSuccess(Promise* promise,
                                           const libwebrtc::string type)
 {
     postCallback(promise, [this, promise, sdp, type] {
-        if (m_peerConnection->isDisposed()) {
+        // https://w3c.github.io/webrtc-pc/#chain-an-asynchronous-operation
+        // A closed connection neither resolves nor rejects the operation.
+        if (m_peerConnection->isClosed()) {
             return;
         }
 
@@ -491,7 +506,7 @@ void CreateOfferAnswerObserver::OnFailure(Promise* promise,
                                           const std::string& error)
 {
     postCallback(promise, [this, promise, error] {
-        if (m_peerConnection->isDisposed()) {
+        if (m_peerConnection->isClosed()) {
             return;
         }
 
@@ -511,6 +526,10 @@ SetLocalRemoteDescriptionObserver::SetLocalRemoteDescriptionObserver(
 void SetLocalRemoteDescriptionObserver::OnSuccess(Promise* promise)
 {
     postCallback(promise, [this, promise] {
+        if (m_peerConnection->isClosed()) {
+            return;
+        }
+
         for (auto transceiver : m_peerConnection->getTransceivers()) {
             auto currentDirection = transceiver->currentDirection();
             if (currentDirection.hasValue()) {
@@ -540,7 +559,7 @@ void SetLocalRemoteDescriptionObserver::OnFailure(Promise* promise,
                                                   const std::string& error)
 {
     postCallback(promise, [this, promise, error] {
-        if (m_peerConnection->isDisposed()) {
+        if (m_peerConnection->isClosed()) {
             return;
         }
 
@@ -640,6 +659,10 @@ void ChainedPromiseManager::AddChain(ChainedOperation chainedOperation)
             [](size_t handle, void* data) {
                 ChainedPromiseManager* self =
                     static_cast<ChainedPromiseManager*>(data);
+                // Closed before the operation started; it never runs.
+                if (self->m_peerConnection->isClosed()) {
+                    return;
+                }
                 auto seedChain = self->m_chainedOperations.front();
                 self->m_lastExecutedPromise = seedChain.first;
                 seedChain.second();
@@ -671,7 +694,6 @@ RTCPeerConnection::RTCPeerConnection(ExecutionContext* executionContext,
 
     if (!initializePeerConnection(configuration)) {
         m_peerConnectionObserver = nullptr;
-        m_webRtcManager->deletePeerConnection(nullptr);
         m_backend = nullptr;
         STARFISH_LOG_ERROR("PeerConnection: failed");
         throw new DOMException(executionContext, DOMException::DOM_EXCEPTION,
@@ -705,8 +727,8 @@ bool RTCPeerConnection::initializePeerConnection(
     libwebrtc::scoped_refptr<libwebrtc::RTCMediaConstraints> constraints =
         libwebrtc::RTCMediaConstraints::Create();
 
-    m_backend =
-        m_webRtcManager->peerConnectionFactory()->Create(config, constraints);
+    m_factory = m_webRtcManager->peerConnectionFactory();
+    m_backend = m_factory->Create(config, constraints);
     m_backend->RegisterRTCPeerConnectionObserver(m_peerConnectionObserver);
 
     m_createOfferObserver = new CreateOfferObserver(this);
@@ -750,11 +772,11 @@ void RTCPeerConnection::dispose()
     m_transceivers.clear();
 
     m_webRtcManager->deletePeerConnection(this);
-    m_webRtcManager = nullptr;
 
     m_backend->DeRegisterRTCPeerConnectionObserver();
     m_backend = nullptr;
     m_peerConnectionObserver = nullptr;
+    m_factory = nullptr;
 }
 
 ScriptBindingInstance* RTCPeerConnection::scriptBindingInstance()
@@ -970,7 +992,10 @@ Promise* RTCPeerConnection::setLocalDescription(
 {
     if (isClosed()) {
         Promise* promise = new Promise(scriptBindingInstance());
-        promise->fulfill(scriptUndefined());
+        auto exception = new DOMException(executionContext(),
+                                          DOMException::INVALID_STATE_ERR,
+                                          "InvalidStateError");
+        promise->reject(exception->scriptValue());
         return promise;
     }
 
@@ -1196,7 +1221,10 @@ Promise* RTCPeerConnection::setRemoteDescription(
 {
     if (isClosed()) {
         Promise* promise = new Promise(scriptBindingInstance());
-        promise->fulfill(scriptUndefined());
+        auto exception = new DOMException(executionContext(),
+                                          DOMException::INVALID_STATE_ERR,
+                                          "InvalidStateError");
+        promise->reject(exception->scriptValue());
         return promise;
     }
 
@@ -1299,6 +1327,15 @@ Promise* RTCPeerConnection::addIceCandidate(RTCIceCandidateInit init)
         !init.m_sdpMid.hasValue() && !init.m_sdpMLineIndex.hasValue()) {
         auto exception = new DOMException(
             executionContext(), DOMException::SCRIPT_TYPE_ERR, "TypeError");
+        promise->reject(exception->scriptValue());
+        return promise;
+    }
+
+    // 4. Chaining an operation on a closed connection rejects.
+    if (isClosed()) {
+        auto exception = new DOMException(executionContext(),
+                                          DOMException::INVALID_STATE_ERR,
+                                          "InvalidStateError");
         promise->reject(exception->scriptValue());
         return promise;
     }
@@ -1555,13 +1592,28 @@ void RTCPeerConnection::close()
     }
 
     m_closed = true;
-    if (m_backend) {
-        // Note: Closing backend does not call the callback for the close state.
-        m_backend->Close();
-    }
-
+    // https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-close
+    // Closing fires no events, and the transceivers stop before the ICE agent
+    // is destroyed.
+    m_backend->DeRegisterRTCPeerConnectionObserver();
     for (auto* transceiver : m_transceivers) {
         transceiver->stop();
+    }
+    // Close() is a blocking call on the signaling thread, so an observer
+    // callback that saw the observer before DeRegister has already posted
+    // (and counted) itself when it returns.
+    m_backend->Close();
+    releaseIfIdle();
+}
+
+// shortcut: a callback libwebrtc never delivers (e.g. one dropped after the
+// native connection is gone) keeps a closed connection rooted, and so does
+// any RTCDataChannel, whose observer idlers also hold raw pointers. Upgrade
+// when those paths report completion or hold GC references.
+void RTCPeerConnection::releaseIfIdle()
+{
+    if (m_closed && !m_nativeCallbacks && m_dataChannels.empty()) {
+        m_webRtcManager->deletePeerConnection(this);
     }
 }
 
@@ -1670,10 +1722,6 @@ GCVector<RTCRtpSender*> RTCPeerConnection::getSenders()
         senders.push_back(transceiver->sender());
     }
 
-    libwebrtc::vector<libwebrtc::scoped_refptr<libwebrtc::RTCRtpSender>>
-        backendSenders = backend()->senders();
-    STARFISH_ASSERT(senders.size() == backendSenders.size());
-
     return std::move(senders);
 }
 
@@ -1688,10 +1736,6 @@ GCVector<RTCRtpReceiver*> RTCPeerConnection::getReceivers()
     for (auto transceiver : m_transceivers) {
         receivers.push_back(transceiver->receiver());
     }
-
-    libwebrtc::vector<libwebrtc::scoped_refptr<libwebrtc::RTCRtpReceiver>>
-        backendReceivers = m_backend->receivers();
-    STARFISH_ASSERT(receivers.size() == backendReceivers.size());
 
     return std::move(receivers);
 }
@@ -1958,6 +2002,13 @@ Promise* RTCPeerConnection::getStats(Optional<MediaStreamTrack*> selector)
             promise->reject(exception->scriptValue());
             return promise;
         }
+    }
+
+    // The native connection is gone; there is nothing left to report.
+    if (isClosed()) {
+        promise->fulfill(
+            (new RTCStatsReport(executionContext()))->scriptValue());
+        return promise;
     }
 
     // Rooted until the libwebrtc callback settles it.
