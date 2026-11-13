@@ -307,10 +307,14 @@ static void traceRepaintRegionJob(
 
             lastStackingContextOwner = currentFrameBox;
         } else {
-            // compute new result
-            LayoutRect newLayoutResultRect =
-                currentFrameBox->absoluteRectIncludingScroll(
-                    lastStackingContextOwner);
+            // compute new result: what the box paints itself, so a move
+            // erases and repaints its shadows and outline beyond the border
+            // box too
+            LayoutLocation pos = currentFrameBox->absolutePointIncludingScroll(
+                lastStackingContextOwner);
+            LayoutRect ink = currentFrameBox->frameVisibleRect();
+            LayoutRect newLayoutResultRect(pos.x() + ink.x(), pos.y() + ink.y(),
+                                           ink.width(), ink.height());
 
             // check last result
             LayoutRepaintTracker::ComputeOverflow::reduceRect(

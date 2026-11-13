@@ -1,5 +1,13 @@
 tests/assertion/css/flex/align-self-column-auto-width.html
 tests/assertion/css/box-shadow/calc-shadow-lengths.html
+tests/assertion/css/box-shadow/box-shadow-rounded-partial-repaint.html
+tests/assertion/css/box-shadow/box-shadow-moved-box-repaint.html
+tests/assertion/css/box-shadow/box-shadow-added-after-forced-rebuild.html
+tests/assertion/css/box-shadow/box-shadow-added-during-rebuild.html
+tests/assertion/css/box-shadow/box-shadow-geometry-change.html
+tests/assertion/css/box-shadow/box-shadow-grown-in-layer.html
+tests/assertion/css/border-image/border-image-outset-in-layer.html
+tests/assertion/css/border-image/border-image-outset-no-scroll.html
 tests/pixel/css/all/all_repeated_use.html
 tests/assertion/css/constructable-stylesheet/constructable-stylesheets-insertRule.html
 tests/assertion/css/constructable-stylesheet/constructor_options_test.html
@@ -409,6 +417,8 @@ tests/assertion/css/width/replaced_percent_width_resolves_against_content_width.
 tests/assertion/css/width/width-intrinsic-keywords.html
 tests/pixel/css/text/word-concatenating.html
 tests/assertion/css/text/text-wrap-mode.html
+tests/assertion/css/text/text-shadow-change.html
+tests/assertion/css/text/text-shadow-grown-in-layer.html
 tests/pixel/css/border/starting_unprocessed_mbp_with_pre.html
 tests/pixel/css/length/simple_calc.html
 tests/pixel/css/length/simple_calc2.html
@@ -970,6 +980,7 @@ tests/pixel/css/pseudo/pseudo-class-host_06.html
 tests/pixel/css/pseudo/pseudo-class-host_07.html
 tests/assertion/css/pseudo/pseudo-class-scope_01.html
 tests/assertion/css/css-ui/pointer-events_01.html
+tests/assertion/css/css-ui/outline-grown-in-layer.html
 tests/pixel/css/inset/inset.html
 tests/pixel/compatibility/quirks-height-percent.html
 tests/pixel/compatibility/quirks-empty-body.html

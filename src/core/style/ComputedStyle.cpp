@@ -1532,6 +1532,26 @@ uint64_t ComputedStyle::explicitlyInheritedKeyBit(
     }
 }
 
+// Whether two shadow lists paint over the same area, whatever their colors.
+static bool shadowsCoverSameArea(ShadowDataList* a, ShadowDataList* b)
+{
+    size_t size = a ? a->size() : 0;
+    if (size != (b ? b->size() : 0)) {
+        return false;
+    }
+    for (size_t i = 0; i < size; i++) {
+        const ShadowData& x = a->at(i);
+        const ShadowData& y = b->at(i);
+        if (x.offsetX() != y.offsetX() || x.offsetY() != y.offsetY() ||
+            x.radius() != y.radius() ||
+            x.spreadDistance() != y.spreadDistance() ||
+            x.inset() != y.inset()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                                  ComputedStyle* newStyle, bool* damagedKeys,
                                  bool isSVGDescendant)
@@ -2256,6 +2276,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                 damagedKeys[CSSStyleValuePair::KeyKind::BorderImageSource] =
                     true;
                 damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::
+                        ComputedStyleDamageComputeStackingContextProperties |
                     ComputedStyleDamage::ComputedStyleDamagePainting | damage);
             }
             if (newBorder.image().slices() != oldBorder.image().slices() ||
@@ -2276,6 +2298,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                 damagedKeys[CSSStyleValuePair::KeyKind::BorderImageOutset] =
                     true;
                 damage = static_cast<ComputedStyleDamage>(
+                    ComputedStyleDamage::
+                        ComputedStyleDamageComputeStackingContextProperties |
                     ComputedStyleDamage::ComputedStyleDamagePainting | damage);
             }
             if (newBorder.image().repeatX() != oldBorder.image().repeatX() ||
@@ -2721,21 +2745,30 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
+    // Outlines, shadows and border-image outsets are ink overflow, which the
+    // stacking-context rects hold (FrameBox::frameVisibleRect): a change in
+    // their extent has those recomputed.
     if (newStyle->outlineStyle() != oldStyle->outlineStyle()) {
         damagedKeys[CSSStyleValuePair::KeyKind::OutlineStyle] = true;
         damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::
+                ComputedStyleDamageComputeStackingContextProperties |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->outlineWidth() != oldStyle->outlineWidth()) {
         damagedKeys[CSSStyleValuePair::KeyKind::OutlineWidth] = true;
         damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::
+                ComputedStyleDamageComputeStackingContextProperties |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->outlineOffset() != oldStyle->outlineOffset()) {
         damagedKeys[CSSStyleValuePair::KeyKind::OutlineOffset] = true;
         damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::
+                ComputedStyleDamageComputeStackingContextProperties |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
@@ -2751,16 +2784,24 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     ShadowDataList* oldShadow = oldStyle->textShadow();
     ShadowDataList* newShadow = newStyle->textShadow();
+    if (!shadowsCoverSameArea(oldShadow, newShadow)) {
+        damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::
+                ComputedStyleDamageComputeStackingContextProperties |
+            damage);
+    }
 
     if (oldShadow == nullptr && newShadow == nullptr) {
     } else if ((oldShadow != nullptr && newShadow == nullptr) ||
                (oldShadow == nullptr && newShadow != nullptr)) {
         damagedKeys[CSSStyleValuePair::KeyKind::TextShadow] = true;
         damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     } else if (*oldShadow != *newShadow) {
         damagedKeys[CSSStyleValuePair::KeyKind::TextShadow] = true;
         damage = static_cast<ComputedStyleDamage>(
+            ComputedStyleDamage::ComputedStyleDamageInherited |
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
@@ -2781,6 +2822,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damagedKeys[CSSStyleValuePair::KeyKind::BoxShadow] = true;
         damage = static_cast<ComputedStyleDamage>(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        if (!shadowsCoverSameArea(oldShadow, newShadow)) {
+            damage = static_cast<ComputedStyleDamage>(
+                ComputedStyleDamage::
+                    ComputedStyleDamageComputeStackingContextProperties |
+                damage);
+        }
     }
 
     if (newStyle->listStyleData() != oldStyle->listStyleData()) {

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A text-shadow change reaches the text</title>
+<link rel="help" href="https://drafts.csswg.org/css-text-decor/#text-shadow-property">
+<style>
+  @font-face { font-family: Ahem;
+               src: url(../../../fixtures/resources/webkit/Ahem.ttf); }
+  body { margin: 0; background: white; }
+  #text { margin: 100px 0 0 100px; width: 300px; font: 40px/1 Ahem;
+          color: blue; text-shadow: 1px 0 green; }
+  #text.far { text-shadow: 60px 0 green; }
+</style>
+</head>
+<body>
+<div id="text">X</div>
+<script>
+  var shot = "text-shadow-change.html.png";
+  function change() {
+    // text-shadow is inherited: the text takes it from this element.
+    document.getElementById("text").className = "far";
+  }
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      change();
+      return;
+    }
+    setTimeout(function () {
+      screenShot(shot, function () {
+        change();
+        screenShot(shot, function () {
+          // The glyph is a 40px square at 100,100, its shadow 60px right.
+          console.assert(checkPixelColors(shot, [
+            { x: 180, y: 120, r: 0, g: 128, b: 0, a: 255 },
+            { x: 150, y: 120, r: 255, g: 255, b: 255, a: 255 },
+          ], 3), "shadow moved");
+          testEnd();
+        });
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

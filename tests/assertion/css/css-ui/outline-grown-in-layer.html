@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>An outline that grows inside a layer grows the layer</title>
+<link rel="help" href="https://drafts.csswg.org/css-ui/#outline-props">
+<style>
+  body { margin: 0; background: white; }
+  /* The translucent mask gives #layer a buffer of its own, sized to what
+     it paints. The outline paints outside the border box, so when it gets
+     wider the buffer has to grow with it; the padding keeps the outline
+     inside the mask's border-box clip. */
+  #layer { position: absolute; left: 70px; top: 70px; width: 300px;
+           padding: 30px;
+           mask-image: linear-gradient(black 50%, rgba(0, 0, 0, 0.99)); }
+  #box { height: 40px; background: blue; outline: 1px solid green; }
+  #box.wide { outline-width: 10px; }
+</style>
+</head>
+<body>
+<div id="layer"><div id="box"></div></div>
+<script>
+  var shot = "outline-grown-in-layer.html.png";
+  function change() {
+    document.getElementById("box").className = "wide";
+  }
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      change();
+      return;
+    }
+    setTimeout(function () {
+      // The first capture settles the layer's rect from the 1px outline.
+      screenShot(shot, function () {
+        change();
+        screenShot(shot, function () {
+          // The box is at 100..400 x 100..140, the outline 10px around it.
+          console.assert(checkPixelColors(shot, [
+            { x: 95, y: 120, r: 0, g: 128, b: 0, a: 255 },
+            { x: 405, y: 120, r: 0, g: 128, b: 0, a: 255 },
+            { x: 250, y: 95, r: 0, g: 128, b: 0, a: 255 },
+            { x: 250, y: 145, r: 0, g: 128, b: 0, a: 255 },
+          ], 3), "outline painted all around the box");
+          testEnd();
+        });
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

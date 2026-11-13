@@ -2312,6 +2312,13 @@ void Node::markAncestorStackingContextVisibleRectDirty()
             f->markAncestorStackingContextVisibleRectDirty();
             return;
         }
+        if (n->isElement() && n->style() &&
+            n->style()->display() != DisplayValue::NoneDisplayValue) {
+            // Rendered but its box is not rebuilt yet: the context its old
+            // box owned cannot get this mark, so it must not be carried over
+            // to the new box.
+            n->webView()->prevStackingContextVisibleRects()[n].outdated = true;
+        }
         n = n->renderingParentNode();
     }
 }

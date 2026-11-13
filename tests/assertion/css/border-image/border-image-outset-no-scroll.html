@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A border image outset does not add scrollable overflow</title>
+<link rel="help" href="https://drafts.csswg.org/css-backgrounds/#border-image-outset">
+<style>
+  body { margin: 0; }
+  #scroller { width: 400px; height: 200px; overflow: auto; }
+  /* The image drawn outside the border box is ink overflow and does not
+     trigger scrolling, even where it reaches past the scroller. */
+  #box { margin: 50px 0 0 300px; width: 50px; height: 40px;
+         border: 10px solid;
+         border-image: url(support/green.svg) 1 / 10px / 50px stretch; }
+</style>
+</head>
+<body>
+<div id="scroller"><div id="box"></div></div>
+<script>
+  if (typeof testEnd !== "function") {
+    window.testEnd = function () { console.log("Test complete"); };
+  }
+  window.onload = function () {
+    var scroller = document.getElementById("scroller");
+    console.assert(scroller.scrollWidth === 400, "no horizontal overflow");
+    console.assert(scroller.scrollHeight === 200, "no vertical overflow");
+    testEnd();
+  };
+</script>
+</body>
+</html>

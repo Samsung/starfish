@@ -1319,11 +1319,13 @@ void FrameBox::applyBorderShapeClippingUsedInPaintingBoxShadow(
         canvas->lineTo(exteriorRect.x(),
                        exteriorRect.y() + exteriorRect.height());
         canvas->closePath();
+        // Even-odd cuts the border shape out however it winds: the rounded
+        // clip may come as a plain rect wound like the one above.
+        canvas->setFillRule(false);
         if (hasFrameBorderRadius()) {
             const LayoutRect rect(0, 0, width(), height());
             applyBorderRadiusClippingIfNeeds(canvas, rect);
         } else {
-            canvas->setFillRule(false);
             canvas->clip(borderRect);
         }
     }
@@ -4878,23 +4880,12 @@ LayoutRect FrameBox::frameVisibleRect()
                 outsets.right().computedBorderImageOutset(bRWidth, this);
             double bBOutset =
                 outsets.bottom().computedBorderImageOutset(bBWidth, this);
-            LayoutRect r = frameRect();
-            if (bLOutset > 0) {
-                r.setX(r.x() - bLOutset);
-                r.setWidth(r.width() + bLOutset);
-            }
-            if (bTOutset > 0) {
-                r.setY(r.x() - bTOutset);
-                r.setHeight(r.height() + bTOutset);
-            }
-            if (bROutset > 0) {
-                r.setWidth(r.width() + bROutset);
-            }
-            if (bBOutset > 0) {
-                r.setHeight(r.height() + bBOutset);
-            }
-
-            out.unite(r);
+            // The border image area is the border box grown by the outsets
+            // (css-backgrounds-3 border-image-outset), in this box's own
+            // coordinates like the rest of the rect.
+            out.unite(LayoutRect(-bLOutset, -bTOutset,
+                                 width() + bLOutset + bROutset,
+                                 height() + bTOutset + bBOutset));
         }
     }
 
@@ -4965,68 +4956,9 @@ LayoutRect FrameBox::frameVisibleFilterRect(FilterFunctions* filter)
 
 LayoutRect FrameBox::frameScrollingRect()
 {
-    LayoutRect out(0, 0, width(), height());
-    ComputedStyle* cs = style();
-    BorderData* border = nullptr;
-    FilterFunctions* filter = nullptr;
-
-    if (cs) {
-        size_t len = cs->rareComputedStyleData()->m_styles.size();
-        for (size_t i = 0; i < len; i++) {
-            switch (cs->rareComputedStyleData()->m_styles[i].keyKind()) {
-            case RareComputedStyleData::KeyKind::Border:
-                border = cs->rareComputedStyleData()
-                             ->m_styles[i]
-                             .m_value.m_borderData;
-                break;
-            default:
-                break;
-            }
-        }
-    }
-
-    if (border) {
-        const BorderImageData& bi = border->image();
-        if (!bi.isNull()) {
-            auto outsets = bi.outsets();
-            double bLWidth =
-                border->left().width().specifiedValue(width(), this);
-            double bTWidth =
-                border->top().width().specifiedValue(height(), this);
-            double bRWidth =
-                border->right().width().specifiedValue(width(), this);
-            double bBWidth =
-                border->bottom().width().specifiedValue(height(), this);
-
-            double bLOutset =
-                outsets.left().computedBorderImageOutset(bLWidth, this);
-            double bTOutset =
-                outsets.top().computedBorderImageOutset(bTWidth, this);
-            double bROutset =
-                outsets.right().computedBorderImageOutset(bRWidth, this);
-            double bBOutset =
-                outsets.bottom().computedBorderImageOutset(bBWidth, this);
-            LayoutRect r = frameRect();
-            if (bLOutset > 0) {
-                r.setX(r.x() - bLOutset);
-                r.setWidth(r.width() + bLOutset);
-            }
-            if (bTOutset > 0) {
-                r.setY(r.x() - bTOutset);
-                r.setHeight(r.height() + bTOutset);
-            }
-            if (bROutset > 0) {
-                r.setWidth(r.width() + bROutset);
-            }
-            if (bBOutset > 0) {
-                r.setHeight(r.height() + bBOutset);
-            }
-
-            out.unite(r);
-        }
-    }
-
-    return out;
+    // A border image drawn outside the border box is ink overflow and does
+    // not trigger scrolling (css-backgrounds-3 border-image-outset).
+    return LayoutRect(0, 0, width(), height());
 }
 
 static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b,

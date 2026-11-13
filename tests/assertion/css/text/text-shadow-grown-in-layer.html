@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A text-shadow that grows inside a layer grows the layer</title>
+<link rel="help" href="https://drafts.csswg.org/css-text-decor/#text-shadow-property">
+<style>
+  @font-face { font-family: Ahem;
+               src: url(../../../fixtures/resources/webkit/Ahem.ttf); }
+  body { margin: 0; background: white; }
+  /* The translucent mask gives #layer a buffer of its own, sized to what
+     it paints. The shadow paints outside the glyph, so when it moves
+     further out the buffer has to grow with it. */
+  #layer { position: absolute; left: 70px; top: 70px; width: 300px;
+           padding: 30px;
+           mask-image: linear-gradient(black 50%, rgba(0, 0, 0, 0.99)); }
+  #text { font: 40px/1 Ahem; color: blue; text-shadow: 1px 0 green; }
+  #text.far { text-shadow: 60px 0 green; }
+</style>
+</head>
+<body>
+<div id="layer"><div id="text">X</div></div>
+<script>
+  var shot = "text-shadow-grown-in-layer.html.png";
+  function change() {
+    document.getElementById("text").className = "far";
+  }
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      change();
+      return;
+    }
+    setTimeout(function () {
+      // The first capture settles the layer's rect from the 1px shadow.
+      screenShot(shot, function () {
+        change();
+        screenShot(shot, function () {
+          // The glyph is a 40px square at 100,100, its shadow 60px right.
+          console.assert(checkPixelColors(shot, [
+            { x: 180, y: 120, r: 0, g: 128, b: 0, a: 255 },
+            { x: 150, y: 120, r: 255, g: 255, b: 255, a: 255 },
+          ], 3), "whole shadow painted");
+          testEnd();
+        });
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

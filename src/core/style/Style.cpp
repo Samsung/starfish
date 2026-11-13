@@ -10327,6 +10327,50 @@ static bool markVisibleRectDirtyForMovedContext(Element* element,
     return true;
 }
 
+// A change only to ink overflow (outline, shadows, border-image) reaches the
+// rects of the contexts up to the first buffered one: the contexts above it
+// leave a buffered child out of theirs (see computeVisibleRect).
+static bool markVisibleRectDirtyForInkOverflow(Element* element,
+                                               const bool* damagedKeys)
+{
+    for (size_t i = 0; i < CSSStyleValuePair::KeyKindSize; i++) {
+        if (!damagedKeys[i]) {
+            continue;
+        }
+        switch (i) {
+        case CSSStyleValuePair::KeyKind::BoxShadow:
+        case CSSStyleValuePair::KeyKind::TextShadow:
+        case CSSStyleValuePair::KeyKind::OutlineColor:
+        case CSSStyleValuePair::KeyKind::OutlineStyle:
+        case CSSStyleValuePair::KeyKind::OutlineWidth:
+        case CSSStyleValuePair::KeyKind::OutlineOffset:
+        case CSSStyleValuePair::KeyKind::BorderImageSource:
+        case CSSStyleValuePair::KeyKind::BorderImageSlice:
+        case CSSStyleValuePair::KeyKind::BorderImageWidth:
+        case CSSStyleValuePair::KeyKind::BorderImageOutset:
+        case CSSStyleValuePair::KeyKind::BorderImageRepeat:
+            break;
+        default:
+            return false;
+        }
+    }
+    for (Frame* f = element->frame(); f; f = f->parent()) {
+        if (!f->isFrameBox()) {
+            continue;
+        }
+        if (StackingContext* sc = f->asFrameBox()->stackingContext()) {
+            sc->markVisibleRectDirtyUpToGraphicsBuffer();
+            return true;
+        }
+        if (f->needToEstablishStackingContext()) {
+            // A rebuilt box awaiting its context: the full mark keeps the
+            // old context's rect from being carried over.
+            return false;
+        }
+    }
+    return false;
+}
+
 // damagedKeyMask, when given, receives the properties compareStyle() found
 // changed, folded with ComputedStyle::explicitlyInheritedKeyBit().
 static ComputedStyleDamage applyStyleToElement(
@@ -10601,7 +10645,8 @@ static ComputedStyleDamage applyStyleToElement(
     if (damage & ComputedStyleDamage::
                      ComputedStyleDamageComputeStackingContextProperties) {
         if (!markVisibleRectDirtyForMovedContext(element, damagedKeys, oldStyle,
-                                                 style)) {
+                                                 style) &&
+            !markVisibleRectDirtyForInkOverflow(element, damagedKeys)) {
             element->markAncestorStackingContextVisibleRectDirty();
         }
         element->webView()->setNeedsComputeStackingContextProperties();

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A partial repaint inside a rounded box keeps its outer shadow out</title>
+<style>
+  body { margin: 0; background: white; }
+  /* The outer shadow is clipped out of the border box
+     (https://drafts.csswg.org/css-backgrounds/#shadow-shape). Only the middle
+     of the box is repainted - far from its rounded corners - and the page
+     must still show through there, not the shadow colour. */
+  .wrap { position: absolute; left: 20px; top: 20px; }
+  .pill { width: 400px; height: 20px; padding: 10px 0; border-radius: 17px;
+          box-shadow: 0 0 0 6px green; }
+  #dot { margin: 0 180px; width: 40px; height: 20px; background: green; }
+</style>
+</head>
+<body>
+<div class="wrap"><div class="pill"><div id="dot"></div></div></div>
+<script>
+  var shot = "box-shadow-rounded-partial-repaint.html.png";
+  function change() {
+    document.getElementById("dot").style.background = "transparent";
+  }
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      change();
+      return;
+    }
+    setTimeout(function () {
+      // The first capture settles the full first paint, so the change below
+      // is painted as a partial repaint.
+      screenShot(shot, function () {
+        change();
+        screenShot(shot, function () {
+          console.assert(checkPixelColors(shot, [
+            { x: 220, y: 40, r: 255, g: 255, b: 255, a: 255 },
+            { x: 201, y: 31, r: 255, g: 255, b: 255, a: 255 },
+          ], 3), "repainted middle of the box shows the page, not the shadow");
+          console.assert(checkPixelColors(shot, [
+            { x: 220, y: 17, r: 0, g: 128, b: 0, a: 255 },
+            { x: 220, y: 63, r: 0, g: 128, b: 0, a: 255 },
+          ], 3), "the shadow is painted around the box");
+          testEnd();
+        });
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

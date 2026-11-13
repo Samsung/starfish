@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A border image set out from a box offset in a layer is not cut</title>
+<link rel="help" href="https://drafts.csswg.org/css-backgrounds/#border-image-outset">
+<style>
+  body { margin: 0; background: white; }
+  /* The translucent mask gives #layer a buffer of its own, sized to what
+     it paints. The outset draws the border image outside the border box of
+     #box, which sits away from the layer's corner. */
+  #layer { position: absolute; left: 50px; top: 50px; width: 400px;
+           height: 200px;
+           mask-image: linear-gradient(black 50%, rgba(0, 0, 0, 0.99)); }
+  #box { margin: 60px 0 0 100px; width: 200px; height: 40px;
+         background: blue; border: 10px solid;
+         border-image: url(support/green.svg) 1 / 10px / 20px stretch; }
+</style>
+</head>
+<body>
+<div id="layer"><div id="box"></div></div>
+<script>
+  var shot = "border-image-outset-in-layer.html.png";
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      return;
+    }
+    setTimeout(function () {
+      screenShot(shot, function () {
+        // The border box is at 150..370 x 110..170; the image is drawn in
+        // the 10px band 20px outside it.
+        console.assert(checkPixelColors(shot, [
+          { x: 135, y: 140, r: 0, g: 128, b: 0, a: 255 },
+          { x: 260, y: 95, r: 0, g: 128, b: 0, a: 255 },
+          { x: 385, y: 140, r: 0, g: 128, b: 0, a: 255 },
+          { x: 260, y: 185, r: 0, g: 128, b: 0, a: 255 },
+        ], 3), "border image painted all around the box");
+        testEnd();
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

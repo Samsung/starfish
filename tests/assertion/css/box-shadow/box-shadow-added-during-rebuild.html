@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A shadow added while the boxes are being rebuilt grows its layer</title>
+<style>
+  body { margin: 0; background: white; }
+  /* The translucent mask gives #layer a buffer of its own, sized to what
+     it paints. A box-shadow paints outside the border box
+     (https://drafts.csswg.org/css-backgrounds/#box-shadow), so once the box
+     gets one the buffer has to grow to hold the whole ring; the padding
+     keeps the ring inside the mask's border-box clip. */
+  #layer { position: absolute; left: 70px; top: 70px; width: 300px;
+           padding: 30px;
+           mask-image: linear-gradient(black 50%, rgba(0, 0, 0, 0.99)); }
+  #mid, #box { position: relative; }
+  #box { height: 40px; background: blue; }
+  #box.ring { box-shadow: 0 0 0 10px green; }
+</style>
+</head>
+<body>
+<div id="layer"><div id="sibling"></div><div id="mid"><div id="box"></div></div></div>
+<script>
+  var shot = "box-shadow-added-during-rebuild.html.png";
+  function change() {
+    // Makes the boxes of #layer's subtree be rebuilt at the next rendering
+    // update, and the box gets its shadow before that.
+    document.getElementById("sibling").style.display = "flex";
+    document.getElementById("box").className = "ring";
+  }
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      change();
+      return;
+    }
+    setTimeout(function () {
+      // The first capture settles the layer's rect from the shadowless box.
+      screenShot(shot, function () {
+        change();
+        screenShot(shot, function () {
+          // The box is at 100..400 x 100..140, the ring 10px around it.
+          console.assert(checkPixelColors(shot, [
+            { x: 95, y: 120, r: 0, g: 128, b: 0, a: 255 },
+            { x: 405, y: 120, r: 0, g: 128, b: 0, a: 255 },
+            { x: 250, y: 95, r: 0, g: 128, b: 0, a: 255 },
+            { x: 250, y: 145, r: 0, g: 128, b: 0, a: 255 },
+          ], 3), "ring painted all around the box");
+          testEnd();
+        });
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

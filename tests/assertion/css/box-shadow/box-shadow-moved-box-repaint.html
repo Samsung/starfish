@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A box moved by layout repaints its outer shadow at both places</title>
+<style>
+  body { margin: 0; background: white; }
+  /* The block above grows, which moves the box down by layout alone. The
+     shadow paints outside the border box
+     (https://drafts.csswg.org/css-backgrounds/#box-shadow), so the moved box
+     shows the whole ring at its new place and none of it at the old one. */
+  .col { position: absolute; left: 100px; top: 40px; width: 400px; }
+  #pre { height: 0; }
+  .box { height: 40px; border-radius: 17px; box-shadow: 0 0 0 6px green; }
+  /* Reaches below the moved box, so the page's extent does not change with
+     the move and only the box itself can clear its old place. */
+  #below { position: absolute; left: 0; top: 400px; width: 10px; height: 10px; }
+</style>
+</head>
+<body>
+<div class="col"><div id="pre"></div><div class="box"></div></div>
+<div id="below"></div>
+<script>
+  var shot = "box-shadow-moved-box-repaint.html.png";
+  function change() {
+    document.getElementById("pre").style.height = "80px";
+    var r = document.querySelector(".box").getBoundingClientRect();
+    console.assert(r.top === 120, "box moved: " + r.top);
+  }
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      change();
+      return;
+    }
+    setTimeout(function () {
+      // The first capture settles the full first paint, so the move below
+      // is painted as a partial repaint.
+      screenShot(shot, function () {
+        change();
+        screenShot(shot, function () {
+          // The box is now at 100..500 x 120..160, the ring 6px around it.
+          console.assert(checkPixelColors(shot, [
+            { x: 97, y: 140, r: 0, g: 128, b: 0, a: 255 },
+            { x: 502, y: 140, r: 0, g: 128, b: 0, a: 255 },
+            { x: 300, y: 117, r: 0, g: 128, b: 0, a: 255 },
+            { x: 300, y: 163, r: 0, g: 128, b: 0, a: 255 },
+          ], 3), "ring painted all around the moved box");
+          // It was at 100..500 x 40..80.
+          console.assert(checkPixelColors(shot, [
+            { x: 97, y: 60, r: 255, g: 255, b: 255, a: 255 },
+            { x: 502, y: 60, r: 255, g: 255, b: 255, a: 255 },
+            { x: 300, y: 37, r: 255, g: 255, b: 255, a: 255 },
+          ], 3), "no ring left where the box was");
+          testEnd();
+        });
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

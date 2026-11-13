@@ -2167,7 +2167,8 @@ void StackingContext::collectPrevVisibleRect(
     info.visibleRect = m_rareData->m_visibleRect;
     info.visibleRectContentOnly = m_visibleRectContentOnly;
     info.wasGraphicsBuffer = m_needsGraphicsBuffer;
-    map[nd] = info;
+    // emplace keeps an outdated mark placed before the teardown.
+    map.emplace(nd, info);
 }
 
 void StackingContext::restorePrevVisibleRectIfPossible()
@@ -2190,8 +2191,9 @@ void StackingContext::restorePrevVisibleRectIfPossible()
         return;
     }
     const PrevStackingContextVisibleRect& info = iter->second;
-    if (info.ownerFrameRect != m_owner->frameRect()) {
-        // The owner moved or resized across the rebuild.
+    if (info.outdated || info.ownerFrameRect != m_owner->frameRect()) {
+        // A mutation the old context missed, or the owner moved or resized
+        // across the rebuild.
         return;
     }
     if (info.wasGraphicsBuffer) {

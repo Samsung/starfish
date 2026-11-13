@@ -23,6 +23,7 @@
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
@@ -2242,6 +2243,15 @@ void Frame::markAncestorStackingContextVisibleRectDirty()
             if (sc) {
                 sc->markVisibleRectDirtyUpward();
                 return;
+            }
+            if (f->needToEstablishStackingContext() && !f->isAnonymous()) {
+                // A frame-tree rebuild replaced this box and its context is
+                // not re-established yet, so the pre-rebuild context this
+                // mark cannot reach must not be carried over to the new one.
+                f->node()
+                    ->webView()
+                    ->prevStackingContextVisibleRects()[f->node()]
+                    .outdated = true;
             }
         }
     }

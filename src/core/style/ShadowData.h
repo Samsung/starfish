@@ -109,7 +109,11 @@ public:
     {
         return ((this->m_offsetX == o.m_offsetX) &&
                 (this->m_offsetY == o.m_offsetY) &&
-                (this->m_radius == o.m_radius) && (this->m_color == o.m_color));
+                (this->m_radius == o.m_radius) &&
+                (this->m_spreadDistance == o.m_spreadDistance) &&
+                (this->m_color == o.m_color) &&
+                (this->m_hasColor == o.m_hasColor) &&
+                (this->m_inset == o.m_inset));
     }
 
     bool operator!=(const ShadowData& o) const

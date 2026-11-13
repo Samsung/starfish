@@ -97,11 +97,15 @@ struct PrevStackingContextVisibleRect {
     LayoutRect visibleRect;
     LayoutRect visibleRectContentOnly;
     bool wasGraphicsBuffer{ false };
+    // Set when a mutation reached the node between the rebuild and the
+    // teardown (Frame::markAncestorStackingContextVisibleRectDirty): the old
+    // context missed that mark, so its rect is not carried over.
+    bool outdated{ false };
 };
 
-// Plain std map: entries live only inside one rendering pass (collected
-// during the SC tree teardown, consumed by the following properties pass),
-// and the Node keys are only compared, never dereferenced through the map.
+// Plain std map: entries live only until the next properties pass (outdated
+// marks from the preceding mutations, then the SC tree teardown, consumed by
+// that pass), and the Node keys are only compared, never dereferenced.
 typedef std::unordered_map<Node*, PrevStackingContextVisibleRect>
     PrevStackingContextVisibleRectMap;
 
