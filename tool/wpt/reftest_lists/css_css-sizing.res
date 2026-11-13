@@ -110,8 +110,8 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-017.
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-018.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-019.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-020.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-021.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-022.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-021.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-022.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-023.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-024.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/flex-aspect-ratio-025.html
@@ -172,8 +172,8 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-022.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-025.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-026.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-027.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-028.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-029.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-028.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-029.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-030.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-031.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/grid-aspect-ratio-032.html

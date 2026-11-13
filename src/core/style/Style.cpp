@@ -7313,7 +7313,10 @@ void StyleResolver::applyProperty(Element* element,
             style->setFlexBasis(parentStyle->flexBasis());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::FlexBasisValueKind) {
-            style->setFlexBasis(FlexBasisData(FlexBasisData::Width));
+            style->setFlexBasis(FlexBasisData(newCssValue.flexBasisValue() ==
+                                                      ContentFlexBasisValue
+                                                  ? FlexBasisData::Content
+                                                  : FlexBasisData::Width));
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Length) {
             Length length = newCssValue.cssLengthValue().toLength();

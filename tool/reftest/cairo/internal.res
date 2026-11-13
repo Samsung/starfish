@@ -352,6 +352,7 @@ tests/pixel/css/url/url-invalid.html
 tests/assertion/css/url/url-parsing.html
 tests/assertion/css/url/url-serialization.html
 tests/assertion/css/sizing/aspect-ratio-auto-side.html
+tests/assertion/css/sizing/flex-basis-content.html
 tests/assertion/css/sizing/margins-collapsed-through-top.html
 tests/assertion/css/sizing/replaced-flex-grid-item-size.html
 tests/assertion/css/sizing/replaced-flex-item-min-max.html

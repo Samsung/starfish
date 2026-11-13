@@ -1937,12 +1937,8 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
                 }
                 return std::make_pair(basisSize, false);
             }
-            // Without an aspect ratio or a definite cross size, an explicit
-            // `content` basis has no size to report here; an `auto` one is
-            // measured below.
-            if (flexBasis.isContent()) {
-                return std::make_pair(basisSize, false);
-            }
+            // Without an aspect ratio or a definite cross size the item
+            // is measured below.
         }
     }
 

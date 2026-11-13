@@ -1758,15 +1758,17 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
     bool hasNaturalSize =
         gridItem->isFrameReplaced() &&
         gridItem->asFrameReplaced()->intrinsicSize().m_hasAspectRatio;
-    bool keepsAutoWidth =
-        style->width().isAuto() &&
-        (hasNaturalSize || (hasRatio && style->height().isSpecified())) &&
-        !(style->justifySelfSpecifiedByUser() &&
-          style->justifySelf() == AlignItemValue::StretchAlignItemValue);
     bool keepsAutoHeight =
         (hasRatio || hasNaturalSize) && style->height().isAuto() &&
         !(style->alignSelfSpecifiedByUser() &&
           style->alignSelf() == AlignItemValue::StretchAlignItemValue);
+    // A height stretched on request is as definite as a specified one.
+    bool keepsAutoWidth =
+        style->width().isAuto() &&
+        (hasNaturalSize ||
+         (hasRatio && (style->height().isSpecified() || !keepsAutoHeight))) &&
+        !(style->justifySelfSpecifiedByUser() &&
+          style->justifySelf() == AlignItemValue::StretchAlignItemValue);
 
     // Apply specified width of grid item.
     LayoutUnit width = 0;
