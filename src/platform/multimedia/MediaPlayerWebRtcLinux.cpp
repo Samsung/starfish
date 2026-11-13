@@ -34,6 +34,8 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/threading/Mutex.h"
+#include "core/modules/threading/Locker.h"
 
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/HTMLMediaElement.h"
@@ -168,43 +170,57 @@ void MediaPlayerWebRtcLinux::onFrame(MediaStream::VideoFrameObserver* observer)
         return;
     }
 
-    STARFISH_ASSERT(observer->image() != nullptr);
+    if (!container()->isHTMLVideoElement()) {
+        return;
+    }
 
-    int videoFrameWidth = observer->width();
-    int videoFrameHeight = observer->height();
-
-    if (!m_canvasSurface || m_canvasSurface->width() != videoFrameWidth ||
-        m_canvasSurface->height() != videoFrameHeight) {
-        if (m_canvasSurface != nullptr) {
-            m_canvasSurface->detachNativeBuffer();
-            m_canvasSurface = nullptr;
+    int videoFrameWidth;
+    int videoFrameHeight;
+    bool resized = false;
+    {
+        // OnFrame() resizes and refills the image under this lock.
+        Locker<Mutex> lock(*observer->imageLock());
+        // stop() may have freed the image after this task was posted.
+        if (!observer->image()) {
+            return;
         }
-        if (container()->isHTMLVideoElement()) {
-            HTMLVideoElement* elem = container()->asHTMLVideoElement();
-            {
-                // FIXME!! : mong
-                elem->setWidth(videoFrameWidth);
-                elem->setHeight(videoFrameHeight);
-                elem->setNeedsLayout();
-            }
 
+        videoFrameWidth = observer->width();
+        videoFrameHeight = observer->height();
+
+        if (!m_canvasSurface || m_canvasSurface->width() != videoFrameWidth ||
+            m_canvasSurface->height() != videoFrameHeight) {
+            if (m_canvasSurface != nullptr) {
+                m_canvasSurface->detachNativeBuffer();
+                m_canvasSurface = nullptr;
+            }
             m_canvasSurface =
                 CanvasSurface::create(container()->webView()->renderer(),
                                       videoFrameWidth, videoFrameHeight);
+            resized = true;
         }
+
+        auto ptr = m_canvasSurface->mapBuffer();
+
+        memcpy(ptr, observer->image(),
+               videoFrameWidth * videoFrameHeight * observer->pixelStride());
+
+        m_canvasSurface->unmapBufferAndNotifyUpdatedRegion(
+            0, 0, m_canvasSurface->width(), m_canvasSurface->height());
     }
 
-    FrameReplaced* frame = container()->frame()->asFrameReplaced();
-    BrowsingContext* b = container()->window()->browsingContext();
-    auto ptr = m_canvasSurface->mapBuffer();
+    container()->window()->browsingContext()->setNeedsComposite();
 
-    memcpy(ptr, observer->image(),
-           videoFrameWidth * videoFrameHeight * observer->pixelStride());
-
-    m_canvasSurface->unmapBufferAndNotifyUpdatedRegion(
-        0, 0, m_canvasSurface->width(), m_canvasSurface->height());
-
-    b->setNeedsComposite();
+    // Attribute updates can run script that calls stop(), which waits for
+    // libwebrtc's sink lock; OnFrame() holds that lock while it takes
+    // imageLock, so these must stay outside imageLock.
+    if (resized) {
+        HTMLVideoElement* elem = container()->asHTMLVideoElement();
+        // FIXME!! : mong
+        elem->setWidth(videoFrameWidth);
+        elem->setHeight(videoFrameHeight);
+        elem->setNeedsLayout();
+    }
 }
 
 void MediaPlayerWebRtcLinux::onData(MediaStream::AudioTrackObserver* observer)
