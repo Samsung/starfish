@@ -448,21 +448,20 @@ STARFISH_BINDING_GROUPS_AUDIOWORKLET(FOR_EACH_FORWARD_DECLARATION)
     type* originalObj = (type*)(thisValue->asObject()->extraData()); \
     CHECK_CROSS_ORIGIN_WINDOW_THIS(type)
 
-#define GENERATE_WINDOW()                                                    \
-    Window* window = nullptr;                                                \
-    if (thisValue->isUndefinedOrNull()) {                                    \
-        window =                                                             \
-            (Window*)state->resolveCallerLexicalGlobalObject()->extraData(); \
-    } else {                                                                 \
-        /* A plain object has no extra data. Check it before the call. */    \
-        void* mayBeWindow = thisValue->toObject(state)->extraData();         \
-        if (!mayBeWindow ||                                                  \
-            !static_cast<ScriptWrappable*>(mayBeWindow)->isWindow()) {       \
-            THROW_EXCEPTION(ILLEGAL_INVOKE);                                 \
-        }                                                                    \
-        window = static_cast<Window*>(mayBeWindow);                          \
-        ScriptBindingSecurity::checkWindowMemberAccess(state, window,        \
-                                                       __func__);            \
+#define GENERATE_WINDOW()                                                 \
+    Window* window = nullptr;                                             \
+    if (thisValue->isUndefinedOrNull()) {                                 \
+        window = (Window*)state->context()->globalObject()->extraData();  \
+    } else {                                                              \
+        /* A plain object has no extra data. Check it before the call. */ \
+        void* mayBeWindow = thisValue->toObject(state)->extraData();      \
+        if (!mayBeWindow ||                                               \
+            !static_cast<ScriptWrappable*>(mayBeWindow)->isWindow()) {    \
+            THROW_EXCEPTION(ILLEGAL_INVOKE);                              \
+        }                                                                 \
+        window = static_cast<Window*>(mayBeWindow);                       \
+        ScriptBindingSecurity::checkWindowMemberAccess(state, window,     \
+                                                       __func__);         \
     }
 
 #define GENERATE_WORKER_GLOBALSCOPE(Type)                                    \

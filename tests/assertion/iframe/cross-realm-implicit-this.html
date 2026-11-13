@@ -1,0 +1,73 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Window members called with no this value act on their own realm's window</title>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[cross-realm-implicit-this] " + document.title);
+  };
+}
+</script>
+<body>
+<script>
+// WebIDL: an operation or attribute accessor called with a null or undefined
+// this value acts on the global object of its own realm, not on that of the
+// code that calls it. Here this window calls the members of an iframe's
+// window, so each must act on the iframe's window.
+var frame = document.createElement("iframe");
+document.body.appendChild(frame);
+var other = frame.contentWindow;
+
+console.assert(Reflect.get(other, "document", undefined) === other.document,
+  "document getter with no this value returns the iframe's document");
+console.assert(Reflect.get(other, "self", null) === other,
+  "self getter with no this value returns the iframe's window");
+
+var received = [];
+addEventListener("message", function (e) {
+  received.push("parent: " + e.data);
+});
+other.addEventListener("message", function (e) {
+  received.push("iframe: " + e.data);
+});
+other.postMessage.call(null, "posted", "*");
+
+// A timer of the iframe's window ends with that window: removing the iframe
+// before the timer is due must cancel it. One armed on this window instead
+// would still run.
+var timerRan = false;
+var otherSetTimeout = other.setTimeout;
+otherSetTimeout(function () { timerRan = true; }, 300);
+
+// The other way around: a script of the iframe calls a function of this
+// window that arms a timer with no this value. The timer is this window's,
+// so it outlives the iframe.
+var parentTimerRan = false;
+function armParentTimer() {
+  setTimeout(function () { parentTimerRan = true; }, 300);
+}
+var doc = frame.contentDocument;
+var script = doc.createElement("script");
+script.textContent = "parent.armParentTimer();";
+(doc.body || doc.documentElement).appendChild(script);
+
+setTimeout(function () {
+  console.assert(received.join() === "iframe: posted",
+    "postMessage with no this value posts to the iframe's window: " + received.join());
+  frame.remove();
+  setTimeout(function () {
+    console.assert(!timerRan,
+      "setTimeout with no this value arms a timer on the iframe's window");
+    console.assert(parentTimerRan,
+      "this window's setTimeout with no this value, called by the iframe's script, arms this window's timer");
+    testEnd();
+  }, 400);
+}, 100);
+</script>

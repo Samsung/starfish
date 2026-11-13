@@ -890,6 +890,7 @@ tests/assertion/iframe/iframe-resize-media-query.html
 tests/assertion/iframe/iframe-focus-mouse-event.html
 tests/assertion/iframe/fixed-iframe-click-in-scrolled-document.html
 tests/assertion/iframe/svg-image-iframe-no-script.html
+tests/assertion/iframe/cross-realm-implicit-this.html
 tests/assertion/fullscreen/fullscreen-element-above-sibling-stacking-context.html
 tests/assertion/event/click-on-scrolled-document.html
 tests/assertion/event/touch-generates-pointer-events.html
