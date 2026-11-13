@@ -142,6 +142,13 @@ libwebrtc::RTCConfiguration RTCConfiguration::genBackend()
     libwebrtc::IceServer* iceServers = config.ice_servers;
     int i = 0;
     for (auto& iceServer : m_iceServers) {
+        // https://w3c.github.io/webrtc-pc/#dom-rtcconfiguration-iceservers
+        // ICE servers above the implementation-defined limit are ignored.
+        // The spec requires a limit of at least 32; the libwebrtc wrapper
+        // only has kMaxIceServerSize slots.
+        if (i == libwebrtc::kMaxIceServerSize) {
+            break;
+        }
         libwebrtc::IceServer& server = iceServers[i];
         if (iceServer.hasUsername()) {
             server.username = libwebrtc::string(

@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebRTC ICE servers above the implementation limit</title>
+<script>
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "WebRTC ICE servers limit complete";
+    };
+}
+
+if (typeof RTCPeerConnection !== "function") {
+    testEnd();
+} else {
+    // webrtc-pc #dom-rtcconfiguration-iceservers: servers above the
+    // implementation-defined limit are ignored, not rejected.
+    const count = 40;
+    const iceServers = [];
+    for (let i = 1; i <= count; i++) {
+        iceServers.push({ urls: "stun:stun" + i + ".example.net" });
+    }
+    const pc = new RTCPeerConnection({ iceServers: iceServers });
+    const reported = pc.getConfiguration().iceServers;
+    console.assert(reported.length === count,
+                   "getConfiguration() keeps every server: " +
+                   reported.length);
+    console.assert(String(reported[count - 1].urls) ===
+                   "stun:stun" + count + ".example.net",
+                   "last server is reported as given: " +
+                   reported[count - 1].urls);
+    pc.close();
+    testEnd();
+}
+</script>
