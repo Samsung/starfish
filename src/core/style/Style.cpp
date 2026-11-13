@@ -3898,9 +3898,19 @@ void StyleResolver::applyProperty(Element* element,
             style->setMaxWidth(Length());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
-            // TODO: max-width can have the following keyword values
-            // stretch | fit-content | contain
-            STARFISH_UNIMPLEMENTED("MinWidth: css keyword value kind.");
+            switch (newCssValue.widthHeightKeywordValue()) {
+            case WidthHeightKeywordValue::MinContentValue:
+                style->setMaxWidth(Length(Length::Type::MinContent));
+                break;
+            case WidthHeightKeywordValue::MaxContentValue:
+                style->setMaxWidth(Length(Length::Type::MaxContent));
+                break;
+            case WidthHeightKeywordValue::FitContentValue:
+                style->setMaxWidth(Length(Length::Type::FitContent));
+                break;
+            default:
+                break;
+            }
         } else {
             Optional<Length> length = LengthUtil::convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
@@ -3957,7 +3967,12 @@ void StyleResolver::applyProperty(Element* element,
             style->setHeight(Length());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
-            STARFISH_UNIMPLEMENTED();
+            // css-sizing-3 §3.2: in the block axis the content-based
+            // keywords are equivalent to the automatic size.
+            if (newCssValue.widthHeightKeywordValue() !=
+                WidthHeightKeywordValue::AvailableValue) {
+                style->setHeight(Length());
+            }
         } else {
             Optional<Length> length = LengthUtil::convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());

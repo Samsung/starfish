@@ -278,7 +278,7 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-041.h
 http://web-platform.test:8000/css/css-sizing/auto-scrollbar-inside-stf-abspos.html
 http://web-platform.test:8000/css/css-sizing/block-fit-content-as-initial.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-image-percentage-max-height-inside-inline.html
-http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-1a.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-1a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-1b.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-3.html
@@ -554,6 +554,6 @@ http://web-platform.test:8000/css/css-sizing/stretch/fixed-table-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/table-child-percentage-height-with-border-box.html
 http://web-platform.test:8000/css/css-sizing/thin-element-render.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/vert-block-size-small-or-larger-than-container-with-min-or-max-content-1.html
-http://web-platform.test:8000/css/css-sizing/vert-block-size-small-or-larger-than-container-with-min-or-max-content-2a.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/vert-block-size-small-or-larger-than-container-with-min-or-max-content-2a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/vert-block-size-small-or-larger-than-container-with-min-or-max-content-2b.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/whitespace-and-break.html

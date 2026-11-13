@@ -964,7 +964,6 @@ public:
         , m_isWhiteSpaceAtLast(true)
         , m_isPendingWrapLine(false)
         , m_hasAppliedTextIndent(false)
-        , m_isIntrinsicMode(false)
     {
     }
 
@@ -1173,16 +1172,6 @@ public:
 
     LayoutUnit wordSpacing(const TextToken& token);
 
-    void setIntrinsicMode(bool isIntrinsicMode)
-    {
-        m_isIntrinsicMode = isIntrinsicMode;
-    }
-
-    bool isIntrinsicMode()
-    {
-        return m_isIntrinsicMode;
-    }
-
 private:
     LayoutContext& m_layoutContext;
     PreferredWidthContext* m_upperContext;
@@ -1202,7 +1191,6 @@ private:
     bool m_isWhiteSpaceAtLast;
     bool m_isPendingWrapLine;
     bool m_hasAppliedTextIndent;
-    bool m_isIntrinsicMode;
 
     bool canAppendToCurrentLineBox(LayoutUnit width);
     bool hasFloatingBoxAlreadyInLineBox() const

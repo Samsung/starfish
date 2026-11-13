@@ -5437,6 +5437,8 @@ LayoutUnit FrameBox::widthAfterApplyingMinMaxWidths(
     bool underComputingPreferredWidth)
 {
     ComputedStyle* style = Frame::style();
+    // CSS2 §10.4: min-width wins over a smaller max-width.
+    LayoutUnit usedMinWidth;
     if (style->minWidth().isSpecified()) {
         if (style->minWidth().isDefinite(!underComputingPreferredWidth)) {
             LayoutUnit minWidth =
@@ -5446,26 +5448,17 @@ LayoutUnit FrameBox::widthAfterApplyingMinMaxWidths(
             if (minWidth > width) {
                 return minWidth;
             }
+            usedMinWidth = minWidth;
         }
     } else if (style->minWidth().isIntrinsic()) {
-        LayoutUnit minWidth = intMaxForLayoutUnit;
         if (!underComputingPreferredWidth) {
-            if (!isFrameReplaced() && style->width().isSpecified()) {
-                LayoutUnit width =
-                    style->width().specifiedValue(parentWidth, this);
-                width = contentWidthAfterApplyingBoxSizing(width);
-                minWidth = width;
-            }
-
-            PreferredWidthContext p(ctx, nullptr, this, this, parentWidth);
-            p.setIntrinsicMode(true);
-            p.computePreferredWidth();
-            minWidth = std::max(p.preferredWidth(), p.preferredMinWidth());
-            if (minWidth != intMaxForLayoutUnit && minWidth > width) {
+            LayoutUnit minWidth = intrinsicContentWidth(
+                ctx, style->minWidth(), parentWidth - mbpWidth());
+            if (minWidth > width) {
                 return minWidth;
             }
+            usedMinWidth = minWidth;
         }
-
     } else if (isFlexItem()) {
         LayoutUnit minWidth = intMaxForLayoutUnit;
 
@@ -5499,11 +5492,32 @@ LayoutUnit FrameBox::widthAfterApplyingMinMaxWidths(
             maxWidth = contentWidthAfterApplyingBoxSizing(maxWidth);
 
             if (maxWidth >= 0 && maxWidth < width) {
-                return maxWidth;
+                return std::max(maxWidth, usedMinWidth);
             }
+        }
+    } else if (style->maxWidth().isIntrinsic() &&
+               !underComputingPreferredWidth) {
+        LayoutUnit maxWidth = intrinsicContentWidth(ctx, style->maxWidth(),
+                                                    parentWidth - mbpWidth());
+        if (maxWidth < width) {
+            return std::max(maxWidth, usedMinWidth);
         }
     }
     return width;
+}
+
+LayoutUnit FrameBox::intrinsicContentWidth(LayoutContext& ctx, Length keyword,
+                                           LayoutUnit availableWidth)
+{
+    // css-sizing-3 §5.1: the min-/max-content sizes ignore the available
+    // space; fit-content wraps at it, which yields
+    // min(max-content, max(min-content, available)).
+    LayoutUnit lastKnownWidth = keyword.isFitContent()
+                                    ? availableWidth
+                                    : LayoutUnit(intMaxForLayoutUnit);
+    PreferredWidthContext p(ctx, nullptr, this, this, lastKnownWidth);
+    p.computePreferredWidth();
+    return keyword.isMinContent() ? p.preferredMinWidth() : p.preferredWidth();
 }
 
 LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,

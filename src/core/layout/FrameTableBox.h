@@ -289,6 +289,9 @@ public:
         return m_tableRect;
     }
 
+    // A definite width, min-width or max-width as a border-box width.
+    LayoutUnit definiteBorderBoxWidth(Length width);
+
     virtual void paintBackgroundAndBorders(Canvas* canvas) override;
     virtual Unit::Rect makeRect(BoxValue box) override;
 
@@ -362,9 +365,28 @@ private:
                                          GCVector<Cell*>& headers, int deltaX,
                                          int deltaY);
 
-    void calCellWidth(LayoutContext& ctx);
+    // Gathers each column's min/max widths from the cells spanning it. It
+    // writes only what the content decides (slot structure, each cell's
+    // min/max widths) unless forLayout, so a preferred-width query leaves
+    // the laid-out columns and cells alone.
+    void collectColumnWidthInfo(LayoutContext& ctx,
+                                GCVector<ColSizeStruct*>& columnWidths,
+                                bool forLayout);
+    // Returns the given table width (border box), absent for an auto-sized
+    // table.
+    Optional<LayoutUnit> calCellWidth(LayoutContext& ctx);
+    // The captions' min-content width (CAPMIN, css-tables-3 §3.9.1),
+    // margin box.
+    LayoutUnit captionMinContentWidth(LayoutContext& ctx);
     void calCellWidthsWithColspans();
-    void layoutWidth(LayoutContext& ctx);
+    void layoutWidth(LayoutContext& ctx, Optional<LayoutUnit> givenWidth);
+    // A min-width or max-width as a border-box width. The content-based
+    // keywords resolve to the given border-box min-/max-content widths,
+    // fit-content wrapping at availableWidth.
+    LayoutUnit resolveMinMaxWidth(Length width, LayoutUnit parentContentWidth,
+                                  LayoutUnit availableWidth,
+                                  LayoutUnit minContentWidth,
+                                  LayoutUnit maxContentWidth);
     void layoutHeight(LayoutContext& ctx);
 
     LayoutUnit calCellHeightWithRowspan(FrameTableCellBox* cell, size_t rowId,
@@ -395,7 +417,7 @@ private:
     void collectColumnWidths(GCVector<ColSizeStruct*>& columnWidthsSoFar,
                              GCVector<ColSizeStruct*>& columnWidths);
 
-    bool resetColspanIfPossible();
+    bool resetColspanIfPossible(GCVector<ColSizeStruct*>& columnWidths);
 
     // This function returns nullptr if the table has no non-empty sections.
     FrameTableSectionBox* firstNonEmptySectionBoxInVisualOrder();

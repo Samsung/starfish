@@ -113,7 +113,6 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
         LayoutUnit contentWidth;
 
         if (width.isIntrinsicOrAuto()) {
-            // TODO: implement width: 'max-content' and 'fit-content'
             bool shouldComputeWithNormalBlockWidthRule =
                 isNormalFlow() && !isAtomicInlineLevel() &&
                 !width.isIntrinsic();
@@ -136,12 +135,9 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                 }
             }
 
-            if (width.isFitContent() || width.isMinContent() ||
-                width.isMaxContent()) {
-                PreferredWidthContext p(ctx, nullptr, this, this,
-                                        lastKnownWidth);
-                p.computePreferredWidth();
-                contentWidth = p.preferredWidth();
+            if (width.isIntrinsic()) {
+                contentWidth =
+                    intrinsicContentWidth(ctx, width, lastKnownWidth);
             } else if (isAbsolutePositioned() && width.isAuto() &&
                        left.isSpecified() && right.isSpecified() &&
                        !(node() && node()->isHTMLButtonElement())) {

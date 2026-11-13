@@ -1,0 +1,46 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Flex items keep a fractional cross size when it is fixed for layout</title>
+<style>
+  .fc { display: flex; flex-direction: column; }
+  .wb { display: -webkit-box; -webkit-box-orient: vertical; }
+  /* Two 25.25px boxes with no whitespace between them: one 10px line when the
+     item is at least 50.5px wide, two lines (20px) when it is any narrower. */
+  .item { font-size: 0; line-height: 0; }
+  .item > span { display: inline-block; vertical-align: top; width: 25.25px; height: 10px; background: green; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[flex-cross-size-fractional] " + document.title);
+  };
+}
+</script>
+<div style="display: inline-block"><div class="fc" id="shrinkColumn"><div class="item"><span></span><span></span></div></div></div>
+<div class="fc" id="fixedColumn" style="width: 50.5px"><div class="item"><span></span><span></span></div></div>
+<div class="fc" id="wrapColumn" style="width: 50.5px; flex-wrap: wrap"><div class="item"><span></span><span></span></div></div>
+<div style="display: inline-block"><div class="wb" id="webkitBox"><div class="item"><span></span><span></span></div></div></div>
+<div style="display: flex; height: 33.5px"><div id="rowStretch" style="width: 10px"></div></div>
+<script>
+// css-flexbox-1 #algo-main-item, #algo-stretch and #min-size-auto: the
+// cross size an item is measured or stretched at is the container's
+// (possibly fractional) cross size; nothing in the algorithm rounds it,
+// so content that fits that width must not wrap.
+function h(id) { return document.getElementById(id).getBoundingClientRect().height; }
+function w(id) { return document.getElementById(id).firstElementChild.getBoundingClientRect().width; }
+
+console.assert(h("shrinkColumn") === 10, "shrink-to-fit column flex height: " + h("shrinkColumn"));
+console.assert(h("fixedColumn") === 10, "50.5px column flex height: " + h("fixedColumn"));
+console.assert(w("wrapColumn") === 50.5, "stretched item width in wrapping column flex: " + w("wrapColumn"));
+console.assert(h("wrapColumn") === 10, "wrapping column flex height: " + h("wrapColumn"));
+console.assert(h("webkitBox") === 10, "shrink-to-fit vertical -webkit-box height: " + h("webkitBox"));
+console.assert(h("rowStretch") === 33.5, "stretched row item height: " + h("rowStretch"));
+testEnd();
+</script>

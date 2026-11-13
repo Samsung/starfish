@@ -82,7 +82,10 @@ void FrameTableCellBox::collectCellWidthInfo(
             m_maxCellWidth = mw;
         }
     }
+}
 
+void FrameTableCellBox::useMaxCellWidth()
+{
     LayoutUnit oldContentWidth = contentWidth();
     setContentWidth(m_maxCellWidth - borderWidth() - paddingWidth());
     if (oldContentWidth != contentWidth()) {

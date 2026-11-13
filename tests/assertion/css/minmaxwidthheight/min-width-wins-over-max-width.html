@@ -1,0 +1,36 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>min-width wins over a smaller max-width</title>
+<style>
+  body { margin: 0; }
+  .wide { width: 400px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[min-width-wins-over-max-width] " + document.title);
+  };
+}
+</script>
+<div class="wide"><div id="fixed" style="width: 300px; min-width: 200px; max-width: 100px"></div></div>
+<div class="wide"><div id="auto" style="min-width: 200px; max-width: 100px"></div></div>
+<div class="wide"><div id="percent" style="min-width: 50%; max-width: 100px"></div></div>
+<script>
+// CSS2 §10.4: the tentative width is clamped to max-width first and then to
+// min-width, so when min-width exceeds max-width the min-width is used.
+function checkWidth(id, expected) {
+  var w = document.getElementById(id).getBoundingClientRect().width;
+  console.assert(Math.abs(w - expected) < 0.01, id + ": " + w + " != " + expected);
+}
+checkWidth("fixed", 200);
+checkWidth("auto", 200);
+checkWidth("percent", 200);
+testEnd();
+</script>

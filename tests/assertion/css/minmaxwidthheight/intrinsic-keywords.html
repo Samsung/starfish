@@ -1,0 +1,61 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>min-width, max-width and height with content-based keywords</title>
+<style>
+  body { margin: 0; }
+  /* Three unbreakable 30px, 50px and 20px pieces with zero-width break
+     opportunities between them: min-content 50px, max-content 100px. */
+  .z { font-size: 0; }
+  .z i { display: inline-block; height: 10px; background: green; }
+  .a { width: 30px; } .b { width: 50px; } .c { width: 20px; }
+  .wide { width: 400px; }
+  .narrow { width: 60px; }
+  .tall { height: 50px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[intrinsic-keywords] " + document.title);
+  };
+}
+</script>
+<div class="wide"><div id="minWidthMin" class="z" style="width: 0; min-width: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="narrow"><div id="minWidthMax" class="z" style="width: 0; min-width: max-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="narrow"><div id="minWidthFit" class="z" style="width: 0; min-width: fit-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="wide"><div id="maxWidthMin" class="z" style="max-width: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="wide"><div id="maxWidthMax" class="z" style="max-width: max-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="wide"><div id="maxWidthFit" class="z" style="max-width: fit-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="wide"><div class="z" style="display: flex"><div id="flexItemMaxWidthMin" style="flex-grow: 1; max-width: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div></div>
+<div id="heightMin" class="tall" style="height: min-content"><div style="height: 10px"></div></div>
+<div id="heightMax" class="tall" style="height: max-content"><div style="height: 10px"></div></div>
+<div id="heightFit" class="tall" style="height: fit-content"><div style="height: 10px"></div></div>
+<script>
+// css-sizing-3 §3.2: the content-based keywords resolve to the box's
+// min-content, max-content or fit-content size in the inline axis; in the
+// block axis they are equivalent to the automatic size, so they replace any
+// earlier height instead of leaving it in effect.
+function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+function checkWidth(id, expected) { console.assert(Math.abs(rect(id).width - expected) < 0.01, id + ": " + rect(id).width + " != " + expected); }
+function checkHeight(id, expected) { console.assert(Math.abs(rect(id).height - expected) < 0.01, id + ": " + rect(id).height + " != " + expected); }
+
+checkWidth("minWidthMin", 50);
+checkWidth("minWidthMax", 100);
+checkWidth("minWidthFit", 60);
+checkWidth("maxWidthMin", 50);
+checkWidth("maxWidthMax", 100);
+checkWidth("maxWidthFit", 100);
+checkWidth("flexItemMaxWidthMin", 50);
+console.assert(getComputedStyle(document.getElementById("maxWidthMin")).maxWidth === "min-content",
+               "max-width computed value: " + getComputedStyle(document.getElementById("maxWidthMin")).maxWidth);
+checkHeight("heightMin", 10);
+checkHeight("heightMax", 10);
+checkHeight("heightFit", 10);
+testEnd();
+</script>

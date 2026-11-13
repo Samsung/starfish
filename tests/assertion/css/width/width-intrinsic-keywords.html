@@ -1,0 +1,80 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>width: min-content, max-content and fit-content</title>
+<style>
+  body { margin: 0; }
+  /* Three unbreakable 30px, 50px and 20px pieces with zero-width break
+     opportunities between them: min-content 50px, max-content 100px. */
+  .z { font-size: 0; }
+  .z i { display: inline-block; height: 10px; background: green; }
+  .a { width: 30px; } .b { width: 50px; } .c { width: 20px; }
+  .wide { width: 400px; }
+  .narrow { width: 60px; }
+  .row { display: flex; }
+  .col { display: flex; flex-direction: column; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[width-intrinsic-keywords] " + document.title);
+  };
+}
+</script>
+<div class="wide"><div id="blockMin" class="z" style="width: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="narrow"><div id="blockMinNarrow" class="z" style="width: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="narrow"><div id="blockMax" class="z" style="width: max-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="narrow"><div id="blockFit" class="z" style="width: fit-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="wide"><div id="nestedMin" class="z" style="width: min-content"><div><i class="a"></i> <i class="b"></i></div><div><i class="c"></i> <i class="c"></i></div></div></div>
+<div class="wide"><div id="columnFlexMin" class="z col" style="width: min-content"><div><i class="a"></i> <i class="b"></i></div><div><i class="c"></i> <i class="c"></i></div></div></div>
+<div class="narrow"><div id="rowFlexMin" class="z row" style="width: min-content"><div><i class="a"></i> <i class="b"></i></div><div><i class="c"></i> <i class="c"></i></div></div></div>
+<div class="wide"><div id="wrapFlexMin" class="z row" style="width: min-content; flex-wrap: wrap"><div><i class="a"></i> <i class="b"></i></div><div><i class="c"></i> <i class="c"></i></div></div></div>
+<div class="wide z"><div id="inlineBlockMin" style="display: inline-block; width: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="wide z" style="height: 30px"><div id="floatMin" style="float: left; width: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="wide z" style="position: relative; height: 30px"><div id="absMin" style="position: absolute; left: 0; right: 0; width: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="wide"><div id="borderBoxMin" class="z" style="width: min-content; box-sizing: border-box; padding: 0 5px; border: 2px solid"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div class="wide"><div class="z row"><div id="flexItemMin" style="width: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div></div>
+<div class="wide"><div class="z col"><div id="columnItemMin" style="width: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div></div>
+<div class="wide z"><div id="shrinkToFitParent" style="display: inline-block"><div style="width: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div></div>
+<div class="narrow z"><div id="shrinkToFitParentMax" style="display: inline-block"><div style="width: max-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div></div>
+<div class="wide"><div id="textIndentMax" class="z" style="width: max-content; text-indent: 10%"><i class="a"></i> <i class="b"></i></div></div>
+<div class="wide"><div id="flexBasisPercentMax" class="z" style="width: max-content; padding: 0 3px"><div class="row"><div style="flex-basis: 50%"><i class="a"></i></div><div><i class="b"></i></div></div></div></div>
+<div class="wide"><table id="tableFit" class="z" style="width: fit-content; border-spacing: 0"><tr><td style="padding: 0"><i class="a"></i> <i class="b"></i></td></tr></table></div>
+<div class="wide" style="font: 16px sans-serif"><div id="longWordMin" style="width: min-content">a <span id="longWord">unbreakablelongword</span> b</div></div>
+<script>
+// css-sizing-3 §3.2 / §5: min-content is the narrowest size the content fits
+// without avoidable overflow, max-content the size it takes without any soft
+// wrap, fit-content min(max-content, max(min-content, available)); none of
+// the keywords is affected by box-sizing, and a box sized by one contributes
+// that size to a shrink-to-fit ancestor.
+function w(id) { return document.getElementById(id).getBoundingClientRect().width; }
+function check(id, expected) { console.assert(Math.abs(w(id) - expected) < 0.01, id + ": " + w(id) + " != " + expected); }
+
+check("blockMin", 50);
+check("blockMinNarrow", 50);
+check("blockMax", 100);
+check("blockFit", 60);
+check("nestedMin", 50);
+check("columnFlexMin", 50);
+check("rowFlexMin", 70);
+check("wrapFlexMin", 50);
+check("inlineBlockMin", 50);
+check("floatMin", 50);
+check("absMin", 50);
+check("borderBoxMin", 64);
+check("flexItemMin", 50);
+check("columnItemMin", 50);
+check("shrinkToFitParent", 50);
+check("shrinkToFitParentMax", 100);
+check("textIndentMax", 80);
+check("flexBasisPercentMax", 86);
+check("tableFit", 80);
+check("longWordMin", w("longWord"));
+testEnd();
+</script>

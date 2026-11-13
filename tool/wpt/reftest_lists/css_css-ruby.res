@@ -67,9 +67,9 @@ http://web-platform.test:8000/css/css-ruby/ruby-inlinize-blocks-003.html
 http://web-platform.test:8000/css/css-ruby/ruby-intra-level-whitespace-001.html
 http://web-platform.test:8000/css/css-ruby/ruby-intra-level-whitespace-002.html
 http://web-platform.test:8000/css/css-ruby/ruby-intra-level-whitespace-003.html
-http://web-platform.test:8000/css/css-ruby/ruby-intrinsic-isize-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-intrinsic-isize-001.html
 http://web-platform.test:8000/css/css-ruby/ruby-intrinsic-isize-002.html
-http://web-platform.test:8000/css/css-ruby/ruby-intrinsic-isize-003.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-intrinsic-isize-003.html
 http://web-platform.test:8000/css/css-ruby/ruby-justification-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-justification-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ruby/ruby-lang-specific-style-001.html

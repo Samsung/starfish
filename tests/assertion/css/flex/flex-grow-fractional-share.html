@@ -1,0 +1,36 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Flexed main sizes are not rounded up to whole pixels</title>
+<style>
+  #c { display: flex; width: 100px; height: 10px; }
+  #c > div { flex: 1 1 0; min-width: 0; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[flex-grow-fractional-share] " + document.title);
+  };
+}
+</script>
+<div id="c"><div></div><div></div><div></div></div>
+<script>
+// css-flexbox-1 #resolve-flexible-lengths: each item gets its flex base
+// size plus its share of the free space (100px / 3); the items fill the
+// container instead of overflowing it.
+var c = document.getElementById("c");
+var right = c.getBoundingClientRect().right;
+for (var i = 0; i < 3; i++) {
+  var w = c.children[i].getBoundingClientRect().width;
+  console.assert(Math.abs(w - 100 / 3) < 0.05, "item " + i + " width: " + w);
+}
+var lastRight = c.lastElementChild.getBoundingClientRect().right;
+console.assert(Math.abs(lastRight - right) < 0.05, "last item right " + lastRight + " vs container " + right);
+testEnd();
+</script>

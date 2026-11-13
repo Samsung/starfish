@@ -386,6 +386,8 @@ tests/pixel/css/position2/left-margin-fixed-right-margin-fixed-width-auto.html
 tests/pixel/css/position2/left-margin-auto-right-margin-fixed-width-auto.html
 tests/pixel/css/table/table_fixed_20.html
 tests/assertion/css/table/table_border-spacing_computed_value.html
+tests/assertion/css/table/table-min-max-width.html
+tests/crash/table-intrinsic-min-max-width.html
 tests/pixel/css/border/next-line-dont-show-end-mbp.html
 tests/assertion/event/click.html
 tests/assertion/event/click2.html
@@ -398,10 +400,13 @@ tests/pixel/css/position2/left-margin-fixed-right-margin-auto-width-fixed.html
 tests/pixel/css/minmaxwidthheight/min_max_width_height_with_replaced.html
 tests/pixel/css/minmaxwidthheight/minwidth_mincontent_sample.html
 tests/assertion/css/minmaxwidthheight/replaced_percent_max_width_shrink_to_fit.html
+tests/assertion/css/minmaxwidthheight/intrinsic-keywords.html
+tests/assertion/css/minmaxwidthheight/min-width-wins-over-max-width.html
 tests/pixel/css/text/text-indent-basic.html
 tests/pixel/css/text/text-align-001.html
 tests/pixel/css/width/dont-break-line.html
 tests/assertion/css/width/replaced_percent_width_resolves_against_content_width.html
+tests/assertion/css/width/width-intrinsic-keywords.html
 tests/pixel/css/text/word-concatenating.html
 tests/assertion/css/text/text-wrap-mode.html
 tests/pixel/css/border/starting_unprocessed_mbp_with_pre.html
@@ -739,6 +744,7 @@ tests/assertion/css/flex/flex_auto_min_size_nested_stretch.html
 tests/assertion/css/flex/flex_auto_min_size_specified_cap.html
 tests/assertion/css/flex/flex_auto_min_size_specified_cap_border_box.html
 tests/assertion/css/flex/flex_basis_size_01.html
+tests/assertion/css/flex/flex-grow-fractional-share.html
 tests/pixel/css/flex/flex_basis_size_02.html
 tests/assertion/css/flex/flex_item_margin-inline.html
 tests/assertion/css/flex/flex_item_padding-inline.html
@@ -773,6 +779,7 @@ tests/assertion/css/flex/flex-item-minheight.html
 tests/assertion/css/flex/flex_row-gap_axis_role.html
 tests/assertion/css/flex/flex_row-gap_percentage_block_size.html
 tests/assertion/css/flex/nested-inline-flex-details-relayout.html
+tests/assertion/css/flex/flex-cross-size-fractional.html
 tests/assertion/svg/animation/animate_begin_endEvent.html
 tests/assertion/svg/animation/animate_beginElement_01.html
 tests/assertion/svg/animation/animate_keySplines_computedStyle.html

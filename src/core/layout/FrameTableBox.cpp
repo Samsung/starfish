@@ -71,9 +71,9 @@ void FrameTableBox::computeTableWidth(LayoutContext& ctx)
 {
     formingATable();
 
-    calCellWidth(ctx);
+    Optional<LayoutUnit> givenWidth = calCellWidth(ctx);
     calCellWidthsWithColspans();
-    layoutWidth(ctx);
+    layoutWidth(ctx, givenWidth);
 }
 
 void FrameTableBox::layoutTable(LayoutContext& ctx)
@@ -416,7 +416,8 @@ void FrameTableBox::calSpecifiedWidthInPixel(
     }
 }
 
-void FrameTableBox::calCellWidth(LayoutContext& ctx)
+void FrameTableBox::collectColumnWidthInfo(
+    LayoutContext& ctx, GCVector<ColSizeStruct*>& columnWidths, bool forLayout)
 {
     resetIfNeeds(ctx);
 
@@ -435,14 +436,21 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         // similar to "table-layout: auto", i.e., we perform the following
         // to get:
         //  * min/max cell widths of the table if "width: auto"
-        m_columnWidths.clear();
+        columnWidths.clear();
         for (Frame* c = firstChild(); c; c = c->next()) {
             if (c->isFrameTableSectionBox()) {
                 c->asFrameTableSectionBox()->collectCellWidthInfo(ctx);
                 collectColumnWidths(
-                    m_columnWidths,
-                    c->asFrameTableSectionBox()->columnWidths());
+                    columnWidths, c->asFrameTableSectionBox()->columnWidths());
             }
+        }
+
+        if (forLayout) {
+            forEachRowStruct([](RowStruct* rowStruct, size_t _rowId) {
+                for (auto& cellStruct : rowStruct->cells()) {
+                    cellStruct->cell()->useMaxCellWidth();
+                }
+            });
         }
 
         // Do not need to run the following steps in the second run
@@ -456,12 +464,16 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         // If there are cells that have updated colspans to "colspan=1", we
         // need to recalculate absoluteColumnIndexes for the cells
         // one more time.
-        bool colspanUpdated = resetColspanIfPossible();
+        bool colspanUpdated = resetColspanIfPossible(columnWidths);
         if (!colspanUpdated) {
             break;
         }
     }
+}
 
+Optional<LayoutUnit> FrameTableBox::calCellWidth(LayoutContext& ctx)
+{
+    collectColumnWidthInfo(ctx, m_columnWidths, true);
     collectColBoxes();
 
     // 0. Get the cells in the first row. These are used to determine:
@@ -535,10 +547,20 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     // except when table width is given, we simple use the width (following how
     // blink works)
     LayoutUnit parentContentWidth = ctx.parentContentWidth(this);
+    // The table's min-content and max-content widths (border box), which
+    // its captions bound from below (css-tables-3 §3.9.1).
+    LayoutUnit captionWidth =
+        captionMinContentWidth(ctx) + borderWidth() + paddingWidth();
+    LayoutUnit minContentWidth =
+        std::max(minTableWidth - marginWidth(), captionWidth);
+    LayoutUnit maxContentWidth =
+        std::max(maxTableWidth - marginWidth(), captionWidth);
     LayoutUnit tableWidth;
     bool hasTableWidth = false;
     Length width = style()->width();
-    if (width.isAuto()) {
+    // css-tables-3 §3.9.2: the auto table width is already
+    // min(max-content, max(min-content, available)), i.e. fit-content.
+    if (width.isAuto() || width.isFitContent()) {
         tableWidth = std::max(minTableWidth, parentContentWidth);
         tableWidth -= marginWidth();
     } else {
@@ -546,27 +568,48 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         hasTableWidth = true;
 
         if (width.isDefinite(false)) {
-            LayoutUnit unused;
-            tableWidth = width.specifiedValue(unused, this);
-
-            // For CSS table, width refers to the table content width.
-            // For HTML table, width refers to table content width + border +
-            // padding.
-            if (!isAnonymous() && !node()->isHTMLTableElement()) {
-                tableWidth += borderWidth() + paddingWidth();
-            }
+            tableWidth = definiteBorderBoxWidth(width);
         } else if (width.isPercent()) {
             tableWidth = width.percentValue(parentContentWidth);
         } else if (width.isMaxContent()) {
-            tableWidth = maxTableWidth;
+            tableWidth = maxContentWidth;
         } else if (width.isMinContent()) {
-            tableWidth = minTableWidth;
+            tableWidth = minContentWidth;
         } else {
             STARFISH_UNSUPPORTED("HTMLTable property: unsupported width kind");
         }
+    }
 
-        tableWidth = widthAfterApplyingMinMaxWidths(ctx, tableWidth,
-                                                    parentContentWidth, false);
+    // css-tables-3 §3.9.3: min-width and max-width clamp the table width,
+    // min-width winning (CSS2 §10.4). Their content-based keywords resolve to
+    // the widths above; intrinsicContentWidth() would re-enter this function
+    // through computePreferredWidth().
+    auto resolve = [&](Length l) {
+        return resolveMinMaxWidth(l, parentContentWidth,
+                                  parentContentWidth - marginWidth(),
+                                  minContentWidth, maxContentWidth);
+    };
+    Length maxWidth = style()->maxWidth();
+    if (maxWidth.isDefinite(true) || maxWidth.isIntrinsic()) {
+        tableWidth = std::min(tableWidth, resolve(maxWidth));
+        // css-tables-3: fixed-mode column widths don't depend on the content.
+        if (!tableLayoutFixed || !hasTableWidth) {
+            tableWidth = std::max(tableWidth, minContentWidth);
+        }
+    }
+    Length minWidth = style()->minWidth();
+    if (minWidth.isDefinite(true) || minWidth.isIntrinsic()) {
+        // shortcut: an auto table is taken to end up min(max-content,
+        // available) wide, so one widened by percentage columns can shrink
+        // to min-width; upgrade when its max-content counts those columns.
+        LayoutUnit usedWidth =
+            hasTableWidth ? tableWidth : std::min(maxContentWidth, tableWidth);
+        LayoutUnit resolvedMinWidth = resolve(minWidth);
+        if (resolvedMinWidth > usedWidth) {
+            // Only a given table width stretches the columns past max-content.
+            tableWidth = resolvedMinWidth;
+            hasTableWidth = true;
+        }
     }
 
     bool borderCollapseSeparate =
@@ -1062,6 +1105,74 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
             }
         }
     }
+
+    return hasTableWidth ? Optional<LayoutUnit>(tableWidth)
+                         : Optional<LayoutUnit>();
+}
+
+LayoutUnit FrameTableBox::captionMinContentWidth(LayoutContext& ctx)
+{
+    LayoutUnit captionWidth;
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (!c->isFrameTableCaptionBox()) {
+            continue;
+        }
+        FrameTableCaptionBox* caption = c->asFrameTableCaptionBox();
+        // Its border and padding may not be laid out yet.
+        MBPRestorer restorer(caption);
+        caption->computeBorderMarginPadding(
+            ctx, containingBlock(caption)->contentWidth());
+        Length width = caption->style()->width();
+        LayoutUnit contentWidth;
+        if (width.isDefinite(false)) {
+            contentWidth = caption->contentWidthAfterApplyingBoxSizing(
+                width.specifiedValue(LayoutUnit(), caption));
+        } else {
+            contentWidth = caption->intrinsicContentWidth(
+                ctx, Length(Length::Type::MinContent), LayoutUnit());
+        }
+        captionWidth =
+            std::max(captionWidth, contentWidth + caption->mbpWidth());
+    }
+    return captionWidth;
+}
+
+LayoutUnit FrameTableBox::definiteBorderBoxWidth(Length width)
+{
+    LayoutUnit unused;
+    LayoutUnit w = width.specifiedValue(unused, this);
+
+    // For CSS table, width refers to the table content width unless
+    // box-sizing says border-box. For HTML table, width refers to table
+    // content width + border + padding.
+    if (!isAnonymous() && !node()->isHTMLTableElement() &&
+        style()->boxSizing() != BoxSizingValue::BorderBoxBoxSizingValue) {
+        w += borderWidth() + paddingWidth();
+    }
+    return w;
+}
+
+LayoutUnit FrameTableBox::resolveMinMaxWidth(Length width,
+                                             LayoutUnit parentContentWidth,
+                                             LayoutUnit availableWidth,
+                                             LayoutUnit minContentWidth,
+                                             LayoutUnit maxContentWidth)
+{
+    if (width.isMinContent()) {
+        return minContentWidth;
+    }
+    if (width.isMaxContent()) {
+        return maxContentWidth;
+    }
+    if (width.isFitContent()) {
+        return std::min(maxContentWidth,
+                        std::max(minContentWidth, availableWidth));
+    }
+    if (width.isDefinite(false)) {
+        return definiteBorderBoxWidth(width);
+    }
+    // A percentage resolves like a percentage width.
+    return width.specifiedValue(parentContentWidth, this);
 }
 
 template <typename Func>
@@ -1080,11 +1191,12 @@ void FrameTableBox::forEachRowStruct(Func filter)
     }
 }
 
-bool FrameTableBox::resetColspanIfPossible()
+bool FrameTableBox::resetColspanIfPossible(
+    GCVector<ColSizeStruct*>& columnWidths)
 {
     bool colspanUpdated = false;
-    for (size_t i = 0; i < m_columnWidths.size(); i++) {
-        if (m_columnWidths[i]->isNullCell) {
+    for (size_t i = 0; i < columnWidths.size(); i++) {
+        if (columnWidths[i]->isNullCell) {
             forEachRowStruct(
                 [i, &colspanUpdated](RowStruct* rowStruct, size_t _rowId) {
                     STARFISH_ASSERT(rowStruct != nullptr);
@@ -1311,7 +1423,8 @@ void FrameTableBox::calCellWidthsWithColspans()
         });
 }
 
-void FrameTableBox::layoutWidth(LayoutContext& ctx)
+void FrameTableBox::layoutWidth(LayoutContext& ctx,
+                                Optional<LayoutUnit> givenWidth)
 {
     // The width of the caption is limited by the max width of the
     // FrameTableSection. Hence, captions can only be placed after calculating
@@ -1348,23 +1461,12 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
     LayoutUnit tableContentWidth = maxRowWidthSoFar;
     tableContentWidth = std::max(tableContentWidth, minCaptionWidthSoFar);
 
-    Length width = style()->width();
-    if (!width.isAuto()) {
-        LayoutUnit tableWidth;
-        if (width.isDefinite(false)) {
-            LayoutUnit unused;
-            tableWidth = width.specifiedValue(unused, this);
-            if (!isAnonymous() && !node()->isHTMLTableElement()) {
-                tableWidth += borderWidth() + paddingWidth();
-            }
-        } else if (width.isPercent()) {
-            tableWidth = width.percentValue(ctx.parentContentWidth(this));
-        } else if (width.isCalc()) {
-            STARFISH_UNSUPPORTED("HTMLTable property: width with calc");
-        }
-
-        tableContentWidth = std::max(
-            tableContentWidth, tableWidth - borderWidth() - paddingWidth());
+    // The given width, already clamped by min-width and max-width, holds
+    // even when the rows are narrower, e.g. with no rows at all.
+    if (givenWidth) {
+        tableContentWidth =
+            std::max(tableContentWidth,
+                     givenWidth.value() - borderWidth() - paddingWidth());
     }
 
     setWidth(tableContentWidth + paddingWidth() + borderWidth());

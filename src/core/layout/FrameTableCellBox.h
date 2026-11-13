@@ -33,6 +33,8 @@ public:
 
     void collectCellWidthInfo(LayoutContext& ctx,
                               Frame::LayoutWantToResolve resolveWhat);
+    // Sizes the cell to its max width until the columns are distributed.
+    void useMaxCellWidth();
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 

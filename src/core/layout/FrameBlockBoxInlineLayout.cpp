@@ -4463,10 +4463,24 @@ std::pair<LayoutUnit, LayoutUnit>
 PreferredWidthContext::preferredWidthsWithNewContext(Frame* f)
 {
     LayoutUnit mbpWidth = this->mbpWidth(f);
+    Length width = f->style()->width();
+    // css-sizing-3 §5.2: a box sized as min-content or max-content
+    // contributes that size, which ignores the available space, as both its
+    // min-content and max-content contribution.
+    LayoutUnit remainingWidth = m_remainingWidth - mbpWidth;
+    if (width.isMinContent() || width.isMaxContent() ||
+        m_remainingWidth == intMaxForLayoutUnit) {
+        remainingWidth = intMaxForLayoutUnit;
+    }
     PreferredWidthContext newCtx(m_layoutContext, this, f, m_owner,
-                                 m_remainingWidth - mbpWidth);
+                                 remainingWidth);
     newCtx.computePreferredWidth();
     newCtx.finishLine(false);
+    LayoutUnit preferredWidth = width.isMinContent()
+                                    ? newCtx.preferredMinWidth()
+                                    : newCtx.preferredWidth();
+    LayoutUnit preferredMinWidth =
+        width.isMaxContent() ? preferredWidth : newCtx.preferredMinWidth();
 
     auto& floatContext = nearestFloatContext();
     if (f->style()->clear() & ClearValue::LeftClearValue) {
@@ -4477,13 +4491,13 @@ PreferredWidthContext::preferredWidthsWithNewContext(Frame* f)
     }
 
     if (f->style()->floating() & FloatValue::LeftFloatValue) {
-        floatContext.m_floatLeftWidth += (newCtx.preferredWidth() + mbpWidth);
+        floatContext.m_floatLeftWidth += (preferredWidth + mbpWidth);
     } else if (f->style()->floating() & FloatValue::RightFloatValue) {
-        floatContext.m_floatRightWidth += (newCtx.preferredWidth() + mbpWidth);
+        floatContext.m_floatRightWidth += (preferredWidth + mbpWidth);
     }
 
-    return std::make_pair(newCtx.preferredWidth() + mbpWidth,
-                          newCtx.preferredMinWidth() + mbpWidth);
+    return std::make_pair(preferredWidth + mbpWidth,
+                          preferredMinWidth + mbpWidth);
 }
 
 void PreferredWidthContext::computePreferredWidthInline(Frame* parent)
@@ -4707,8 +4721,13 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                 ctx.layoutContext().checkIfThisIsFirstLineCandidate(this);
             if (isFirstLineCandidate) {
                 Length textIndent = style()->textIndent();
-                LayoutUnit textIndentWidth =
-                    textIndent.specifiedValue(ctx.remainingWidth(), this);
+                // css-sizing-3 §5.2.1: with no available width to resolve
+                // against, a percentage is cyclic and resolves against zero.
+                LayoutUnit textIndentWidth = textIndent.specifiedValue(
+                    ctx.remainingWidth() == intMaxForLayoutUnit
+                        ? LayoutUnit()
+                        : ctx.remainingWidth(),
+                    this);
                 ctx.setTextIndentWidth(textIndentWidth);
             }
             ctx.computePreferredWidthInline(this);
@@ -4852,7 +4871,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
                 f = f->next();
             }
 
-            if (w > ctx.remainingWidth() && !ctx.isIntrinsicMode()) {
+            if (w > ctx.remainingWidth()) {
                 f = firstChild();
 
                 LayoutUnit minWidth;
@@ -4878,7 +4897,12 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
                 }
             } else {
                 ctx.updatePreferredWidth(w);
-                ctx.updatePreferredMinWidth(totalPreferredMinWidth);
+                // css-flexbox-1 §9.9.1: a multi-line container's min-content
+                // size is its largest item's min-content contribution.
+                bool isMultiLine = style()->flexWrap() != NoWrapFlexWrapValue;
+                ctx.updatePreferredMinWidth(isMultiLine
+                                                ? maxPreferredMinWidth
+                                                : totalPreferredMinWidth);
             }
         } else {
             Frame* f = firstChild();
@@ -4976,6 +5000,10 @@ void FrameGridBox::computePreferredWidth(PreferredWidthContext& ctx)
 
 void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
 {
+    // The border and padding read below may not be laid out yet.
+    MBPRestorer restorer(this);
+    computeBorderMarginPadding(ctx.layoutContext(),
+                               containingBlock(this)->contentWidth());
     LayoutUnit unused;
     LayoutUnit borderSpacing =
         style()->horizontalBorderSpacing().specifiedValue(unused, this);
@@ -4983,23 +5011,70 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
     LayoutUnit tablePreferredWidth = 0;
     LayoutUnit tablePreferredMinWidth = 0;
     Length width = style()->width();
-    if (width.isDefinite(false)) {
-        LayoutUnit unused;
-        tablePreferredWidth = width.specifiedValue(unused, this);
-        if (!isAnonymous() && node()->isHTMLTableElement()) {
-            tablePreferredWidth -= borderWidth() + paddingWidth();
-        }
-        tablePreferredMinWidth = tablePreferredWidth;
-    } else {
-        calCellWidth(ctx.layoutContext());
+    // Percentages are cyclic here and ignored, as for other boxes.
+    Length minWidth = style()->minWidth();
+    Length maxWidth = style()->maxWidth();
+    bool hasMinWidth = minWidth.isDefinite(false) || minWidth.isIntrinsic();
+    bool hasMaxWidth = maxWidth.isDefinite(false) || maxWidth.isIntrinsic();
+    if (!width.isDefinite(false) || hasMinWidth || hasMaxWidth) {
+        // calCellWidth() would rewrite the laid-out columns, which a layout
+        // skipped after this query would keep using.
+        GCVector<ColSizeStruct*> columnWidths;
+        collectColumnWidthInfo(ctx.layoutContext(), columnWidths, false);
         tablePreferredWidth += borderSpacing;
         tablePreferredMinWidth += borderSpacing;
-        for (auto& col : columnWidths()) {
+        for (auto& col : columnWidths) {
             tablePreferredWidth += col->maxCellWidth;
             tablePreferredMinWidth += col->minCellWidth;
             tablePreferredWidth += borderSpacing;
             tablePreferredMinWidth += borderSpacing;
         }
+    }
+    // The table's min-/max-content widths, without border and padding.
+    LayoutUnit minContentWidth = tablePreferredMinWidth;
+    LayoutUnit maxContentWidth = tablePreferredWidth;
+    if (width.isDefinite(false)) {
+        tablePreferredWidth =
+            definiteBorderBoxWidth(width) - borderWidth() - paddingWidth();
+        tablePreferredMinWidth = tablePreferredWidth;
+    }
+    // css-tables-3 §3.9.1: the table is at least as wide as its captions.
+    LayoutUnit captionWidth = captionMinContentWidth(ctx.layoutContext());
+    minContentWidth = std::max(minContentWidth, captionWidth);
+    maxContentWidth = std::max(maxContentWidth, captionWidth);
+    tablePreferredMinWidth = std::max(tablePreferredMinWidth, captionWidth);
+    tablePreferredWidth = std::max(tablePreferredWidth, captionWidth);
+
+    if (hasMinWidth || hasMaxWidth) {
+        // The min-width and max-width clamp the contributions as they clamp
+        // the width in calCellWidth().
+        LayoutUnit bp = borderWidth() + paddingWidth();
+        bool fixedMode =
+            style()->tableLayout() == TableLayoutValue::FixedTableLayoutValue &&
+            !width.isAuto() && !width.isFitContent();
+        auto clamp = [&](LayoutUnit w, LayoutUnit availableWidth) {
+            auto resolve = [&](Length l) {
+                return resolveMinMaxWidth(l, unused, availableWidth,
+                                          minContentWidth + bp,
+                                          maxContentWidth + bp) -
+                       bp;
+            };
+            if (hasMaxWidth) {
+                w = std::min(w, resolve(maxWidth));
+                if (!fixedMode) {
+                    w = std::max(w, minContentWidth);
+                }
+            }
+            if (hasMinWidth) {
+                w = std::max(w, resolve(minWidth));
+            }
+            return w;
+        };
+        // css-sizing-3 §5.2: the max-content contribution fits into
+        // unbounded space and the min-content one into none.
+        tablePreferredWidth =
+            clamp(tablePreferredWidth, LayoutUnit(intMaxForLayoutUnit));
+        tablePreferredMinWidth = clamp(tablePreferredMinWidth, LayoutUnit());
     }
 
     LayoutUnit oldTextIndentWidth = ctx.textIndentWidth();

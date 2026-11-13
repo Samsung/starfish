@@ -279,7 +279,7 @@ http://web-platform.test:8000/css/css-flexbox/flex-inline.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-item-content-is-min-width-max-content.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-item-max-height-min-content.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-item-max-width-min-content-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-item-max-width-min-content.html
+# [vacuous-pass:WRITING_MODE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-flexbox/flex-item-max-width-min-content.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-item-min-height-min-content-overflow.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flex-item-min-height-min-content.html
 http://web-platform.test:8000/css/css-flexbox/flex-item-min-width-min-content.html

@@ -419,6 +419,11 @@ public:
         LayoutContext& ctx, LayoutUnit width, LayoutUnit parentWidth,
         bool underComputingPreferredWidth);
 
+    // The content width a min-content, max-content or fit-content sizing
+    // keyword resolves to.
+    LayoutUnit intrinsicContentWidth(LayoutContext& ctx, Length keyword,
+                                     LayoutUnit availableWidth);
+
     LayoutUnit heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
                                                 LayoutUnit height,
                                                 LayoutUnit parentHeight,

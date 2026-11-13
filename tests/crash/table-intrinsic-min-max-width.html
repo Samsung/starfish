@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Tables sized with content-based min-width and max-width do not recurse</title>
+<style>
+  table { border-spacing: 0; }
+  td { padding: 0; }
+</style>
+<div style="width: 400px">
+  <div style="display: table; width: max-content; max-width: fit-content"><div style="display: table-cell">aa bb</div></div>
+  <table style="width: max-content; max-width: fit-content"><tr><td>aa bb</td></tr></table>
+  <table style="width: max-content; max-width: min-content"><tr><td>aa bb</td></tr></table>
+  <table style="width: min-content; min-width: max-content"><tr><td>aa bb</td></tr></table>
+  <table style="width: 10%; min-width: max-content"><tr><td>aa bb</td></tr></table>
+  <div style="display: flex"><table style="width: 50%"><tr><td>aa bb</td></tr></table></div>
+  <div style="display: flex"><div style="display: table; width: max-content"><div style="display: table-cell">aa bb</div></div></div>
+</div>
+<script>
+// css-sizing-3 §5: a table's min-content and max-content widths come from its
+// columns, so resolving min-width, max-width or a flex item's automatic minimum
+// against them must not lay the table out again. The test passes if the page
+// lays out without crashing.
+document.body.offsetWidth;
+if (typeof testEnd === "function") testEnd();
+</script>

@@ -1,0 +1,107 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>min-width and max-width on tables</title>
+<style>
+  body { margin: 0; }
+  .wide { width: 400px; }
+  table { border-spacing: 0; }
+  td { padding: 0; }
+  /* Three unbreakable 30px, 50px and 20px pieces with zero-width break
+     opportunities between them: the table's min-content width is 50px and
+     its max-content width 100px. */
+  .z { font-size: 0; }
+  .z i { display: inline-block; height: 10px; background: green; }
+  .a { width: 30px; } .b { width: 50px; } .c { width: 20px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[table-min-max-width] " + document.title);
+  };
+}
+</script>
+<div class="wide"><table id="fitMin" style="width: fit-content; min-width: 300px"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div>
+<div class="wide"><table id="fitMax" style="width: fit-content; max-width: 70px"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div>
+<div class="wide"><table id="autoMin" style="min-width: 300px"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div>
+<div class="wide"><table id="autoMax" style="max-width: 70px"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div>
+<div class="wide"><table id="autoMaxMin" style="max-width: min-content"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div>
+<div class="wide"><table id="fixedMinMax" style="width: 10px; min-width: max-content"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div>
+<div class="wide"><table id="percentMax" style="width: 100%; max-width: 70px"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div>
+<div class="wide"><table id="fixedMinOverMax" style="width: 300px; min-width: 200px; max-width: 100px"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div>
+<div class="wide"><table id="maxContentMargin" style="width: max-content; margin-left: 30px"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div>
+<div class="wide"><div id="cssMinBox" style="display: table; min-width: 300px; border: 10px solid; padding: 5px"><div class="z" style="display: table-cell"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div></div>
+<div class="wide"><div id="cssMaxBox" style="display: table; max-width: 70px; border: 10px solid; padding: 5px"><div class="z" style="display: table-cell"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div></div>
+<div class="wide"><table id="borderBoxMin" style="box-sizing: border-box; min-width: 300px; border: 10px solid; padding: 5px"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div>
+<div class="wide"><table id="fixedLayoutMax" style="table-layout: fixed; width: 100%; max-width: 30px"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div>
+<div class="wide"><div id="floatMin" style="float: left"><table style="min-width: 300px"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div></div>
+<div class="wide" style="clear: both"><div id="floatMax" style="float: left"><table style="width: 300px; max-width: 70px"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div></div>
+<div class="wide" style="clear: both"><div id="floatBorderMin" style="float: left"><table style="min-width: 300px; border: 10px solid; padding: 5px"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table></div></div>
+<div class="wide"><div id="cssBorderBoxMin" style="display: table; box-sizing: border-box; min-width: 200px; padding: 10px"><div class="z" style="display: table-cell"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div></div>
+<div class="wide" style="clear: both"><div style="float: left"><table id="floatClamped" style="width: 300px; max-width: 200px"><tr><td class="z" id="floatClampedCell"><i class="a"></i> <i class="b"></i> <i class="c"></i></td></tr></table><div id="floatSibling">s</div></div></div>
+<div class="wide" style="clear: both"><div style="display: flex"><table style="width: 300px; min-width: min-content"><tr><td class="z" id="flexCell1" style="width: 40%"><i class="c"></i></td><td class="z" id="flexCell2"><i class="b"></i></td></tr></table></div></div>
+<div class="wide" style="clear: both"><div style="display: flex"><table style="max-width: fit-content"><tr><td class="z" id="flexFitCell1" style="width: 40%"><i class="c"></i></td><td class="z" id="flexFitCell2"><i class="b"></i></td></tr></table></div></div>
+<div class="wide"><div style="display: flex"><table id="flexCaptionFit" style="max-width: fit-content"><caption class="z"><i style="width: 60px"></i></caption><tr><td class="z"><i class="c"></i></td></tr></table></div></div>
+<div class="wide"><table id="captionMaxMin" style="max-width: min-content"><caption class="z"><i style="width: 60px"></i></caption><tr><td class="z"><i class="c"></i></td></tr></table></div>
+<div class="wide"><div style="display: flex"><table style="flex: 0 0 150px"><tr><td class="z" id="flexBasisCell1" style="width: 40%"><i class="c"></i></td><td class="z" id="flexBasisCell2"><i class="b"></i></td></tr></table></div></div>
+<script>
+// css-tables-3 §3.9.3: min-width and max-width clamp the table width whatever
+// its width value, min-width winning (CSS2 §10.4); their content-based
+// keywords resolve to the table's min-content and max-content widths
+// (css-sizing-3 §5), which exclude margins.
+function checkWidth(id, expected) {
+  var w = document.getElementById(id).getBoundingClientRect().width;
+  console.assert(Math.abs(w - expected) < 0.01, id + ": " + w + " != " + expected);
+}
+checkWidth("fitMin", 300);
+checkWidth("fitMax", 70);
+checkWidth("autoMin", 300);
+checkWidth("autoMax", 70);
+checkWidth("autoMaxMin", 50);
+checkWidth("fixedMinMax", 100);
+checkWidth("percentMax", 70);
+checkWidth("fixedMinOverMax", 200);
+checkWidth("maxContentMargin", 100);
+// min-width and max-width take the box-sizing that width takes: content-box
+// for a CSS table, border-box for an HTML table.
+checkWidth("cssMinBox", 330);
+checkWidth("cssMaxBox", 100);
+checkWidth("borderBoxMin", 300);
+// Fixed-layout column widths don't depend on the content, so neither does
+// the clamped width.
+checkWidth("fixedLayoutMax", 30);
+// A shrink-to-fit container sees the clamped width.
+checkWidth("floatMin", 300);
+checkWidth("floatMax", 70);
+checkWidth("floatBorderMin", 300);
+// box-sizing: border-box makes a CSS table's min-width a border-box width.
+checkWidth("cssBorderBoxMin", 200);
+// Asking a table for its contribution must not disturb its laid-out
+// columns: they hold across a relayout of the shrink-to-fit container and
+// in a flex item.
+checkWidth("floatClampedCell", 200);
+document.getElementById("floatSibling").textContent = "ssssssssssssssssssss";
+checkWidth("floatClampedCell", 200);
+checkWidth("flexCell1", 120);
+checkWidth("flexCell2", 180);
+console.assert(Math.abs(document.getElementById("flexCell2").getBoundingClientRect().left - 120) < 0.01,
+               "flexCell2 left: " + document.getElementById("flexCell2").getBoundingClientRect().left);
+// A table flex item distributes its columns over its final main size.
+checkWidth("flexFitCell1", 20);
+checkWidth("flexFitCell2", 50);
+console.assert(Math.abs(document.getElementById("flexFitCell2").getBoundingClientRect().left - 20) < 0.01,
+               "flexFitCell2 left: " + document.getElementById("flexFitCell2").getBoundingClientRect().left);
+// A table is at least as wide as its captions' min-content width
+// (css-tables-3 §3.9.1), keywords and flex sizing included.
+checkWidth("flexCaptionFit", 60);
+checkWidth("captionMaxMin", 60);
+checkWidth("flexBasisCell1", 60);
+checkWidth("flexBasisCell2", 90);
+testEnd();
+</script>

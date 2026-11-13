@@ -24,6 +24,7 @@
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
 #include "core/layout/FrameFlexibleBox.h"
+#include "core/layout/FrameTableBox.h"
 
 namespace Starfish {
 
@@ -281,10 +282,10 @@ LayoutUnit FlexFormattingContext::automaticMinimumMainSize(FrameBox* flexItem)
         // safe to restore it to auto afterwards.
         if (m_isMainAxisInInlineAxis) {
             flexItem->style()->setHeight(
-                Length(Length::Fixed, crossSize.toInt()));
+                Length(Length::Fixed, crossSize.toFloat()));
         } else {
             flexItem->style()->setWidth(
-                Length(Length::Fixed, crossSize.toInt()));
+                Length(Length::Fixed, crossSize.toFloat()));
         }
         didFixCrossSize = true;
     }
@@ -693,7 +694,12 @@ void FlexFormattingContext::applyFlexFactor()
                         }
                     }
 
-                    targetMainSize = std::ceil(targetMainSize.toDouble());
+                    // shortcut: shrunk sizes still round up to whole pixels,
+                    // drop once the auto minimum size (#min-size-auto) also
+                    // applies to definite main sizes.
+                    if (!usingGrowFactor) {
+                        targetMainSize = std::ceil(targetMainSize.toDouble());
+                    }
 
                     unclampedSize += targetMainSize;
 
@@ -1013,8 +1019,16 @@ struct MainSizeFixer {
 
             m_mainSizeBackup = m_flexItem->style()->width();
             m_mainSizeLayoutBackup = m_flexItem->width();
-            m_flexItem->style()->setWidth(
-                Length(Length::Fixed, m_mainSizeLayoutBackup));
+            // width() is the border box. A table resolves its width again
+            // from this length and adds its border and padding unless it
+            // reads the length as the border box, so take those off.
+            LayoutUnit pinnedWidth = m_mainSizeLayoutBackup;
+            if (m_flexItem->isFrameTableBox()) {
+                pinnedWidth -=
+                    m_flexItem->asFrameTableBox()->definiteBorderBoxWidth(
+                        Length(Length::Fixed, 0));
+            }
+            m_flexItem->style()->setWidth(Length(Length::Fixed, pinnedWidth));
         } else {
             m_mainSizeBackup = m_flexItem->style()->height();
             m_mainSizeLayoutBackup = m_flexItem->height();
@@ -1057,10 +1071,10 @@ struct CrossSizeFixer {
     {
         if (m_isMainAxisInInlineAxis) {
             m_flexItem->style()->setHeight(
-                Length(Length::Fixed, crossSize.toInt()));
+                Length(Length::Fixed, crossSize.toFloat()));
         } else {
             m_flexItem->style()->setWidth(
-                Length(Length::Fixed, crossSize.toInt()));
+                Length(Length::Fixed, crossSize.toFloat()));
         }
     }
 
@@ -1286,8 +1300,10 @@ void FlexFormattingContext::computeCrossSize()
             // during the subtree layout, so it must not be skipped.
             if (m_isMainAxisInInlineAxis) {
                 auto resolveWhat = Frame::LayoutWantToResolve::ResolveHeight;
-                if (flexItem->isFrameReplaced()) {
-                    // height of FrameReplaced is computed at ResolveWidth
+                // height of FrameReplaced is computed at ResolveWidth, and a
+                // table distributes its columns there for the final main size.
+                if (flexItem->isFrameReplaced() ||
+                    flexItem->isFrameTableBox()) {
                     resolveWhat = Frame::LayoutWantToResolve::ResolveAll;
                 }
                 layoutFlexItem(flexItem, resolveWhat, NullOption,
