@@ -820,7 +820,7 @@ http://web-platform.test:8000/html/rendering/non-replaced-elements/the-page/body
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/non-replaced-elements/the-page/body_text_00ffff.xhtml
 http://web-platform.test:8000/html/rendering/non-replaced-elements/the-page/iframe-scrolling-attribute-values.html
 http://web-platform.test:8000/html/rendering/non-replaced-elements/the-page/iframe-scrolling-attribute.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/replaced-elements/attributes-for-embedded-content-and-images/canvas-dimension-attributes.html
+http://web-platform.test:8000/html/rendering/replaced-elements/attributes-for-embedded-content-and-images/canvas-dimension-attributes.html
 http://web-platform.test:8000/html/rendering/replaced-elements/attributes-for-embedded-content-and-images/img-dim.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/replaced-elements/attributes-for-embedded-content-and-images/img_border_percent.xhtml
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/rendering/replaced-elements/attributes-for-embedded-content-and-images/input-align-right-1.html

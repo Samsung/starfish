@@ -116,7 +116,7 @@ http://web-platform.test:8000/css/css-flexbox/alignment/flex-content-alignment-w
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/balance/flex-wrap-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/box-sizing-001.html
 http://web-platform.test:8000/css/css-flexbox/box-sizing-min-max-sizes-001.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-flexbox/canvas-dynamic-change-001.html
+http://web-platform.test:8000/css/css-flexbox/canvas-dynamic-change-001.html
 http://web-platform.test:8000/css/css-flexbox/change-column-flex-width.html
 http://web-platform.test:8000/css/css-flexbox/checkbox-percentage-width-in-flex.html
 http://web-platform.test:8000/css/css-flexbox/column-flex-child-with-overflow-scroll.html

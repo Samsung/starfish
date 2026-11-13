@@ -109,7 +109,7 @@ http://web-platform.test:8000/css/css-sizing/percentage-height-in-flexbox.html
 http://web-platform.test:8000/css/css-sizing/percentage-height-replaced-content-in-auto-cb.html
 http://web-platform.test:8000/css/css-sizing/percentage-min-width.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-sizing/replaced-element-transferred-size-flex.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/replaced-fractional-height-from-aspect-ratio-2.html
+http://web-platform.test:8000/css/css-sizing/replaced-fractional-height-from-aspect-ratio-2.html
 # [vacuous-pass:ZOOM_UNIMPLEMENTED] http://web-platform.test:8000/css/css-sizing/replaced-fractional-height-from-aspect-ratio.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/responsive-iframe/parsing/frame-sizing-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-sizing/responsive-iframe/parsing/frame-sizing-valid.html

@@ -234,13 +234,13 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-013.h
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-014.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-015.html
 # [vacuous-pass:SVG_ELEMENT_ASPECT_RATIO_UNIMPLEMENTED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-016.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-017.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-017.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-018.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-019.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-020.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-022.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-023.html
+# [vacuous-pass:CONTAIN_UNIMPLEMENTED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-023.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-024.html
 # [vacuous-pass:CONTAIN_UNIMPLEMENTED] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-025.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-026.html
@@ -256,8 +256,8 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-037.h
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-039.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-040.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-041.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-045.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-046.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-045.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-046.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-047.tentative.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-048.tentative.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-049.html
@@ -426,20 +426,20 @@ http://web-platform.test:8000/css/css-sizing/intrinsic-percent-non-replaced-003.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-non-replaced-005.html
 http://web-platform.test:8000/css/css-sizing/intrinsic-percent-non-replaced-007.html
 http://web-platform.test:8000/css/css-sizing/intrinsic-percent-non-replaced-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-001.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-005.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-007.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-009.html
 http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-010.html
 http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-011.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-012.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-013.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-014.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-012.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-013.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-014.html
 http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-015.html
 http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-017.html
@@ -450,23 +450,23 @@ http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-022.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-023.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-024.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-025.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-025.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-026.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-027.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-027.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-029.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-030.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-031.html
 http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-032.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-007.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-002.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-003.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-004.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-005.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-006.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-009.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-010.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-009.html
+http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-percent-replaced-dynamic-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/intrinsic-ratio-replaced-box-sizing.html
@@ -493,7 +493,7 @@ http://web-platform.test:8000/css/css-sizing/replaced-aspect-ratio-intrinsic-siz
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/replaced-aspect-ratio-stretch-fit-003.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-sizing/replaced-element-intrinsic-sizing-keywords.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/replaced-max-height-min-content.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/replaced-max-size-saturation.html
+http://web-platform.test:8000/css/css-sizing/replaced-max-size-saturation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/replaced-max-width-min-content.html
 http://web-platform.test:8000/css/css-sizing/replaced-max-width-with-height-fit-content.html
 http://web-platform.test:8000/css/css-sizing/replaced-max-width-with-height-max-content.html

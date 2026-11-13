@@ -523,9 +523,16 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
                 height.specifiedValue(parentContentHeight, this));
             w = widthFromHeight(h);
         } else {
-            setContentWidth(0);
-            setContentHeight(0);
-            return;
+            // Nothing relates the sides: each one is as specified, or
+            // else natural.
+            w = width.isSpecified()
+                    ? contentWidthAfterApplyingBoxSizing(
+                          width.specifiedValue(parentContentWidth, this))
+                    : intrinsicWidth;
+            h = height.isDefinite(parentHasFixedHeight)
+                    ? contentHeightAfterApplyingBoxSizing(
+                          height.specifiedValue(parentContentHeight, this))
+                    : intrinsicHeight;
         }
         applyMinMaxWidthAndHeightIfNeeds(ctx, w, h, parentContentWidth,
                                          parentContentHeight, false,

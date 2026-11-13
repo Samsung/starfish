@@ -144,7 +144,7 @@ http://web-platform.test:8000/css/css-flexbox/balance/balance-min-line-count-008
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/baseline-synthesis-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/baseline-synthesis-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/baseline-synthesis-vert-lr-line-under.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/canvas-contain-size.html
+# [vacuous-pass:CONTAIN_UNIMPLEMENTED] http://web-platform.test:8000/css/css-flexbox/canvas-contain-size.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/column-flex-child-with-max-width.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/content-height-with-scrollbars.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/cross-axis-scrollbar.html
@@ -442,10 +442,10 @@ http://web-platform.test:8000/css/css-flexbox/flexbox-definite-sizes-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flexbox-definite-sizes-005.html
 http://web-platform.test:8000/css/css-flexbox/flexbox-definite-sizes-006.html
 http://web-platform.test:8000/css/css-flexbox/flexbox-dyn-resize-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flexbox-flex-basis-content-001a.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flexbox-flex-basis-content-001b.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flexbox-flex-basis-content-002a.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/flexbox-flex-basis-content-002b.html
+http://web-platform.test:8000/css/css-flexbox/flexbox-flex-basis-content-001a.html
+http://web-platform.test:8000/css/css-flexbox/flexbox-flex-basis-content-001b.html
+http://web-platform.test:8000/css/css-flexbox/flexbox-flex-basis-content-002a.html
+http://web-platform.test:8000/css/css-flexbox/flexbox-flex-basis-content-002b.html
 http://web-platform.test:8000/css/css-flexbox/flexbox-flex-basis-content-003a.html
 http://web-platform.test:8000/css/css-flexbox/flexbox-flex-basis-content-003b.html
 http://web-platform.test:8000/css/css-flexbox/flexbox-flex-basis-content-004a.html
@@ -901,16 +901,16 @@ http://web-platform.test:8000/css/css-flexbox/percentage-heights-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-010.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-014.html
+http://web-platform.test:8000/css/css-flexbox/percentage-heights-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-017.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-018.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-019.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-020.html
+http://web-platform.test:8000/css/css-flexbox/percentage-heights-020.html
 http://web-platform.test:8000/css/css-flexbox/percentage-heights-021.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-022.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-heights-023.html
+http://web-platform.test:8000/css/css-flexbox/percentage-heights-022.html
+http://web-platform.test:8000/css/css-flexbox/percentage-heights-023.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-max-height-001.html
 http://web-platform.test:8000/css/css-flexbox/percentage-max-height-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/percentage-max-height-003.html
@@ -927,7 +927,7 @@ http://web-platform.test:8000/css/css-flexbox/position-absolute-scrollbar-freeze
 http://web-platform.test:8000/css/css-flexbox/position-fixed-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/position-relative-percentage-top-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/position-relative-percentage-top-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/relayout-intrinsic-block-size.html
+http://web-platform.test:8000/css/css-flexbox/relayout-intrinsic-block-size.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/remove-wrapped-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/remove-wrapped-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/scrollbars-auto.html

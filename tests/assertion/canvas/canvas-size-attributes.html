@@ -1,0 +1,73 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Canvas width and height attributes give a natural size and ratio</title>
+<style>
+  body { margin: 0; }
+  .wide { width: 400px; }
+  .flex { display: flex; width: 400px; }
+  .column { flex-direction: column; }
+  .grid { display: grid; width: 400px; grid-template-rows: 100px; }
+</style>
+<canvas id="plain" width="200" height="100"></canvas>
+<canvas id="css-width" width="200" height="100" style="width: 100px"></canvas>
+<canvas id="css-height" width="200" height="100" style="height: 50px"></canvas>
+<div class="wide"><canvas id="percent-width" width="200" height="100" style="width: 100%"></canvas></div>
+<canvas id="ratio" width="200" height="100" style="aspect-ratio: 1 / 1"></canvas>
+<canvas id="ratio-width" width="200" height="100" style="aspect-ratio: 1 / 1; width: 100px"></canvas>
+<canvas id="no-attributes"></canvas>
+<canvas id="width-only" width="200"></canvas>
+<canvas id="max-width" width="200" height="100" style="max-width: 100px"></canvas>
+<div class="flex"><canvas id="flex-row" width="200" height="100"></canvas></div>
+<div class="flex column"><canvas id="flex-column" width="200" height="100"></canvas></div>
+<div class="grid"><canvas id="grid" width="200" height="100"></canvas></div>
+<canvas id="zero-width" width="0" height="100"></canvas>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[canvas-size-attributes] " + document.title);
+  };
+}
+
+function size(id, width, height) {
+  var r = document.getElementById(id).getBoundingClientRect();
+  console.assert(r.width === width && r.height === height,
+    id + " should be " + width + "x" + height + ", got " + r.width + "x" + r.height);
+}
+
+function ratio(id, expected) {
+  var value = getComputedStyle(document.getElementById(id)).aspectRatio;
+  console.assert(value === expected,
+    id + " aspect-ratio should be " + expected + ", got " + value);
+}
+
+window.onload = function () {
+  // The attributes are the natural size.
+  size("plain", 200, 100);
+  size("no-attributes", 300, 150);
+  size("width-only", 200, 150);
+  size("zero-width", 0, 100);
+  // A CSS size on one side keeps the proportions of the bitmap.
+  size("css-width", 100, 50);
+  size("css-height", 100, 50);
+  size("percent-width", 400, 200);
+  size("max-width", 100, 50);
+  // Both attributes map to `aspect-ratio: auto w / h`; CSS overrides it.
+  ratio("plain", "auto 200 / 100");
+  ratio("width-only", "auto");
+  ratio("ratio", "1 / 1");
+  size("ratio", 200, 200);
+  size("ratio-width", 100, 100);
+  // Flex and grid items.
+  size("flex-row", 200, 100);
+  size("flex-column", 400, 200);
+  size("grid", 200, 100);
+  testEnd();
+};
+</script>

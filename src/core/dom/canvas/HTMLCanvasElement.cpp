@@ -63,32 +63,21 @@ void HTMLCanvasElement::styleForPresentationAttribute(
     HTMLElement::styleForPresentationAttribute(cssValues, matchedRules,
                                                cssCustomValues);
 
-    // TODO: Since this patch, the width and height retrieved from the
-    // attributes of the canvas element will be included in the calculation of
-    // styles. Therefore, it is no longer necessary to directly call
-    // setneedslayout in HTMLCanvasElement::didAttributeChanged. Also, in
-    // FrameReplacedCanvas::intrinsicSize(), you should no longer refer to the
-    // the canvas element's width and height directly.
-
-    // Note: Ignore unit. The unit is always px.
-    // width
+    // https://html.spec.whatwg.org/multipage/rendering.html#attributes-for-embedded-content-and-images
+    // The width and height attributes of a canvas give its natural size
+    // (FrameReplacedCanvas::intrinsicSize()) and map to 'aspect-ratio' only,
+    // so a CSS size on one side keeps the proportions of the bitmap.
     Optional<String*> maybeWidth =
         getAttribute(starfish()->staticStrings()->m_width);
-    if (maybeWidth) {
-        CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::KeyKind::Width);
-        uint32_t width = String::parseInt(maybeWidth.getValue());
-        pair.setLengthValue(CSSLength(width));
-        cssValues.push_back(pair);
-    }
-    // height
     Optional<String*> maybeHeight =
         getAttribute(starfish()->staticStrings()->m_height);
-    if (maybeHeight) {
+    if (maybeWidth && maybeHeight) {
         CSSStyleValuePair pair;
-        pair.setKeyKind(CSSStyleValuePair::KeyKind::Height);
-        uint32_t height = String::parseInt(maybeHeight.getValue());
-        pair.setLengthValue(CSSLength(height));
+        pair.setKeyKind(CSSStyleValuePair::KeyKind::AspectRatio);
+        pair.setAspectRatioValue(
+            AspectRatioData(String::parseInt(maybeWidth.getValue()),
+                            String::parseInt(maybeHeight.getValue())),
+            true);
         cssValues.push_back(pair);
     }
 }

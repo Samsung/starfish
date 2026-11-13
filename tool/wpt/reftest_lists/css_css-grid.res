@@ -238,9 +238,9 @@ http://web-platform.test:8000/css/css-grid/alignment/grid-item-no-aspect-ratio-s
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/grid-self-alignment-baseline-with-grid-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/grid-self-alignment-baseline-with-grid-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/grid-self-alignment-stretch-input-range.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-003.tentative.html
+http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-001.html
+http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-002.html
+http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-003.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-004.html
 # [vacuous-pass:WRITING_MODE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/alignment/replaced-alignment-with-aspect-ratio-006.html
@@ -1216,7 +1216,7 @@ http://web-platform.test:8000/css/css-grid/layout-algorithm/flex-and-intrinsic-s
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/layout-algorithm/grid-as-flex-item-should-not-shrink-to-fit-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/layout-algorithm/grid-as-flex-item-should-not-shrink-to-fit-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/layout-algorithm/grid-find-fr-size-restart-algorithm.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/layout-algorithm/grid-intrinsic-size-dynamic-block-size.html
+http://web-platform.test:8000/css/css-grid/layout-algorithm/grid-intrinsic-size-dynamic-block-size.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/layout-algorithm/grid-intrinsic-track-sizes-min-size-001.html
 http://web-platform.test:8000/css/css-grid/layout-algorithm/grid-layout-free-space-unit.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/layout-algorithm/grid-percent-cols-filled-shrinkwrap-001.html
