@@ -273,7 +273,7 @@ http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-053.
 http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-abspos-001.html
 http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-block-in-inline-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-dynamic-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-with-line-height.html
+http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-with-line-height.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/line-clamp/webkit-line-clamp-with-max-height.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/margin-block-end-scroll-area-001.html
 http://web-platform.test:8000/css/css-overflow/max-content-with-float-scrollable-descendant.html
@@ -487,13 +487,13 @@ http://web-platform.test:8000/css/css-overflow/select-size-overflow-001.html
 http://web-platform.test:8000/css/css-overflow/single-axis-overflow-clip-rtl.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/single-axis-overflow-scroll-to-clip.html
 http://web-platform.test:8000/css/css-overflow/table-max-content-with-scrollable-descendant.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/text-overflow-ellipsis-001.html
+http://web-platform.test:8000/css/css-overflow/text-overflow-ellipsis-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/text-overflow-ellipsis-002.html
 http://web-platform.test:8000/css/css-overflow/text-overflow-ellipsis-003.html
 http://web-platform.test:8000/css/css-overflow/text-overflow-ellipsis-changing-scroll.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/text-overflow-ellipsis-editable-div-with-caret.html
 http://web-platform.test:8000/css/css-overflow/text-overflow-ellipsis-editing-input.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/text-overflow-ellipsis-rtl-001.html
+http://web-platform.test:8000/css/css-overflow/text-overflow-ellipsis-rtl-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/text-overflow-ellipsis-textarea-with-caret.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/text-overflow-ellipsis-vertical-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/text-overflow-ellipsis-vertical-rtl-001.html

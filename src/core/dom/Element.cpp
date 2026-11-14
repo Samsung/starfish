@@ -1483,6 +1483,16 @@ static void elementScrollPropertyChanged(Element* element)
 #endif
 }
 
+// The ellipsis of text-overflow follows the scrolled edge, so the lines
+// have to be cut again when the inline scroll position changes.
+static void relayoutTextOverflowIfNeeded(Element* element)
+{
+    if (element->frame() && element->frame()->isFrameBlockBox() &&
+        !element->frame()->style()->textOverflow().hasClipValue()) {
+        element->setNeedsLayout();
+    }
+}
+
 bool Element::setScrollLeft(double s, bool layoutIfNeeds)
 {
     // https://drafts.csswg.org/cssom-view/#dom-element-scrollleft
@@ -1525,6 +1535,7 @@ bool Element::setScrollLeft(double s, bool layoutIfNeeds)
 
     if (ensureRareElementMembers()->m_scrollLeft != (LayoutUnit)s) {
         ensureRareElementMembers()->m_scrollLeft = s;
+        relayoutTextOverflowIfNeeded(this);
         elementScrollPropertyChanged(this);
         // The scroll position decides which slide of a tabs-mode scroller
         // is the active tabpanel, so the accessibility tree can change
@@ -1749,6 +1760,7 @@ void Element::scrollTo(double x, double y)
 
         if (ensureRareElementMembers()->m_scrollLeft != (LayoutUnit)x) {
             ensureRareElementMembers()->m_scrollLeft = x;
+            relayoutTextOverflowIfNeeded(this);
             scrolled = true;
         }
     }

@@ -1849,7 +1849,7 @@ The following properties are also implemented but were missing from earlier revi
 | Layout        | grid-template | &lt;grid-template-rows&gt; / &lt;grid-template-columns&gt; | Shorthand combining `grid-template-rows`, `grid-template-columns`, and `grid-template-areas`. | |
 | Overflow      | overflow-x, overflow-y | visible &#124; hidden &#124; auto &#124; scroll | Single-axis variants of `overflow`. | |
 | Text          | letter-spacing | normal &#124; &lt;length&gt; | Specifies the spacing between adjacent text characters. | |
-| Text          | text-overflow | clip &#124; ellipsis | Specifies how overflowed inline-axis text is signalled. Requires `overflow:hidden` and `white-space:nowrap`. | |
+| Text          | text-overflow | clip &#124; ellipsis | Specifies how overflowed inline-axis text is signalled. Applies to a box whose `overflow-x` is not `visible` (`hidden`, `scroll` or `auto`) when its text overflows on a line, as with `white-space:nowrap`. The ellipsis follows the scroll position and goes away once the end of the content is scrolled into view. | |
 | UI            | pointer-events | auto &#124; none &#124; visible &#124; visiblepainted &#124; visiblefill &#124; visiblestroke &#124; painted &#124; fill &#124; stroke &#124; all | Whether the element can be the target of pointer events. **All 10 SVG-style values parse and round-trip via `getComputedStyle`, but hit-testing currently does NOT consult the computed value** — see the runtime caveat below. | |
 | UI            | appearance | auto &#124; none | Reset native form-control rendering. | |
 | UI            | image-rendering | auto &#124; crisp-edges &#124; pixelated | Hint for image scaling algorithm. | |

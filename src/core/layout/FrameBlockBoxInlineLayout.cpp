@@ -1285,7 +1285,7 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
         TextOverflowData textOverflowData = style->textOverflow();
         m_shouldConsiderTextOverflow =
             !textOverflowData.hasClipValue() &&
-            style->overflowX() == OverflowValue::HiddenOverflow &&
+            style->overflowX() != OverflowValue::VisibleOverflow &&
             (!(style->whiteSpace() & WhiteSpaceValue::PreLineWhiteSpaceValue));
     }
 }
@@ -4162,11 +4162,22 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
             } else {
                 overflowString = textOverflowData.stringValue();
             }
+            // css-overflow-4 "ellipsis scrolling": scrolling reveals more
+            // content, so the ellipsis sits at the scrolled edge and goes
+            // away once the end of the content is in view.
+            LayoutUnit scrolled =
+                isAnonymous() ? parent()->asFrameBlockBox()->scrollLeft()
+                              : scrollLeft();
+            // Scroll offsets are whole pixels, so the last fraction of a
+            // pixel of the content can never be scrolled into view.
+            LayoutUnit unreachable = scrolled > 0
+                                         ? LayoutUnit(1)
+                                         : LayoutUnit(LayoutUnit::epsilon());
             LayoutUnit rightBoundary = width() -
                                        (borderRight() + paddingRight()) +
-                                       LayoutUnit::epsilon();
-            LayoutUnit leftBoundary =
-                (borderLeft() + paddingLeft()) - LayoutUnit::epsilon();
+                                       scrolled + unreachable;
+            LayoutUnit leftBoundary = (borderLeft() + paddingLeft()) +
+                                      scrolled - LayoutUnit::epsilon();
 
             while (true) {
                 bool seenHiddenText = false;
@@ -4179,7 +4190,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                             if (!box->asInlineTextBox()
                                      ->isHiddenByTextOverflow()) {
                                 LayoutUnit diff =
-                                    absRect.maxX() - width() +
+                                    absRect.maxX() - width() - scrolled +
                                     (borderRight() + paddingRight());
                                 box->asInlineTextBox()
                                     ->markNeedsConsiderTextOverflow(
@@ -4207,7 +4218,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                             if (!box->asInlineTextBox()
                                      ->isHiddenByTextOverflow()) {
                                 LayoutUnit diff =
-                                    (borderLeft() + paddingLeft()) -
+                                    (borderLeft() + paddingLeft()) + scrolled -
                                     absRect.x();
 
                                 box->asInlineTextBox()
@@ -5558,12 +5569,12 @@ void InlineTextBox::markNeedsConsiderTextOverflow(String* overflowString,
             if ((fnt->measureText(StringView(originalText.string(),
                                              originalText.start(),
                                              originalText.start() + end)) +
-                 overflowStringWidth) < (width() - clippedWidth)) {
+                 overflowStringWidth) <= (width() - clippedWidth)) {
                 break;
             }
         }
 
-        if (end == 0 && overflowStringWidth >= (width() - clippedWidth)) {
+        if (end == 0 && overflowStringWidth > (width() - clippedWidth)) {
             inlineTextBoxRareData()->m_isHidedByTextOverflow = true;
         } else {
             inlineTextBoxRareData()->m_overflowText = overflowString;
@@ -5579,13 +5590,13 @@ void InlineTextBox::markNeedsConsiderTextOverflow(String* overflowString,
             if ((fnt->measureText(StringView(originalText.string(),
                                              originalText.start() + start,
                                              originalText.end())) +
-                 overflowStringWidth) < (width() - clippedWidth)) {
+                 overflowStringWidth) <= (width() - clippedWidth)) {
                 break;
             }
         }
 
         if (start == originalText.length() &&
-            overflowStringWidth >= (width() - clippedWidth)) {
+            overflowStringWidth > (width() - clippedWidth)) {
             inlineTextBoxRareData()->m_isHidedByTextOverflow = true;
         } else {
             inlineTextBoxRareData()->m_overflowText = overflowString;

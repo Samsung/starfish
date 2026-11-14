@@ -950,7 +950,7 @@ http://web-platform.test:8000/css/css-ui/text-overflow-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-016.html
 http://web-platform.test:8000/css/css-ui/text-overflow-020.html
-# [vacuous-pass:TEXT_OVERFLOW_ON_SCROLLER_UNIMPLEMENTED] http://web-platform.test:8000/css/css-ui/text-overflow-021.html
+http://web-platform.test:8000/css/css-ui/text-overflow-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-022.html
 http://web-platform.test:8000/css/css-ui/text-overflow-024.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-ui/text-overflow-025.html

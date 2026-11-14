@@ -2,7 +2,7 @@ http://web-platform.test:8000/html/semantics/forms/the-input-element/auto-direct
 http://web-platform.test:8000/html/semantics/forms/the-input-element/date-time-with-trusted-types.html
 http://web-platform.test:8000/html/semantics/forms/the-input-element/dynamic-value-update.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-input-element/image01.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-input-element/input-text-overflow-ellipsis-scroll.html
+http://web-platform.test:8000/html/semantics/forms/the-input-element/input-text-overflow-ellipsis-scroll.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-input-element/multiline-placeholder-cr.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-input-element/multiline-placeholder-crlf.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/html/semantics/forms/the-input-element/multiline-placeholder.html
