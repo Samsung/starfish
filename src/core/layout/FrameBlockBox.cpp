@@ -1031,9 +1031,11 @@ void FrameBlockBox::computeScrollRectIfNeeded()
             STARFISH_ASSERT(node()->isDocument());
             u = &asFrameDocument()->m_scrollLeft;
         }
+        // The scrollport is the padding box, so the borders do not count.
         LayoutUnit scrollWidth = this->scrollWidth();
-        if (*u > scrollWidth - width()) {
-            *u = scrollWidth - width();
+        LayoutUnit scrollportWidth = width() - borderWidth();
+        if (*u > scrollWidth - scrollportWidth) {
+            *u = scrollWidth - scrollportWidth;
             if (*u < 0) {
                 *u = 0;
             }
@@ -1053,8 +1055,9 @@ void FrameBlockBox::computeScrollRectIfNeeded()
             u = &asFrameDocument()->m_scrollTop;
         }
         LayoutUnit scrollHeight = this->scrollHeight();
-        if (*u > scrollHeight - height()) {
-            *u = scrollHeight - height();
+        LayoutUnit scrollportHeight = height() - borderHeight();
+        if (*u > scrollHeight - scrollportHeight) {
+            *u = scrollHeight - scrollportHeight;
             if (*u < 0) {
                 *u = 0;
             }

@@ -1,0 +1,60 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A layout keeps a scroll offset that fits the padding box</title>
+<style>
+  body { margin: 0; }
+  .scroller { width: 200px; height: 100px; border: 10px solid blue; overflow: scroll; }
+  .content { width: 300px; height: 250px; }
+  #ellipsis { width: 200px; border: 10px solid blue; overflow: scroll; white-space: pre;
+              text-overflow: ellipsis; font: 20px/1 monospace; }
+</style>
+<div id="box" class="scroller"><div id="content" class="content"></div></div>
+<div id="ellipsis">0123456789abcdefghijABCDEFGHIJ0123456789</div>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[scroll-offset-kept-across-layout] " + document.title);
+  };
+}
+
+function equal(actual, expected, what) {
+  console.assert(actual === expected, what + " should be " + expected + ", got " + actual);
+}
+
+window.onload = function () {
+  var box = document.getElementById("box");
+  var content = document.getElementById("content");
+  box.scrollLeft = 5000;
+  box.scrollTop = 5000;
+  var left = box.scrollWidth - box.clientWidth;
+  var top = box.scrollHeight - box.clientHeight;
+  equal(box.scrollLeft, left, "scrollLeft at the end");
+  equal(box.scrollTop, top, "scrollTop at the end");
+
+  // A layout that leaves the scrollable area alone must not move the box:
+  // the borders are not part of the scrollport.
+  content.appendChild(document.createElement("div"));
+  box.appendChild(document.createElement("div"));
+  equal(box.scrollLeft, left, "scrollLeft after a layout");
+  equal(box.scrollTop, top, "scrollTop after a layout");
+
+  // The content of a box with an ellipsis stays fully scrollable.
+  var ellipsis = document.getElementById("ellipsis");
+  equal(ellipsis.scrollWidth > ellipsis.clientWidth, true, "ellipsis box overflows");
+  var end = ellipsis.scrollWidth - ellipsis.clientWidth;
+  ellipsis.scrollLeft = 5000;
+  equal(ellipsis.scrollLeft, end, "ellipsis box scrollLeft at the end");
+  equal(ellipsis.scrollWidth - ellipsis.clientWidth, end, "ellipsis box scroll range after scrolling");
+  ellipsis.scrollLeft = 0;
+  equal(ellipsis.scrollLeft, 0, "ellipsis box scrollLeft at the start");
+
+  testEnd();
+};
+</script>

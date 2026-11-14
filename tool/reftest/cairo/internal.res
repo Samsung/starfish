@@ -966,6 +966,7 @@ tests/assertion/css/overflow/translucent-bg-composited-test-1.html
 tests/assertion/css/overflow/overflowhittest.html
 tests/assertion/css/overflow/overflowhittest2.html
 tests/assertion/css/overflow/overflowhittest3.html
+tests/assertion/css/overflow/scroll-offset-kept-across-layout.html
 tests/pixel/css/overflow/fixed-positioned-parent-box-and-fixed-positioned-child-box.html
 tests/pixel/css/overflow/fixed-positioned-parent-box-and-transform-child-box.html
 tests/pixel/css/overflow/fixed-positioned-parent-box-and-will-change-child-box.html
