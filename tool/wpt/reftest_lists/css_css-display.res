@@ -70,8 +70,8 @@ http://web-platform.test:8000/css/css-display/display-contents-tr-001.html
 http://web-platform.test:8000/css/css-display/display-contents-unusual-html-elements-none.html
 http://web-platform.test:8000/css/css-display/display-contents-whitespace-inside-inline.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-display/display-first-line-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-flow-root-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-flow-root-002.html
+http://web-platform.test:8000/css/css-display/display-flow-root-001.html
+http://web-platform.test:8000/css/css-display/display-flow-root-002.html
 http://web-platform.test:8000/css/css-display/display-flow-root-dynamic.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-flow-root-list-item-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-display/display-inline-dynamic-001.html

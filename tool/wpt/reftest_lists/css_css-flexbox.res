@@ -145,7 +145,7 @@ http://web-platform.test:8000/css/css-flexbox/balance/balance-min-line-count-008
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/baseline-synthesis-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/baseline-synthesis-vert-lr-line-under.html
 # [vacuous-pass:CONTAIN_UNIMPLEMENTED] http://web-platform.test:8000/css/css-flexbox/canvas-contain-size.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/column-flex-child-with-max-width.html
+http://web-platform.test:8000/css/css-flexbox/column-flex-child-with-max-width.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/content-height-with-scrollbars.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/cross-axis-scrollbar.html
 http://web-platform.test:8000/css/css-flexbox/css-box-justify-content.html

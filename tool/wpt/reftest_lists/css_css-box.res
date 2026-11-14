@@ -8,7 +8,7 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/block-container-block-end-self-collapsing-block-start-margin.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/block-container-block-end-self-collapsing-item-has-larger-block-end.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/block-container-block-end-self-collapsing-item-has-larger-block-start.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/block-container-block-end-start-margin.html
+# [vacuous-pass:MARGIN_TRIM_UNIMPLEMENTED] http://web-platform.test:8000/css/css-box/margin-trim/block-container-block-end-start-margin.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/block-container-block-in-inline-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/block-container-block-in-inline-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/block-container-block-in-inline-003.html
@@ -60,7 +60,7 @@ http://web-platform.test:8000/css/css-box/margin-trim/flex-row-orthogonal-item.h
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/grid-trim-ignores-collapsed-tracks.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/multicol-spanner-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/multicol-spanner-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/multicol-spanner-003.html
+# [vacuous-pass:MULTICOL_UNIMPLEMENTED] http://web-platform.test:8000/css/css-box/margin-trim/multicol-spanner-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/multicol-spanner-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/multicol-spanner-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-box/margin-trim/multicol-spanner-006.html

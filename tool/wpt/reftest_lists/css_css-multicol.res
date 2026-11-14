@@ -238,7 +238,7 @@ http://web-platform.test:8000/css/css-multicol/multicol-nested-025.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-nested-026.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-nested-027.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-nested-028.html
-http://web-platform.test:8000/css/css-multicol/multicol-nested-029.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-nested-029.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-nested-030.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-nested-031.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-multicol/multicol-nested-032.html

@@ -226,6 +226,7 @@ private:
         }
         switch (frame->style()->display()) {
         case BlockDisplayValue:
+        case FlowRootDisplayValue:
         case ListItemDisplayValue:
         case TableDisplayValue:
         case FlexDisplayValue:

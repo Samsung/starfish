@@ -916,8 +916,8 @@ http://web-platform.test:8000/css/css-break/table/table-section-paint-vrl-rtl.ht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/transform-020.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/transform-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/transform-025.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/truncated-margin-at-fragmentainer-end-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/truncated-margin-at-fragmentainer-end-002.html
+# [vacuous-pass:MULTICOL_UNIMPLEMENTED] http://web-platform.test:8000/css/css-break/truncated-margin-at-fragmentainer-end-001.html
+# [vacuous-pass:MULTICOL_UNIMPLEMENTED] http://web-platform.test:8000/css/css-break/truncated-margin-at-fragmentainer-end-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-break/widows-001.html
 http://web-platform.test:8000/css/css-break/widows-block-in-inline-001.html
 http://web-platform.test:8000/css/css-break/widows-orphans-001.html

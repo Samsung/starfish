@@ -1,0 +1,66 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>display: flow-root makes a block formatting context root</title>
+<style>
+  body { margin: 0; }
+  .wrap { width: 300px; }
+  .float { float: left; width: 100px; height: 80px; }
+  .child { height: 20px; margin: 30px 0; }
+</style>
+<!-- A float inside is contained. -->
+<div class="wrap"><div id="contains" style="display: flow-root"><div class="float"></div></div></div>
+<div class="wrap"><div id="block" style="display: block"><div class="float"></div></div></div>
+<!-- Child margins stay inside. -->
+<div class="wrap"><div id="margins" style="display: flow-root"><div class="child"></div></div></div>
+<!-- The box does not overlap a float beside it. -->
+<div class="wrap"><div class="float"></div><div id="beside" style="display: flow-root; height: 20px"></div></div>
+<div class="wrap" style="clear: both"><span id="inline-like" style="display: flow-root">text</span></div>
+<div id="floated" style="display: flow-root; float: left"></div>
+<div style="display: flex; clear: both"><div id="flex-item" style="display: flow-root"></div></div>
+<div id="dynamic"><div class="float"></div></div>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[display-flow-root] " + document.title);
+  };
+}
+
+function equal(actual, expected, what) {
+  console.assert(actual === expected, what + " should be " + expected + ", got " + actual);
+}
+
+function byId(id) { return document.getElementById(id); }
+function display(id) { return getComputedStyle(byId(id)).display; }
+
+window.onload = function () {
+  equal(CSS.supports("display", "flow-root"), true, "CSS.supports");
+  equal(display("contains"), "flow-root", "computed display");
+  equal(display("floated"), "flow-root", "computed display of a float");
+  equal(display("flex-item"), "flow-root", "computed display of a flex item");
+  equal(byId("contains").style.display, "flow-root", "specified display");
+
+  equal(byId("contains").offsetHeight, 80, "height with a float inside");
+  equal(byId("block").offsetHeight, 0, "height of a plain block with a float inside");
+  equal(byId("margins").offsetHeight, 80, "height with child margins");
+  equal(byId("beside").offsetLeft, 100, "left edge beside a float");
+  equal(byId("beside").offsetWidth, 200, "width beside a float");
+  // The box is block-level whatever the element.
+  equal(byId("inline-like").offsetWidth, 300, "width of a span");
+
+  var dynamic = byId("dynamic");
+  equal(dynamic.offsetHeight, 0, "height before the change");
+  dynamic.style.display = "flow-root";
+  equal(dynamic.offsetHeight, 80, "height after changing to flow-root");
+  dynamic.style.display = "block";
+  equal(dynamic.offsetHeight, 0, "height after changing back to block");
+
+  testEnd();
+};
+</script>

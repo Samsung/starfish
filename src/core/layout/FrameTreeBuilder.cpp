@@ -913,6 +913,7 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
         return FrameInputBox::buildFrameTree(current, ctx, force);
     } else {
         if (display == DisplayValue::BlockDisplayValue ||
+            display == DisplayValue::FlowRootDisplayValue ||
             display == DisplayValue::InlineBlockDisplayValue ||
             display == DisplayValue::ListItemDisplayValue) {
             return new FrameBlockBox(current, nullptr);

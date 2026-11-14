@@ -1719,6 +1719,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("-webkit-inline-box");
         case DisplayValue::ContentsDisplayValue:
             return String::fromUTF8("contents");
+        case DisplayValue::FlowRootDisplayValue:
+            return String::fromUTF8("flow-root");
         case DisplayValue::NoneDisplayValue:
             return String::fromUTF8("none");
         default:
@@ -12762,6 +12764,8 @@ bool CSSStyleValuePair::updateValueDisplay(Document* document,
         m_value.m_display = DisplayValue::InlineGridDisplayValue;
     } else if (value.equals("contents")) {
         m_value.m_display = DisplayValue::ContentsDisplayValue;
+    } else if (value.equals("flow-root")) {
+        m_value.m_display = DisplayValue::FlowRootDisplayValue;
     } else if (value.equals("none")) {
         m_value.m_display = DisplayValue::NoneDisplayValue;
     } else {

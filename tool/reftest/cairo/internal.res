@@ -133,6 +133,7 @@ tests/pixel/click/click-internal-test-4.html
 tests/pixel/css/display/ltr-display-internal-test-3.html
 tests/pixel/css/display/ltr-display-internal-test-1.html
 tests/assertion/css/display/display-contents.html
+tests/assertion/css/display/display-flow-root.html
 tests/pixel/click/click-internal-test-3.html
 tests/pixel/click/click-internal-test-5.html
 tests/pixel/css/position/ltr-position-internal-test-with-image-element-4.html

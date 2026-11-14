@@ -1411,7 +1411,7 @@ http://web-platform.test:8000/css/CSS2/floats/floats-wrap-bfc-007.xht
 http://web-platform.test:8000/css/CSS2/floats/floats-wrap-bfc-outside-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/floats-wrap-bfc-with-margin-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/floats-wrap-bfc-with-margin-001a.tentative.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/floats-wrap-bfc-with-margin-002.tentative.html
+http://web-platform.test:8000/css/CSS2/floats/floats-wrap-bfc-with-margin-002.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/floats-wrap-bfc-with-margin-003.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/floats-wrap-bfc-with-margin-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/floats/floats-wrap-bfc-with-margin-005.html

@@ -1701,6 +1701,8 @@ void Frame::computeStyleFlags()
     m_flags.m_needToEstablishBlockFormattingContext |= isAbsolutePositioned;
     m_flags.m_needToEstablishBlockFormattingContext |= isFloating;
     m_flags.m_needToEstablishBlockFormattingContext |=
+        (style->display() == DisplayValue::FlowRootDisplayValue);
+    m_flags.m_needToEstablishBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::InlineBlockDisplayValue);
     m_flags.m_needToEstablishBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::TableCellDisplayValue);

@@ -482,7 +482,7 @@ http://web-platform.test:8000/css/css-sizing/intrinsic-size-min-content-box-sizi
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/nested-flexbox-image-percentage-max-height-computes-as-none.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/ortho-writing-mode-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/orthogonal-writing-mode-float-in-inline.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/percentage-width-subpixels.tentative.html
+http://web-platform.test:8000/css/css-sizing/percentage-width-subpixels.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/range-percent-intrinsic-size-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/range-percent-intrinsic-size-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/range-percent-intrinsic-size-2a.html
@@ -519,7 +519,7 @@ http://web-platform.test:8000/css/css-sizing/responsive-iframe/responsive-iframe
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/slice-nowrap-intrinsic-size.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/abspos-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/abspos-2.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/bfc-next-to-float-1.html
+# [vacuous-pass:STRETCH_SIZING_UNIMPLEMENTED] http://web-platform.test:8000/css/css-sizing/stretch/bfc-next-to-float-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/bfc-next-to-float-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/block-height-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/block-height-006.html

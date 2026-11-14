@@ -146,6 +146,9 @@ enum DisplayValue ENSURE_ENUM_UNSIGNED {
     // (css-display-3 #valdef-display-contents). Unlike `none`, the element
     // still takes part in style resolution and inheritance.
     ContentsDisplayValue,
+    // A block box that establishes a block formatting context for its
+    // contents (css-display-3 #valdef-display-flow-root).
+    FlowRootDisplayValue,
     NoneDisplayValue,
 };
 
