@@ -422,10 +422,71 @@ void Canvas::restore()
     }
 }
 
+namespace {
+    // The pixels of a shadow buffer that can show, [left, right) x [top,
+    // bottom) in buffer pixels.
+    struct ShadowArea {
+        double left, top, right, bottom;
+        bool isEmpty() const
+        {
+            return !(left < right && top < bottom);
+        }
+        double width() const
+        {
+            return right - left;
+        }
+        double height() const
+        {
+            return bottom - top;
+        }
+    };
+} // namespace
+
+// A shadow buffer covers width x height pixels from (originX, originY) in
+// user space. Only its pixels within the blur's reach of the clip (the canvas
+// when there is none) can reach the canvas, so only those are allocated; the
+// clip's user-space bounding box already accounts for the transform.
+static ShadowArea visibleShadowArea(Canvas* canvas, double originX,
+                                    double originY, double width, double height,
+                                    float radius)
+{
+    ShadowArea area = { 0, 0, width, height };
+    double x1, y1, x2, y2;
+    if (canvas->clipExtents(x1, y1, x2, y2)) {
+        // Three box passes of one kernel each, and a pixel of filtering when
+        // the buffer is drawn.
+        const double reach =
+            (radius > 0
+                 ? 3 * ShadowBlur::computeKernelSizeAtStdDeviation(radius / 2)
+                 : 0) +
+            2;
+        area.left = std::max(area.left, floor(x1 - reach - originX));
+        area.top = std::max(area.top, floor(y1 - reach - originY));
+        area.right = std::min(area.right, ceil(x2 + reach - originX));
+        area.bottom = std::min(area.bottom, ceil(y2 + reach - originY));
+    }
+    return area;
+}
+
+// shortcut: a shadow whose visible part still exceeds
+// BufferedNativeImageData's limits, or whose buffers cannot be allocated, is
+// not drawn (also in the text, path and image variants).
 void Canvas::drawRectShadowInner(float x, float y, float width, float height,
                                  bool isFill)
 {
-    int xx = x, yy = y, ww = width, hh = height;
+    // fillRect() and strokeRect() draw a negative-size rectangle as is; its
+    // shadow is the same rectangle.
+    if (width < 0) {
+        x += width;
+        width = -width;
+    }
+    if (height < 0) {
+        y += height;
+        height = -height;
+    }
+    // Truncated as an int conversion would, without its range limit.
+    float xx = std::trunc(x), yy = std::trunc(y), ww = std::trunc(width),
+          hh = std::trunc(height);
     Unit::Rect shadowRect(0, 0, ww, hh);
     CanvasShadowData& shadow = lastState()->m_shadowData;
     auto shadowColor = shadow.color();
@@ -481,10 +542,16 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
         cv->setFillColor(shadowColor);
         cv->drawRect(shadowRect);
 
-        ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                      nativeImage->height(), nativeImage->stride());
-        sb.process(radius / 2);
+        const bool blurred =
+            ShadowBlur(nativeImage->data(), nativeImage->width(),
+                       nativeImage->height(), nativeImage->stride())
+                .process(radius / 2);
         delete cv;
+        if (!blurred) {
+            restore();
+            delete nativeImage;
+            return;
+        }
 
         float offset = ceil(radiusOffset / 2);
         Unit::Rect imageRect(-offset + shadowOffsetX + xx,
@@ -617,14 +684,27 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
 
         delete nativeImage;
     } else {
+        float offset = ceil(radiusOffset / 2);
+        const float originX = -offset + shadowOffsetX + xx;
+        const float originY = -offset + shadowOffsetY + yy;
+        const ShadowArea area = visibleShadowArea(
+            this, originX, originY, ceil(shadowRect.width() + radiusOffset),
+            ceil(shadowRect.height() + radiusOffset), radius);
+        if (area.isEmpty()) {
+            return;
+        }
+        auto shadowImage =
+            BufferedNativeImageData::tryCreate(area.width(), area.height());
+        if (!shadowImage) {
+            return;
+        }
+        NativeImageData* nativeImage = shadowImage.value();
         save();
-        NativeImageData* nativeImage = BufferedNativeImageData::create(
-            ceil(shadowRect.width() + radiusOffset),
-            ceil(shadowRect.height() + radiusOffset));
         Canvas* cv =
             Canvas::create(nativeImage->data(), nativeImage->width(),
                            nativeImage->height(), nativeImage->stride());
         cv->clearColor(Unit::Color(0, 0, 0, 0));
+        cv->translate(-area.left, -area.top);
         cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
         if (isFill) {
             cv->setFillColor(shadowColor);
@@ -634,17 +714,17 @@ void Canvas::drawRectShadowInner(float x, float y, float width, float height,
             cv->strokeRect(shadowRect);
         }
 
-        ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                      nativeImage->height(), nativeImage->stride());
-        sb.process(radius / 2);
+        const bool blurred =
+            ShadowBlur(nativeImage->data(), nativeImage->width(),
+                       nativeImage->height(), nativeImage->stride())
+                .process(radius / 2);
         delete cv;
 
-        float offset = ceil(radiusOffset / 2);
-        Unit::Rect imageRect(-offset + shadowOffsetX + xx,
-                             -offset + shadowOffsetY + yy,
-                             ceil(shadowRect.width() + radiusOffset),
-                             ceil(shadowRect.height() + radiusOffset));
-        drawImageInner(nativeImage, imageRect);
+        if (blurred) {
+            drawImageInner(nativeImage,
+                           Unit::Rect(originX + area.left, originY + area.top,
+                                      area.width(), area.height()));
+        }
         restore();
 
         delete nativeImage;
@@ -667,8 +747,8 @@ void Canvas::drawTextShadowInner(float x, float y, float stringWidth,
     CanvasShadowData& shadow = lastState()->m_shadowData;
     Font* font = lastState()->m_font;
     Unit::Color shadowColor = shadow.color();
-    size_t width = (size_t)(ceil(stringWidth));
-    size_t height = (size_t)(ceil((float)font->metrics().m_fontHeight));
+    double width = ceil(stringWidth);
+    double height = ceil((float)font->metrics().m_fontHeight);
     float radius = shadow.radius();
     float shadowOffsetX = shadow.offsetX();
     float shadowOffsetY = shadow.offsetY();
@@ -706,8 +786,20 @@ void Canvas::drawTextShadowInner(float x, float y, float stringWidth,
 
     auto imageWidth = width + ceil(radiusOffset);
     auto imageHeight = height + ceil(radiusOffset);
-    NativeImageData* nativeImage =
-        BufferedNativeImageData::create(imageWidth, imageHeight);
+    float offset = ceil(radiusOffset / 2);
+    const float originX = -offset + shadowOffsetX + x;
+    const float originY = -offset + shadowOffsetY + y;
+    const ShadowArea area = visibleShadowArea(this, originX, originY,
+                                              imageWidth, imageHeight, radius);
+    if (area.isEmpty()) {
+        return;
+    }
+    auto shadowImage =
+        BufferedNativeImageData::tryCreate(area.width(), area.height());
+    if (!shadowImage) {
+        return;
+    }
+    NativeImageData* nativeImage = shadowImage.value();
     Canvas* cv = Canvas::create(nativeImage->data(), nativeImage->width(),
                                 nativeImage->height(), nativeImage->stride());
     cv->clearColor(Unit::Color(0, 0, 0, 0));
@@ -716,6 +808,7 @@ void Canvas::drawTextShadowInner(float x, float y, float stringWidth,
     tdc.setUnderLineColor(shadowColor);
     tdc.setLineThroughColor(shadowColor);
     cv->setTextDecorationData(tdc);
+    cv->translate(-area.left, -area.top);
     cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
     if (isFill) {
         cv->setFillColor(shadowColor);
@@ -726,16 +819,16 @@ void Canvas::drawTextShadowInner(float x, float y, float stringWidth,
     }
     delete cv;
 
-    if (radius > 0) {
-        ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                      nativeImage->height(), nativeImage->stride());
-        sb.process(radius / 2);
+    if (radius > 0 && !ShadowBlur(nativeImage->data(), nativeImage->width(),
+                                  nativeImage->height(), nativeImage->stride())
+                           .process(radius / 2)) {
+        delete nativeImage;
+        return;
     }
 
     save();
-    Unit::Rect rect(0, 0, imageWidth, imageHeight);
-    float offset = ceil(radiusOffset / 2);
-    translate(-offset + shadowOffsetX + x, -offset + shadowOffsetY + y);
+    Unit::Rect rect(0, 0, area.width(), area.height());
+    translate(originX + area.left, originY + area.top);
     drawImageInner(nativeImage, rect);
     delete nativeImage;
     restore();
@@ -775,8 +868,8 @@ void Canvas::drawPathShadowInner(Path* path, bool isFill)
             { lineWidth() / 2, static_cast<float>(miterLimit()), lineCap(),
               lineJoin(), dash(), dashOffset() });
     }
-    size_t width = (size_t)(ceil(boundRect.width()));
-    size_t height = (size_t)(ceil(boundRect.height()));
+    double width = ceil(boundRect.width());
+    double height = ceil(boundRect.height());
     float radius = shadow.radius();
     float shadowOffsetX = shadow.offsetX();
     float shadowOffsetY = shadow.offsetY();
@@ -813,11 +906,24 @@ void Canvas::drawPathShadowInner(Path* path, bool isFill)
 
     auto imageWidth = width + ceil(radiusOffset);
     auto imageHeight = height + ceil(radiusOffset);
-    NativeImageData* nativeImage =
-        BufferedNativeImageData::create(imageWidth, imageHeight);
+    float offset = ceil(radiusOffset / 2);
+    const float originX = -offset + shadowOffsetX + boundRect.x();
+    const float originY = -offset + shadowOffsetY + boundRect.y();
+    const ShadowArea area = visibleShadowArea(this, originX, originY,
+                                              imageWidth, imageHeight, radius);
+    if (area.isEmpty()) {
+        return;
+    }
+    auto shadowImage =
+        BufferedNativeImageData::tryCreate(area.width(), area.height());
+    if (!shadowImage) {
+        return;
+    }
+    NativeImageData* nativeImage = shadowImage.value();
     Canvas* cv = Canvas::create(nativeImage->data(), nativeImage->width(),
                                 nativeImage->height(), nativeImage->stride());
     cv->clearColor(Unit::Color(0, 0, 0, 0));
+    cv->translate(-area.left, -area.top);
     cv->translate(-boundRect.x(), -boundRect.y());
     cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
     if (isFill) {
@@ -830,26 +936,27 @@ void Canvas::drawPathShadowInner(Path* path, bool isFill)
     }
     delete cv;
 
-    ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                  nativeImage->height(), nativeImage->stride());
-    sb.process(radius / 2);
+    if (!ShadowBlur(nativeImage->data(), nativeImage->width(),
+                    nativeImage->height(), nativeImage->stride())
+             .process(radius / 2)) {
+        delete nativeImage;
+        return;
+    }
 
     save();
-    Unit::Rect rect(0, 0, imageWidth, imageHeight);
-    float offset = ceil(radiusOffset / 2);
-    translate(-offset + shadowOffsetX + boundRect.x(),
-              -offset + shadowOffsetY + boundRect.y());
+    Unit::Rect rect(0, 0, area.width(), area.height());
+    translate(originX + area.left, originY + area.top);
     drawImageInner(nativeImage, rect);
     delete nativeImage;
     restore();
 }
 
-#if defined(PORT_CANVAS_BACKEND_CAIRO)
-#define NEEDS_UNPREMULTIPLIED
-#endif
-void Canvas::drawImageShadow(NativeImageData* data, const Unit::Rect& dst)
+void Canvas::drawImageShadow(NativeImageData* data, const Unit::Rect& src,
+                             const Unit::Rect& dst,
+                             ImageRenderingValue imageRenderingMode)
 {
-    int xx = dst.x(), yy = dst.y(), ww = dst.width(), hh = dst.height();
+    float xx = std::trunc(dst.x()), yy = std::trunc(dst.y()),
+          ww = std::trunc(dst.width()), hh = std::trunc(dst.height());
     Unit::Rect shadowRect(0, 0, ww, hh);
     CanvasShadowData& shadow = lastState()->m_shadowData;
     auto shadowColor = shadow.color();
@@ -862,62 +969,51 @@ void Canvas::drawImageShadow(NativeImageData* data, const Unit::Rect& dst)
         radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radius);
         radiusOffset *= 2;
     }
+    float offset = ceil(radiusOffset / 2);
+    const float originX = -offset + shadowOffsetX + xx;
+    const float originY = -offset + shadowOffsetY + yy;
+    const ShadowArea area = visibleShadowArea(
+        this, originX, originY, ceil(shadowRect.width() + radiusOffset),
+        ceil(shadowRect.height() + radiusOffset), radius);
+    if (area.isEmpty()) {
+        return;
+    }
+    auto shadowImage =
+        BufferedNativeImageData::tryCreate(area.width(), area.height());
+    if (!shadowImage) {
+        return;
+    }
+    NativeImageData* nativeImage = shadowImage.value();
     save();
-    NativeImageData* nativeImage = BufferedNativeImageData::create(
-        ceil(shadowRect.width() + radiusOffset),
-        ceil(shadowRect.height() + radiusOffset));
     Canvas* cv = Canvas::create(nativeImage->data(), nativeImage->width(),
                                 nativeImage->height(), nativeImage->stride());
     cv->clearColor(Unit::Color(0, 0, 0, 0));
+    cv->translate(-area.left, -area.top);
     cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
+    // HTML canvas shadows: the shadow is the image's alpha as drawImage() lays
+    // it on dst, in the shadow colour, then blurred.
+    DrawImageInfo drawImageInfo = { 1.0, 1.0,
+                                    BorderImageRepeatValue::StretchValue,
+                                    BorderImageRepeatValue::StretchValue };
+    cv->drawImage(data, src, shadowRect, drawImageInfo, imageRenderingMode);
+    cv->setCompositeOperator(CanvasCompositeOperator::SourceIn,
+                             BlendMode::Normal);
     cv->setFillColor(shadowColor);
     cv->drawRect(shadowRect);
 
-    ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                  nativeImage->height(), nativeImage->stride());
-    sb.process(radius / 2);
+    const bool blurred =
+        ShadowBlur(nativeImage->data(), nativeImage->width(),
+                   nativeImage->height(), nativeImage->stride())
+            .process(radius / 2);
     delete cv;
 
-    {
-        size_t imagaDataHeight = data->height();
-        size_t imagaDataWidth = data->width();
-        uint8_t* srcPtr = data->data();
-        uint8_t* dstPtr = nativeImage->data();
-        for (size_t y = 0; y < imagaDataHeight; y++) {
-            for (size_t x = 0; x < imagaDataWidth; x++) {
-                uint8_t* srcPixel = srcPtr + (y * imagaDataWidth * 4) + (x * 4);
-                uint8_t* dstPixel = dstPtr + (y * imagaDataWidth * 4) + (x * 4);
-                uint8_t r, g, b, a, src_a;
-
-                src_a = srcPixel[3];
-                r = dstPixel[0];
-                g = dstPixel[1];
-                b = dstPixel[2];
-                a = dstPixel[3];
-#if defined(NEEDS_UNPREMULTIPLIED)
-                if (a != 0 && a != 255) {
-                    r = r * 255 / a;
-                    g = g * 255 / a;
-                    b = b * 255 / a;
-                }
-                dstPixel[0] = ((float)r * ((float)src_a / 255));
-                dstPixel[1] = ((float)g * ((float)src_a / 255));
-                dstPixel[2] = ((float)b * ((float)src_a / 255));
-#endif
-                dstPixel[3] = ((float)a * ((float)src_a / 255));
-            }
-        }
+    if (blurred) {
+        drawImageInner(nativeImage,
+                       Unit::Rect(originX + area.left, originY + area.top,
+                                  area.width(), area.height()));
     }
-
-    float offset = ceil(radiusOffset / 2);
-    Unit::Rect imageRect(-offset + shadowOffsetX + xx,
-                         -offset + shadowOffsetY + yy,
-                         ceil(shadowRect.width() + radiusOffset),
-                         ceil(shadowRect.height() + radiusOffset));
-    drawImageInner(nativeImage, imageRect);
     restore();
 
     delete nativeImage;
 }
-#undef NEEDS_UNPREMULTIPLIED
 } // namespace Starfish

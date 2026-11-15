@@ -362,7 +362,10 @@ https://web-platform.test:8443/html/canvas/element/manual/fill-and-stroke-styles
 # [auto-fail:SUBTESTS_FAILED] https://web-platform.test:8443/html/canvas/element/manual/fill-and-stroke-styles/pattern-from-video-cross-origin-taint.https.sub.html
 http://web-platform.test:8000/html/canvas/element/manual/image-smoothing/imagesmoothing.html
 http://web-platform.test:8000/html/canvas/element/manual/imagebitmap/createImageBitmap-blob-invalidtype.html
+http://web-platform.test:8000/html/canvas/element/manual/imagebitmap/createImageBitmap-bounds.html
+# [auto-fail:HARNESS_STATUS_1] the data: URL video that common.sub.js loads fires error, an unhandled rejection that sets the harness status to ERROR; the HTMLVideoElement source fires neither canplaythrough nor error, so its first subtest times out and the subtests after it do not run; OffscreenCanvas is not implemented: http://web-platform.test:8000/html/canvas/element/manual/imagebitmap/createImageBitmap-invalid-args.html
 # [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/html/canvas/element/manual/imagebitmap/createImageBitmap-origin.sub.html
+http://web-platform.test:8000/html/canvas/element/manual/imagebitmap/createImageBitmap-sizeOverflow.html
 http://web-platform.test:8000/html/canvas/element/manual/line-styles/setLineDash.html
 http://web-platform.test:8000/html/canvas/element/manual/the-canvas-state/2d.state.saverestore.imageSmoothingEnabled.html
 http://web-platform.test:8000/html/canvas/element/path-objects/2d.path.arc.angle.1.html
@@ -579,6 +582,7 @@ http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.enable.y.htm
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.image.alpha.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.image.basic.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.image.scale.html
+http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.image.section.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.image.transparent.1.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.image.transparent.2.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.offset.negativeX.html

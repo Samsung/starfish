@@ -125,12 +125,12 @@ namespace WindowOrWorkerGlobalScope {
             , m_hasSrcRect(true)
         {
             if (sw < 0) {
-                m_sx = sx + sw;
-                m_sw = std::abs(sw);
+                m_sx = (int64_t)sx + sw;
+                m_sw = -(int64_t)sw;
             }
             if (sh < 0) {
-                m_sy = sy + sh;
-                m_sh = std::abs(sh);
+                m_sy = (int64_t)sy + sh;
+                m_sh = -(int64_t)sh;
             }
         }
         ImageBitmapCreateContext(ImageBitmapSource& image,
@@ -142,7 +142,7 @@ namespace WindowOrWorkerGlobalScope {
 
         ImageBitmapSource& m_image;
         ImageBitmapOptions& m_options;
-        int32_t m_sx{ 0 }, m_sy{ 0 }, m_sw{ 0 }, m_sh{ 0 };
+        int64_t m_sx{ 0 }, m_sy{ 0 }, m_sw{ 0 }, m_sh{ 0 };
         bool m_hasSrcRect{ false };
     };
 
@@ -179,14 +179,18 @@ namespace WindowOrWorkerGlobalScope {
         return promise;
     }
 
-    static void resolveOutputSize(int32_t sw, int32_t sh,
+    // sw and sh are at most 2^31 and a resize value below 2^32, so the
+    // products fit in 64 bits.
+    static void resolveOutputSize(uint64_t sw, uint64_t sh,
                                   ImageBitmapOptions& options,
-                                  size_t& outputWidth, size_t& outputHight)
+                                  uint64_t& outputWidth, uint64_t& outputHight)
     {
+        // The other dimension of a one-sided resize is "rounded up to the
+        // nearest integer".
         if (options.hasResizeWidth()) {
             outputWidth = options.resizeWidth();
         } else if (!options.hasResizeWidth() && options.hasResizeHeight()) {
-            outputWidth = round(((double)(sw * options.resizeHeight())) / sh);
+            outputWidth = (sw * options.resizeHeight() + sh - 1) / sh;
         } else {
             outputWidth = sw;
         }
@@ -194,15 +198,16 @@ namespace WindowOrWorkerGlobalScope {
         if (options.hasResizeHeight()) {
             outputHight = options.resizeHeight();
         } else if (!options.hasResizeHeight() && options.hasResizeWidth()) {
-            outputHight = round(((double)(sh * options.resizeWidth())) / sw);
+            outputHight = (sh * options.resizeWidth() + sw - 1) / sw;
         } else {
             outputHight = sh;
         }
     }
 
-    static NativeImageData* cropBitmapDataToSourceRectangleWithFormatting(
+    static Optional<NativeImageData*>
+    cropBitmapDataToSourceRectangleWithFormatting(
         ExecutionContext* executionContext, NativeImageData* srcImage,
-        int32_t sx, int32_t sy, int32_t sw, int32_t sh,
+        int64_t sx, int64_t sy, int64_t sw, int64_t sh,
         ImageBitmapOptions& options)
     {
         // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#cropped-to-the-source-rectangle-with-formatting
@@ -211,19 +216,21 @@ namespace WindowOrWorkerGlobalScope {
             return nullptr;
         }
 
-        size_t outputWidth, outputHight;
+        uint64_t outputWidth, outputHight;
         resolveOutputSize(sw, sh, options, outputWidth, outputHight);
 
-        NativeImageData* destImage =
-            BufferedNativeImageData::create(outputWidth, outputHight);
-        Canvas* canvas =
-            Canvas::create(executionContext->webBase()->asWebView(), destImage);
+        auto destImage =
+            BufferedNativeImageData::tryCreate(outputWidth, outputHight);
+        if (!destImage) {
+            return nullptr;
+        }
+        Canvas* canvas = Canvas::create(
+            executionContext->webBase()->asWebView(), destImage.value());
 
         canvas->clearColor(Unit::Color(0, 0, 0, 0));
         canvas->setImageSmoothingEnabled(true);
         canvas->setImageSmoothingQuality(options.toImageRenderingValue());
 
-        Unit::Rect destRect(0, 0, outputWidth, outputHight);
         ImageRenderingValue imageRenderingValue = toImageRenderingValue(
             canvas->imageSmoothingEnabled(), canvas->imageSmoothingQuality());
 
@@ -233,24 +240,44 @@ namespace WindowOrWorkerGlobalScope {
         }
         // TODO : Apply colorSpaceConversion
 
-        Unit::Rect srcRect = Unit::Rect(sx, sy, sw, sh);
-        Unit::Rect adjustSrcRect(0, 0, srcImage->width(), srcImage->height());
-
-        if (adjustSrcRect.contains(srcRect) == true) {
-            adjustSrcRect = srcRect;
-        } else {
-            adjustSrcRect.intersect(srcRect);
+        // The input sits on a transparent black plane: only the part of the
+        // source rectangle over it is drawn, onto the matching part of the
+        // output.
+        const int64_t left = std::max<int64_t>(sx, 0);
+        const int64_t top = std::max<int64_t>(sy, 0);
+        const int64_t right =
+            std::min<int64_t>(sx + sw, (int64_t)srcImage->width());
+        const int64_t bottom =
+            std::min<int64_t>(sy + sh, (int64_t)srcImage->height());
+        if (left < right && top < bottom) {
+            const double scaleX = (double)outputWidth / sw;
+            const double scaleY = (double)outputHight / sh;
+            double x = (left - sx) * scaleX, w = (right - left) * scaleX;
+            double y = (top - sy) * scaleY, h = (bottom - top) * scaleY;
+            // A part landing on less than a pixel covers the pixels it
+            // touches instead: cairo fails to scale down to a sub-pixel size.
+            if (w < 1) {
+                const double end = x + w;
+                x = floor(x);
+                w = std::max(ceil(end), x + 1) - x;
+            }
+            if (h < 1) {
+                const double end = y + h;
+                y = floor(y);
+                h = std::max(ceil(end), y + 1) - y;
+            }
+            DrawImageInfo drawImageInfo = {
+                1.0, 1.0, BorderImageRepeatValue::StretchValue,
+                BorderImageRepeatValue::StretchValue
+            };
+            canvas->drawImage(
+                srcImage, Unit::Rect(left, top, right - left, bottom - top),
+                Unit::Rect(x, y, w, h), drawImageInfo, imageRenderingValue);
         }
-
-        DrawImageInfo drawImageInfo = { 1.0, 1.0,
-                                        BorderImageRepeatValue::StretchValue,
-                                        BorderImageRepeatValue::StretchValue };
-        canvas->drawImage(srcImage, adjustSrcRect, destRect, drawImageInfo,
-                          imageRenderingValue);
         canvas->flush();
         delete canvas;
 
-        return destImage;
+        return destImage.value();
     }
 
     static NativeImageData* createNativeImageDataWithDecoding(
@@ -312,8 +339,8 @@ namespace WindowOrWorkerGlobalScope {
         if (context.m_hasSrcRect) {
             if (!context.m_sw || !context.m_sh) {
                 auto error =
-                    scriptTypeError(executionContext->scriptBindingInstance(),
-                                    String::fromUTF8("sw or sh is 0."));
+                    scriptRangeError(executionContext->scriptBindingInstance(),
+                                     String::fromUTF8("sw or sh is 0."));
                 promise->reject(createScriptValue(error));
                 return promise;
             }
@@ -328,7 +355,6 @@ namespace WindowOrWorkerGlobalScope {
 
         NativeImageData* srcImage = nullptr;
         std::unique_ptr<NativeImageData> ownedSource;
-        NativeImageData* destImage = nullptr;
         bool needsToSetOriginCleanFlag = false;
         bool setOriginCleanFlagValue = false;
         bool srcIsPremultiplied = true;
@@ -455,12 +481,16 @@ namespace WindowOrWorkerGlobalScope {
                 DOMException::Code::INVALID_STATE_ERR);
         }
 
-        if (srcImage == nullptr) {
+        // cairo cannot read a source wider or taller than this.
+        if (srcImage == nullptr ||
+            srcImage->width() > BufferedNativeImageData::kMaxSide ||
+            srcImage->height() > BufferedNativeImageData::kMaxSide) {
             return rejectPromiseWithDOMException(
                 executionContext, promise,
                 DOMException::Code::INVALID_STATE_ERR);
         }
 
+        Optional<NativeImageData*> destImage;
         if (context.m_hasSrcRect) {
             destImage = cropBitmapDataToSourceRectangleWithFormatting(
                 executionContext, srcImage, context.m_sx, context.m_sy,
@@ -471,7 +501,7 @@ namespace WindowOrWorkerGlobalScope {
                 srcImage->height(), context.m_options);
         }
 
-        if (destImage == nullptr) {
+        if (!destImage) {
             return rejectPromiseWithDOMException(
                 executionContext, promise,
                 DOMException::Code::INVALID_STATE_ERR);
@@ -493,7 +523,8 @@ namespace WindowOrWorkerGlobalScope {
                 destImage->height());
         }
 
-        ImageBitmap* imageBitmap = new ImageBitmap(executionContext, destImage);
+        ImageBitmap* imageBitmap =
+            new ImageBitmap(executionContext, destImage.value());
         imageBitmap->setPremultiplied(premultiplied);
 
         if (needsToSetOriginCleanFlag) {

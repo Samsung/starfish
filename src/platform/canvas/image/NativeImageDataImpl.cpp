@@ -43,7 +43,6 @@ public:
         // An alpha mask row is padded to four bytes, as cairo lays it out.
         m_stride = alphaMask ? ((w + 3) & ~(size_t)3) : w * 4;
         m_image = (unsigned char*)malloc(m_stride * h);
-        STARFISH_RELEASE_ASSERT(m_image);
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
         m_imageSurface = nullptr;
 #endif
@@ -92,7 +91,7 @@ public:
     void initInternalSurface()
     {
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
-        if (m_width && m_height) {
+        if (m_image && m_width && m_height) {
             m_imageSurface = cairo_image_surface_create_for_data(
                 (unsigned char*)m_image,
                 m_alphaMask ? CAIRO_FORMAT_A8 : CAIRO_FORMAT_ARGB32, m_width,
@@ -153,12 +152,33 @@ protected:
 BufferedNativeImageData* BufferedNativeImageData::create(size_t width,
                                                          size_t height)
 {
-    return new BufferedNativeImageDataImpl(width, height);
+    auto image = new BufferedNativeImageDataImpl(width, height);
+    STARFISH_RELEASE_ASSERT(image->data());
+    return image;
+}
+
+Optional<BufferedNativeImageData*> BufferedNativeImageData::tryCreate(
+    double width, double height)
+{
+    // Negated so that NaN fails too.
+    if (!(width >= 1 && width <= kMaxSide && height >= 1 &&
+          height <= kMaxSide) ||
+        4 * width * height > INT32_MAX) {
+        return nullptr;
+    }
+    auto image = new BufferedNativeImageDataImpl((size_t)width, (size_t)height);
+    if (!image->data()) {
+        delete image;
+        return nullptr;
+    }
+    return image;
 }
 
 BufferedNativeImageData* BufferedNativeImageData::createAlphaMask(size_t width,
                                                                   size_t height)
 {
-    return new BufferedNativeImageDataImpl(width, height, true);
+    auto image = new BufferedNativeImageDataImpl(width, height, true);
+    STARFISH_RELEASE_ASSERT(image->data());
+    return image;
 }
 } // namespace Starfish

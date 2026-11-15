@@ -1540,7 +1540,9 @@ public:
         }
 
         if (lastState()->m_shadowData.hasValidValue()) {
-            drawImageShadow(data, dst);
+            drawImageShadow(data,
+                            Unit::Rect(0, 0, data->width(), data->height()),
+                            dst, imageRenderingMode);
         }
         drawImageInner(data, dst, imageRenderingMode);
     }
@@ -1744,7 +1746,7 @@ public:
         }
 
         if (lastState()->m_shadowData.hasValidValue()) {
-            drawImageShadow(data, dst);
+            drawImageShadow(data, src, dst, imageRenderingMode);
         }
 
         drawImageInner(data, src, dst, borderinfo, imageRenderingMode);
@@ -2934,6 +2936,13 @@ private:
         double y1, y2;
         cairo_clip_extents(m_canvas, &x1, &y1, &x2, &y2);
         out = LayoutRect(x1, y1, x2 - x1, y2 - y1);
+        return true;
+    }
+
+    virtual bool clipExtents(double& x1, double& y1, double& x2,
+                             double& y2) override
+    {
+        cairo_clip_extents(m_canvas, &x1, &y1, &x2, &y2);
         return true;
     }
 

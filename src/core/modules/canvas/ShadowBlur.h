@@ -30,7 +30,9 @@ public:
     ShadowBlur(uint8_t* source, const size_t& width, const size_t& height,
                const size_t& stride, size_t channels = 4);
     ~ShadowBlur();
-    void process(float stdDeviation);
+    // Blurs the source in place. False when the work buffers cannot be
+    // allocated; the source is then left as it was.
+    bool process(float stdDeviation);
 
     static const float RADIUS_LIMIT;
     static float computeKernelSizeAtStdDeviation(float stdDeviation);
@@ -41,7 +43,6 @@ private:
     size_t m_stride;
     size_t m_channels;
     uint8_t* m_source;
-    std::unique_ptr<uint8_t, void (*)(uint8_t*)> m_workspace;
 };
 } // namespace Starfish
 #endif

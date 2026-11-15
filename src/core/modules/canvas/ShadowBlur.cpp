@@ -41,8 +41,6 @@ ShadowBlur::ShadowBlur(uint8_t* source, const size_t& width,
     , m_stride(stride)
     , m_channels(channels)
     , m_source(source)
-    , m_workspace(new uint8_t[m_stride * m_height],
-                  [](uint8_t* data) { delete[] data; })
 {
 }
 
@@ -206,13 +204,12 @@ static void boxBlurColumnsAlpha(const uint8_t* src, uint8_t* dst,
 inline void standardBoxBlur(uint8_t* fromBuffer, uint8_t* toBuffer,
                             unsigned kernelSizeX, unsigned kernelSizeY,
                             int stride, int imageWidth, int imageHeight,
-                            int channels)
+                            int channels, uint32_t* columnSums)
 {
     int dxLeft = 0;
     int dxRight = 0;
     int dyLeft = 0;
     int dyRight = 0;
-    std::unique_ptr<uint32_t[]> columnSums(new uint32_t[imageWidth * channels]);
 
     for (int i = 0; i < 3; ++i) {
         if (kernelSizeX) {
@@ -232,11 +229,11 @@ inline void standardBoxBlur(uint8_t* fromBuffer, uint8_t* toBuffer,
             if (channels == 1) {
                 boxBlurColumnsAlpha(fromBuffer, toBuffer, kernelSizeY, dyLeft,
                                     dyRight, stride, imageWidth, imageHeight,
-                                    columnSums.get());
+                                    columnSums);
             } else {
                 boxBlurColumns(fromBuffer, toBuffer, kernelSizeY, dyLeft,
                                dyRight, stride, imageWidth, imageHeight,
-                               columnSums.get());
+                               columnSums);
             }
             std::swap(fromBuffer, toBuffer);
         }
@@ -265,15 +262,24 @@ float ShadowBlur::computeKernelSizeAtStdDeviation(float stdDeviation)
     return clampedToKernelSize(stdDeviation);
 }
 
-void ShadowBlur::process(float stdDeviation)
+bool ShadowBlur::process(float stdDeviation)
 {
     if (stdDeviation <= 0 || !m_width || !m_height) {
-        return;
+        return true;
     }
 
+    // The work buffer is as large as the source, which a page sizes.
+    std::unique_ptr<uint8_t[]> workspace(new (std::nothrow)
+                                             uint8_t[m_stride * m_height]);
+    std::unique_ptr<uint32_t[]> columnSums(new (std::nothrow)
+                                               uint32_t[m_width * m_channels]);
+    if (!workspace || !columnSums) {
+        return false;
+    }
     LongTaskFinder timer("ShadowBlur::process", 1);
     int kernelSize = computeKernelSizeAtStdDeviation(stdDeviation);
-    standardBoxBlur(m_source, m_workspace.get(), kernelSize, kernelSize,
-                    m_stride, m_width, m_height, m_channels);
+    standardBoxBlur(m_source, workspace.get(), kernelSize, kernelSize, m_stride,
+                    m_width, m_height, m_channels, columnSums.get());
+    return true;
 }
 } // namespace Starfish

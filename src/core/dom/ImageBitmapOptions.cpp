@@ -27,7 +27,9 @@ bool ImageBitmapOptions::stringToImageOrientation(String* imageOrientation,
                                                   ImageOrientation& out)
 {
     STARFISH_ASSERT(imageOrientation != nullptr);
-    if (imageOrientation->equals("none", 4)) {
+    // EXIF orientation is not applied, so "from-image" draws as "none".
+    if (imageOrientation->equals("from-image", 10) ||
+        imageOrientation->equals("none", 4)) {
         out = ImageOrientation::None;
         return true;
     } else if (imageOrientation->equals("flipY", 5)) {

@@ -41,6 +41,14 @@ public:
 
     static BufferedNativeImageData* create(size_t actualDeviceWidth,
                                            size_t actualDeviceHeight);
+    // cairo cannot draw into or from an image past MAX_IMAGE_SIZE a side; the
+    // byte bound is ImageData's (4 * sw * sh within int32).
+    static constexpr size_t kMaxSide = 32767;
+    // Sizes a page controls come here, not to create(), which aborts: nothing
+    // when a side is outside [1, kMaxSide] (NaN too), the pixels exceed
+    // INT32_MAX bytes, or they cannot be allocated.
+    static Optional<BufferedNativeImageData*> tryCreate(double width,
+                                                        double height);
     // One byte of coverage per pixel, no colour: the shape of a mask that
     // Canvas::fillWithImageAlpha() paints a colour through.
     static BufferedNativeImageData* createAlphaMask(size_t actualDeviceWidth,

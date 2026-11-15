@@ -1,12 +1,13 @@
 // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#imagebitmapoptions
 
-enum ImageOrientation { "none", "flipY" };
+// "none" is the former name of "from-image", kept for content (Khronos uses it).
+enum ImageOrientation { "from-image", "flipY", "none" };
 enum PremultiplyAlpha { "none", "premultiply", "default" };
 enum ColorSpaceConversion { "none", "default" };
 enum ResizeQuality { "pixelated", "low", "medium", "high" };
 
 dictionary ImageBitmapOptions {
-  ImageOrientation imageOrientation = "none";
+  ImageOrientation imageOrientation = "from-image";
   PremultiplyAlpha premultiplyAlpha = "default";
   ColorSpaceConversion colorSpaceConversion = "default";
   [EnforceRange] unsigned long resizeWidth;

@@ -1,0 +1,207 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Canvas shadows of huge or scaled shapes</title>
+<script>
+// https://html.spec.whatwg.org/multipage/canvas.html#shadows
+// The shadow of a drawn image is its alpha, as drawImage() lays it out, in
+// the shadow colour.
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "canvas shadows complete";
+    };
+}
+
+function context() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 100;
+    canvas.height = 100;
+    return canvas.getContext("2d");
+}
+
+function rgba(ctx, x, y) {
+    return Array.from(ctx.getImageData(x, y, 1, 1).data).join(",");
+}
+
+function opaque(size) {
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "rgb(0, 0, 255)";
+    ctx.fillRect(0, 0, size, size);
+    return canvas;
+}
+
+const small = opaque(4);
+const huge = {
+    "strokeRect 1e8": ctx => {
+        ctx.shadowBlur = 2;
+        ctx.strokeRect(0, 0, 1e8, 1e8);
+    },
+    "thin fillRect": ctx => {
+        ctx.shadowBlur = 40;
+        ctx.fillRect(0, 0, 1e9, 1);
+    },
+    "wide text": ctx => {
+        ctx.font = "2000px sans-serif";
+        ctx.shadowBlur = 2;
+        ctx.fillText("W".repeat(20), 0, 50);
+    },
+    "huge arc": ctx => {
+        ctx.shadowBlur = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 1e9, 0, 2 * Math.PI);
+        ctx.fill();
+    },
+    "drawImage 1e8": ctx => {
+        ctx.shadowBlur = 2;
+        ctx.drawImage(small, 0, 0, 1e8, 1e8);
+    },
+    "drawImage 1e5 with offset": ctx => {
+        ctx.shadowOffsetX = 3;
+        ctx.drawImage(small, 0, 0, 1e5, 1e5);
+    }
+};
+for (const name in huge) {
+    const ctx = context();
+    ctx.shadowColor = "black";
+    huge[name](ctx);
+    console.assert(ctx.getImageData(0, 0, 1, 1).data.length === 4,
+                   name + ": the canvas stays usable");
+}
+
+// Only the part of a shadow that can show is rendered, however large or far
+// off the canvas its shape is.
+let ctx = context();
+ctx.shadowColor = "black";
+ctx.shadowOffsetY = 20;
+ctx.drawImage(small, 0, 0, 40000, 10);
+console.assert(rgba(ctx, 50, 5) === "0,0,255,255",
+               "a 40000-wide image: " + rgba(ctx, 50, 5));
+console.assert(rgba(ctx, 50, 25) === "0,0,0,255",
+               "a 40000-wide image casts its visible shadow: " +
+                   rgba(ctx, 50, 25));
+ctx = context();
+ctx.shadowColor = "black";
+ctx.shadowBlur = 2;
+ctx.shadowOffsetX = 1030;
+ctx.beginPath();
+ctx.rect(-1000, 10, 40, 20);
+ctx.fill();
+console.assert(ctx.getImageData(45, 20, 1, 1).data[3] > 200,
+               "a shape off the canvas casts its shadow onto it: " +
+                   rgba(ctx, 45, 20));
+
+// Under a transform, the part of a shadow that shows is the same whether
+// the rest of it is clipped away or off the canvas.
+function transformedScene(size, shift, clip, blur) {
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const c = canvas.getContext("2d");
+    c.translate(-shift, -shift);
+    if (clip) {
+        c.beginPath();
+        c.rect(130, 130, 60, 60);
+        c.clip();
+    }
+    c.translate(120, 120);
+    c.rotate(0.7);
+    c.scale(1.6, 0.7);
+    c.shadowColor = "rgba(0, 0, 0, 0.8)";
+    c.shadowBlur = blur;
+    c.shadowOffsetX = 18;
+    c.shadowOffsetY = 10;
+    c.drawImage(opaque(60), -40, -30, 60, 60);
+    return c.getImageData(0, 0, size, size).data;
+}
+// The largest premultiplied difference from the whole scene over
+// [132, 188)^2, inside the clip or the small canvas.
+function sceneDifference(size, shift, clip, blur) {
+    const part = transformedScene(size, shift, clip, blur);
+    const whole = transformedScene(240, 0, false, blur);
+    let max = 0;
+    for (let y = 132; y < 188; y++) {
+        for (let x = 132; x < 188; x++) {
+            const i = ((y - shift) * size + x - shift) * 4;
+            const j = (y * 240 + x) * 4;
+            for (let k = 0; k < 4; k++) {
+                const a = k === 3 ? part[i + 3] : part[i + k] * part[i + 3] / 255;
+                const b = k === 3 ? whole[j + 3] : whole[j + k] * whole[j + 3] / 255;
+                max = Math.max(max, Math.abs(a - b));
+            }
+        }
+    }
+    return max;
+}
+// Browsers antialias edges differently under a clip or on another canvas
+// size (up to 13 in Chrome); a part of the shadow lost or moved differs by
+// far more.
+let difference = sceneDifference(240, 0, true, 0);
+console.assert(difference <= 16,
+               "a transformed shadow under a clip: " + difference);
+difference = sceneDifference(60, 130, false, 6);
+console.assert(difference <= 16,
+               "a transformed blurred shadow on a small canvas: " + difference);
+
+// A rectangle with a negative size casts its shadow where it is drawn.
+ctx = context();
+ctx.shadowColor = "black";
+ctx.shadowBlur = 4;
+ctx.shadowOffsetX = 40;
+ctx.fillStyle = "rgb(0, 0, 255)";
+ctx.fillRect(50, 50, -20, -20);
+console.assert(rgba(ctx, 40, 40) === "0,0,255,255",
+               "negative-size fillRect: " + rgba(ctx, 40, 40));
+console.assert(ctx.getImageData(80, 40, 1, 1).data[3] > 200,
+               "negative-size fillRect shadow: " + rgba(ctx, 80, 40));
+console.assert(ctx.getImageData(80, 10, 1, 1).data[3] === 0,
+               "negative-size fillRect shadow stays near it: " +
+                   rgba(ctx, 80, 10));
+
+// A large image drawn small: the shadow is the small one.
+ctx = context();
+ctx.shadowColor = "black";
+ctx.shadowOffsetX = 20;
+ctx.drawImage(opaque(200), 0, 0, 10, 10);
+console.assert(rgba(ctx, 5, 5) === "0,0,255,255",
+               "downscaled image: " + rgba(ctx, 5, 5));
+console.assert(rgba(ctx, 25, 5) === "0,0,0,255",
+               "downscaled image shadow: " + rgba(ctx, 25, 5));
+console.assert(rgba(ctx, 15, 5) === "0,0,0,0",
+               "downscaled image shadow keeps the drawn size: " +
+                   rgba(ctx, 15, 5));
+console.assert(rgba(ctx, 25, 15) === "0,0,0,0",
+               "downscaled image shadow keeps the drawn height: " +
+                   rgba(ctx, 25, 15));
+
+// A part of an image drawn: the shadow follows that part only.
+ctx = context();
+ctx.shadowColor = "black";
+ctx.shadowOffsetY = 30;
+ctx.drawImage(opaque(200), 50, 50, 20, 20, 0, 0, 20, 20);
+console.assert(rgba(ctx, 10, 40) === "0,0,0,255",
+               "image section shadow: " + rgba(ctx, 10, 40));
+console.assert(rgba(ctx, 30, 40) === "0,0,0,0",
+               "image section shadow keeps the drawn size: " +
+                   rgba(ctx, 30, 40));
+
+// A small image drawn large: its transparent half casts no shadow.
+const half = document.createElement("canvas");
+half.width = 2;
+half.height = 2;
+const halfCtx = half.getContext("2d");
+halfCtx.fillStyle = "rgb(0, 0, 255)";
+halfCtx.fillRect(0, 0, 1, 2);
+ctx = context();
+ctx.shadowColor = "black";
+ctx.shadowOffsetY = 30;
+ctx.drawImage(half, 0, 0, 20, 20);
+// Columns 2 and 17 sample one source pixel whatever the filter.
+console.assert(rgba(ctx, 2, 40) === "0,0,0,255",
+               "upscaled image shadow: " + rgba(ctx, 2, 40));
+console.assert(rgba(ctx, 17, 40) === "0,0,0,0",
+               "upscaled image shadow follows its alpha: " + rgba(ctx, 17, 40));
+
+testEnd();
+</script>

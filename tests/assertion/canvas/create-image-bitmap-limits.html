@@ -1,0 +1,101 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>createImageBitmap sizes and crops</title>
+<script>
+// https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#dom-createimagebitmap
+// A bitmap that cannot be allocated is an internal failure, which WPT and
+// browsers report as InvalidStateError.
+if (typeof testEnd !== "function") {
+    window.testEnd = function () {
+        document.title = "createImageBitmap limits complete";
+    };
+}
+
+async function outcome(promise) {
+    try {
+        const bitmap = await promise;
+        return bitmap.width + "x" + bitmap.height;
+    } catch (e) {
+        return e.name;
+    }
+}
+
+function pixel(bitmap, x, y) {
+    const canvas = document.createElement("canvas");
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(bitmap, 0, 0);
+    return Array.from(ctx.getImageData(x, y, 1, 1).data).join(",");
+}
+
+async function run() {
+    const canvas = document.createElement("canvas");
+    canvas.width = 20;
+    canvas.height = 20;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "rgb(0, 255, 0)";
+    ctx.fillRect(0, 0, 20, 20);
+    const sources = [["canvas", canvas], ["ImageData", new ImageData(20, 20)]];
+
+    for (const [name, source] of sources) {
+        let result = await outcome(createImageBitmap(source, 0, 0, 1e8, 1e8));
+        console.assert(result === "InvalidStateError",
+                       name + ": a 1e8 x 1e8 crop rejects: " + result);
+        result = await outcome(createImageBitmap(source, 0, 0, -2147483648, 20));
+        console.assert(result === "InvalidStateError",
+                       name + ": sw = -2^31 rejects: " + result);
+        result = await outcome(createImageBitmap(
+            source, {resizeWidth: 1e5, resizeHeight: 1e5}));
+        console.assert(result === "InvalidStateError",
+                       name + ": a 1e5 x 1e5 resize rejects: " + result);
+        result = await outcome(createImageBitmap(source, {resizeWidth: 4e9}));
+        console.assert(result === "InvalidStateError",
+                       name + ": resizeWidth 4e9 rejects: " + result);
+        result = await outcome(createImageBitmap(source, 0, 0, 0, 20));
+        console.assert(result === "RangeError", name + ": sw = 0: " + result);
+        result = await outcome(createImageBitmap(source, 0, 0, 20, 0));
+        console.assert(result === "RangeError", name + ": sh = 0: " + result);
+    }
+
+    // The other dimension of a one-sided resize is rounded up.
+    let result = await outcome(createImageBitmap(canvas, 0, 0, 20, 1,
+                                                 {resizeWidth: 1}));
+    console.assert(result === "1x1", "20x1 resized to width 1: " + result);
+
+    // The input lies on a transparent black plane: a crop past its edge keeps
+    // its size and draws the input where it overlaps.
+    const partial = await createImageBitmap(canvas, -8, -8, 16, 16);
+    console.assert(partial.width === 16 && partial.height === 16,
+                   "a crop past the edge keeps its size");
+    console.assert(pixel(partial, 4, 4) === "0,0,0,0",
+                   "outside the input is transparent: " + pixel(partial, 4, 4));
+    console.assert(pixel(partial, 12, 12) === "0,255,0,255",
+                   "the input is not stretched: " + pixel(partial, 12, 12));
+
+    // An input part that lands on less than an output pixel still shows.
+    const thin = await createImageBitmap(canvas, 0, 0, 40, 20,
+                                         {resizeWidth: 1});
+    console.assert(thin.width === 1 && thin.height === 1 &&
+                       pixel(thin, 0, 0) === "0,255,0,255",
+                   "a sub-pixel part covers its pixel: " + pixel(thin, 0, 0));
+
+    // 4294967400 wraps to 104 (long has no [EnforceRange]).
+    const outside = await createImageBitmap(canvas, 4294967400, 0, 10, 10);
+    console.assert(outside.width === 10 && outside.height === 10,
+                   "a crop beside the input keeps its size");
+    console.assert(pixel(outside, 5, 5) === "0,0,0,0",
+                   "a crop beside the input is transparent");
+
+    // A source this wide may be refused, but must not crash.
+    result = await outcome(createImageBitmap(new ImageData(40000, 1),
+                                             0, 0, 10, 1));
+    console.assert(result === "10x1" || result === "InvalidStateError",
+                   "a 40000-wide source: " + result);
+}
+
+run().then(testEnd, (e) => {
+    console.assert(false, "unexpected exception " + e);
+    testEnd();
+});
+</script>

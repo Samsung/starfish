@@ -592,6 +592,13 @@ public:
         return false;
     }
 
+    // The same bounding box in double precision, which a scaled-down
+    // transform can need; false when the backend cannot provide it.
+    virtual bool clipExtents(double& x1, double& y1, double& x2, double& y2)
+    {
+        return false;
+    }
+
     // Generic canvas functions
     virtual void beginPath()
     {
@@ -751,7 +758,9 @@ protected:
     void drawStrokePathShadow(Path* path);
     void drawPathShadowInner(Path* path, bool isFill);
 
-    void drawImageShadow(NativeImageData* data, const Unit::Rect& dst);
+    void drawImageShadow(NativeImageData* data, const Unit::Rect& src,
+                         const Unit::Rect& dst,
+                         ImageRenderingValue imageRenderingMode);
 
     virtual void drawRectInner(float x, float y, float w, float h) = 0;
     virtual void drawStrokeRectInner(float x, float y, float w, float h) = 0;
