@@ -201,6 +201,11 @@ public:
     {
         return m_contexts.front();
     }
+    // HTTP discovery body for /json and /json/list, built from the live
+    // targets on every request so tabs spawned via Target.createTarget show
+    // up immediately (the previous hardcoded single-entry body never did).
+    std::string discoveryListJson();
+
     const std::vector<TargetContext*>& contexts() const
     {
         return m_contexts;

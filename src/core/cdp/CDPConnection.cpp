@@ -116,12 +116,8 @@ bool CDPConnection::handleHttpDiscovery(const std::string& /*requestLine*/,
     }
 
     if (url == "/json" || url == "/json/list" || url == "/json/list/") {
-        std::string port = std::to_string(m_server->port());
-        std::string body =
-            "[{\"description\":\"\",\"id\":\"TID-0000000001\",\"title\":"
-            "\"Starfish\",\"type\":\"page\",\"url\":\"about:blank\","
-            "\"webSocketDebuggerUrl\":\"ws://127.0.0.1:" +
-            port + "/devtools/page/TID-0000000001\"}]";
+        // Built from the live targets so spawned tabs appear immediately.
+        std::string body = m_server->dispatcher()->discoveryListJson();
         sendHttp(body, "application/json; charset=UTF-8");
         return false;
     }

@@ -52,6 +52,7 @@
 #include "domains/OverlayDomain.h"
 #include "core/page/WebView.h"
 #include "core/page/BrowsingContext.h"
+#include "core/dom/Document.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
@@ -157,6 +158,70 @@ TargetContext* CDPDispatcher::createContext(WebView* wv, bool ownsWebView)
     GC_add_roots(&ctx->remoteObjectStore, &ctx->remoteObjectStore + 1);
     m_contexts.push_back(ctx);
     return ctx;
+}
+
+static std::string discoveryTargetUrl(TargetContext* ctx)
+{
+    WebView* wv = ctx->webView;
+    BrowsingContext* bc = wv ? wv->mainBrowsingContext() : nullptr;
+    if (bc && bc->document() && bc->document()->urlString()) {
+        std::string u = bc->document()->urlString()->toUTF8NonGCString();
+        if (!u.empty()) {
+            return u;
+        }
+    }
+    return "about:blank";
+}
+
+static void discoveryAppendJsonString(std::string& out, const std::string& v)
+{
+    out += '"';
+    for (char ch : v) {
+        switch (ch) {
+        case '"':
+            out += "\\\"";
+            break;
+        case '\\':
+            out += "\\\\";
+            break;
+        case '\n':
+            out += "\\n";
+            break;
+        case '\r':
+            out += "\\r";
+            break;
+        case '\t':
+            out += "\\t";
+            break;
+        default:
+            out += ch;
+        }
+    }
+    out += '"';
+}
+
+std::string CDPDispatcher::discoveryListJson()
+{
+    std::string port = std::to_string(m_server->port());
+    std::string body = "[";
+    bool first = true;
+    for (TargetContext* ctx : m_contexts) {
+        CDPSession* s = ctx->session;
+        if (!first) {
+            body += ",";
+        }
+        first = false;
+        body += "{\"description\":\"\",\"id\":";
+        discoveryAppendJsonString(body, s->targetId);
+        body += ",\"title\":\"Starfish\",\"type\":\"page\",\"url\":";
+        discoveryAppendJsonString(body, discoveryTargetUrl(ctx));
+        body += ",\"webSocketDebuggerUrl\":\"ws://127.0.0.1:" + port +
+                "/devtools/page/";
+        body += s->targetId;
+        body += "\"}";
+    }
+    body += "]";
+    return body;
 }
 
 void CDPDispatcher::destroyContext(TargetContext* ctx)
