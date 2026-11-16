@@ -70,6 +70,9 @@ void CDPServer::start()
         m_ioThread = nullptr;
         m_isRunning = false;
     }
+    // The initial context existed before this server, so its discovery body
+    // was never published; build it now that the port is known.
+    m_dispatcher->rebuildDiscoveryJson();
 }
 
 void CDPServer::stop()

@@ -157,11 +157,13 @@ TargetContext* CDPDispatcher::createContext(WebView* wv, bool ownsWebView)
     GC_add_roots(&ctx->nodeRegistry, &ctx->nodeRegistry + 1);
     GC_add_roots(&ctx->remoteObjectStore, &ctx->remoteObjectStore + 1);
     m_contexts.push_back(ctx);
+    rebuildDiscoveryJson();
     return ctx;
 }
 
 static std::string discoveryTargetUrl(TargetContext* ctx)
 {
+    // Main thread only: reads GC-managed document state.
     WebView* wv = ctx->webView;
     BrowsingContext* bc = wv ? wv->mainBrowsingContext() : nullptr;
     if (bc && bc->document() && bc->document()->urlString()) {
@@ -200,8 +202,14 @@ static void discoveryAppendJsonString(std::string& out, const std::string& v)
     out += '"';
 }
 
-std::string CDPDispatcher::discoveryListJson()
+void CDPDispatcher::rebuildDiscoveryJson()
 {
+    // Main thread only (GC reads below). The IO thread answers HTTP
+    // discovery from the cached string instead: touching GC objects or
+    // m_contexts there races the GC and the context list mutation.
+    if (!m_server) {
+        return; // port unknown until the server exists; start() rebuilds
+    }
     std::string port = std::to_string(m_server->port());
     std::string body = "[";
     bool first = true;
@@ -221,7 +229,15 @@ std::string CDPDispatcher::discoveryListJson()
         body += "\"}";
     }
     body += "]";
-    return body;
+    std::lock_guard<std::mutex> lock(m_discoveryMutex);
+    m_discoveryJson = body;
+}
+
+std::string CDPDispatcher::discoveryListJson()
+{
+    // Called on the IO thread (CDPConnection HTTP discovery handler).
+    std::lock_guard<std::mutex> lock(m_discoveryMutex);
+    return m_discoveryJson.empty() ? std::string("[]") : m_discoveryJson;
 }
 
 void CDPDispatcher::destroyContext(TargetContext* ctx)
@@ -240,6 +256,7 @@ void CDPDispatcher::destroyContext(TargetContext* ctx)
     }
     delete ctx->session;
     delete ctx;
+    rebuildDiscoveryJson();
 }
 
 TargetContext* CDPDispatcher::contextForSession(const std::string& sessionId)

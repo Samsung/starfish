@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPDispatcher__)
 #define __StarfishCDPDispatcher__
 
+#include <mutex>
 #include <string>
 #include <vector>
 #include "TargetContext.h"
@@ -201,9 +202,13 @@ public:
     {
         return m_contexts.front();
     }
-    // HTTP discovery body for /json and /json/list, built from the live
-    // targets on every request so tabs spawned via Target.createTarget show
-    // up immediately (the previous hardcoded single-entry body never did).
+    // HTTP discovery body for /json and /json/list, kept fresh as tabs are
+    // created or destroyed and as documents navigate (the previous
+    // hardcoded single-entry body never showed spawned tabs).
+    // discoveryListJson() answers on the IO thread and returns the cached
+    // string; only rebuildDiscoveryJson() reads GC objects and m_contexts,
+    // and it runs on the main thread exclusively.
+    void rebuildDiscoveryJson();
     std::string discoveryListJson();
 
     const std::vector<TargetContext*>& contexts() const
@@ -235,6 +240,10 @@ private:
     std::vector<TargetContext*> m_contexts; // [0] is the initial target
     TargetContext* m_current;               // selected per-dispatch
     std::string m_browserSessionId;         // Target.attachToBrowserTarget
+    // Cached /json/list body: rebuilt under m_discoveryMutex on the main
+    // thread, copied to the IO thread by discoveryListJson().
+    std::mutex m_discoveryMutex;
+    std::string m_discoveryJson;
     TargetDomain* m_target;
     PageDomain* m_page;
     RuntimeDomain* m_runtime;

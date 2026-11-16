@@ -1159,6 +1159,11 @@ void PageDomain::finishNavigation(const std::string& sessionId)
     WebView* wv = m_dispatcher->webView();
     const std::string& fid = s->frameId;
 
+    // Keep the cached HTTP discovery body (/json/list) in step with the new
+    // document URL. Main thread: this is the only place GC document state
+    // may be read for discovery.
+    m_dispatcher->rebuildDiscoveryJson();
+
     // Page.addScriptToEvaluateOnNewDocument: evaluate registered scripts in the
     // new document's main world, in registration order. The HTML resource is
     // fetched deferred to the message loop, so at this point the new
