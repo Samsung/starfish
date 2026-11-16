@@ -305,11 +305,40 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
     }
 
     if (method == "attachToTarget") {
-        if (s->sessionId.empty()) {
-            s->sessionId =
-                "SID-" + std::to_string(++s->sessionCounter) + "0000000";
+        // Chrome attaches the session to the target named by params.targetId.
+        // The old handler ignored targetId and always attached the current
+        // (initial) context's session, so a flattened session opened for a
+        // created tab executed every later command on the first WebView.
+        TargetContext* target = m_dispatcher->initialContext();
+        for (TargetContext* c : m_dispatcher->contexts()) {
+            if (c->session == s) {
+                target = c;
+                break;
+            }
         }
-        s->attached = true;
+        std::string wantTid;
+        if (cmd.params() && cmd.params()->HasMember("targetId") &&
+            (*cmd.params())["targetId"].IsString()) {
+            wantTid = (*cmd.params())["targetId"].GetString();
+        }
+        if (!wantTid.empty()) {
+            for (TargetContext* c : m_dispatcher->contexts()) {
+                if (c->session->targetId == wantTid) {
+                    target = c;
+                    break;
+                }
+            }
+        }
+        CDPSession* ts = target->session;
+        if (ts->sessionId.empty()) {
+            // Mint off the initial session's monotonic counter so ids stay
+            // distinct from createTarget's session ids.
+            CDPSession* init = m_dispatcher->initialContext()->session;
+            ts->sessionId =
+                "SID-" + std::to_string(++init->sessionCounter) + "0000000";
+        }
+        ts->attached = true;
+        WebView* twv = target->webView;
 
         // Emit attachedToTarget event first.
         {
@@ -317,11 +346,11 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
             rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
             rapidjson::Value params(rapidjson::kObjectType);
             params.AddMember("sessionId",
-                             rapidjson::Value(s->sessionId.c_str(),
-                                              s->sessionId.size(), alloc),
+                             rapidjson::Value(ts->sessionId.c_str(),
+                                              ts->sessionId.size(), alloc),
                              alloc);
             rapidjson::Value ti(rapidjson::kObjectType);
-            buildTargetInfo(s, wv, true, ti, alloc);
+            buildTargetInfo(ts, twv, true, ti, alloc);
             params.AddMember("targetInfo", ti, alloc);
             params.AddMember("waitingForDebugger", false, alloc);
             CDPCommand evt(m_dispatcher, Optional<int64_t>(), cmd.sessionId(),
@@ -332,10 +361,10 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "sessionId",
-            rapidjson::Value(s->sessionId.c_str(), s->sessionId.size(), alloc),
-            alloc);
+        result.AddMember("sessionId",
+                         rapidjson::Value(ts->sessionId.c_str(),
+                                          ts->sessionId.size(), alloc),
+                         alloc);
         cmd.sendResult(result, doc);
         return;
     }
