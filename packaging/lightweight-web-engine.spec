@@ -312,8 +312,6 @@ BuildRequires: pkgconfig(openssl)
   %endif
 %endif
 
-BuildRequires: pkgconfig(libpulse)
-
 %if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "common" || "%{rpm}" == "all"
 BuildRequires: pkgconfig(capi-system-info)
 BuildRequires: pkgconfig(capi-system-device)
