@@ -3594,13 +3594,35 @@ The WebAudio support is in an early stage.
 (32/64-bit), and WAVE_FORMAT_EXTENSIBLE variants of those formats on all
 WebAudio builds. Linux builds with `USE_FFMPEG_MEDIA_PLAYER=1` additionally
 decode compressed audio from memory with FFmpeg and resample it to the
-context's sample rate. Only these codecs are accepted: AAC, MP3, FLAC,
+context's sample rate. Only these codecs are accepted: AAC, ALAC, MP3, FLAC,
 Vorbis, Opus, a set of `pcm_*` variants, `adpcm_ms`, and `adpcm_ima_wav`.
-Non-audio streams are discarded, and inputs with more than 16 streams are
-rejected.
+Non-audio tracks are skipped; MP4 and Matroska inputs with more than 16
+tracks are rejected.
 The compressed decoder accepts AAC, FLAC, Matroska/WebM, MP4/MOV, MP3,
 Ogg, and WAVE containers. Playlists and secondary file or network access
 from demuxers are rejected; decoding is confined to the supplied bytes.
+Container parsing is native and confined to the supplied buffer, with no
+libavformat fallback. MP3 handles MPEG-1/2/2.5 CBR/VBR frames, ID3/APE tags,
+small encoder preambles, Xing/LAME gapless trimming and VBRI metadata frames.
+Ogg selects an audio stream from multiplexed audio/video or multiple-audio
+files; chained streams reset the codec at each boundary. Vorbis, Opus and
+FLAC are supported, including large comment metadata scanned without copying.
+MP4/MOV reads regular/compact sample sizes, 32/64-bit chunk offsets, multiple
+sample descriptions and fragmented MP4 runs. Empty edits and ordered audio
+edit ranges are supported. QuickTime v2 PCM and ALAC are also accepted.
+WAVE parsing includes RF64/BW64, big-endian RIFX and MP3-in-WAVE.
+Matroska/WebM reads audio blocks with Xiph, fixed and EBML lacing, CodecDelay
+and positive discard padding. Ogg Vorbis/Opus also handle a nonzero initial
+granule origin.
+Codec decoding, codec-level frame parsing and compressed-audio resampling
+still use FFmpeg's libavcodec/libavutil/libswresample.
+The bounded native readers intentionally reject unsupported layouts instead
+of invoking a general-purpose container backend: free-format MP3 (also
+unsupported by the FFmpeg MP3 codec), backward/repeated MP4 edit ranges,
+non-unit edit playback rates and encrypted tracks. Ogg audio packets and
+codec headers are limited to 1 MiB (comments are skipped with bounded memory),
+Ogg chains to 16, and fragmented MP4 runs to 4096 per fragment.
+Codec packet copies and unframed codec-parser buffering are limited to 16 MiB.
 Tizen builds decode compressed audio the same way with the platform's FFmpeg
 libraries, so the decoders available depend on the device's FFmpeg build.
 Other Linux builds reject compressed formats.

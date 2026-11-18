@@ -341,7 +341,6 @@ BuildRequires: pkgconfig(capi-media-tool)
 
 %if "%{enable_webaudio}" == "1"
 BuildRequires: pkgconfig(libavcodec)
-BuildRequires: pkgconfig(libavformat)
 BuildRequires: pkgconfig(libavutil)
 BuildRequires: pkgconfig(libswresample)
 %endif

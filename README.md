@@ -163,8 +163,9 @@ Default values are in **bold**.
 * -DWEBAUDIO=[ **0** | 1 ]<br>
   Enable Web Audio on processors other than x86_64, where it is always on.
   On Tizen it needs capi-media-audio-io, capi-media-sound-manager and the
-  platform FFmpeg (libavcodec, libavformat, libavutil, libswresample) for
-  compressed `decodeAudioData()`.
+  platform FFmpeg (libavcodec, libavutil, libswresample) for compressed
+  `decodeAudioData()`. Audio containers are parsed internally; Web Audio
+  does not require libavformat.
 * -DAUDIO_WORKLET=[ **0** | 1 ]<br>
   Enable AudioWorklet (`Worklet`, `AudioWorklet` and the worklet global
   scope). Needs Web Audio. A context creates its worklet realm only when a
@@ -650,6 +651,26 @@ STARFISH_BIN="$PWD/out/ffmpeg/bin/Starfish" xvfb-run -s '-screen 0 1920x1080x24'
 # and a C++ compiler. Compiles only decoder sources into a temporary directory.
 xvfb-run -s '-screen 0 1920x1080x24' -a \
   python3 tool/webaudio/test_decoder_memory.py --build-dir out/ffmpeg
+
+# Native audio demuxing versus reference PCM (manual): requires the
+# FFmpeg build directory, development libraries/CLI, libvorbis-dev (test-only
+# Xiph Vorbis reference decoder), and a C++ compiler.
+# Tests MP3, FLAC, ADTS, Ogg, WebM/Matroska, MP4/fMP4, MOV and WAVE,
+# including gapless trimming, metadata, Ogg multiplexing/chaining, MP4 edits,
+# ALAC, high-resolution PCM and malformed/truncated input. Vorbis is compared
+# with Xiph's decoder because FFmpeg can mis-trim sub-frame Ogg clips.
+# Matroska Opus comparisons decode untrimmed packets, then apply CodecDelay
+# and independently demuxed discard padding to the reference PCM.
+# The decoder test executable does not link libavformat. Add --sanitize
+# to run with Address/Undefined sanitizers.
+xvfb-run -s '-screen 0 1920x1080x24' -a \
+  python3 tool/webaudio/test_native_audio.py --build-dir out/ffmpeg
+
+# Scan the pinned WPT audio/video corpus as well (audio tracks, up to 30 s
+# and the AudioBuffer limit). Writes a per-file JSON report under /tmp.
+xvfb-run -s '-screen 0 1920x1080x24' -a \
+  python3 tool/webaudio/test_native_audio.py --build-dir out/ffmpeg \
+    --corpus-only --corpus third_party/wpt --report /tmp/native-audio-corpus.json
 
 # Native graph/connection-queue ThreadSanitizer stress test (CI, clang job):
 # requires Clang 18 with its TSan runtime and an existing configured Ninja

@@ -29,9 +29,10 @@ bool isMalformedWaveAudio(const uint8_t* bytes, size_t length);
 AudioBufferData* decodeWaveAudio(const uint8_t* bytes, size_t length,
                                  double targetSampleRate);
 
-// Uses FFmpeg on Linux FFmpeg builds and on Tizen; returns nullptr for formats
-// that cannot be decoded or exceed the AudioBuffer allocation limit. Blocks
-// the calling thread until decoding ends, so call it off the main thread.
+// Uses native memory-backed container readers. Codecs and resampling use
+// FFmpeg on Linux FFmpeg builds and on Tizen, without libavformat. Returns
+// nullptr for invalid/unsupported input or allocation limits. Blocks until
+// decoding ends, so call it off the main thread.
 AudioBufferData* decodeCompressedAudio(const uint8_t* bytes, size_t length,
                                        double targetSampleRate);
 

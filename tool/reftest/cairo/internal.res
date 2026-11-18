@@ -22,6 +22,7 @@ tests/assertion/webaudio/buffer-view-lifetime.html
 tests/assertion/webaudio/control-connection-queue.html
 tests/assertion/webaudio/render-navigation-stress.html
 tests/assertion/webaudio/decode-wave-container.html
+tests/assertion/webaudio/decode-native-containers.html
 tests/assertion/webaudio/audionode-connections.html
 tests/assertion/webaudio/buffer-source-rate.html
 tests/assertion/webaudio/buffer-source-loop.html

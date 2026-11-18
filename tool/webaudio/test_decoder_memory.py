@@ -32,7 +32,7 @@ def main():
     if '-DSTARFISH_USE_FFMPEG_MEDIAPLAYER' not in flags:
         raise RuntimeError('An FFmpeg-enabled build is required')
     libraries = shlex.split(subprocess.check_output(
-        ['pkg-config', '--cflags', '--libs', 'libavformat', 'libavcodec',
+        ['pkg-config', '--cflags', '--libs', 'libavcodec',
          'libavutil', 'libswresample'], text=True))
     sources = [root / 'src/core/modules/webaudio/render' / name
                for name in ('CompressedAudioDecoder.cpp', 'AudioDecoder.cpp',

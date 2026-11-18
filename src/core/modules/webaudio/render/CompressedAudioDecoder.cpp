@@ -14,6 +14,8 @@
 #include "core/modules/webaudio/render/AudioDecoder.h"
 #include "core/modules/webaudio/render/AudioBufferData.h"
 #include "core/modules/webaudio/render/AudioBus.h"
+#include "platform/multimedia/MP3MemoryDemuxer.h"
+#include "platform/multimedia/AudioContainerReader.h"
 
 // Linux decodes with FFmpeg only in the FFmpeg media player build; Tizen
 // Web Audio builds always link the platform's FFmpeg.
@@ -33,7 +35,7 @@
 #if defined(STARFISH_FFMPEG_AUDIO_DECODER)
 extern "C" {
 #include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
+#include <libavcodec/vorbis_parser.h>
 #include <libavutil/channel_layout.h>
 #include <libavutil/mem.h>
 #include <libswresample/swresample.h>
@@ -49,17 +51,6 @@ namespace {
     // for extreme sample-rate ratios.
     constexpr int64_t ConversionFrames = 4096;
     constexpr int MaxChannels = 32;
-    constexpr int MaxStreams = 16;
-
-    // decodeAudioData is only required to support audio codecs; keep the
-    // attack surface to the decoders behind the documented containers.
-    // https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-decodeaudiodata
-    const char AudioCodecWhitelist[] =
-        "aac,aac_fixed,mp3float,mp3,flac,vorbis,libvorbis,opus,libopus,"
-        "pcm_alaw,pcm_mulaw,pcm_s8,pcm_u8,pcm_s16le,pcm_s16be,pcm_s24le,"
-        "pcm_s24be,pcm_s32le,pcm_s32be,pcm_f32le,pcm_f32be,pcm_f64le,"
-        "pcm_f64be,adpcm_ms,adpcm_ima_wav";
-
     struct BufferInput {
         BufferInput(const uint8_t* data, size_t size)
             : bytes(data)
@@ -69,48 +60,7 @@ namespace {
 
         const uint8_t* bytes;
         size_t length;
-        size_t offset{ 0 };
     };
-
-    int readPacket(void* opaque, uint8_t* output, int requested)
-    {
-        auto* input = static_cast<BufferInput*>(opaque);
-        if (input->offset == input->length) {
-            return AVERROR_EOF;
-        }
-        size_t count = std::min(static_cast<size_t>(requested),
-                                input->length - input->offset);
-        memcpy(output, input->bytes + input->offset, count);
-        input->offset += count;
-        return static_cast<int>(count);
-    }
-
-    int64_t seekPacket(void* opaque, int64_t offset, int whence)
-    {
-        auto* input = static_cast<BufferInput*>(opaque);
-        if (whence == AVSEEK_SIZE) {
-            return static_cast<int64_t>(input->length);
-        }
-        whence &= ~AVSEEK_FORCE;
-        int64_t base = 0;
-        if (whence == SEEK_CUR) {
-            base = static_cast<int64_t>(input->offset);
-        } else if (whence == SEEK_END) {
-            base = static_cast<int64_t>(input->length);
-        } else if (whence != SEEK_SET) {
-            return AVERROR(EINVAL);
-        }
-        if ((offset > 0 && base > INT64_MAX - offset) ||
-            (offset < 0 && base < INT64_MIN - offset)) {
-            return AVERROR(EINVAL);
-        }
-        int64_t position = base + offset;
-        if (position < 0 || static_cast<uint64_t>(position) > input->length) {
-            return AVERROR(EINVAL);
-        }
-        input->offset = static_cast<size_t>(position);
-        return position;
-    }
 
     class CompressedDecoder {
     public:
@@ -133,7 +83,7 @@ namespace {
                 return nullptr;
             }
             int status = 0;
-            while ((status = av_read_frame(m_format, m_packet)) >= 0) {
+            while ((status = readPacket()) >= 0) {
                 if (m_packet->stream_index == m_streamIndex) {
                     int submitted = avcodec_send_packet(m_codec, m_packet);
                     av_packet_unref(m_packet);
@@ -146,7 +96,7 @@ namespace {
             }
             if (status != AVERROR_EOF ||
                 avcodec_send_packet(m_codec, nullptr) < 0 || !receiveFrames() ||
-                !flushResampler()) {
+                (m_limitSource && m_sourceRemaining) || !flushResampler()) {
                 return nullptr;
             }
             releaseDecoder();
@@ -160,90 +110,362 @@ namespace {
             av_frame_free(&m_frame);
             av_packet_free(&m_packet);
             avcodec_free_context(&m_codec);
-            avformat_close_input(&m_format);
-            // libavformat may replace the caller-owned AVIO buffer.
-            if (m_io) {
-                av_freep(&m_io->buffer);
-            }
-            avio_context_free(&m_io);
+            av_vorbis_parse_free(&m_vorbisGranules);
+            av_parser_close(m_parser);
+            m_parser = nullptr;
             std::vector<float>().swap(m_conversionBuffer);
         }
 
         bool open()
         {
-            m_format = avformat_alloc_context();
-            uint8_t* ioBuffer = static_cast<uint8_t*>(av_malloc(4096));
-            if (!m_format || !ioBuffer) {
-                av_free(ioBuffer);
+            m_nativeMP3 = m_mp3.open(m_input.bytes, m_input.length);
+            if (m_nativeMP3) {
+                const AVCodec* decoder = avcodec_find_decoder(AV_CODEC_ID_MP3);
+                if (!decoder) {
+                    return false;
+                }
+                m_codec = avcodec_alloc_context3(decoder);
+                if (!m_codec) {
+                    return false;
+                }
+                m_codec->pkt_timebase = { 1, static_cast<int>(
+                                                 m_mp3.sampleRate()) };
+                if (avcodec_open2(m_codec, decoder, nullptr) < 0) {
+                    return false;
+                }
+                m_streamIndex = 0;
+                m_packet = av_packet_alloc();
+                m_frame = av_frame_alloc();
+                return m_packet && m_frame;
+            }
+            m_nativeContainer = m_container.open(m_input.bytes, m_input.length);
+            if (m_nativeContainer) {
+                return openNativeContainer();
+            }
+            return false;
+        }
+
+        int readPacket()
+        {
+            if (m_nativeContainer) {
+                return readContainerPacket();
+            }
+            if (!m_nativeMP3) {
+                return AVERROR_INVALIDDATA;
+            }
+            MP3MemoryDemuxer::Packet packet;
+            if (!m_mp3.next(packet)) {
+                return AVERROR_EOF;
+            }
+            // libavcodec requires zero padding beyond each packet. Copy only
+            // the current frame, never the complete resource.
+            int status = av_new_packet(m_packet, static_cast<int>(packet.size));
+            if (status < 0) {
+                return status;
+            }
+            memcpy(m_packet->data, packet.data, packet.size);
+            m_packet->stream_index = 0;
+            m_packet->pts = m_packet->dts = packet.sampleOffset;
+            m_packet->duration = packet.samples;
+            if (packet.skip || packet.discard) {
+                uint8_t* side = av_packet_new_side_data(
+                    m_packet, AV_PKT_DATA_SKIP_SAMPLES, 10);
+                if (!side) {
+                    return AVERROR(ENOMEM);
+                }
+                for (unsigned i = 0; i < 4; i++) {
+                    side[i] = static_cast<uint8_t>(packet.skip >> (i * 8));
+                    side[i + 4] =
+                        static_cast<uint8_t>(packet.discard >> (i * 8));
+                }
+                side[8] = side[9] = 0;
+            }
+            return 0;
+        }
+
+        bool openNativeContainer()
+        {
+            const auto& config = m_container.configuration();
+            if (config.rate > 768000 || config.channels > MaxChannels) {
                 return false;
             }
-            m_io = avio_alloc_context(ioBuffer, 4096, 0, &m_input, readPacket,
-                                      nullptr, seekPacket);
-            if (!m_io) {
-                av_free(ioBuffer);
-                return false;
+            using Codec = AudioContainerReader::Codec;
+            AVCodecID id = AV_CODEC_ID_NONE;
+            switch (config.codec) {
+            case Codec::AAC:
+                id = AV_CODEC_ID_AAC;
+                break;
+            case Codec::ALAC:
+                id = AV_CODEC_ID_ALAC;
+                break;
+            case Codec::MP3:
+                id = AV_CODEC_ID_MP3;
+                break;
+            case Codec::FLAC:
+                id = AV_CODEC_ID_FLAC;
+                break;
+            case Codec::Vorbis:
+                id = AV_CODEC_ID_VORBIS;
+                break;
+            case Codec::Opus:
+                id = AV_CODEC_ID_OPUS;
+                break;
+            case Codec::ALaw:
+                id = AV_CODEC_ID_PCM_ALAW;
+                break;
+            case Codec::MuLaw:
+                id = AV_CODEC_ID_PCM_MULAW;
+                break;
+            case Codec::IMAADPCM:
+                id = AV_CODEC_ID_ADPCM_IMA_WAV;
+                break;
+            case Codec::MSADPCM:
+                id = AV_CODEC_ID_ADPCM_MS;
+                break;
+            case Codec::PCM:
+                if (config.floating) {
+                    id = config.bits == 32   ? AV_CODEC_ID_PCM_F32LE
+                         : config.bits == 64 ? AV_CODEC_ID_PCM_F64LE
+                                             : AV_CODEC_ID_NONE;
+                } else {
+                    switch (config.bits) {
+                    case 8:
+                        id = AV_CODEC_ID_PCM_U8;
+                        break;
+                    case 16:
+                        id = AV_CODEC_ID_PCM_S16LE;
+                        break;
+                    case 24:
+                        id = AV_CODEC_ID_PCM_S24LE;
+                        break;
+                    case 32:
+                        id = AV_CODEC_ID_PCM_S32LE;
+                        break;
+                    }
+                }
+                break;
+            default:
+                break;
             }
-            m_format->pb = m_io;
-            m_format->flags |= AVFMT_FLAG_CUSTOM_IO;
-            // decodeAudioData receives a complete resource, not permission to
-            // open files or URLs referenced by an attacker-controlled demuxer.
-            // https://webaudio.github.io/web-audio-api/#dom-baseaudiocontext-decodeaudiodata
-            m_format->io_open = [](AVFormatContext*, AVIOContext**, const char*,
-                                   int,
-                                   AVDictionary**) { return AVERROR(EACCES); };
-            m_format->format_whitelist =
-                av_strdup("aac,flac,matroska,webm,mov,mp3,ogg,wav");
-            m_format->protocol_whitelist = av_strdup("");
-            // Stream probing opens decoders too; restrict it to audio codecs.
-            m_format->codec_whitelist = av_strdup(AudioCodecWhitelist);
-            m_format->max_streams = MaxStreams;
-            if (!m_format->format_whitelist || !m_format->protocol_whitelist ||
-                !m_format->codec_whitelist) {
-                return false;
-            }
-            if (avformat_open_input(&m_format, nullptr, nullptr, nullptr) < 0) {
-                return false;
-            }
-            // Keep video, subtitle and data streams out of probing and
-            // demuxing; only audio can contribute to the decoded buffer.
-            for (unsigned i = 0; i < m_format->nb_streams; i++) {
-                AVStream* stream = m_format->streams[i];
-                if (stream->codecpar->codec_type != AVMEDIA_TYPE_AUDIO) {
-                    stream->discard = AVDISCARD_ALL;
+            if (config.codec == Codec::PCM && config.bigEndian) {
+                switch (id) {
+                case AV_CODEC_ID_PCM_S16LE:
+                    id = AV_CODEC_ID_PCM_S16BE;
+                    break;
+                case AV_CODEC_ID_PCM_S24LE:
+                    id = AV_CODEC_ID_PCM_S24BE;
+                    break;
+                case AV_CODEC_ID_PCM_S32LE:
+                    id = AV_CODEC_ID_PCM_S32BE;
+                    break;
+                case AV_CODEC_ID_PCM_F32LE:
+                    id = AV_CODEC_ID_PCM_F32BE;
+                    break;
+                case AV_CODEC_ID_PCM_F64LE:
+                    id = AV_CODEC_ID_PCM_F64BE;
+                    break;
+                default:
+                    break;
                 }
             }
-            if (avformat_find_stream_info(m_format, nullptr) < 0) {
-                return false;
+            if (id == AV_CODEC_ID_PCM_U8 && config.signed8) {
+                id = AV_CODEC_ID_PCM_S8;
             }
-            m_streamIndex = av_find_best_stream(m_format, AVMEDIA_TYPE_AUDIO,
-                                                -1, -1, nullptr, 0);
-            if (m_streamIndex < 0) {
-                return false;
-            }
-            for (unsigned i = 0; i < m_format->nb_streams; i++) {
-                if (static_cast<int>(i) != m_streamIndex) {
-                    m_format->streams[i]->discard = AVDISCARD_ALL;
-                }
-            }
-            AVCodecParameters* parameters =
-                m_format->streams[m_streamIndex]->codecpar;
-            const AVCodec* decoder = avcodec_find_decoder(parameters->codec_id);
-            if (!decoder || decoder->type != AVMEDIA_TYPE_AUDIO) {
+            const AVCodec* decoder = avcodec_find_decoder(id);
+            if (!decoder) {
                 return false;
             }
             m_codec = avcodec_alloc_context3(decoder);
             if (!m_codec) {
                 return false;
             }
-            m_codec->codec_whitelist = av_strdup(AudioCodecWhitelist);
-            if (!m_codec->codec_whitelist ||
-                avcodec_parameters_to_context(m_codec, parameters) < 0 ||
-                avcodec_open2(m_codec, decoder, nullptr) < 0) {
+            m_codec->sample_rate = config.rate;
+            if (config.channels) {
+                av_channel_layout_default(&m_codec->ch_layout, config.channels);
+            }
+            m_codec->bits_per_coded_sample = config.bits;
+            m_codec->block_align = config.blockAlign;
+            if (!config.extra.empty()) {
+                m_codec->extradata = static_cast<uint8_t*>(av_mallocz(
+                    config.extra.size() + AV_INPUT_BUFFER_PADDING_SIZE));
+                if (!m_codec->extradata) {
+                    return false;
+                }
+                memcpy(m_codec->extradata, config.extra.data(),
+                       config.extra.size());
+                m_codec->extradata_size = config.extra.size();
+                if (config.codec == Codec::Opus && config.extra.size() >= 12) {
+                    // Container CodecDelay/editing can override OpusHead.
+                    // Apply that delay ourselves instead of skipping twice.
+                    m_codec->extradata[10] = m_codec->extradata[11] = 0;
+                }
+            }
+            if (avcodec_open2(m_codec, decoder, nullptr) < 0) {
                 return false;
             }
-            m_packet = av_packet_alloc();
-            m_frame = av_frame_alloc();
+            if (config.parseFrames) {
+                m_parser = av_parser_init(id);
+                if (!m_parser) {
+                    return false;
+                }
+            }
+            m_startSkip = config.skip;
+            m_skipSourceRate = config.rate;
+            m_skipNeedsRate = true;
+            av_vorbis_parse_free(&m_vorbisGranules);
+            if (config.codec == Codec::Vorbis && config.oggGranules) {
+                m_vorbisGranules = av_vorbis_parse_init(config.extra.data(),
+                                                        config.extra.size());
+                if (!m_vorbisGranules) {
+                    return false;
+                }
+            }
+            m_vorbisPageSamples = 0;
+            m_vorbisFirstPacket = true;
+            m_sourceRemaining = config.samples;
+            m_limitSource = config.samples != 0;
+            m_streamIndex = 0;
+            if (!m_packet) {
+                m_packet = av_packet_alloc();
+            }
+            if (!m_frame) {
+                m_frame = av_frame_alloc();
+            }
             return m_packet && m_frame;
+        }
+
+        int copyPacket(const uint8_t* data, size_t size)
+        {
+            // Bound compressed-packet copies independently of the file size.
+            if (!size || size > 16 * 1024 * 1024) {
+                return AVERROR_INVALIDDATA;
+            }
+            int status = av_new_packet(m_packet, static_cast<int>(size));
+            if (status < 0) {
+                return status;
+            }
+            memcpy(m_packet->data, data, size);
+            m_packet->stream_index = 0;
+            return 0;
+        }
+
+        int readContainerPacket()
+        {
+            AudioContainerReader::Packet packet;
+            if (!m_parser) {
+                if (!m_container.next(packet)) {
+                    return m_container.failed() ? AVERROR_INVALIDDATA
+                                                : AVERROR_EOF;
+                }
+                if (packet.reconfigure) {
+                    if (avcodec_send_packet(m_codec, nullptr) < 0 ||
+                        !receiveFrames()) {
+                        return AVERROR_INVALIDDATA;
+                    }
+                    avcodec_free_context(&m_codec);
+                    if (!openNativeContainer()) {
+                        return AVERROR_INVALIDDATA;
+                    }
+                }
+                if (packet.granuleOrigin) {
+                    if (packet.granuleOrigin > m_sourceRemaining) {
+                        return AVERROR_INVALIDDATA;
+                    }
+                    m_sourceRemaining -= packet.granuleOrigin;
+                }
+                if (m_vorbisGranules) {
+                    int duration = av_vorbis_parse_frame(
+                        m_vorbisGranules, packet.data, packet.size);
+                    if (duration < 0) {
+                        return AVERROR_INVALIDDATA;
+                    }
+                    // The initial packet establishes overlap and emits no
+                    // samples. Granules count PCM, not its nominal duration.
+                    if (!m_vorbisFirstPacket) {
+                        m_vorbisPageSamples += duration;
+                    }
+                    m_vorbisFirstPacket = false;
+                    if (packet.granule >= 0) {
+                        // Vorbis permits a negative initial PCM position.
+                        // Infer that origin from a non-final first audio page;
+                        // an EOS-only page instead uses its granule for trim.
+                        // https://xiph.org/vorbis/doc/framing.html
+                        if (!packet.endOfStream ||
+                            uint64_t(packet.granule) > m_vorbisPageSamples) {
+                            int64_t origin =
+                                packet.granule -
+                                static_cast<int64_t>(m_vorbisPageSamples);
+                            if (origin > 0 &&
+                                uint64_t(origin) > m_sourceRemaining) {
+                                return AVERROR_INVALIDDATA;
+                            }
+                            if (origin >= 0) {
+                                m_sourceRemaining -= origin;
+                            } else {
+                                m_sourceRemaining +=
+                                    static_cast<uint64_t>(-origin);
+                            }
+                        }
+                        av_vorbis_parse_free(&m_vorbisGranules);
+                    }
+                }
+                int status = copyPacket(packet.data, packet.size);
+                if (status >= 0 && packet.discard) {
+                    uint8_t* side = av_packet_new_side_data(
+                        m_packet, AV_PKT_DATA_SKIP_SAMPLES, 10);
+                    if (!side) {
+                        return AVERROR(ENOMEM);
+                    }
+                    memset(side, 0, 10);
+                    for (unsigned i = 0; i < 4; i++) {
+                        side[4 + i] =
+                            static_cast<uint8_t>(packet.discard >> (i * 8));
+                    }
+                }
+                return status;
+            }
+            for (;;) {
+                if (m_parserOffset == m_parserLength && !m_parserEOF) {
+                    if (m_container.next(packet)) {
+                        m_parserBuffer.assign(packet.data,
+                                              packet.data + packet.size);
+                        m_parserLength = packet.size;
+                        m_parserBuffer.resize(
+                            packet.size + AV_INPUT_BUFFER_PADDING_SIZE, 0);
+                    } else {
+                        if (m_container.failed()) {
+                            return AVERROR_INVALIDDATA;
+                        }
+                        m_parserEOF = true;
+                        m_parserLength = 0;
+                    }
+                    m_parserOffset = 0;
+                }
+                if (m_parserFlushed) {
+                    return AVERROR_EOF;
+                }
+                uint8_t* output = nullptr;
+                int size = 0;
+                int consumed = av_parser_parse2(
+                    m_parser, m_codec, &output, &size,
+                    m_parserEOF ? nullptr
+                                : m_parserBuffer.data() + m_parserOffset,
+                    m_parserLength - m_parserOffset, AV_NOPTS_VALUE,
+                    AV_NOPTS_VALUE, 0);
+                if (consumed < 0 || (!consumed && !size && !m_parserEOF)) {
+                    return AVERROR_INVALIDDATA;
+                }
+                m_parserOffset += consumed;
+                m_parserPending += consumed;
+                if (m_parserPending > 16 * 1024 * 1024) {
+                    return AVERROR_INVALIDDATA;
+                }
+                m_parserFlushed = m_parserEOF && !size;
+                if (size) {
+                    m_parserPending = 0;
+                    return copyPacket(output, size);
+                }
+            }
         }
 
         bool configureResampler()
@@ -302,22 +524,32 @@ namespace {
         // error.
         size_t estimatedFrames() const
         {
-            if (m_format->duration <= 0) {
-                return 0;
+            if (m_nativeContainer) {
+                const auto& config = m_container.configuration();
+                double count = config.rate
+                                   ? static_cast<double>(config.samples) *
+                                         m_targetRate / config.rate
+                                   : 0;
+                return count < AudioBufferData::MaxSamples
+                           ? static_cast<size_t>(count)
+                           : 0;
             }
-            int64_t frames =
-                av_rescale(m_format->duration, m_targetRate, AV_TIME_BASE);
-            if (frames <= 0 ||
-                static_cast<uint64_t>(frames) > AudioBufferData::MaxSamples) {
-                return 0;
+            if (m_nativeMP3) {
+                double frames = static_cast<double>(m_mp3.samples()) *
+                                m_targetRate / m_mp3.sampleRate();
+                return frames < AudioBufferData::MaxSamples
+                           ? static_cast<size_t>(frames)
+                           : 0;
             }
-            size_t estimate = static_cast<size_t>(frames);
-            // Decoder priming and duration rounding can add a few frames.
-            return estimate + estimate / 64 + AudioBus::RenderQuantumFrames;
+            return 0;
         }
 
         bool appendFrames(const float* planar, size_t stride, size_t frames)
         {
+            // Short packets can be fully buffered by the resampling filter.
+            if (!frames) {
+                return true;
+            }
             if (!m_output->reserve(frames)) {
                 return false;
             }
@@ -358,6 +590,61 @@ namespace {
 
         bool convertFrame()
         {
+            if (m_skipNeedsRate) {
+                // Codec output can use an extension rate (e.g. HE-AAC SBR)
+                // different from the container's core sampling frequency.
+                if (m_skipSourceRate && m_startSkip) {
+                    m_startSkip = av_rescale(m_startSkip, m_frame->sample_rate,
+                                             m_skipSourceRate);
+                }
+                m_skipNeedsRate = false;
+            }
+            const auto& config = m_container.configuration();
+            if (m_nativeContainer && !config.edits.empty()) {
+                uint64_t first = m_editPosition;
+                uint64_t last = first + m_frame->nb_samples;
+                while (m_editIndex < config.edits.size()) {
+                    const auto& edit = config.edits[m_editIndex];
+                    if (edit.start > INT64_MAX || edit.length > INT64_MAX) {
+                        return false;
+                    }
+                    uint64_t start = av_rescale(
+                        edit.start, m_frame->sample_rate, config.rate);
+                    uint64_t end =
+                        start + av_rescale(edit.length, m_frame->sample_rate,
+                                           config.rate);
+                    start = std::max<uint64_t>(start, config.skip);
+                    if (start >= last) {
+                        break;
+                    }
+                    uint64_t begin = std::max(first, start);
+                    uint64_t stop = std::min(last, end);
+                    if (begin < stop &&
+                        !convertFrameRange(begin - first, stop - first)) {
+                        return false;
+                    }
+                    if (end > last) {
+                        break;
+                    }
+                    m_editIndex++;
+                }
+                m_editPosition += m_frame->nb_samples;
+                return true;
+            }
+            int start = static_cast<int>(
+                std::min<uint64_t>(m_startSkip, m_frame->nb_samples));
+            m_startSkip -= start;
+            int end = m_frame->nb_samples;
+            if (m_limitSource) {
+                end = start + static_cast<int>(std::min<uint64_t>(
+                                  m_sourceRemaining, end - start));
+                m_sourceRemaining -= end - start;
+            }
+            return convertFrameRange(start, end);
+        }
+
+        bool convertFrameRange(int start, int end)
+        {
             auto format = static_cast<AVSampleFormat>(m_frame->format);
             size_t channels =
                 static_cast<size_t>(m_frame->ch_layout.nb_channels);
@@ -370,9 +657,9 @@ namespace {
             size_t planes = planar ? channels : 1;
             int64_t slice = std::max<int64_t>(
                 1, av_rescale(ConversionFrames, m_inputRate, m_targetRate));
-            for (int offset = 0; offset < m_frame->nb_samples;) {
-                int count = static_cast<int>(
-                    std::min<int64_t>(slice, m_frame->nb_samples - offset));
+            for (int offset = start; offset < end;) {
+                int count =
+                    static_cast<int>(std::min<int64_t>(slice, end - offset));
                 const uint8_t* input[MaxChannels] = {};
                 for (size_t plane = 0; plane < planes; plane++) {
                     input[plane] = m_frame->extended_data[plane] +
@@ -411,10 +698,29 @@ namespace {
         }
 
         BufferInput m_input;
+        MP3MemoryDemuxer m_mp3;
+        bool m_nativeMP3{ false };
+        AudioContainerReader m_container;
+        bool m_nativeContainer{ false };
+        AVCodecParserContext* m_parser{ nullptr };
+        std::vector<uint8_t> m_parserBuffer;
+        size_t m_parserLength{ 0 };
+        size_t m_parserOffset{ 0 };
+        size_t m_parserPending{ 0 };
+        bool m_parserEOF{ false };
+        bool m_parserFlushed{ false };
+        uint64_t m_startSkip{ 0 };
+        uint32_t m_skipSourceRate{ 0 };
+        bool m_skipNeedsRate{ false };
+        uint64_t m_sourceRemaining{ 0 };
+        bool m_limitSource{ false };
+        AVVorbisParseContext* m_vorbisGranules{ nullptr };
+        uint64_t m_vorbisPageSamples{ 0 };
+        bool m_vorbisFirstPacket{ true };
+        uint64_t m_editPosition{ 0 };
+        size_t m_editIndex{ 0 };
         int m_targetRate;
         int m_streamIndex{ -1 };
-        AVFormatContext* m_format{ nullptr };
-        AVIOContext* m_io{ nullptr };
         AVCodecContext* m_codec{ nullptr };
         AVPacket* m_packet{ nullptr };
         AVFrame* m_frame{ nullptr };

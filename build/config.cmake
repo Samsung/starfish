@@ -767,7 +767,7 @@ int main() { AtkComponentIface i; i.grab_highlight = 0; (void)i; return 0; }"
     # STARFISH_ENABLE_WEBAUDIO.
     IF ("${LWE_DEFINES_ENABLED}" MATCHES "STARFISH_ENABLE_WEBAUDIO")
         pkg_check_modules (STARFISH_TIZEN_WEBAUDIO REQUIRED capi-media-audio-io
-            capi-media-sound-manager libavcodec libavformat libavutil
+            capi-media-sound-manager libavcodec libavutil
             libswresample)
     ENDIF()
 ENDIF()
