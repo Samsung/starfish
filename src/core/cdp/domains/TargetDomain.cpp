@@ -70,18 +70,49 @@ static WebView* spawnWebView(WebView* src)
                            src->builtinPolyfillPathString());
 }
 
+static std::string targetTitle(WebView* wv)
+{
+    if (wv) {
+        BrowsingContext* bc = wv->mainBrowsingContext();
+        if (bc && bc->document()) {
+            String* t = bc->document()->title();
+            if (t && !t->isEmpty()) {
+                std::string s = t->toUTF8NonGCString();
+                if (!s.empty()) {
+                    return s;
+                }
+            }
+            // Fallback to URL without scheme
+            if (bc->document()->urlString()) {
+                std::string u = bc->document()->urlString()->toUTF8NonGCString();
+                if (u.rfind("http://", 0) == 0) {
+                    return u.substr(7);
+                }
+                if (u.rfind("https://", 0) == 0) {
+                    return u.substr(8);
+                }
+                if (!u.empty()) {
+                    return u;
+                }
+            }
+        }
+    }
+    return "";
+}
+
 static void buildTargetInfo(CDPSession* s, WebView* wv, bool attached,
                             rapidjson::Value& out,
                             rapidjson::Document::AllocatorType& alloc)
 {
     std::string url = targetUrl(wv);
+    std::string title = targetTitle(wv);
     out.SetObject();
     out.AddMember(
         "targetId",
         rapidjson::Value(s->targetId.c_str(), s->targetId.size(), alloc),
         alloc);
     out.AddMember("type", "page", alloc);
-    out.AddMember("title", "", alloc);
+    out.AddMember("title", rapidjson::Value(title.c_str(), title.size(), alloc), alloc);
     out.AddMember("url", rapidjson::Value(url.c_str(), url.size(), alloc),
                   alloc);
     out.AddMember("attached", attached, alloc);
@@ -121,6 +152,48 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
     }
 
     if (method == "setAutoAttach") {
+        if (cmd.sessionId().empty() || cmd.sessionId() == m_dispatcher->browserSessionId()) {
+            bool flatten = false;
+            if (cmd.params() && cmd.params()->HasMember("flatten") &&
+                (*cmd.params())["flatten"].IsBool()) {
+                flatten = (*cmd.params())["flatten"].GetBool();
+            }
+            if (!flatten) {
+                cmd.sendError(-32602, "Only flatten protocol is supported with browser level auto-attach");
+                return;
+            }
+
+            if (cmd.params()->HasMember("filter") &&
+                (*cmd.params())["filter"].IsArray()) {
+                bool allowsPage = false;
+                bool allowsTab = false;
+                for (rapidjson::Value::ConstValueIterator itr = (*cmd.params())["filter"].Begin();
+                     itr != (*cmd.params())["filter"].End(); ++itr) {
+                    const rapidjson::Value& item = *itr;
+                    if (item.IsObject()) {
+                        bool exclude = false;
+                        if (item.HasMember("exclude") && item["exclude"].IsBool()) {
+                            exclude = item["exclude"].GetBool();
+                        }
+                        if (!exclude) {
+                            if (!item.HasMember("type")) {
+                                allowsPage = true;
+                                allowsTab = true;
+                            } else if (item["type"].IsString()) {
+                                std::string type = item["type"].GetString();
+                                if (type == "page") allowsPage = true;
+                                if (type == "tab") allowsTab = true;
+                            }
+                        }
+                    }
+                }
+                if (allowsPage && allowsTab) {
+                    cmd.sendError(-32602, "Filter should not simultaneously allow \"tab\" and \"page\", page targets are attached via tab targets");
+                    return;
+                }
+            }
+        }
+
         bool autoAttach = false;
         if (cmd.params() && cmd.params()->HasMember("autoAttach") &&
             (*cmd.params())["autoAttach"].IsBool()) {
@@ -391,6 +464,30 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
     }
 
     if (method == "createTarget") {
+        if (cmd.params() && cmd.params()->HasMember("hidden") &&
+            (*cmd.params())["hidden"].IsBool() &&
+            (*cmd.params())["hidden"].GetBool()) {
+            
+            if (cmd.params()->HasMember("background") &&
+                (*cmd.params())["background"].IsBool() &&
+                !(*cmd.params())["background"].GetBool()) {
+                cmd.sendError(-32602, "Hidden target can be created only in background");
+                return;
+            }
+            if (cmd.params()->HasMember("newWindow") &&
+                (*cmd.params())["newWindow"].IsBool() &&
+                (*cmd.params())["newWindow"].GetBool()) {
+                cmd.sendError(-32602, "Hidden target cannot be created in a new window");
+                return;
+            }
+            if (cmd.params()->HasMember("forTab") &&
+                (*cmd.params())["forTab"].IsBool() &&
+                (*cmd.params())["forTab"].GetBool()) {
+                cmd.sendError(-32602, "Hidden target cannot be created for tab");
+                return;
+            }
+        }
+
         // A windowed engine gets its GL context and window from the embedder;
         // a view spawned here would have neither.
         if (!wv->starfish()->isHeadless()) {

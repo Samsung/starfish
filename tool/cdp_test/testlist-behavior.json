@@ -3498,8 +3498,7 @@
       "category": "timeout"
     },
     "target/browser-auto-attach-invalid-filter-error.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "target/browser-auto-attach-tab.js": {
       "expected": "fail",
@@ -3514,8 +3513,7 @@
       "category": "timeout"
     },
     "target/get-target-info.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "target/getTargets-worker.js": {
       "expected": "fail",
@@ -3525,8 +3523,7 @@
       "expected": "pass"
     },
     "target/hidden-target-create-invalid-params.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "target/hidden-target-create.js": {
       "expected": "fail",
@@ -3600,8 +3597,7 @@
       "category": "timeout"
     },
     "target/target-setAutoAttach-flatten-only.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "target/target-setAutoAttach-new-page.js": {
       "expected": "fail",
