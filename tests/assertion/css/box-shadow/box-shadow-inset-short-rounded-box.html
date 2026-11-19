@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>An inset shadow fades the same way in a short rounded box</title>
+<style>
+  body { margin: 0; background: black; }
+  /* The inset shadow is the padding box's outside blurred by a Gaussian of
+     half the blur radius (https://drafts.csswg.org/css-backgrounds/#shadow-blur).
+     Far from the corners and from the opposite side, how it fades in from a
+     side must not depend on how tall or wide the box is. */
+  .box { position: absolute; top: 20px; width: 300px; border-radius: 32px;
+         box-shadow: inset 0 0 35px white; }
+  #short { left: 20px; height: 140px; }
+  #tall { left: 360px; height: 400px; }
+</style>
+</head>
+<body>
+<div class="box" id="short"></div>
+<div class="box" id="tall"></div>
+<script>
+  var shot = "box-shadow-inset-short-rounded-box.html.png";
+  function level(x, y) {
+    return getPixelColor(shot, x, y).g;
+  }
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      return;
+    }
+    setTimeout(function () {
+      screenShot(shot, function () {
+        var top = level(170, 21);
+        var left = level(21, 90);
+        var reference = level(510, 21);
+        console.assert(reference > 100,
+                       "the tall box fades in from about half the shadow colour: " + reference);
+        console.assert(Math.abs(top - reference) <= 6,
+                       "the short box's top side fades in like the tall box's: " + top + " vs " + reference);
+        console.assert(Math.abs(left - level(361, 220)) <= 6,
+                       "the short box's left side fades in like the tall box's: " + left);
+        testEnd();
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

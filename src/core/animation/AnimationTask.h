@@ -128,6 +128,9 @@ public:
 
     double fraction(uint64_t tickCount) const;
     double computeProgress(double& fraction);
+    // The current iteration and the progress through it at the time a
+    // paused animation holds.
+    Optional<std::pair<double, double>> pausedIterationProgress() const;
 
     uint64_t remainTime(uint64_t tickCount) const;
 
@@ -273,6 +276,11 @@ public:
         m_fillMode = v;
     }
 
+    void setDirection(AnimationDirectionValue v)
+    {
+        m_direction = static_cast<unsigned>(v);
+    }
+
     // Whether the animated values have to be kept after the active period
     // ends. Both "forwards" and "both" fill the end of the animation.
     bool fillsForwards() const
@@ -331,6 +339,9 @@ protected:
 
     bool m_isEveryAnimiatedValueResolved : 1;
     CSSStyleValuePair::KeyKind m_property : 9;
+    // An AnimationDirectionValue. GCC 9 rejects an enum class bit-field
+    // narrower than int, and a whole member would grow this class.
+    unsigned m_direction : 2;
 
     AnimationType m_animationType;
     Element* m_targetElement;

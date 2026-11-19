@@ -8,6 +8,7 @@ tests/assertion/css/box-shadow/box-shadow-added-after-forced-rebuild.html
 tests/assertion/css/box-shadow/box-shadow-added-during-rebuild.html
 tests/assertion/css/box-shadow/box-shadow-geometry-change.html
 tests/assertion/css/box-shadow/box-shadow-grown-in-layer.html
+tests/assertion/css/box-shadow/box-shadow-inset-short-rounded-box.html
 tests/assertion/css/box-shadow/shadow-currentcolor-inherited.html
 tests/assertion/css/border-image/border-image-outset-in-layer.html
 tests/assertion/css/border-image/border-image-outset-no-scroll.html
@@ -687,6 +688,10 @@ tests/assertion/css/animation/animation_svg_rx_ry.html
 tests/assertion/css/animation/animation_svg_cx_cy.html
 tests/assertion/css/animation/animation_transform-origin.html
 tests/assertion/css/animation/currentcolor-animated-values.html
+tests/assertion/css/animation/paused-negative-delay.html
+tests/assertion/css/animation/paused-delay-phases.html
+tests/crash/background-animation-without-image.html
+tests/crash/animation-sub-millisecond-running.html
 tests/assertion/svg/animation/check-frame-exist.html
 tests/assertion/svg/geometry-property-negative.html
 tests/assertion/svg/currentcolor-stop-and-flood-color.html
@@ -1075,6 +1080,7 @@ tests/assertion/css/compositing/composited-hidden-layer-not-ghost.html
 tests/assertion/css/compositing/composited-layer-fractional-origin.html
 tests/assertion/css/compositing/composited-layer-fractional-position.html
 tests/assertion/css/compositing/fractional-box-edges-composite-mode.html
+tests/assertion/css/compositing/composited-box-overflow-visible.html
 tests/pixel/css/compositing/mix-blend-mode-overlay-layer.html
 tests/pixel/dom/text-element-added.html
 tests/assertion/dom/same_origin_01.html

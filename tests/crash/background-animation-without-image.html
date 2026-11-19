@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Animating background position and size with no background image does not crash</title>
+<link rel="help" href="https://drafts.csswg.org/css-animations-1/#animations">
+<style>
+  @keyframes position { from { background-position: 0 0; } to { background-position: 10px 10px; } }
+  @keyframes size { from { background-size: 1px; } to { background-size: 10px; } }
+  @keyframes shorthand { 50% { background: green; } }
+  div { width: 20px; height: 20px; }
+  #running { animation: position 1s linear infinite; }
+  #paused { background: red; animation: size 1s linear -0.5s paused; }
+  #pseudo::after { content: ""; display: block; width: 10px; height: 10px; background: red;
+                   animation: shorthand 2s step-end -1s paused; }
+</style>
+<div id="running"></div>
+<div id="paused"></div>
+<div id="pseudo"></div>
+<script>
+// Without a background image the element has no layer to position or size
+// (css-backgrounds-3 #layering counts background-image: none as one, which
+// paints nothing), so such an animation changes nothing that is drawn; the
+// color of the shorthand still animates.
+var frames = 0;
+function step() {
+  ["running", "paused", "pseudo"].forEach(function (id) {
+    var style = getComputedStyle(document.getElementById(id));
+    style.backgroundPosition;
+    style.backgroundSize;
+  });
+  if (++frames < 4) {
+    requestAnimationFrame(step);
+  } else if (typeof testEnd === "function") {
+    testEnd();
+  }
+}
+requestAnimationFrame(step);
+</script>

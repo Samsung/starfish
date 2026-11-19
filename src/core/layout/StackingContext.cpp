@@ -458,8 +458,11 @@ static bool ownerHasFixedBackgroundAttachment(FrameBox* owner)
 
 RepaintingWhenScrollingReason StackingContext::repaintingWhenScrollingReason()
 {
-    // can't scroll
-    if (!m_owner->isFrameBlockBox()) {
+    // can't scroll: only the root (the viewport) and an overflow clip scroll;
+    // any other box's content overflows it and paints unclipped (CSS 2
+    // §11.1.1 overflow: visible).
+    if (!m_owner->isFrameBlockBox() ||
+        !(m_owner->isRootElement() || m_owner->shouldApplyOverflow())) {
         return RepaintingWhenScrollingReasonNone;
     }
 

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A running animation shorter than a millisecond</title>
+<link rel="help" href="https://drafts.csswg.org/web-animations-1/#calculating-the-overall-progress">
+<style>
+  @keyframes fade { from { opacity: 0.2; } to { opacity: 0.6; } }
+  div { height: 20px; background: green; }
+  #once { animation: fade 0.0004s linear both; }
+  #endless { animation: fade 0.0004s linear infinite; }
+</style>
+</head>
+<body>
+<div id="once"></div>
+<div id="endless"></div>
+<script>
+  window.onload = function () {
+    setTimeout(function () {
+      getComputedStyle(document.getElementById("once")).opacity;
+      document.getElementById("once").style.animationPlayState = "paused";
+      setTimeout(function () {
+        getComputedStyle(document.getElementById("once")).opacity;
+        if (typeof testEnd === "function") testEnd();
+      }, 100);
+    }, 300);
+  };
+</script>
+</body>
+</html>

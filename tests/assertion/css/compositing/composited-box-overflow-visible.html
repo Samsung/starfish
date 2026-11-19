@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A composited box with a border, shadow, outline or background image does not clip its overflow</title>
+<link rel="help" href="https://www.w3.org/TR/CSS2/visufx.html#overflow">
+<style>
+  body { margin: 0; background: white; }
+  /* will-change gives each box a buffer of its own; overflow stays visible. */
+  .box { position: absolute; top: 20px; width: 60px; height: 20px;
+         will-change: transform; }
+  .box > div { height: 80px; background: rgb(0, 128, 0); }
+  #border { left: 20px; border: 2px solid black; }
+  #shadow { left: 120px; box-shadow: 0 0 4px black; }
+  #outline { left: 220px; outline: 2px solid black; }
+  #image { left: 320px; background-image: linear-gradient(red, red); }
+</style>
+</head>
+<body>
+<div class="box" id="border"><div></div></div>
+<div class="box" id="shadow"><div></div></div>
+<div class="box" id="outline"><div></div></div>
+<div class="box" id="image"><div></div></div>
+<script>
+  var shot = "composited-box-overflow-visible.html.png";
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      return;
+    }
+    setTimeout(function () {
+      screenShot(shot, function () {
+        // The children reach y = 100, far below the boxes.
+        console.assert(checkPixelColors(shot, [
+          { x: 50, y: 80, r: 0, g: 128, b: 0, a: 255 },
+          { x: 150, y: 80, r: 0, g: 128, b: 0, a: 255 },
+          { x: 250, y: 80, r: 0, g: 128, b: 0, a: 255 },
+          { x: 350, y: 80, r: 0, g: 128, b: 0, a: 255 },
+        ], 3), "overflow painted outside the boxes");
+        testEnd();
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

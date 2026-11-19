@@ -4,7 +4,7 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-delay-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-delay-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-delay-010.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-delay-011.html
+http://web-platform.test:8000/css/css-animations/animation-delay-011.html
 http://web-platform.test:8000/css/css-animations/animation-duration-infinite.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-important-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-animations/animation-name-in-nested-shadow.html

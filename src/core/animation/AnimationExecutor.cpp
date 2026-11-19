@@ -368,6 +368,7 @@ void AnimationExecutor::registerAnimation(ActiveAnimationTask* task,
 {
     task->attachToElement();
     task->setIterationStart(iterationCount);
+    task->setDirection(direction);
     task->setIsRunning(playState == AnimationPlayStateValue::Running);
 
     ActiveElementAnimation* key =

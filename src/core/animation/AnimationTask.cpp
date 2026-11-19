@@ -134,6 +134,7 @@ void ActiveAnimationTask::initialize(const ActiveAnimationTaskInit& init)
     m_delayMs = init.delayInMs;
     m_playState = init.playState;
     m_fillMode = init.fillMode;
+    setDirection(AnimationDirectionValue::Normal);
     m_iterationCount = init.iterationCount;
     m_isInDelayedTime = init.delayInMs > 0 ? true : false;
     m_frameSize = init.animatedValues.size();
@@ -193,6 +194,37 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
             return;
         }
 
+        if (!m_isRunning) {
+            Optional<std::pair<double, double>> timing =
+                pausedIterationProgress();
+            if (!timing) {
+                return;
+            }
+            double iteration = timing.value().first;
+            // web-animations-1 #calculating-the-directed-progress: an
+            // alternating one turns each iteration, and goes forwards on the
+            // endless iteration a zero long one ends with.
+            AnimationDirectionValue direction =
+                static_cast<AnimationDirectionValue>(m_direction);
+            bool odd = std::fmod(iteration, 2) != 0;
+            bool alternateForwards =
+                std::isinf(iteration) ||
+                odd == (direction == AnimationDirectionValue::AlternateReverse);
+            setIsForward(direction == AnimationDirectionValue::Normal ||
+                         (direction != AnimationDirectionValue::Reverse &&
+                          alternateForwards));
+            double f = timing.value().second;
+            // The keyframe interval that holds the directed progress.
+            double directed = m_isForward ? f : 1 - f;
+            unsigned i = 0;
+            while (i + 2 < m_frameSize && m_offsets[i + 1] <= directed) {
+                i++;
+            }
+            m_frameIdx = m_isForward ? i : i + 1;
+            execute(computeProgress(f), style);
+            return;
+        }
+
         if (m_isInDelayedTime) {
             if (m_startTimeMs + m_delayMs > currentTickCount) {
                 return;
@@ -237,16 +269,55 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
     }
 }
 
+// web-animations-1 #calculating-the-active-time onward, at the time a paused
+// animation holds, which a negative delay starts ahead of zero: nothing
+// outside the active interval unless the fill mode covers it.
+Optional<std::pair<double, double>>
+ActiveAnimationTask::pausedIterationProgress() const
+{
+    // The running path restarts the time each iteration and counts finished
+    // ones down in m_iterationStart (an infinite count only by parity).
+    double finished = std::isinf(m_iterationCount)
+                          ? 1 - m_iterationStart
+                          : m_iterationCount - m_iterationStart;
+    double activeTime =
+        finished * m_durationMs + (double)m_gapTimeMs - m_delayMs;
+    if (activeTime < 0) {
+        if (m_fillMode != AnimationFillModeValue::Backwards &&
+            m_fillMode != AnimationFillModeValue::Both) {
+            return Optional<std::pair<double, double>>();
+        }
+        return std::make_pair(0., 0.);
+    }
+    // A zero iteration duration (one under the millisecond clock too)
+    // leaves no active interval: past the delay it is after it, all its
+    // iterations through (#calculating-the-overall-progress).
+    double iterations =
+        m_durationMs ? activeTime / m_durationMs : m_iterationCount;
+    if (iterations >= m_iterationCount) {
+        if (!fillsForwards()) {
+            return Optional<std::pair<double, double>>();
+        }
+        if (std::isinf(m_iterationCount)) {
+            return std::make_pair(static_cast<double>(m_iterationCount), 1.);
+        }
+        // The end of the last iteration.
+        double last = std::max<double>(std::ceil(m_iterationCount) - 1, 0);
+        return std::make_pair(last, m_iterationCount - last);
+    }
+    double iteration = std::floor(iterations);
+    return std::make_pair(iteration, iterations - iteration);
+}
+
 double ActiveAnimationTask::fraction(uint64_t tickCount) const
 {
-    STARFISH_ASSERT(m_durationMs != 0);
     if (m_isInForwardsFillMode) {
         return 1.0f;
     }
 
     if (!m_isRunning) {
-        double result = m_gapTimeMs / static_cast<double>(m_durationMs);
-        return std::min(result, 1.0);
+        Optional<std::pair<double, double>> timing = pausedIterationProgress();
+        return timing ? timing.value().second : 0;
     }
 
     if (!m_startTimeMs) {
@@ -255,6 +326,12 @@ double ActiveAnimationTask::fraction(uint64_t tickCount) const
 
     if (tickCount < (m_startTimeMs + m_delayMs)) {
         return 0;
+    }
+
+    // As when paused (pausedIterationProgress): a zero long iteration is
+    // over once its delay is.
+    if (!m_durationMs) {
+        return 1;
     }
 
     uint64_t timeDiff = tickCount - (m_startTimeMs + m_delayMs);
@@ -270,7 +347,8 @@ uint64_t ActiveAnimationTask::remainTime(uint64_t tickCount) const
     }
 
     if (!m_isRunning) {
-        return m_durationMs - m_gapTimeMs;
+        Optional<std::pair<double, double>> timing = pausedIterationProgress();
+        return timing ? (1 - timing.value().second) * m_durationMs : 0;
     }
 
     if (!m_startTimeMs) {

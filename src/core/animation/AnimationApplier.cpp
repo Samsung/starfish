@@ -198,10 +198,10 @@ bool AnimationApplier::createLayerdValues(
     } else if (currentKeyKind == CSSStyleValuePair::MaskPositionX ||
                currentKeyKind == CSSStyleValuePair::MaskPositionY) {
         layerSize = m_style->maskLayerSize();
-        if (layerSize == 0) {
-            // No mask image to position.
-            return false;
-        }
+    }
+    if (layerSize == 0) {
+        // No image to position or size: the layers are kept per image.
+        return false;
     }
     layeredValues.resize(layerSize);
 

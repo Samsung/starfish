@@ -2343,9 +2343,12 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 }
 
                 const float dpr = wv->screenInfo().devicePixelRatio;
-                // Create image buffer bigger than paddingbox+ shadowBox
-                const float margin = 4.0f;
-                const float half = 2.0f;
+                BoxShadowNinePatch ninePatch(wv, true, shadowColor,
+                                             shadow->radius());
+                // The solid band around the hole must be as deep as the blur
+                // reaches, or the blur fades the shadow at the padding edge.
+                const float half = ninePatch.margin();
+                const float margin = half * 2;
                 const float dx =
                     (shadow->offsetX() < 0) ? -half + shadow->offsetX() : -half;
                 const float dy =
@@ -2426,8 +2429,6 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 const int iw = real.interiorRect.width();
                 const int ih = real.interiorRect.height();
 
-                BoxShadowNinePatch ninePatch(wv, true, shadowColor,
-                                             shadow->radius());
                 BorderRadiusFixedData radii(0, 0, 0, 0, 0, 0, 0, 0);
                 if (hasFrameBorderRadius()) {
                     radii = computeFixedBorderRadius(
