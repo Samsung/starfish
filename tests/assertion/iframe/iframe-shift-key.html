@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Left and right Shift keys through a focused iframe</title>
+<link rel="help" href="https://www.w3.org/TR/uievents-code/#key-alphanumeric-functional">
+<link rel="help" href="https://www.w3.org/TR/uievents-key/#keys-modifier">
+<p>Press and release left Shift, then right Shift.</p>
+<iframe srcdoc="<canvas width='200' height='100'></canvas>"
+        onload="run(this)"></iframe>
+<script>
+function run(frame) {
+  const expected = [
+    ['keydown', 'ShiftLeft', true], ['keyup', 'ShiftLeft', false],
+    ['keydown', 'ShiftRight', true], ['keyup', 'ShiftRight', false],
+  ];
+  let next = 0;
+  function check(event) {
+    if (event.repeat) return;
+    const [type, code, shiftKey] = expected[next++];
+    console.assert(event.type === type && event.key === 'Shift' &&
+                   event.code === code && event.shiftKey === shiftKey,
+                   'Expected ' + [type, 'Shift', code, shiftKey].join(' ') +
+                   ', got ' + [event.type, event.key, event.code, event.shiftKey].join(' '));
+    if (next === expected.length) {
+      frame.contentWindow.removeEventListener('keydown', check);
+      frame.contentWindow.removeEventListener('keyup', check);
+      if (typeof testEnd === 'function') testEnd();
+    }
+  }
+  frame.contentWindow.addEventListener('keydown', check);
+  frame.contentWindow.addEventListener('keyup', check);
+  frame.focus();
+  if (typeof simulateKeyDown === 'function') {
+    for (const code of ['ShiftLeft', 'ShiftRight']) {
+      simulateKeyDown(code);
+      simulateKeyUp(code);
+    }
+  }
+}
+</script>

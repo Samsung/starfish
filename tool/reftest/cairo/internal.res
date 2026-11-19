@@ -938,6 +938,7 @@ tests/assertion/iframe/iframe-click-event-isolation.html
 tests/assertion/iframe/iframe-mouse-screen-coords.html
 tests/assertion/iframe/iframe-resize-media-query.html
 tests/assertion/iframe/iframe-focus-mouse-event.html
+tests/assertion/iframe/iframe-shift-key.html
 tests/assertion/iframe/fixed-iframe-click-in-scrolled-document.html
 tests/assertion/iframe/svg-image-iframe-no-script.html
 tests/assertion/iframe/cross-realm-implicit-this.html

@@ -546,8 +546,9 @@ public:
                         case XK_Page_Down:
                             return ::LWE::KeyValue::PageDownKey;
                         case XK_Shift_L:
-                        case XK_Shift_R:
                             return ::LWE::KeyValue::ShiftLeftKey;
+                        case XK_Shift_R:
+                            return ::LWE::KeyValue::ShiftRightKey;
                         case XK_Control_L:
                         case XK_Control_R:
                             return ::LWE::KeyValue::ControlLeftKey;

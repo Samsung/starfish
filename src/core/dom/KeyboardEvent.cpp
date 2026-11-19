@@ -36,6 +36,8 @@ String* keyValueToKey(KeyValue v)
         return String::createASCIIString(ch);
     } else if (v == EnterKey) {
         return String::createASCIIString("Enter");
+    } else if (v == ShiftLeftKey || v == ShiftRightKey) {
+        return String::createASCIIString("Shift");
     } else if (v == SpaceKey) {
         return String::createASCIIString(" ");
     } else if (v == AtMarkKey) {
@@ -159,6 +161,8 @@ bool keyToKeyValue(const std::string& key, const std::string& text,
         { "Tab", TabKey },
         { "Backspace", BackspaceKey },
         { "Delete", DeleteKey },
+        { "ShiftLeft", ShiftLeftKey },
+        { "ShiftRight", ShiftRightKey },
         { "ArrowLeft", ArrowLeftKey },
         { "ArrowRight", ArrowRightKey },
         { "ArrowUp", ArrowUpKey },
@@ -219,6 +223,10 @@ String* keyValueToCode(KeyValue v)
         return String::createASCIIString("Enter");
     } else if (v == EscapeKey) {
         return String::createASCIIString("Escape");
+    } else if (v == ShiftLeftKey) {
+        return String::createASCIIString("ShiftLeft");
+    } else if (v == ShiftRightKey) {
+        return String::createASCIIString("ShiftRight");
     } else if (v == SpaceKey) {
         return String::createASCIIString("Space");
     } else if (v == AtMarkKey) {
