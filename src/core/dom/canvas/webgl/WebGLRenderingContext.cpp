@@ -1466,14 +1466,20 @@ static bool isGLSLESBuiltin(const std::string& name)
     return false;
 }
 
-// Names no WebGL shader may use: the webgl_ and _webgl_ prefixes (WebGL 1.0
-// and 2.0 "Supported GLSL Constructs") and gl_ names that are not built-ins.
+// Names no WebGL shader may use, a macro name included: the webgl_ and
+// _webgl_ prefixes (WebGL 1.0 and 2.0 "Supported GLSL Constructs").
 static bool isReservedShaderName(const std::string& name)
 {
-    if (name.compare(0, 6, "webgl_") == 0 ||
-        name.compare(0, 7, "_webgl_") == 0) {
-        return true;
-    }
+    return name.compare(0, 6, "webgl_") == 0 ||
+           name.compare(0, 7, "_webgl_") == 0;
+}
+
+// gl_ names that are not built-ins: reserved as identifiers (GLSL ES 1.00
+// §3.7, 3.00 §3.8), so a shader can neither declare nor refer to one. A macro
+// may have such a name, as only GL_ macro names are reserved (GLSL ES 1.00
+// §3.4, 3.00 §3.5), and its uses never reach the compiler.
+static bool isReservedGLName(const std::string& name)
+{
     return name.compare(0, 3, "gl_") == 0 && !isGLSLESBuiltin(name);
 }
 
@@ -2118,10 +2124,13 @@ bool WebGLRenderingContext::shaderSourceForDriver(
                     continue;
                 }
                 const std::string token = view.substr(i, tokenEnd - i);
-                // EXT_frag_depth's built-in; the driver declares it only after
-                // the directive, so a shader without one still fails there.
-                if (isReservedShaderName(token) &&
-                    !(allowsFragDepthEXT && token == "gl_FragDepthEXT")) {
+                const bool isMacro = macroNames.count(token);
+                // gl_FragDepthEXT is EXT_frag_depth's built-in; the driver
+                // declares it only after the directive, so a shader without
+                // one still fails there.
+                if (isReservedShaderName(token) ||
+                    (isCode && !isMacro && isReservedGLName(token) &&
+                     !(allowsFragDepthEXT && token == "gl_FragDepthEXT"))) {
                     error = "Reserved identifier " + token;
                     return false;
                 }
@@ -2139,7 +2148,6 @@ bool WebGLRenderingContext::shaderSourceForDriver(
                     topLevelMacros.erase(token);
                     topLevelFunctionMacros.erase(token);
                 }
-                const bool isMacro = macroNames.count(token);
                 // shaderLimitationError() judges only what the compiler
                 // surely sees: a macro or a name on any other line may
                 // stand for other tokens.

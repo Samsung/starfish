@@ -931,6 +931,7 @@ tests/assertion/canvas/webgl2-texture-size-limit.html
 tests/assertion/canvas/webgl2-compressed-texture-s3tc.html
 tests/assertion/canvas/webgl-draw-buffers-frag-color.html
 tests/assertion/canvas/webgl-draw-buffers-resize.html
+tests/assertion/canvas/webgl-shader-gl-macro-name.html
 tests/assertion/canvas/toDataURL-nocontext.html
 tests/assertion/canvas/dimension-overflow.html
 tests/assertion/canvas/create-image-bitmap-limits.html

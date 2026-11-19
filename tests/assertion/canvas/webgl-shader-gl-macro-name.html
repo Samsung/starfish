@@ -1,0 +1,142 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebGL shaders: gl_ names as macro names and in dropped #if groups</title>
+<canvas id="c1" width="4" height="4"></canvas>
+<canvas id="c2" width="4" height="4"></canvas>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[webgl-shader-gl-macro-name] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// GLSL ES 1.00 §3.7 and 3.00 §3.8 reserve gl_ names as identifiers: a shader
+// may not declare one, and one that is no built-in is undeclared.
+// The preprocessor reserves only GL_ macro names (1.00 §3.4, 3.00 §3.5), so
+// a macro may be named gl_x; its uses are replaced before the compiler sees
+// them, and it never sees the tokens of a dropped #if group either. WebGL
+// reserves webgl_ and _webgl_ for macro names too ("Supported GLSL
+// Constructs").
+
+function compiles(gl, source) {
+  var s = gl.createShader(gl.FRAGMENT_SHADER);
+  gl.shaderSource(s, source);
+  gl.compileShader(s);
+  return gl.getShaderParameter(s, gl.COMPILE_STATUS);
+}
+
+function expect(gl, label, source, expected) {
+  console.assert(compiles(gl, source) === expected,
+                 label + ': expected ' + (expected ? 'success' : 'failure'));
+}
+
+var gl1 = document.getElementById('c1').getContext('webgl');
+if (gl1) {
+  // EXT_frag_depth is not enabled in this context.
+  var P1 = 'precision mediump float;\n';
+  expect(gl1, 'WebGL 1: gl_ name in a dropped #ifdef group',
+         P1 + 'void main() {\n#ifdef NOT_DEFINED\n  gl_FragDepthEXT = 0.5;\n' +
+         '#endif\n  gl_FragColor = vec4(1.0);\n}', true);
+  expect(gl1, 'WebGL 1: macro named gl_x',
+         P1 + '#define gl_MyColor gl_FragColor\n' +
+         'void main() { gl_MyColor = vec4(1.0); }', true);
+  expect(gl1, 'WebGL 1: gl_FragDepthEXT without the extension',
+         P1 + 'void main() { gl_FragDepthEXT = 0.5; ' +
+         'gl_FragColor = vec4(1.0); }', false);
+  expect(gl1, 'WebGL 1: unknown gl_ name in code',
+         P1 + 'void main() { gl_FragColor = gl_Bogus; }', false);
+  expect(gl1, 'WebGL 1: declaring a gl_ name',
+         P1 + 'void main() { float gl_mine = 1.0; ' +
+         'gl_FragColor = vec4(gl_mine); }', false);
+  expect(gl1, 'WebGL 1: macro named webgl_x',
+         P1 + '#define webgl_foo 1.0\n' +
+         'void main() { gl_FragColor = vec4(1.0); }', false);
+} else {
+  console.log('WebGL 1 is not supported: skipped');
+}
+
+var gl2 = document.getElementById('c2').getContext('webgl2');
+if (gl2) {
+  var P2 = '#version 300 es\nprecision mediump float;\nout vec4 color;\n';
+  // The compatibility prelude three.js puts before its ESSL 3.00 shaders.
+  var PRELUDE = '#define gl_FragDepthEXT gl_FragDepth\n';
+  expect(gl2, 'WebGL 2: macro named gl_x, unused',
+         P2 + PRELUDE + 'void main() { color = vec4(1.0); }', true);
+  expect(gl2, 'WebGL 2: macro named gl_x in a dropped #if group',
+         P2 + PRELUDE + 'void main() {\n' +
+         '#if defined( USE_LOGDEPTHBUF ) && defined( USE_LOGDEPTHBUF_EXT )\n' +
+         '  gl_FragDepthEXT = 0.5;\n#endif\n  color = vec4(1.0);\n}', true);
+  expect(gl2, 'WebGL 2: unknown gl_ name in code',
+         P2 + 'void main() { color = gl_Bogus; }', false);
+  expect(gl2, 'WebGL 2: macro named _webgl_x',
+         P2 + '#define _webgl_foo 1.0\n' +
+         'void main() { color = vec4(1.0); }', false);
+  drawThroughMacro();
+} else {
+  console.log('WebGL 2 is not supported: skipped');
+}
+testEnd();
+
+// The macro stands for the built-in: the depth written through it decides
+// the depth test.
+function drawThroughMacro() {
+  var gl = gl2;
+  function shader(type, source) {
+    var s = gl.createShader(type);
+    gl.shaderSource(s, source);
+    gl.compileShader(s);
+    console.assert(gl.getShaderParameter(s, gl.COMPILE_STATUS),
+                   'compiles: ' + source);
+    return s;
+  }
+  var p = gl.createProgram();
+  gl.attachShader(p, shader(gl.VERTEX_SHADER,
+    '#version 300 es\nin vec4 p; void main() { gl_Position = p; }'));
+  gl.attachShader(p, shader(gl.FRAGMENT_SHADER,
+    P2 + PRELUDE + 'uniform float depth;\nvoid main() {\n' +
+    '  gl_FragDepthEXT = depth;\n  color = vec4(depth, 1.0, 0.0, 1.0);\n}'));
+  gl.bindAttribLocation(p, 0, 'p');
+  gl.linkProgram(p);
+  console.assert(gl.getProgramParameter(p, gl.LINK_STATUS), 'links');
+  gl.useProgram(p);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
+                gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  gl.enable(gl.DEPTH_TEST);
+  gl.depthFunc(gl.LESS);
+  gl.clearColor(0, 0, 0, 0);
+  gl.clearDepth(0.5);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  var depth = gl.getUniformLocation(p, 'depth');
+  var pixel = new Uint8Array(4);
+  gl.uniform1f(depth, 1.0);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  gl.readPixels(1, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+  console.assert(Array.prototype.join.call(pixel, ',') === '0,0,0,0',
+                 'depth 1.0 fails against 0.5, got ' +
+                 Array.prototype.join.call(pixel, ','));
+  gl.uniform1f(depth, 0.0);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  gl.readPixels(1, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+  console.assert(Array.prototype.join.call(pixel, ',') === '0,255,0,255',
+                 'depth 0.0 passes against 0.5, got ' +
+                 Array.prototype.join.call(pixel, ','));
+  console.assert(gl.getError() === gl.NO_ERROR, 'no GL error');
+}
+</script>
