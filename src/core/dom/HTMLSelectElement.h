@@ -101,7 +101,8 @@ private:
     void addSelectedIndex(StringBuilder& data);
     void addBaseStyle(StringBuilder& data);
     void addChildren(StringBuilder& data);
-    void addOption(HTMLOptionElement* option, StringBuilder& data);
+    void addOption(HTMLOptionElement* option, int position,
+                   StringBuilder& data);
     void addSeparator(HTMLBRElement* br, StringBuilder& data);
     void addElementStyle(HTMLElement* option, StringBuilder& data);
 

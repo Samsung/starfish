@@ -135,6 +135,7 @@ bool isStringScriptValue(ScriptValue v);
 
 bool scriptValueAsBoolean(ScriptValue v);
 unsigned scriptValueAsNumber(ScriptValue v);
+Optional<int32_t> scriptValueAsInt32(ScriptValue v);
 ScriptObject scriptValueAsObject(ScriptValue v);
 
 Optional<bool> scriptValueToBoolean(ScriptBindingInstance* instance,
@@ -573,6 +574,9 @@ public:
     }
 
 protected:
+    ScriptValue createScriptCallback(
+        const std::string& name, Escargot::ScriptNativeFunctionPointer callback,
+        size_t argumentCount);
     void overrideScriptObject(ScriptObject obj)
     {
         m_object = obj;

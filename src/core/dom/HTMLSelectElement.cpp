@@ -25,13 +25,11 @@
 
 #include "core/dom/HTMLSelectElement.h"
 
-#include "binding/WindowProxy.h"
 #include "core/dom/Event.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMRect.h"
 #include "core/dom/HTMLBRElement.h"
 #include "core/dom/HTMLCollection.h"
-#include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLOptionElement.h"
 #include "core/dom/HTMLOptionsCollection.h"
 #include "core/dom/HTMLOptGroupElement.h"
@@ -528,7 +526,9 @@ void HTMLSelectElement::showDropdownMenu()
         }
 
         StringBuilder builder;
-        builder.appendString("window.dialogArguments = {\n");
+        builder.appendString(
+            "(function(commitSelection) {\n"
+            "var dialogArguments = {\n");
         addSelectedIndex(builder);
         addBaseStyle(builder);
         addChildren(builder);
@@ -581,22 +581,70 @@ void HTMLSelectElement::showDropdownMenu()
         String* picker = String::createASCIIStringWithNoCopy(pickerJs);
         builder.appendString(picker);
 
-        String* script = builder.finalize();
-        window()->webView()->evaluateJavaScript(script);
-
-        Element* e = document()->getElementById(iframeId);
-        if (e && e->isHTMLIFrameElement()) {
-            auto win = e->asHTMLIFrameElement()->contentWindow();
-            jsGlobalObjectDefinePropertyIfNotExists(
-                win->scriptBindingInstance(), String::fromUTF8("picker"),
-                scriptValue());
-        }
+        builder.appendString("\n})");
+        // Open the popup in the select's own document.
+        auto* instance = scriptBindingInstance();
+        auto openPicker = evaluateString(instance, builder.finalize());
+        auto commitSelection = createScriptCallback(
+            "commitSelectPicker",
+            [](ScriptExecutionState state, ScriptValue, size_t argc,
+               ScriptValue* argv, bool) -> ScriptValue {
+                if (argc) {
+                    auto position = scriptValueAsInt32(argv[0]);
+                    auto* select = toScriptWrappable(toCalleeObject(state))
+                                       ->asHTMLSelectElement();
+                    if (position && select->isInDocumentScope()) {
+                        select->onDropdownMenuItemSelected(position.value());
+                    }
+                }
+                return scriptUndefined();
+            },
+            1);
+        callScriptFunction(instance, openPicker, &commitSelection, 1,
+                           scriptUndefined());
     }
 }
 
 void HTMLSelectElement::addSelectedIndex(StringBuilder& data)
 {
     addProperty("selectedIndex", selectedIndex(), data);
+}
+
+// Picker data is inserted into a script evaluated in the select's document.
+static void appendPickerString(StringBuilder& data, String* value)
+{
+    data.appendChar('\'');
+    size_t start = 0;
+    for (size_t i = 0; i < value->length(); ++i) {
+        const char* escape;
+        switch (value->charAt(i)) {
+        case '\'':
+            escape = "\\'";
+            break;
+        case '\\':
+            escape = "\\\\";
+            break;
+        case '\n':
+            escape = "\\n";
+            break;
+        case '\r':
+            escape = "\\r";
+            break;
+        case 0x2028:
+            escape = "\\u2028";
+            break;
+        case 0x2029:
+            escape = "\\u2029";
+            break;
+        default:
+            continue;
+        }
+        data.appendSubString(value, start, i);
+        data.appendString(escape, strlen(escape));
+        start = i + 1;
+    }
+    data.appendSubString(value, start, value->length());
+    data.appendChar('\'');
 }
 
 void HTMLSelectElement::addBaseStyle(StringBuilder& data)
@@ -617,9 +665,7 @@ void HTMLSelectElement::addBaseStyle(StringBuilder& data)
     size_t len = s->fontFamily()->m_length;
     data.appendString("fontFamily: [\n");
     for (size_t i = 0; i < len; ++i) {
-        data.appendString("'");
-        data.appendString(s->fontFamily()[i + 1].m_familyName);
-        data.appendString("'");
+        appendPickerString(data, s->fontFamily()[i + 1].m_familyName);
         if (i + 1 < len) {
             data.appendString(", ");
         }
@@ -636,7 +682,7 @@ void HTMLSelectElement::addChildren(StringBuilder& data)
     for (size_t i = 0; i < len; ++i) {
         Element* child = options()->item(i);
         if (child->isHTMLOptionElement()) {
-            addOption(child->asHTMLOptionElement(), data);
+            addOption(child->asHTMLOptionElement(), i, data);
         } else if (child->isHTMLBRElement()) {
             addSeparator(child->asHTMLBRElement(), data);
         } else if (child->isHTMLOptGroupElement()) {
@@ -646,13 +692,14 @@ void HTMLSelectElement::addChildren(StringBuilder& data)
     data.appendString("],\n");
 }
 
-void HTMLSelectElement::addOption(HTMLOptionElement* element,
+void HTMLSelectElement::addOption(HTMLOptionElement* element, int position,
                                   StringBuilder& data)
 {
     STARFISH_ASSERT(element);
     data.appendString("{");
     addProperty("label", element->label(), data);
-    addProperty("value", element->value(), data);
+    // Options can share a value, so the popup identifies them by position.
+    addProperty("value", position, data);
     if (!element->title()->isEmpty()) {
         addProperty("title", element->title(), data);
     }
@@ -661,7 +708,7 @@ void HTMLSelectElement::addOption(HTMLOptionElement* element,
     if (!ariaLabel->isEmpty()) {
         addProperty("ariaLabel", ariaLabel, data);
     }
-    if (element->disabled()) {
+    if (element->isDisabled()) {
         addProperty("disabled", true, data);
     }
     addElementStyle(element, data);
@@ -733,9 +780,7 @@ void HTMLSelectElement::addElementStyle(HTMLElement* element,
         size_t len = s->fontFamily()->m_length;
         data.appendString("fontFamily: [\n");
         for (size_t i = 0; i < len; ++i) {
-            data.appendString("'");
-            data.appendString(s->fontFamily()[i + 1].m_familyName);
-            data.appendString("'");
+            appendPickerString(data, s->fontFamily()[i + 1].m_familyName);
             if (i + 1 < len) {
                 data.appendString(", ");
             }
@@ -759,9 +804,9 @@ void HTMLSelectElement::addProperty(const char* name, String* value,
                                     StringBuilder& data)
 {
     data.appendString(name, strlen(name));
-    data.appendString(": '");
-    data.appendString(value);
-    data.appendString("',\n");
+    data.appendString(": ");
+    appendPickerString(data, value);
+    data.appendString(",\n");
 }
 
 void HTMLSelectElement::addProperty(const char* name, int value,
@@ -814,9 +859,7 @@ void HTMLSelectElement::addProperty(const char* name,
         if (i) {
             data.appendString(", ");
         }
-        data.appendString("'");
-        data.appendString(values[i]);
-        data.appendString("'");
+        appendPickerString(data, values[i]);
     }
     data.appendString("],\n");
 }
@@ -838,16 +881,14 @@ void HTMLSelectElement::onDropdownMenuItemSelected(int position)
     GCVector<HTMLOptionElement*> list;
     computeListOfOptionElements(this, list);
 
-    if (0 <= position && (size_t)position < list.size()) {
-        if (!multiple()) {
-            if (!list[position]->selectedness()) {
-                setSelectedIndex(position);
-                setNeedsFrameTreeBuild();
-                fireSelectUpdateNotification();
-            }
-        } else {
-            // TODO: multiple selection
-        }
+    if (isDisabled() || multiple() || position < 0 ||
+        static_cast<size_t>(position) >= list.size() ||
+        list[position]->isDisabled() || list[position]->selectedness()) {
+        return;
     }
+
+    setSelectedIndex(position);
+    setNeedsFrameTreeBuild();
+    fireSelectUpdateNotification();
 }
 } // namespace Starfish

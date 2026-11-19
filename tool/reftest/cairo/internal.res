@@ -1042,6 +1042,7 @@ tests/assertion/forms/range-pointer.html
 tests/assertion/forms/range-appearance-none.html
 tests/assertion/forms/select-value-setter-no-events.html
 tests/assertion/forms/select-reselect-crash.html
+tests/assertion/forms/select-picker-in-iframe.html
 tests/assertion/media/autoplay-after-src.html
 tests/assertion/media/media-error-survives-gc.html
 tests/assertion/websocket/bufferedAmount-after-close.html

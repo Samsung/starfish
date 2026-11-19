@@ -325,6 +325,14 @@ unsigned scriptValueAsNumber(ScriptValue v)
     return v->asNumber();
 }
 
+Optional<int32_t> scriptValueAsInt32(ScriptValue v)
+{
+    if (v->isInt32()) {
+        return v->asInt32();
+    }
+    return NullOption;
+}
+
 ScriptObject scriptValueAsObject(ScriptValue v)
 {
     return v->asObject();
@@ -1027,6 +1035,18 @@ ScriptValue createScriptFunction(
     }
 
     return result.result;
+}
+
+ScriptValue ScriptWrappable::createScriptCallback(
+    const std::string& name, Escargot::ScriptNativeFunctionPointer callback,
+    size_t argumentCount)
+{
+    auto function = createScriptFunction(scriptBindingInstance(), name,
+                                         callback, argumentCount, true, false);
+    if (function->isFunctionObject()) {
+        function->asFunctionObject()->setExtraData(this);
+    }
+    return function;
 }
 
 ScriptValue createAttributeStringEventFunction(EventTarget* target,

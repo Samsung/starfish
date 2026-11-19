@@ -1,0 +1,63 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Picking an option from a select inside an iframe</title>
+<link rel="help" href="https://html.spec.whatwg.org/multipage/form-elements.html#pick-an-option">
+<style>iframe { position: absolute; top: 40px; left: 40px; width: 400px; height: 350px; border: 0; }</style>
+<iframe id="child"></iframe>
+<script>
+const child = document.getElementById('child');
+child.srcdoc = `<select style="width: 200px">
+  <option value="same">First</option>
+  <option value="middle" disabled>Disabled</option>
+  <option value="same">Last</option>
+</select>`;
+
+child.onload = () => {
+  const doc = child.contentDocument;
+  const select = doc.querySelector('select');
+  const lastLabel = "Kid's \\ path — 마지막";
+  select.options[2].label = lastLabel;
+  const events = [];
+  select.addEventListener('input', () => events.push('input'));
+  select.addEventListener('change', () => {
+    events.push('change');
+    console.assert(select.selectedIndex === 2, 'The clicked option is selected even if its value is shared');
+    console.assert(events.join(',') === 'input,change', 'One input event precedes the change event');
+    if (typeof testEnd === 'function') testEnd();
+  });
+  if (typeof simulateClick !== 'function') return;
+  const clickAt = (rect, x, y) => {
+    simulateClick(rect.left + x, rect.top + y);
+  };
+  const childBounds = child.getBoundingClientRect();
+  const bounds = select.getBoundingClientRect();
+  clickAt(childBounds, bounds.left + 50, bounds.top + bounds.height / 2);
+  let remaining = 100;
+  const findPopup = () => {
+    const popup = doc.getElementById('STARFISH_DROPDOWN_MENU');
+    const options = popup?.contentDocument?.querySelectorAll('option');
+    if (!options || options.length < 3) {
+      if (--remaining > 0) {
+        setTimeout(findPopup, 20);
+        return;
+      }
+      console.assert(false, 'The dropdown opens in the select’s document');
+      testEnd();
+      return;
+    }
+    console.assert(options[2].label === lastLabel,
+                   'Quoted option labels appear as text');
+    const popupBounds = popup.getBoundingClientRect();
+    const optionBounds = options[2].getBoundingClientRect();
+    clickAt(childBounds, popupBounds.left + optionBounds.left + 25,
+            popupBounds.top + optionBounds.top + optionBounds.height / 2);
+    setTimeout(() => {
+      if (!events.includes('change')) {
+        console.assert(false, 'Clicking an option fires change');
+        testEnd();
+      }
+    }, 500);
+  };
+  setTimeout(findPopup, 20);
+};
+</script>
