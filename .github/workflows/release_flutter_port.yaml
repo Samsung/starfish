@@ -5,8 +5,17 @@ on:
   # Called from pr_ci.yml (pull_request_target) so fork PRs get secrets.
   workflow_call:
 
+# One build per PR: superseded PR runs cancel, manual runs (run_id) never do.
+# Workflow-level so the two profile jobs share one group; per-job groups with
+# cancel-in-progress would cancel each other.
+concurrency:
+  group: flutter-port-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
-  build_tizen_60:
+  # Emulator profile: i586 + x86_64. Sequential inside one runner because
+  # both gbs builds share ~/GBS-ROOT.
+  build_tizen_60_emulator:
     runs-on: [code-extra-2xlarge]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:gbs
@@ -17,11 +26,6 @@ jobs:
 
     # Set reasonable timeout value.
     timeout-minutes: 180
-
-    # One build per PR: superseded PR runs cancel, manual runs (run_id) never do.
-    concurrency:
-      group: flutter-port-${{ github.event.pull_request.number || github.run_id }}
-      cancel-in-progress: true
 
     steps:
       - name: Checkout source..
@@ -88,6 +92,39 @@ jobs:
         run: |
           rm -rf out_tizen/
           sudo rm -rf ~/GBS-ROOT/
+
+  # Standard profile: armv7l + aarch64. Runs in parallel with the emulator
+  # job on its own runner.
+  build_tizen_60_standard:
+    runs-on: [code-extra-2xlarge]
+    container:
+      image: lws-docker-local.bart.sec.samsung.net/starfish-build:gbs
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      options: --user root --privileged
+
+    # Set reasonable timeout value.
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout source..
+        uses: CODE-Actions/checkout@v2
+        with:
+          submodules: "recursive"
+          # PR runs come through pr_ci.yml's workflow_call: check out the PR
+          # head, not the base. Empty on workflow_dispatch -> default ref.
+          allow-unsafe-pr-checkout: true
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: container fix
+        run: |
+          sudo /usr/sbin/update-binfmts --disable
+          sudo systemctl disable binfmt-support.service
+          sudo systemctl enable binfmt-support.service
+          sudo /usr/sbin/update-binfmts --enable
+          sudo sh -c "echo -1 > /proc/sys/fs/binfmt_misc/status"
+      - name: Reset Submodule
+        run: git submodule foreach --recursive git reset --hard
 
       - name: Build flutter_arm
         run: |
