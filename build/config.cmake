@@ -769,6 +769,22 @@ int main() { AtkComponentIface i; i.grab_highlight = 0; (void)i; return 0; }"
         pkg_check_modules (STARFISH_TIZEN_WEBAUDIO REQUIRED capi-media-audio-io
             capi-media-sound-manager libavcodec libavutil
             libswresample)
+        # Link FFmpeg by the soname its headers declare. A buildroot can also
+        # carry an older FFmpeg whose lib*.so links win the -lavutil lookup;
+        # the decoder then builds against 5.1+ headers but its 5.1+ calls
+        # stay unresolved until they abort at run time.
+        FOREACH (ff avcodec avutil swresample)
+            STRING (TOUPPER ${ff} FF)
+            FIND_FILE (STARFISH_LIB${FF}_VERSION_H
+                NAMES lib${ff}/version_major.h lib${ff}/version.h
+                HINTS ${STARFISH_TIZEN_WEBAUDIO_INCLUDE_DIRS})
+            FILE (STRINGS ${STARFISH_LIB${FF}_VERSION_H} FF_MAJOR
+                REGEX "#define LIB${FF}_VERSION_MAJOR")
+            STRING (REGEX MATCH "[0-9]+" FF_MAJOR "${FF_MAJOR}")
+            LIST (REMOVE_ITEM STARFISH_TIZEN_WEBAUDIO_LIBRARIES ${ff})
+            LIST (APPEND STARFISH_TIZEN_WEBAUDIO_LIBRARIES
+                -l:lib${ff}.so.${FF_MAJOR})
+        ENDFOREACH ()
     ENDIF()
 ENDIF()
 
