@@ -1062,8 +1062,7 @@ public:
         return m_flags.m_hasBiggerContentThanFrameHeight;
     }
 
-    LayoutRect computeVisibleRectForScroll(
-        bool isForSpecialValueForTableCell = false);
+    LayoutRect computeVisibleRectForScroll();
 
     void computeScrollRectIfNeeded();
 

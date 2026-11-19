@@ -1785,7 +1785,14 @@ void GridFormattingContext::layoutGridItemFrameBox(GridArea& gridArea,
             justify == AlignItemValue::CenterAlignItemValue ||
             justify == AlignItemValue::EndAlignItemValue ||
             justify == AlignItemValue::FlexEndAlignItemValue;
-        if (gridArea.isMarginLeftAuto() || gridArea.isMarginRightAuto()) {
+        if (style->width().isIntrinsic()) {
+            // css-sizing-3 §5: the item sizes to its content, not the track.
+            width =
+                gridItem->intrinsicContentWidth(m_layoutContext, style->width(),
+                                                colTrackWidth - mbp.width()) +
+                mbp.width();
+        } else if (gridArea.isMarginLeftAuto() ||
+                   gridArea.isMarginRightAuto()) {
             width = gridArea.preferredWidth();
         } else if (isSelfAligned) {
             // A self-aligned item is fit-content sized, so it never overflows

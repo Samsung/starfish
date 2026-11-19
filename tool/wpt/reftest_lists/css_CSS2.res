@@ -2765,8 +2765,8 @@ http://web-platform.test:8000/css/CSS2/margin-padding-clear/margin-right-114.htm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-applies-to-013.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-applies-to-014.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-applies-to-015.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-applies-to-016.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-applies-to-017.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-applies-to-016.xht
+http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-applies-to-017.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-background-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-bottom-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/margin-padding-clear/padding-bottom-002.xht
@@ -5287,8 +5287,8 @@ http://web-platform.test:8000/css/CSS2/tables/border-collapse-dynamic-table-001.
 http://web-platform.test:8000/css/CSS2/tables/border-collapse-dynamic-table-002.xht
 http://web-platform.test:8000/css/CSS2/tables/border-collapse-dynamic-table-003.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/border-collapse-empty-row.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/border-collapse-offset-001.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/border-collapse-offset-002.xht
+http://web-platform.test:8000/css/CSS2/tables/border-collapse-offset-001.xht
+http://web-platform.test:8000/css/CSS2/tables/border-collapse-offset-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/border-collapse-visibility-collapse-001.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/border-collapse-visibility-collapse-002.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/border-conflict-element-001a.xht
@@ -5324,10 +5324,10 @@ http://web-platform.test:8000/css/CSS2/tables/caption-side-applies-to-017.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/collapsing-border-model-009.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/collapsing-border-model-010a.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/collapsing-border-model-010b.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/collapsing-border-model-011.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/collapsing-border-model-012.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/collapsing-border-model-013.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/collapsing-border-model-014.html
+http://web-platform.test:8000/css/CSS2/tables/collapsing-border-model-011.html
+http://web-platform.test:8000/css/CSS2/tables/collapsing-border-model-012.html
+http://web-platform.test:8000/css/CSS2/tables/collapsing-border-model-013.html
+http://web-platform.test:8000/css/CSS2/tables/collapsing-border-model-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/column-visibility-004.xht
 http://web-platform.test:8000/css/CSS2/tables/empty-cells-applies-to-008.xht
 http://web-platform.test:8000/css/CSS2/tables/empty-cells-applies-to-009.xht
@@ -5365,26 +5365,26 @@ http://web-platform.test:8000/css/CSS2/tables/empty-cells-applies-to-017.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003c06.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003c07.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003c08.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003d01.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003d02.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003d03.xht
+http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003d01.xht
+http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003d02.xht
+http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003d03.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003d04.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003d05.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003d06.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e01.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e02.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e03.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e04.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e05.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e06.xht
+http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003d05.xht
+http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003d06.xht
+http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e01.xht
+http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e02.xht
+http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e03.xht
+http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e04.xht
+http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e05.xht
+http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e06.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e07.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e08.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e09.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e10.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e11.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003e12.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003f01.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003f02.xht
+http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003f01.xht
+http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003f02.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003f03.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003f04.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/fixed-table-layout-003f05.xht
@@ -5423,9 +5423,9 @@ http://web-platform.test:8000/css/CSS2/tables/empty-cells-applies-to-017.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/row-visibility-002.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/separated-border-model-003a.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/separated-border-model-003b.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/separated-border-model-004a.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/separated-border-model-004b.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/separated-border-model-004c.xht
+http://web-platform.test:8000/css/CSS2/tables/separated-border-model-004a.xht
+http://web-platform.test:8000/css/CSS2/tables/separated-border-model-004b.xht
+http://web-platform.test:8000/css/CSS2/tables/separated-border-model-004c.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/separated-border-model-004d.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/separated-border-model-004e.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/separated-border-model-007.xht
@@ -5628,13 +5628,13 @@ http://web-platform.test:8000/css/CSS2/tables/table-vertical-align-baseline-006.
 http://web-platform.test:8000/css/CSS2/tables/table-vertical-align-baseline-007.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-vertical-align-baseline-008.xht
 http://web-platform.test:8000/css/CSS2/tables/table-vertical-align-baseline-009.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-visual-layout-017.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-visual-layout-018.xht
+http://web-platform.test:8000/css/CSS2/tables/table-visual-layout-017.xht
+http://web-platform.test:8000/css/CSS2/tables/table-visual-layout-018.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-visual-layout-026a.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-visual-layout-026b.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-visual-layout-026c.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/tables/table-visual-layout-026d.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/text/bidi-flag-emoji-02.html
+http://web-platform.test:8000/css/CSS2/text/bidi-flag-emoji-02.html
 http://web-platform.test:8000/css/CSS2/text/bidi-flag-emoji.html
 http://web-platform.test:8000/css/CSS2/text/bidi-span-001.html
 http://web-platform.test:8000/css/CSS2/text/bidi-span-002.html

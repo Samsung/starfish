@@ -310,7 +310,7 @@ http://web-platform.test:8000/css/css-grid/grid-container-baseline-synthesized-0
 http://web-platform.test:8000/css/css-grid/grid-container-baseline-synthesized-003.html
 http://web-platform.test:8000/css/css-grid/grid-container-baseline-synthesized-004.html
 http://web-platform.test:8000/css/css-grid/grid-definition/flex-item-grid-container-auto-repeat-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-definition/flex-item-grid-container-auto-repeat-002.html
+http://web-platform.test:8000/css/css-grid/grid-definition/flex-item-grid-container-auto-repeat-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-definition/flex-item-grid-container-percentage-rows-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-definition/fr-unit-with-percentage.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-definition/fr-unit.html
@@ -338,9 +338,9 @@ http://web-platform.test:8000/css/css-grid/grid-definition/grid-repeat-max-width
 http://web-platform.test:8000/css/css-grid/grid-flex-spanning-items-001.html
 http://web-platform.test:8000/css/css-grid/grid-in-table-cell-with-img.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-item-non-auto-height-stretch-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-item-non-auto-height-stretch-002.html
+# [vacuous-pass:WRITING_MODE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-grid/grid-item-non-auto-height-stretch-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-item-non-auto-height-stretch-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-item-non-auto-height-stretch-004.html
+# [vacuous-pass:WRITING_MODE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-grid/grid-item-non-auto-height-stretch-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-grid/grid-item-percentage-quirk-001.html
 http://web-platform.test:8000/css/css-grid/grid-item-percentage-quirk-002.html
 http://web-platform.test:8000/css/css-grid/grid-items/anonymous-grid-item-001.html

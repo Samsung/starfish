@@ -1,10 +1,10 @@
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/absolute-tables-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/absolute-tables-002.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/absolute-tables-003.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/absolute-tables-004.html
+http://web-platform.test:8000/css/css-tables/absolute-tables-004.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/absolute-tables-005.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-tables/animations/border-spacing-interpolation.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/auto-layout-calc-width-001.html
+http://web-platform.test:8000/css/css-tables/auto-layout-calc-width-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/border-spacing-included-in-sizes-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/border-writing-mode-dynamic-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/bounding-box-computation-1.html
@@ -24,14 +24,14 @@ http://web-platform.test:8000/css/css-tables/collapsed-scroll-overflow.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/column-track-merging.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/dynamic-rowspan-change.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/fixed-layout-1.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/fixed-layout-2.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/fixed-layout-calc-width-001.html
+http://web-platform.test:8000/css/css-tables/fixed-layout-2.html
+http://web-platform.test:8000/css/css-tables/fixed-layout-calc-width-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/fixed-layout-excess-width-distribution-001.html
 http://web-platform.test:8000/css/css-tables/fractional-percent-width.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/height-distribution/computing-row-measure-0.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/height-distribution/computing-row-measure-1.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/height-distribution/extra-height-given-to-all-row-groups-003.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/height-distribution/extra-height-given-to-all-row-groups-004.html
+http://web-platform.test:8000/css/css-tables/height-distribution/extra-height-given-to-all-row-groups-003.html
+http://web-platform.test:8000/css/css-tables/height-distribution/extra-height-given-to-all-row-groups-004.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/height-distribution/percentage-sizing-of-table-cell-children.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/html-to-css-mapping-1.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-tables/html-to-css-mapping-2.html

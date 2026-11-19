@@ -289,8 +289,12 @@ public:
         return m_tableRect;
     }
 
-    // A definite width, min-width or max-width as a border-box width.
-    LayoutUnit definiteBorderBoxWidth(Length width);
+    // A specified width, min-width or max-width as a border-box width.
+    LayoutUnit borderBoxWidth(Length width, LayoutUnit parentContentWidth);
+
+    // css-tables-3 §3.6.2: the collapsed-borders model ignores border-spacing.
+    LayoutUnit usedHorizontalBorderSpacing();
+    LayoutUnit usedVerticalBorderSpacing();
 
     virtual void paintBackgroundAndBorders(Canvas* canvas) override;
     virtual Unit::Rect makeRect(BoxValue box) override;
@@ -410,7 +414,11 @@ private:
         LayoutUnit* sumOfFixedWidth);
 
     void collectColBoxes();
+    void collectCellsInTheFirstRow();
     bool hasColBox(size_t i);
+    // Fixed mode needs collectColBoxes() and collectCellsInTheFirstRow().
+    bool isInFixedMode();
+    LayoutUnit fixedModeColumnWidth(size_t i);
     FrameTableCellBox* cellFromFirstRowOrColGroup(bool tableLayoutFixed,
                                                   size_t i);
 

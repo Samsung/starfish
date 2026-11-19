@@ -18,7 +18,7 @@ http://web-platform.test:8000/css/css-tables/baseline-empty-cell-001.html
 http://web-platform.test:8000/css/css-tables/border-collapse-double-border.html
 http://web-platform.test:8000/css/css-tables/border-collapse-dynamic-col-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/border-collapse-dynamic-oof.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/border-collapse-dynamic-section.html
+http://web-platform.test:8000/css/css-tables/border-collapse-dynamic-section.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/border-collapse-empty-cell.html
 http://web-platform.test:8000/css/css-tables/border-collapse-rowspan-cell.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/border-conflict-resolution.html
@@ -30,8 +30,8 @@ http://web-platform.test:8000/css/css-tables/border-collapse-rowspan-cell.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/col-definite-min-size-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/col-definite-size-001.html
 http://web-platform.test:8000/css/css-tables/collapsed-border-color-change-with-compositing.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/collapsed-border-large-rowgroup-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/collapsed-border-large-rowgroup-002.html
+http://web-platform.test:8000/css/css-tables/collapsed-border-large-rowgroup-001.html
+http://web-platform.test:8000/css/css-tables/collapsed-border-large-rowgroup-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/collapsed-border-paint-phase-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/collapsed-border-paint-phase-002.html
 http://web-platform.test:8000/css/css-tables/collapsed-border-partial-invalidation-001.html
@@ -53,9 +53,9 @@ http://web-platform.test:8000/css/css-tables/fixup-dynamic-anonymous-inline-tabl
 http://web-platform.test:8000/css/css-tables/fixup-dynamic-anonymous-inline-table-002.html
 http://web-platform.test:8000/css/css-tables/fixup-dynamic-anonymous-inline-table-003.html
 http://web-platform.test:8000/css/css-tables/fixup-dynamic-anonymous-table-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/height-distribution/extra-height-given-to-all-row-groups-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/height-distribution/extra-height-given-to-all-row-groups-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/height-distribution/extra-height-given-to-all-row-groups-005.html
+http://web-platform.test:8000/css/css-tables/height-distribution/extra-height-given-to-all-row-groups-001.html
+http://web-platform.test:8000/css/css-tables/height-distribution/extra-height-given-to-all-row-groups-002.html
+http://web-platform.test:8000/css/css-tables/height-distribution/extra-height-given-to-all-row-groups-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/height-distribution/percentage-sizing-of-table-cell-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/height-distribution/percentage-sizing-of-table-cell-children-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/height-distribution/percentage-sizing-of-table-cell-children-003.html
@@ -69,11 +69,11 @@ http://web-platform.test:8000/css/css-tables/html-display-table.html
 http://web-platform.test:8000/css/css-tables/iframe-display-table-content-insertion.html
 http://web-platform.test:8000/css/css-tables/insert-after-col.html
 http://web-platform.test:8000/css/css-tables/insert-after-colgroup.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/internal-containing-block-001.html
+http://web-platform.test:8000/css/css-tables/internal-containing-block-001.html
 http://web-platform.test:8000/css/css-tables/max-height-table.html
 http://web-platform.test:8000/css/css-tables/min-height-table-2.html
 http://web-platform.test:8000/css/css-tables/min-height-table.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/min-max-size-table-content-box.html
+http://web-platform.test:8000/css/css-tables/min-max-size-table-content-box.html
 http://web-platform.test:8000/css/css-tables/out-of-order-elements-collapsed-border.html
 http://web-platform.test:8000/css/css-tables/paint/col-change-span-bg-invalidation-001.html
 http://web-platform.test:8000/css/css-tables/paint/col-change-span-bg-invalidation-002.html
@@ -111,14 +111,14 @@ http://web-platform.test:8000/css/css-tables/subpixel-table-width-001.html
 http://web-platform.test:8000/css/css-tables/table-cell-baseline-static-position.html
 http://web-platform.test:8000/css/css-tables/table-cell-child-overflow-measure.html
 http://web-platform.test:8000/css/css-tables/table-cell-inline-size-box-sizing-quirks.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/table-cell-overflow-auto-scrolled.html
+http://web-platform.test:8000/css/css-tables/table-cell-overflow-auto-scrolled.html
 http://web-platform.test:8000/css/css-tables/table-cell-overflow-auto.html
 http://web-platform.test:8000/css/css-tables/table-cell-overflow-explicit-height-001.html
 http://web-platform.test:8000/css/css-tables/table-cell-overflow-explicit-height-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/table-cell-width-0.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/table-colspan-percent-auto.html
+http://web-platform.test:8000/css/css-tables/table-cell-width-0.html
+http://web-platform.test:8000/css/css-tables/table-colspan-percent-auto.html
 http://web-platform.test:8000/css/css-tables/table-has-box-sizing-border-box-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/table-has-box-sizing-border-box-002.html
+http://web-platform.test:8000/css/css-tables/table-has-box-sizing-border-box-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/table-intrinsic-size-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/table-intrinsic-size-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/table-intrinsic-size-003.html
@@ -133,13 +133,13 @@ http://web-platform.test:8000/css/css-tables/table-row-group-color-inheritance-0
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-006.html
+http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-004.html
+http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-005.html
+http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-009.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-010.html
+http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-009.html
+http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/collapsed-borders-painting-order-013.html
@@ -158,7 +158,7 @@ http://web-platform.test:8000/css/css-tables/toggle-row-display-property-001.htm
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/visibility-collapse-border-spacing-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/visibility-collapse-colspan-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/visibility-collapse-rowspan-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/visibility-hidden-collapsed-borders.html
+http://web-platform.test:8000/css/css-tables/visibility-hidden-collapsed-borders.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/whitespace-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/zero-rowspan-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/zero-rowspan-002.html

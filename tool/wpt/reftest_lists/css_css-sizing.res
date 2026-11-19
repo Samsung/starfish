@@ -263,7 +263,7 @@ http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-046.h
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-049.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/replaced-element-dynamic-aspect-ratio.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/select-element-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/aspect-ratio/table-element-001.html
+http://web-platform.test:8000/css/css-sizing/aspect-ratio/table-element-001.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/zero-or-infinity-001.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/zero-or-infinity-002.html
 http://web-platform.test:8000/css/css-sizing/aspect-ratio/zero-or-infinity-003.html
@@ -280,12 +280,12 @@ http://web-platform.test:8000/css/css-sizing/block-fit-content-as-initial.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-image-percentage-max-height-inside-inline.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-1a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-1b.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-2.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-3.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-4.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-5.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-6.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-7.html
+http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-2.html
+http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-3.html
+http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-4.html
+http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-5.html
+http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-6.html
+http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-7.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-table-1a.html
 http://web-platform.test:8000/css/css-sizing/block-size-with-min-or-max-content-table-1b.html
 http://web-platform.test:8000/css/css-sizing/border-box-and-max-content-001.html
@@ -527,7 +527,7 @@ http://web-platform.test:8000/css/css-sizing/responsive-iframe/responsive-iframe
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/block-height-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/cache-miss-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/cache-miss-002.html
-http://web-platform.test:8000/css/css-sizing/stretch/fixed-table-1.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/fixed-table-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/flexbox-auto-minimum-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/flexbox-auto-minimum-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-sizing/stretch/flexbox-flex-base-size-001.html

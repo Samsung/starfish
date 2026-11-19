@@ -1,0 +1,57 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>The min-content width of a fixed-layout table counts specified column widths only</title>
+<style>
+  body { margin: 0; }
+  .wide { width: 400px; }
+  table { border-spacing: 0; table-layout: fixed; }
+  td { padding: 0; }
+  .z { font-size: 0; }
+  .z i { display: inline-block; height: 10px; background: green; vertical-align: top; }
+  .a { width: 30px; } .b { width: 50px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[table-fixed-min-content] " + document.title);
+  };
+}
+</script>
+<div class="wide">
+  <table id="min" style="width: min-content"><tr><td class="z" style="width: 50px"><i class="a"></i> <i class="b"></i></td><td class="z"><i class="b"></i> <i class="b"></i></td></tr></table>
+  <table id="col" style="width: min-content"><col style="width: 40px"><tr><td class="z" style="width: 50px"><i class="a"></i> <i class="b"></i></td><td class="z"><i class="b"></i></td></tr></table>
+  <table id="spacing" style="width: min-content; border-spacing: 4px; border: 3px solid; padding: 2px"><tr><td class="z" style="width: 50px; padding: 1px"><i class="a"></i> <i class="b"></i></td><td class="z"><i class="b"></i></td></tr></table>
+  <div id="float" style="float: left"><table style="width: min-content"><tr><td class="z" style="width: 50px"><i class="a"></i> <i class="b"></i></td><td class="z"><i class="b"></i> <i class="b"></i></td></tr></table></div>
+  <div style="clear: both"></div>
+  <table id="fitContent" style="width: fit-content"><tr><td class="z" style="width: 50px"><i class="a"></i> <i class="b"></i></td><td class="z"><i class="b"></i> <i class="b"></i></td></tr></table>
+</div>
+<div style="display: flex; width: 50px"><table id="autoCol" style="width: 300px"><col><tr><td class="z" style="width: 100px"></td></tr></table></div>
+<div style="width: 0"><table id="narrowAuto"><tr><td class="z" style="width: 50px"><i style="width: 100px"></i></td><td class="z"></td></tr></table></div>
+<div style="width: 0"><table id="narrowFitContent" style="width: fit-content"><tr><td class="z" style="width: 50px"><i style="width: 100px"></i></td><td class="z"></td></tr></table></div>
+<script>
+// css-tables-3 §3.8.3, §3.9.3.1: in fixed mode the cells' content doesn't
+// count; auto and percentage columns are zero wide in the table's
+// min-content width. Only an auto or max-content width leaves the table in
+// auto mode (§3.5.1, csswg-drafts#10937).
+function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+function check(what, actual, expected) { console.assert(Math.abs(actual - expected) < 0.01, what + ": " + actual + " != " + expected); }
+
+check("min", rect("min").width, 50);
+check("col", rect("col").width, 40);
+// 52px column, three 4px spacings, 2 * (3px + 2px) border and padding.
+check("spacing", rect("spacing").width, 74);
+check("float", rect("float").width, 50);
+check("fitContent", rect("fitContent").width, 150);
+// An auto column box leaves the width to the first-row cell.
+check("autoCol", rect("autoCol").width, 100);
+check("narrowAuto", rect("narrowAuto").width, 100);
+check("narrowFitContent", rect("narrowFitContent").width, 50);
+testEnd();
+</script>

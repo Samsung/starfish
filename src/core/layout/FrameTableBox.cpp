@@ -471,12 +471,9 @@ void FrameTableBox::collectColumnWidthInfo(
     }
 }
 
-Optional<LayoutUnit> FrameTableBox::calCellWidth(LayoutContext& ctx)
+void FrameTableBox::collectCellsInTheFirstRow()
 {
-    collectColumnWidthInfo(ctx, m_columnWidths, true);
-    collectColBoxes();
-
-    // 0. Get the cells in the first row. These are used to determine:
+    // These are used to determine:
     // * the width of each cell, and
     // * the width property (i.e., auto or specified) in the table.
     m_cellsInTheFirstRow.clear();
@@ -502,6 +499,14 @@ Optional<LayoutUnit> FrameTableBox::calCellWidth(LayoutContext& ctx)
             }
         }
     }
+}
+
+Optional<LayoutUnit> FrameTableBox::calCellWidth(LayoutContext& ctx)
+{
+    collectColumnWidthInfo(ctx, m_columnWidths, true);
+    collectColBoxes();
+    // 0. Get the cells in the first row.
+    collectCellsInTheFirstRow();
 
     // We iterate columns and calculate the following:
     //   * sum of all cells with specified widths.
@@ -509,9 +514,8 @@ Optional<LayoutUnit> FrameTableBox::calCellWidth(LayoutContext& ctx)
     //   * min/max table width
     //     - TODO: Need to consider caption widths too
     //   * collect auto and specified width cells for later calculation
-    LayoutUnit unused;
-    LayoutUnit borderSpacing =
-        style()->horizontalBorderSpacing().specifiedValue(unused, this);
+    LayoutUnit borderSpacing = usedHorizontalBorderSpacing();
+    bool fixedMode = isInFixedMode();
 
     LayoutUnit minTableWidth = 0;
     LayoutUnit maxTableWidth = 0;
@@ -528,19 +532,15 @@ Optional<LayoutUnit> FrameTableBox::calCellWidth(LayoutContext& ctx)
             cellsWithSpecifiedWidths.push_back(col);
         }
 
-        minTableWidth += col->minCellWidth + borderSpacing;
+        minTableWidth +=
+            (fixedMode ? fixedModeColumnWidth(col->id) : col->minCellWidth) +
+            borderSpacing;
         maxTableWidth += col->maxCellWidth + borderSpacing;
     }
 
     // https://www.w3.org/TR/CSS2/tables.html#width-layout
     // Applying rules in Section 17.5.2.1
-    bool tableLayoutFixed = false;
-    if ((style()->display() == DisplayValue::TableDisplayValue ||
-         style()->display() == DisplayValue::InlineTableDisplayValue) &&
-        (style()->tableLayout() == TableLayoutValue::FixedTableLayoutValue)) {
-        // TODO: Need to consider when (!hasTableWidth && tableLayoutFixed)
-        tableLayoutFixed = true;
-    }
+    bool tableLayoutFixed = isInFixedMode();
 
     // Followed the algorithm from
     // https://www.w3.org/TR/2016/WD-css-tables-3-20161025/#width-distribution
@@ -567,10 +567,8 @@ Optional<LayoutUnit> FrameTableBox::calCellWidth(LayoutContext& ctx)
         // The width of table is explicitly given
         hasTableWidth = true;
 
-        if (width.isDefinite(false)) {
-            tableWidth = definiteBorderBoxWidth(width);
-        } else if (width.isPercent()) {
-            tableWidth = width.percentValue(parentContentWidth);
+        if (width.isSpecified()) {
+            tableWidth = borderBoxWidth(width, parentContentWidth);
         } else if (width.isMaxContent()) {
             tableWidth = maxContentWidth;
         } else if (width.isMinContent()) {
@@ -670,8 +668,6 @@ Optional<LayoutUnit> FrameTableBox::calCellWidth(LayoutContext& ctx)
                                ->width();
             if (width.isPercent()) {
                 sumOfWidthPercentage += width.percent();
-            } else if (width.isCalc()) {
-                STARFISH_UNSUPPORTED("HTMLTable property: width with calc");
             }
         }
 
@@ -693,8 +689,6 @@ Optional<LayoutUnit> FrameTableBox::calCellWidth(LayoutContext& ctx)
                         width.percentValue(availableWidth) /
                         sumOfWidthPercentage;
                     col.cellWidth = specifiedWidth;
-                } else if (width.isCalc()) {
-                    STARFISH_UNSUPPORTED("HTMLTable property: width with calc");
                 }
                 sumOfSpecifiedCellWidths += col.cellWidth;
             }
@@ -747,8 +741,9 @@ Optional<LayoutUnit> FrameTableBox::calCellWidth(LayoutContext& ctx)
                         LayoutUnit cellWidth =
                             width.specifiedValue(unused, this);
                         if (!shouldUseContentWidth) {
-                            cellWidth +=
-                                cell->borderWidth() + cell->paddingWidth();
+                            cellWidth =
+                                cell->borderBoxWidthAfterApplyingBoxSizing(
+                                    cellWidth);
                         }
 
                         LayoutUnit newCellWidth =
@@ -1137,19 +1132,72 @@ LayoutUnit FrameTableBox::captionMinContentWidth(LayoutContext& ctx)
     return captionWidth;
 }
 
-LayoutUnit FrameTableBox::definiteBorderBoxWidth(Length width)
+LayoutUnit FrameTableBox::borderBoxWidth(Length width,
+                                         LayoutUnit parentContentWidth)
 {
-    LayoutUnit unused;
-    LayoutUnit w = width.specifiedValue(unused, this);
-
-    // For CSS table, width refers to the table content width unless
-    // box-sizing says border-box. For HTML table, width refers to table
-    // content width + border + padding.
-    if (!isAnonymous() && !node()->isHTMLTableElement() &&
-        style()->boxSizing() != BoxSizingValue::BorderBoxBoxSizingValue) {
+    LayoutUnit w = width.specifiedValue(parentContentWidth, this);
+    // A table sizes the box box-sizing names, like any box; HTML tables
+    // get border-box from the UA style sheet (HTML §15.3.8).
+    if (style()->boxSizing() != BoxSizingValue::BorderBoxBoxSizingValue) {
         w += borderWidth() + paddingWidth();
     }
     return w;
+}
+
+LayoutUnit FrameTableBox::usedHorizontalBorderSpacing()
+{
+    if (style()->borderCollapse() ==
+        BorderCollapseValue::CollapseBorderCollapseValue) {
+        return LayoutUnit();
+    }
+    return style()->horizontalBorderSpacing().specifiedValue(LayoutUnit(),
+                                                             this);
+}
+
+LayoutUnit FrameTableBox::usedVerticalBorderSpacing()
+{
+    if (style()->borderCollapse() ==
+        BorderCollapseValue::CollapseBorderCollapseValue) {
+        return LayoutUnit();
+    }
+    return style()->verticalBorderSpacing().specifiedValue(LayoutUnit(), this);
+}
+
+bool FrameTableBox::isInFixedMode()
+{
+    // css-tables-3 §3.5.1 (csswg-drafts#10937): only an auto or max-content
+    // width keeps the auto mode.
+    Length width = style()->width();
+    return style()->tableLayout() == TableLayoutValue::FixedTableLayoutValue &&
+           !width.isAuto() && !width.isMaxContent();
+}
+
+// css-values-4 §10.11: a math function mixing percentages and lengths in the
+// width of a table column or cell is treated as auto.
+// shortcut: calc(% + 0px) counts as auto too, not as its percentage; upgrade
+// when the table reads percentages from calc().
+static bool isAutoColumnWidth(Length width)
+{
+    return width.isAuto() || (width.isCalc() && !width.isDefinite(false));
+}
+
+LayoutUnit FrameTableBox::fixedModeColumnWidth(size_t i)
+{
+    // css-tables-3 §3.8.3: in fixed mode a column is only as wide as its
+    // column box specifies, or its first-row cell when the column box is
+    // auto; auto and percentage columns count as zero.
+    FrameTableCellBox* box = nullptr;
+    if (hasColBox(i) && !isAutoColumnWidth(m_colBoxes[i]->style()->width())) {
+        box = m_colBoxes[i];
+    } else if (i < m_cellsInTheFirstRow.size()) {
+        // Null in a column spanned by a cell to its left.
+        box = m_cellsInTheFirstRow[i];
+    }
+    if (!box || !box->style()->width().isDefinite(false)) {
+        return LayoutUnit();
+    }
+    return box->borderBoxWidthAfterApplyingBoxSizing(
+        box->style()->width().specifiedValue(LayoutUnit(), box));
 }
 
 LayoutUnit FrameTableBox::resolveMinMaxWidth(Length width,
@@ -1168,11 +1216,7 @@ LayoutUnit FrameTableBox::resolveMinMaxWidth(Length width,
         return std::min(maxContentWidth,
                         std::max(minContentWidth, availableWidth));
     }
-    if (width.isDefinite(false)) {
-        return definiteBorderBoxWidth(width);
-    }
-    // A percentage resolves like a percentage width.
-    return width.specifiedValue(parentContentWidth, this);
+    return borderBoxWidth(width, parentContentWidth);
 }
 
 template <typename Func>
@@ -1223,9 +1267,7 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
     GCVector<ColSizeStruct*>* columnsMayNeedToAdjustWidths,
     LayoutUnit* sumOfColWidths)
 {
-    LayoutUnit unused;
-    LayoutUnit borderSpacing =
-        style()->horizontalBorderSpacing().specifiedValue(unused, this);
+    LayoutUnit borderSpacing = usedHorizontalBorderSpacing();
 
     for (auto& col : m_columnWidths) {
         STARFISH_ASSERT(col->id < m_columnWidths.size());
@@ -1263,9 +1305,8 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
 
             if (width.isDefinite(false)) {
                 LayoutUnit unused;
-                specifiedWidth = width.specifiedValue(unused, this);
-                specifiedWidth +=
-                    cellBox->borderWidth() + cellBox->paddingWidth();
+                specifiedWidth = cellBox->borderBoxWidthAfterApplyingBoxSizing(
+                    width.specifiedValue(unused, this));
                 col->cellWidth = specifiedWidth;
             } else if (width.isPercent()) {
                 col->cellWidth = remainingWidth * width.percent();
@@ -1381,9 +1422,7 @@ void FrameTableBox::calCellWidthsWithColspans()
         }
     }
 
-    LayoutUnit unused;
-    LayoutUnit borderSpacing =
-        style()->horizontalBorderSpacing().specifiedValue(unused, this);
+    LayoutUnit borderSpacing = usedHorizontalBorderSpacing();
 
     forEachRowStruct(
         [this, borderSpacing](RowStruct* rowStruct, size_t _rowId) {
@@ -1560,6 +1599,7 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     m_tableRect.setWidth(width());
 
     LayoutUnit sectionHeight = ySoFar - m_tableRect.y();
+    // The content-box height the height, min-height and max-height give.
     LayoutUnit specifiedHeight = 0;
     {
         bool hasTableHeight = false;
@@ -1576,20 +1616,19 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
         }
 
         if (height.isDefinite(parentHasFixedHeight)) {
-            specifiedHeight = height.specifiedValue(parentHeight, this);
-            if (!height.isPercent()) {
-                specifiedHeight += borderHeight() + paddingHeight();
-            }
+            specifiedHeight = contentHeightAfterApplyingBoxSizing(
+                height.specifiedValue(parentHeight, this));
         } else if (preferredAspectRatio()) {
             // css-sizing-4 5.1: an auto height follows from the width; the
             // rows still grow the table past it.
             specifiedHeight = contentHeightFromAspectRatio(
-                                  preferredAspectRatio(), contentWidth()) +
-                              borderHeight() + paddingHeight();
+                preferredAspectRatio(), contentWidth());
         }
 
-        specifiedHeight = heightAfterApplyingMinMaxHeights(
-            ctx, specifiedHeight, parentHeight, parentHasFixedHeight);
+        specifiedHeight =
+            heightAfterApplyingMinMaxHeights(ctx, specifiedHeight, parentHeight,
+                                             parentHasFixedHeight) +
+            borderHeight() + paddingHeight();
     }
 
     if (sectionHeight < specifiedHeight) {
@@ -1709,7 +1748,7 @@ bool FrameTableBox::isCellWidthAuto(unsigned i)
 
         if (i < m_cellsInTheFirstRow.size()) {
             STARFISH_ASSERT(i < m_columnWidths.size());
-            if (m_cellsInTheFirstRow[i]->style()->width().isAuto() &&
+            if (isAutoColumnWidth(m_cellsInTheFirstRow[i]->style()->width()) &&
                 !(m_columnWidths[i]->hasSpecifiedWidth())) {
                 return true;
             } else {
@@ -1721,7 +1760,7 @@ bool FrameTableBox::isCellWidthAuto(unsigned i)
         // Table has a specified width
 
         if (i < m_colBoxes.size() &&
-            !m_colBoxes[i]->style()->width().isAuto()) {
+            !isAutoColumnWidth(m_colBoxes[i]->style()->width())) {
             return false;
         }
 
@@ -1733,7 +1772,7 @@ bool FrameTableBox::isCellWidthAuto(unsigned i)
         }
 
         if (i < m_cellsInTheFirstRow.size()) {
-            return m_cellsInTheFirstRow[i]->style()->width().isAuto();
+            return isAutoColumnWidth(m_cellsInTheFirstRow[i]->style()->width());
         }
         return true;
     }

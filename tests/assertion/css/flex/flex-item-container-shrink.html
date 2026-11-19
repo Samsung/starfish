@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Table, flex and grid flex items with a definite width shrink to their content</title>
+<style>
+  body { margin: 0; }
+  .row { display: flex; width: 100px; }
+  table { border-spacing: 0; }
+  td { padding: 0; }
+  .z { font-size: 0; }
+  .z i { display: inline-block; height: 10px; background: green; vertical-align: top; }
+  .a { width: 30px; } .b { width: 50px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[flex-item-container-shrink] " + document.title);
+  };
+}
+</script>
+<div class="row"><table id="table" style="width: 200px"><tr><td class="z"><i class="a"></i> <i class="b"></i> <i class="b"></i></td></tr></table></div>
+<div class="row"><table id="tableBorder" style="width: 200px; padding: 5px; border: 5px solid"><tr><td class="z"><i class="a"></i></td></tr></table></div>
+<div class="row"><div id="cssTable" style="display: table; width: 200px"><div class="z" style="display: table-cell"><i class="a"></i></div></div></div>
+<div class="row"><table id="fixedTable" style="width: 200px; table-layout: fixed"><tr><td class="z" style="width: 150px"><i class="a"></i></td></tr></table></div>
+<div class="row"><div id="flex" class="z" style="display: flex; width: 200px"><i class="a"></i></div></div>
+<div class="row"><div id="grid" class="z" style="display: grid; width: 200px"><i class="a"></i></div></div>
+<div class="row"><table id="noShrink" style="width: 200px; flex-shrink: 0"><tr><td class="z"><i class="a"></i></td></tr></table></div>
+<script>
+// css-flexbox-1 §4.5: the automatic minimum size of a flex item is the
+// smaller of its specified size and its content size, its min-content size
+// rather than the width it would otherwise take, so these items shrink to
+// the 100px row like a block does. In fixed mode a table's min-content size
+// is its specified column widths (css-tables-3 §3.9.3.1).
+function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+function check(what, actual, expected) { console.assert(Math.abs(actual - expected) < 0.01, what + ": " + actual + " != " + expected); }
+
+check("table", rect("table").width, 100);
+check("table height", rect("table").height, 20);
+check("tableBorder", rect("tableBorder").width, 100);
+check("cssTable", rect("cssTable").width, 100);
+check("fixedTable", rect("fixedTable").width, 150);
+check("flex", rect("flex").width, 100);
+check("grid", rect("grid").width, 100);
+check("noShrink", rect("noShrink").width, 200);
+testEnd();
+</script>

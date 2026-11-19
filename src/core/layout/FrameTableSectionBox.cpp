@@ -197,17 +197,14 @@ void FrameTableSectionBox::collectCellWidthInfo(LayoutContext& ctx)
                 Length width = cell->style()->width();
                 if (width.isDefinite(false)) {
                     LayoutUnit unused;
-                    LayoutUnit w = width.specifiedValue(unused, this);
-                    w += cell->borderWidth() + cell->paddingWidth();
+                    LayoutUnit w = cell->borderBoxWidthAfterApplyingBoxSizing(
+                        width.specifiedValue(unused, this));
                     col->maxSpecifiedWidth =
                         std::max(col->maxSpecifiedWidth, w);
                 } else if (width.isPercent()) {
                     col->maxPercentageWidth =
                         std::max(col->maxPercentageWidth,
                                  (double)cell->style()->width().percent());
-                } else if (width.isCalc()) {
-                    STARFISH_UNSUPPORTED(
-                        "HTMLTableSection property: width with calc");
                 }
             }
 
@@ -287,10 +284,7 @@ void FrameTableSectionBox::calAbsoluteColumnIndicesForCellsAffectedByRowspan(
 
 void FrameTableSectionBox::calCellWidthsWithColspans()
 {
-    LayoutUnit unused;
-    LayoutUnit borderSpacing =
-        tableBox()->style()->horizontalBorderSpacing().specifiedValue(unused,
-                                                                      this);
+    LayoutUnit borderSpacing = tableBox()->usedHorizontalBorderSpacing();
 
     for (auto& rowStruct : grid()) {
         for (auto& cellStruct : rowStruct->cells()) {
@@ -354,10 +348,7 @@ void FrameTableSectionBox::calCellHeightsWithRowspans()
 LayoutUnit FrameTableSectionBox::calCellHeightWithRowspan(
     FrameTableCellBox* cell, size_t rowId, size_t colId)
 {
-    LayoutUnit unused;
-    LayoutUnit borderSpacing =
-        tableBox()->style()->verticalBorderSpacing().specifiedValue(unused,
-                                                                    tableBox());
+    LayoutUnit borderSpacing = tableBox()->usedVerticalBorderSpacing();
 
     LayoutUnit cellHeight = 0;
     size_t rowspan = cell->updatedRowspan();
@@ -382,10 +373,7 @@ void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
 
     // There are no child nodes
     if (!firstChild()) {
-        LayoutUnit unused;
-        LayoutUnit borderSpacing =
-            tableBox()->style()->horizontalBorderSpacing().specifiedValue(
-                unused, tableBox());
+        LayoutUnit borderSpacing = tableBox()->usedHorizontalBorderSpacing();
         maxRowWidth += borderSpacing * 2;
     } else {
         for (Frame* c = firstChild(); c; c = c->next()) {
@@ -403,10 +391,7 @@ void FrameTableSectionBox::layoutWidth(LayoutContext& ctx)
 void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
 {
     LayoutUnit ySoFar = 0;
-    LayoutUnit unused;
-    LayoutUnit borderSpacing =
-        tableBox()->style()->verticalBorderSpacing().specifiedValue(unused,
-                                                                    tableBox());
+    LayoutUnit borderSpacing = tableBox()->usedVerticalBorderSpacing();
 
     if (tableBox()->firstSectionBoxInVisualOrder() == this) {
         ySoFar += borderSpacing;

@@ -965,7 +965,7 @@ http://web-platform.test:8000/css/css-flexbox/synthesize-vrl-baseline.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/table-as-item-inflexible-in-column-2.html
 http://web-platform.test:8000/css/css-flexbox/table-as-item-inflexible-in-row-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/table-as-item-inflexible-in-row-2.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/table-as-item-large-intrinsic-size.html
+http://web-platform.test:8000/css/css-flexbox/table-as-item-large-intrinsic-size.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/table-as-item-min-content-height-1.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/table-as-item-min-content-height-2.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/table-as-item-min-height-1.html
@@ -973,8 +973,8 @@ http://web-platform.test:8000/css/css-flexbox/table-as-item-narrow-content-2.htm
 http://web-platform.test:8000/css/css-flexbox/table-as-item-narrow-content.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/table-as-item-percent-width-cell-001.html
 http://web-platform.test:8000/css/css-flexbox/table-as-item-specified-height.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/table-as-item-specified-width-vertical.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/table-as-item-specified-width.html
+# [vacuous-pass:WRITING_MODE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-flexbox/table-as-item-specified-width-vertical.html
+http://web-platform.test:8000/css/css-flexbox/table-as-item-specified-width.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/table-as-item-stretch-cross-size-2.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/table-as-item-stretch-cross-size-3.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-flexbox/table-as-item-stretch-cross-size-4.html

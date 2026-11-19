@@ -1,0 +1,47 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A table cell shorter than its content grows to the content's height, not its overflow</title>
+<style>
+  body { margin: 0; }
+  table { border-spacing: 0; }
+  td { padding: 0; height: 5px; }
+  .z { font-size: 0; }
+  .z i { display: inline-block; width: 30px; height: 20px; background: green; vertical-align: top; }
+  .box { width: 20px; height: 20px; background: green; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[table-cell-content-height] " + document.title);
+  };
+}
+</script>
+<table><tr><td id="lineHeight" style="font: 20px/30px monospace">x</td></tr></table>
+<table><tr><td id="shortLine" style="font: 20px/10px monospace">x</td></tr></table>
+<table><tr><td id="relative"><div class="box"></div><div class="box" style="position: relative; top: 30px"></div></td></tr></table>
+<table><tr><td id="negativeMargin"><div class="box" style="margin-bottom: -15px"></div></td></tr></table>
+<table><tr><td id="float"><div class="box" style="float: left; height: 40px"></div></td></tr></table>
+<table><tr><td id="maxHeight" class="z" style="max-height: 5px"><i></i></td></tr></table>
+<script>
+// CSS2 §17.5.3: a cell's height is a minimum; the cell is as tall as its
+// content needs, its auto height (floats included, as it is a block
+// formatting context root), while relative offsets and other overflow
+// don't count.
+function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+function check(what, actual, expected) { console.assert(Math.abs(actual - expected) < 0.01, what + ": " + actual + " != " + expected); }
+
+check("lineHeight", rect("lineHeight").height, 30);
+check("shortLine", rect("shortLine").height, 10);
+check("relative", rect("relative").height, 40);
+check("negativeMargin", rect("negativeMargin").height, 5);
+check("float", rect("float").height, 40);
+check("maxHeight", rect("maxHeight").height, 20);
+testEnd();
+</script>

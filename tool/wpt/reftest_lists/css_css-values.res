@@ -90,7 +90,7 @@ http://web-platform.test:8000/css/css-values/calc-vertical-align-1.html
 http://web-platform.test:8000/css/css-values/calc-width-block-1.html
 http://web-platform.test:8000/css/css-values/calc-width-block-intrinsic-1.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-values/calc-width-table-auto-1.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-values/calc-width-table-fixed-1.html
+http://web-platform.test:8000/css/css-values/calc-width-table-fixed-1.html
 http://web-platform.test:8000/css/css-values/calc-zero-percent-height.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-values/cap-unit-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-values/ch-unit-001.html

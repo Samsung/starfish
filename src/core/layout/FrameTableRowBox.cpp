@@ -71,13 +71,8 @@ void FrameTableRowBox::collectCellWidthInfo(LayoutContext& ctx)
 
 void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
 {
-    LayoutUnit unused;
     LayoutUnit borderSpacing =
-        sectionBox()
-            ->tableBox()
-            ->style()
-            ->horizontalBorderSpacing()
-            .specifiedValue(unused, sectionBox()->tableBox());
+        sectionBox()->tableBox()->usedHorizontalBorderSpacing();
     LayoutUnit xSoFar = borderSpacing;
 
     unsigned i = 0;

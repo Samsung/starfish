@@ -213,6 +213,9 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     auto mbp = style()->marginBorderPadding();
     // padding
     auto padding = std::get<2>(mbp);
+    if (padding && isPaddingIgnored()) {
+        padding = Optional<LengthData*>();
+    }
     if (padding) {
         // Padding does not allow negative values (css-box-3): a calc()
         // that computes below zero is clamped to 0 at used-value time.
@@ -5274,13 +5277,6 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         ret = true;
     }
 
-    if (ctx.isForSpecialValueForTableCell && isScrollingPurpose &&
-        isFrameFlexibleBox()) {
-        if (cs->height().isDefinite(true)) {
-            ret = false;
-        }
-    }
-
     if (boxHasDrawableContents) {
         size_t len = isInlineTextBox() ? 2 : 1;
         for (size_t i = 0; cs && i < len; ++i) {
@@ -5306,11 +5302,6 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
                             computeVisibleShadowRect(owner, shadow);
                         shadowsRect.unite(rect);
                     }
-                } else if (ctx.isForSpecialValueForTableCell &&
-                           isScrollingPurpose && isFrameFlexibleBox()) {
-                    LayoutRect rect = computeVisibleShadowRect(owner, shadow);
-                    shadowsRect.unite(rect);
-                    ret = false;
                 }
             }
             if (hasShadow) {
@@ -5483,16 +5474,18 @@ LayoutUnit FrameBox::intrinsicContentWidth(LayoutContext& ctx, Length keyword,
                                     ? availableWidth
                                     : LayoutUnit(intMaxForLayoutUnit);
     PreferredWidthContext p(ctx, nullptr, this, this, lastKnownWidth);
+    p.setMeasuresOwnerSize(true);
     p.computePreferredWidth();
     return keyword.isMinContent() ? p.preferredMinWidth() : p.preferredWidth();
 }
 
-LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
-                                                      LayoutUnit height,
-                                                      LayoutUnit parentHeight,
-                                                      bool parentHasFixedValue)
+LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(
+    LayoutContext& ctx, LayoutUnit height, LayoutUnit parentHeight,
+    bool parentHasFixedValue, Optional<LayoutUnit> autoHeight)
 {
     ComputedStyle* style = Frame::style();
+    // CSS2 §10.7: min-height wins over a smaller max-height.
+    LayoutUnit usedMinHeight;
     if (style->minHeight().isSpecified()) {
         if (!style->minHeight().isDefinite(parentHasFixedValue)) {
             return height;
@@ -5506,6 +5499,18 @@ LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
         if (minHeight > height) {
             return minHeight;
         }
+        usedMinHeight = minHeight;
+    } else if (style->minHeight().isIntrinsic() && autoHeight) {
+        // css-sizing-3 §5.1: in the block axis the content-based keywords
+        // are the auto height. Where the caller doesn't know it, they act as
+        // their initial value.
+        // shortcut: flex layout never passes autoHeight, so on flex items
+        // and flex containers the keywords act as auto (min-height) and none
+        // (max-height); pass it once flex layout measures the auto height.
+        if (autoHeight.value() > height) {
+            return autoHeight.value();
+        }
+        usedMinHeight = autoHeight.value();
     } else if (isFlexItem()) {
         LayoutUnit minHeight = intMaxForLayoutUnit;
         auto flexibleBox = layoutParent()->asFrameFlexibleBox();
@@ -5586,8 +5591,11 @@ LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
         maxHeight = contentHeightAfterApplyingBoxSizing(maxHeight);
 
         if (maxHeight >= 0 && maxHeight < height) {
-            return maxHeight;
+            return std::max(maxHeight, usedMinHeight);
         }
+    } else if (style->maxHeight().isIntrinsic() && autoHeight &&
+               autoHeight.value() < height) {
+        return std::max(autoHeight.value(), usedMinHeight);
     }
     return height;
 }

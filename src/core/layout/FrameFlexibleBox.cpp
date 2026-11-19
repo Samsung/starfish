@@ -222,7 +222,9 @@ LayoutUnit FlexFormattingContext::automaticMinimumMainSize(FrameBox* flexItem)
             return 0;
         }
     } else {
-        if (!flexItem->style()->minHeight().isAuto() ||
+        // In the block axis the content-based keywords keep the automatic
+        // minimum: only the caller knowing the auto height resolves them.
+        if (!flexItem->style()->minHeight().isIntrinsicOrAuto() ||
             flexItem->appliedOverflowY() != OverflowValue::VisibleOverflow) {
             return 0;
         }
@@ -1034,9 +1036,8 @@ struct MainSizeFixer {
             // reads the length as the border box, so take those off.
             LayoutUnit pinnedWidth = m_mainSizeLayoutBackup;
             if (m_flexItem->isFrameTableBox()) {
-                pinnedWidth -=
-                    m_flexItem->asFrameTableBox()->definiteBorderBoxWidth(
-                        Length(Length::Fixed, 0));
+                pinnedWidth -= m_flexItem->asFrameTableBox()->borderBoxWidth(
+                    Length(Length::Fixed, 0), LayoutUnit());
             }
             m_flexItem->style()->setWidth(Length(Length::Fixed, pinnedWidth));
         } else {
@@ -1772,10 +1773,11 @@ std::pair<LayoutUnit, bool> FrameFlexibleBox::basisSize(
         }
         LayoutContext& m_ctx;
         FrameBox* m_old;
-    } autoMinHeightScope(ctx, !isMainAxisInInlineAxis &&
-                                      flexItem->style()->minHeight().isAuto()
-                                  ? flexItem
-                                  : nullptr);
+    } autoMinHeightScope(
+        ctx, !isMainAxisInInlineAxis &&
+                     flexItem->style()->minHeight().isIntrinsicOrAuto()
+                 ? flexItem
+                 : nullptr);
 
     MinMaxWidthHeightRestorer restorer(flexItem, isMainAxisInInlineAxis);
     restorer.initValues();

@@ -1,0 +1,50 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>calc() widths with percentages on tables and table cells</title>
+<style>
+  body { margin: 0; }
+  .cb { width: 400px; }
+  table { border-spacing: 0; }
+  td { padding: 0; }
+  .z { font-size: 0; }
+  .z i { display: inline-block; height: 10px; background: green; vertical-align: top; }
+  .a { width: 30px; } .c { width: 20px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[table-calc-width] " + document.title);
+  };
+}
+</script>
+<div class="cb"><table id="sum" style="width: calc(50% + 10px)"><tr><td class="z"><i class="a"></i></td></tr></table></div>
+<div class="cb"><table id="diff" style="width: calc(100% - 20px)"><tr><td class="z"><i class="a"></i></td></tr></table></div>
+<div class="cb"><div id="cssTable" style="display: table; width: calc(50% + 10px); padding: 10px; border: 5px solid"><div class="z" style="display: table-cell"><i class="a"></i></div></div></div>
+<div class="cb"><table id="cells" style="width: 400px"><tr><td class="z" id="calcCell" style="width: calc(50% + 10px)"><i class="a"></i></td><td class="z" id="autoCell"><i class="c"></i></td></tr></table></div>
+<div class="cb"><table id="fixedCells" style="width: 400px; table-layout: fixed"><tr><td class="z" id="fixedCalcCell" style="width: calc(50% + 10px)"><i class="a"></i></td><td class="z" id="fixedAutoCell"><i class="c"></i></td></tr></table></div>
+<script>
+// css-values-4: a calc() mixing percentages and lengths resolves its
+// percentages against the same basis as a plain percentage width; in a
+// table column or cell it is treated as auto (css-values-4 §10.11).
+function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+function check(what, actual, expected) { console.assert(Math.abs(actual - expected) < 0.01, what + ": " + actual + " != " + expected); }
+
+check("sum", rect("sum").width, 210);
+check("diff", rect("diff").width, 380);
+check("cssTable", rect("cssTable").width, 240);
+// Two auto columns share the table width by their max-content widths.
+check("cells", rect("cells").width, 400);
+check("calcCell", rect("calcCell").width, 240);
+check("autoCell", rect("autoCell").width, 160);
+// Fixed layout splits the width equally between auto columns.
+check("fixedCalcCell", rect("fixedCalcCell").width, 200);
+check("fixedAutoCell", rect("fixedAutoCell").width, 200);
+testEnd();
+</script>

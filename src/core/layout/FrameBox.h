@@ -424,10 +424,12 @@ public:
     LayoutUnit intrinsicContentWidth(LayoutContext& ctx, Length keyword,
                                      LayoutUnit availableWidth);
 
-    LayoutUnit heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
-                                                LayoutUnit height,
-                                                LayoutUnit parentHeight,
-                                                bool parentHasFixedValue);
+    // autoHeight, the content height for height: auto, resolves the
+    // content-based keywords.
+    LayoutUnit heightAfterApplyingMinMaxHeights(
+        LayoutContext& ctx, LayoutUnit height, LayoutUnit parentHeight,
+        bool parentHasFixedValue,
+        Optional<LayoutUnit> autoHeight = Optional<LayoutUnit>());
 
     void setContentWidthConsideringMinMaxWidths(LayoutContext& ctx,
                                                 LayoutUnit width,
@@ -439,10 +441,11 @@ public:
 
     void setContentHeightConsideringMinMaxHeights(
         LayoutContext& ctx, LayoutUnit height, LayoutUnit parentHeight,
-        bool parentHasFixedValue = true)
+        bool parentHasFixedValue = true,
+        Optional<LayoutUnit> autoHeight = Optional<LayoutUnit>())
     {
         setContentHeight(heightAfterApplyingMinMaxHeights(
-            ctx, height, parentHeight, parentHasFixedValue));
+            ctx, height, parentHeight, parentHasFixedValue, autoHeight));
     }
 
     LayoutUnit contentWidthAfterApplyingBoxSizing(LayoutUnit width)
@@ -453,6 +456,12 @@ public:
         }
 
         return width;
+    }
+
+    LayoutUnit borderBoxWidthAfterApplyingBoxSizing(LayoutUnit width)
+    {
+        return contentWidthAfterApplyingBoxSizing(width) + paddingWidth() +
+               borderWidth();
     }
 
     LayoutUnit contentHeightAfterApplyingBoxSizing(LayoutUnit height)

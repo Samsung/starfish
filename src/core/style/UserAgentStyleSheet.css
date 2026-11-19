@@ -47,6 +47,7 @@
 "}"
 "table {"
 "    display: table;"
+"    box-sizing: border-box;"
 "    border-collapse: separate;"
 "    border-spacing: 2px;"
 "    border-color: gray;"

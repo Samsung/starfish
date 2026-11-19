@@ -1,0 +1,59 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Inherited border-spacing, collapsed borders, max-content fixed tables and short cells</title>
+<link rel="help" href="https://drafts.csswg.org/css-tables-3/#border-spacing-property">
+<link rel="help" href="https://drafts.csswg.org/css-tables-3/#in-fixed-mode">
+<style>
+  body { margin: 0; }
+  td { padding: 0; }
+  .z { font-size: 0; }
+  .z i { display: inline-block; width: 30px; height: 10px; background: green; vertical-align: top; }
+  .t { display: table; } .r { display: table-row; } .c { display: table-cell; }
+  .box { width: 20px; height: 20px; background: green; }
+</style>
+<div style="border-spacing: 10px">
+  <div id="inheritedCollapse" class="t" style="border-collapse: collapse"><div class="r"><div class="z c"><i></i></div><div class="z c"><i></i></div></div></div>
+  <div id="inheritedSeparate" class="t"><div class="r"><div class="z c"><i></i></div><div class="z c"><i></i></div></div></div>
+  <div class="t" style="border-collapse: collapse"><div class="r"><div class="c">
+    <div id="nestedCollapse" class="t"><div class="r"><div class="z c"><i></i></div><div class="z c"><i></i></div></div></div>
+    <div id="nestedSeparate" class="t" style="border-collapse: separate"><div class="r"><div class="z c"><i></i></div><div class="z c"><i></i></div></div></div>
+  </div></div></div>
+</div>
+<table id="sectionEm" style="font-size: 10px; border-spacing: 1em"><tbody style="font-size: 20px; border-spacing: 5em"><tr><td class="z"><i></i></td><td class="z"><i></i></td></tr></tbody></table>
+<table id="sectionFont" style="font-size: 10px; border-spacing: 1em"><tbody style="font-size: 20px"><tr><td class="z"><i></i></td><td class="z"><i></i></td></tr></tbody></table>
+<table id="toggled" style="border-spacing: 10px"><tr><td class="z"><i></i></td><td class="z"><i></i></td></tr></table>
+<table id="fixedMaxContent" style="table-layout: fixed; width: max-content; border-spacing: 0"><tr><td class="z"><i></i></td></tr><tr><td class="z"><i style="width: 80px"></i></td></tr></table>
+<table style="border-spacing: 0"><tr><td id="noLineHeight" style="height: 5px; font: 20px/0 monospace">x</td></tr></table>
+<table style="border-spacing: 0"><tr><td id="raisedContent" style="height: 5px"><div class="box" style="margin-top: -15px"></div></td></tr></table>
+<table style="border-spacing: 0"><tr><td id="shiftedContent"><div class="box" style="position: relative; left: 50px"></div></td></tr></table>
+<table style="border-spacing: 0"><tr><td id="tallInline" style="height: 5px; line-height: 10px; font-size: 0"><i style="display: inline-block; width: 10px; height: 30px; vertical-align: top"></i></td></tr></table>
+<script>
+// css-tables-3 #border-spacing-property: border-spacing is inherited (the
+// boxes below have no UA table rule to override that) and applies to the
+// table box only, so a section's own value has no effect; it is ignored in
+// the collapsed-borders model, and border-collapse is inherited too. #in-fixed-mode: a table with width max-content is not in fixed mode,
+// so every row counts. CSS2 §17.5.3: a cell is as tall as its content's
+// auto height when that exceeds its height; overflow and relative offsets
+// do not count (CSS2 §9.4.3).
+function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+function check(what, actual, expected) { console.assert(Math.abs(actual - expected) < 0.01, what + ": " + actual + " != " + expected); }
+
+check("inherited spacing, collapsed", rect("inheritedCollapse").width, 60);
+check("inherited spacing, separate", rect("inheritedSeparate").width, 90);
+check("section border-spacing ignored", rect("sectionEm").width, 90);
+check("table font resolves em spacing", rect("sectionFont").width, 90);
+check("nested table inherits collapse", rect("nestedCollapse").width, 60);
+check("nested separate table", rect("nestedSeparate").width, 90);
+var toggled = document.getElementById("toggled");
+check("separate before toggle", rect("toggled").width, 90);
+toggled.style.borderCollapse = "collapse";
+check("collapsed after toggle", rect("toggled").width, 60);
+toggled.style.borderCollapse = "separate";
+check("separate again", rect("toggled").width, 90);
+check("max-content fixed table uses every row", rect("fixedMaxContent").width, 80);
+check("cell with a zero line height", rect("noLineHeight").height, 5);
+check("content raised by a negative margin", rect("raisedContent").height, 5);
+check("relative offset does not widen the cell", rect("shiftedContent").width, 20);
+check("inline-block taller than the line", rect("tallInline").height, 30);
+if (typeof testEnd === "function") testEnd();
+</script>

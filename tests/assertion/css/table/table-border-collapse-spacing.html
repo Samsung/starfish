@@ -1,0 +1,73 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>border-spacing and padding have no effect on a table with collapsed borders</title>
+<style>
+  body { margin: 0; }
+  td { padding: 0; }
+  .z { font-size: 0; }
+  .z i { display: inline-block; width: 30px; height: 10px; background: green; vertical-align: top; }
+  .cell { width: 50px; height: 20px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[table-border-collapse-spacing] " + document.title);
+  };
+}
+</script>
+<table id="initial" style="border-collapse: collapse"><tr><td class="z cell" id="initialCell"><i></i></td><td class="z cell"><i></i></td></tr></table>
+<table id="spaced" style="border-collapse: collapse; border-spacing: 10px"><tr><td class="z cell" id="spacedCell"><i></i></td><td class="z cell"><i></i></td></tr><tr><td class="z cell"></td><td class="z cell" id="spacedLast"></td></tr></table>
+<div style="width: 400px"><table id="given" style="border-collapse: collapse; border-spacing: 10px; width: 200px"><tr><td class="z" id="givenCell"><i></i></td><td class="z"><i></i></td></tr></table></div>
+<div id="float" style="float: left"><table style="border-collapse: collapse; border-spacing: 10px"><tr><td class="z"><i></i></td><td class="z"><i></i></td></tr></table></div>
+<div style="clear: both"></div>
+<table id="padded" style="border-collapse: collapse; padding: 50px"><tr><td class="z cell" id="paddedCell"><i></i></td></tr></table>
+<table id="paddedHeight" style="border-collapse: collapse; padding: 20px; width: 200px; height: 50px"><tr><td class="z"><i></i></td></tr></table>
+<table id="paddedContentBox" style="border-collapse: collapse; padding: 20px; box-sizing: content-box; width: 200px; height: 50px"><tr><td class="z"><i></i></td></tr></table>
+<div id="paddedCSS" style="display: table; border-collapse: collapse; padding: 20px; width: 200px"><div class="z" style="display: table-cell"><i></i></div></div>
+<div id="paddedFloat" style="float: left"><table style="border-collapse: collapse; padding: 0 50px"><tr><td class="z"><i></i></td><td class="z"><i></i></td></tr></table></div>
+<div style="clear: both"></div>
+<div style="display: flex"><div id="paddedFlexItem"><table style="border-collapse: collapse; padding: 0 50px"><tr><td class="z"><i></i></td></tr></table></div></div>
+<div id="paddedInlineBlock" style="display: inline-block"><table style="border-collapse: collapse; padding: 0 50px"><tr><td class="z"><i></i></td></tr></table></div>
+<table id="separate" style="border-spacing: 10px"><tr><td class="z cell"><i></i></td><td class="z cell"><i></i></td></tr></table>
+<script>
+// css-tables-3 §3.6.2: in the collapsed-borders model the table's
+// border-spacing is ignored, as if it were 0px, and the table has no
+// padding (CSS2 §17.6.2), whatever box-sizing says.
+function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+function check(what, actual, expected) { console.assert(Math.abs(actual - expected) < 0.01, what + ": " + actual + " != " + expected); }
+
+check("initial width", rect("initial").width, 100);
+check("initial height", rect("initial").height, 20);
+check("initial cell x", rect("initialCell").left - rect("initial").left, 0);
+check("spaced width", rect("spaced").width, 100);
+check("spaced height", rect("spaced").height, 40);
+check("spaced last cell x", rect("spacedLast").left - rect("spaced").left, 50);
+check("spaced last cell y", rect("spacedLast").top - rect("spaced").top, 20);
+check("given cell width", rect("givenCell").width, 100);
+check("float width", rect("float").width, 60);
+check("padded width", rect("padded").width, 50);
+check("padded height", rect("padded").height, 20);
+check("padded cell x", rect("paddedCell").left - rect("padded").left, 0);
+check("paddedHeight width", rect("paddedHeight").width, 200);
+check("paddedHeight height", rect("paddedHeight").height, 50);
+check("paddedContentBox width", rect("paddedContentBox").width, 200);
+check("paddedContentBox height", rect("paddedContentBox").height, 50);
+check("paddedCSS width", rect("paddedCSS").width, 200);
+// Nor does the padding widen the box that shrinks to fit the table.
+check("paddedFloat width", rect("paddedFloat").width, 60);
+check("paddedFlexItem width", rect("paddedFlexItem").width, 30);
+check("paddedInlineBlock width", rect("paddedInlineBlock").width, 30);
+// The separated-borders model keeps the spacing.
+check("separate width", rect("separate").width, 130);
+// The computed value is unchanged.
+console.assert(getComputedStyle(document.getElementById("spaced")).borderSpacing === "10px",
+               "computed border-spacing: " + getComputedStyle(document.getElementById("spaced")).borderSpacing);
+testEnd();
+</script>

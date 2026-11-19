@@ -1,0 +1,66 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Content-based width keywords on grid items and against the box's own limits</title>
+<style>
+  body { margin: 0; }
+  /* Three unbreakable 30px, 50px and 20px pieces with zero-width break
+     opportunities between them: min-content 50px, max-content 100px. */
+  .z { font-size: 0; }
+  .z i { display: inline-block; height: 10px; background: green; vertical-align: top; }
+  .a { width: 30px; } .b { width: 50px; } .c { width: 20px; }
+  .wide { width: 400px; }
+  .grid { display: grid; width: 400px; grid-template-columns: 400px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[intrinsic-width-keywords-items] " + document.title);
+  };
+}
+</script>
+<div class="grid">
+  <div id="gridMin" class="z" style="width: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+  <div id="gridMax" class="z" style="width: max-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+  <div id="gridFit" class="z" style="width: fit-content; padding: 0 5px"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+  <div id="gridCenter" class="z" style="width: fit-content; justify-self: center"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+  <div id="gridMinWidth" class="z" style="min-width: max-content; max-width: 60px"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+</div>
+<div class="wide">
+  <div id="blockMinMax" class="z" style="min-width: max-content; max-width: 50px"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+  <div style="float: left"><div id="floatMinMax" class="z" style="min-width: max-content; max-width: 50px"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+  <div style="clear: both"></div>
+  <div style="width: max-content"><div id="inMaxContent" class="z" style="min-width: max-content; max-width: 50px"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+  <div id="blockFitMax" class="z" style="width: 10px; min-width: fit-content; max-width: 20px"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+  <div style="display: flex"><div id="flexMinMax" class="z" style="min-width: max-content; max-width: 40px"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+  <div id="widthMaxContentClamped" class="z" style="width: max-content; max-width: 60px"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+</div>
+<script>
+// css-sizing-3 §5: a content-based keyword sizes the box from its content,
+// also as a grid item, whose track then only bounds its alignment. The box's
+// own min-/max-content size isn't limited by its max-width (§5.1); the
+// min-width it resolves wins over a smaller max-width (CSS2 §10.4).
+function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+function check(what, actual, expected) { console.assert(Math.abs(actual - expected) < 0.01, what + ": " + actual + " != " + expected); }
+
+check("gridMin", rect("gridMin").width, 50);
+check("gridMax", rect("gridMax").width, 100);
+check("gridFit", rect("gridFit").width, 110);
+check("gridCenter", rect("gridCenter").width, 100);
+check("gridCenter x", rect("gridCenter").left, 150);
+check("gridMinWidth", rect("gridMinWidth").width, 100);
+check("blockMinMax", rect("blockMinMax").width, 100);
+check("floatMinMax", rect("floatMinMax").width, 100);
+// Its parent measuring it first, for its contribution, doesn't change that.
+check("inMaxContent", rect("inMaxContent").width, 100);
+check("blockFitMax", rect("blockFitMax").width, 100);
+check("flexMinMax", rect("flexMinMax").width, 100);
+check("widthMaxContentClamped", rect("widthMaxContentClamped").width, 60);
+testEnd();
+</script>

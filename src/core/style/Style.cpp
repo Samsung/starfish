@@ -163,6 +163,22 @@ static Optional<Length> farSideOffsetToLength(const CSSStyleValuePair& offset)
     return Length(calcData);
 }
 
+// A content-based sizing keyword as a length; `available` is the initial
+// value.
+static Length sizingKeywordLength(WidthHeightKeywordValue keyword)
+{
+    switch (keyword) {
+    case WidthHeightKeywordValue::MinContentValue:
+        return Length(Length::Type::MinContent);
+    case WidthHeightKeywordValue::MaxContentValue:
+        return Length(Length::Type::MaxContent);
+    case WidthHeightKeywordValue::FitContentValue:
+        return Length(Length::Type::FitContent);
+    default:
+        return Length();
+    }
+}
+
 static void setComputedStyleUnitPositionX(
     ComputedStyle* style, const CSSStyleValuePair& value, uint32_t layer,
     std::function<void(ComputedStyle* style, const Length& length,
@@ -4036,7 +4052,8 @@ void StyleResolver::applyProperty(Element* element,
             style->setMaxHeight(Length());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
-            STARFISH_UNIMPLEMENTED();
+            style->setMaxHeight(
+                sizingKeywordLength(newCssValue.widthHeightKeywordValue()));
         } else {
             Optional<Length> length = LengthUtil::convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());
@@ -4056,6 +4073,10 @@ void StyleResolver::applyProperty(Element* element,
                    (newCssValue.valueKind() ==
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setMinHeight(Length());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::WidthHeightKeywordValueKind) {
+            style->setMinHeight(
+                sizingKeywordLength(newCssValue.widthHeightKeywordValue()));
         } else {
             Optional<Length> length = LengthUtil::convertValueToLength(
                 newCssValue.valueKind(), newCssValue.value());

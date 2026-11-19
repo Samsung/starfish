@@ -1259,7 +1259,6 @@ Frame::ComputeVisibleRectContext::ComputeVisibleRectContext(
     SkMatrix& tranformMatrix, LayoutRect& result)
     : purpose(purpose)
     , ignoreTransformOnce(purpose >= GraphicsBufferBySelf ? true : false)
-    , isForSpecialValueForTableCell(false)
     , isVisibleRectCollapsible(purpose >= GraphicsBufferBySelf)
     , sourceStackingContext(sourceStackingContext)
     , sourceFrameBox(sourceStackingContext->owner())

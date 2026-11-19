@@ -1,0 +1,58 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Content-based keywords in min-height and max-height</title>
+<style>
+  body { margin: 0; }
+  /* Pieces 30px, 50px and 20px wide in a 50px wide box: three 10px lines,
+     a 30px tall content. */
+  .z { font-size: 0; width: 50px; }
+  .z i { display: inline-block; height: 10px; background: green; vertical-align: top; }
+  .a { width: 30px; } .b { width: 50px; } .c { width: 20px; }
+  .collapsed { max-height: 0; overflow: hidden; }
+  .collapsed.open { max-height: max-content; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[intrinsic-height-keywords] " + document.title);
+  };
+}
+</script>
+<div id="minMin" class="z" style="height: 10px; min-height: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+<div id="minFit" class="z" style="height: 10px; min-height: fit-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+<div id="maxMax" class="z" style="height: 100px; max-height: max-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+<div id="maxMin" class="z" style="height: 100px; max-height: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+<div id="minOverMax" class="z" style="min-height: min-content; max-height: 5px"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+<div id="definiteMinOverMax" class="z" style="height: 100px; min-height: 20px; max-height: 5px"><i class="a"></i></div>
+<div id="cascaded" class="z collapsed open"><i class="a"></i> <i class="b"></i> <i class="c"></i></div>
+<div style="position: relative; height: 200px"><div id="abspos" class="z" style="position: absolute; top: 0; bottom: 0; max-height: max-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<div style="display: flex; height: 60px"><div id="stretched" class="z" style="max-height: min-content"><i class="a"></i> <i class="b"></i> <i class="c"></i></div></div>
+<script>
+// css-sizing-3 §5.1: in the block axis the min-content, max-content and
+// fit-content sizes are all the height the box takes with height: auto;
+// min-height wins over a smaller max-height (CSS2 §10.7).
+function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+function check(what, actual, expected) { console.assert(Math.abs(actual - expected) < 0.01, what + ": " + actual + " != " + expected); }
+
+check("minMin", rect("minMin").height, 30);
+check("minFit", rect("minFit").height, 30);
+check("maxMax", rect("maxMax").height, 30);
+check("maxMin", rect("maxMin").height, 30);
+check("minOverMax", rect("minOverMax").height, 30);
+check("definiteMinOverMax", rect("definiteMinOverMax").height, 20);
+check("cascaded", rect("cascaded").height, 30);
+check("abspos", rect("abspos").height, 30);
+check("stretched", rect("stretched").height, 30);
+console.assert(getComputedStyle(document.getElementById("cascaded")).maxHeight === "max-content",
+               "computed max-height: " + getComputedStyle(document.getElementById("cascaded")).maxHeight);
+console.assert(getComputedStyle(document.getElementById("minMin")).minHeight === "min-content",
+               "computed min-height: " + getComputedStyle(document.getElementById("minMin")).minHeight);
+testEnd();
+</script>

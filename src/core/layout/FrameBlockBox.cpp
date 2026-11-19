@@ -337,6 +337,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         }
 
         if (isAbsolutePositioned()) {
+            LayoutUnit autoHeight = contentHeight;
             parentHeight = cb->contentHeight() + cb->paddingHeight();
             if (height.isAuto()) {
                 LengthData offset = style()->offset();
@@ -363,8 +364,8 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
                     contentHeightAfterApplyingBoxSizing(contentHeight);
             }
 
-            setContentHeightConsideringMinMaxHeights(ctx, contentHeight,
-                                                     parentHeight);
+            setContentHeightConsideringMinMaxHeights(
+                ctx, contentHeight, parentHeight, true, autoHeight);
         } else {
             computeContentHeight(ctx, contentHeight);
         }
@@ -375,6 +376,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
                                          LayoutUnit contentHeight)
 {
+    LayoutUnit autoHeight = contentHeight;
     bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
     LayoutUnit parentHeight;
     if (parentHasFixedHeight) {
@@ -457,7 +459,13 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
     }
 
     setContentHeightConsideringMinMaxHeights(ctx, contentHeight, parentHeight,
-                                             parentHasFixedHeight);
+                                             parentHasFixedHeight, autoHeight);
+
+    // CSS2 §17.5.3: the height of a cell is a minimum; its content, not
+    // what overflows the content, still fits.
+    if (isFrameTableCellBox() && autoHeight > this->contentHeight()) {
+        setContentHeight(autoHeight);
+    }
 }
 
 bool FrameBlockBox::widthIsStretchedByInsets()
@@ -577,8 +585,7 @@ void LayoutContext::applyRelativePositionInlineCase(Frame* origin,
     }
 }
 
-LayoutRect FrameBlockBox::computeVisibleRectForScroll(
-    bool isForSpecialValueForTableCell)
+LayoutRect FrameBlockBox::computeVisibleRectForScroll()
 {
     LayoutRect visibleRect =
         LayoutRect(borderLeft(), borderTop(), contentWidth() + paddingWidth(),
@@ -586,7 +593,6 @@ LayoutRect FrameBlockBox::computeVisibleRectForScroll(
     SkMatrix loc = SkMatrix::I();
     Frame::ComputeVisibleRectContext vctx(
         Frame::ComputeVisibleRectContext::Scrolling, this, loc, visibleRect);
-    vctx.isForSpecialValueForTableCell = isForSpecialValueForTableCell;
     if (hasBlockFlow()) {
         Frame* child = firstChild();
         while (child) {
@@ -1200,10 +1206,8 @@ void FrameBlockBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     // the content's extent in this box's own space is therefore reusable as
     // a whole: keep it on the boxes the layout pass can skip (formatting
     // context roots and out-of-flow boxes), and rebuild it only after the box
-    // has been laid out again. Table parts and the table-cell special value
-    // keep the per-leaf walk.
+    // has been laid out again. Table parts keep the per-leaf walk.
     if (ctx.purpose == Frame::ComputeVisibleRectContext::Scrolling &&
-        !ctx.isForSpecialValueForTableCell &&
         !(ctx.tranformMatrix.getType() & ~SkMatrix::kTranslate_Mask) &&
         !isFrameTableObjectBox() && !isFrameDocument() &&
         (needToEstablishKindsOfFormattingContext() || isAbsolutePositioned())) {

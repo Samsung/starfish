@@ -1,0 +1,71 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Tables size the box box-sizing names; HTML tables default to border-box</title>
+<style>
+  body { margin: 0; }
+  .wide { width: 400px; }
+  table { border-spacing: 0; }
+  td { padding: 0; }
+  .bp { padding: 10px; border: 5px solid; }
+  .z { font-size: 0; }
+  .z i { display: inline-block; width: 30px; height: 10px; background: green; vertical-align: top; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[table-box-sizing] " + document.title);
+  };
+}
+</script>
+<div class="wide">
+  <table id="htmlWidth" class="bp" style="width: 200px"><tr><td class="z"><i></i></td></tr></table>
+  <table id="htmlHeight" class="bp" style="height: 100px"><tr><td class="z"><i></i></td></tr></table>
+  <table id="htmlMinHeight" class="bp" style="min-height: 100px"><tr><td class="z"><i></i></td></tr></table>
+  <table id="contentWidth" class="bp" style="box-sizing: content-box; width: 200px"><tr><td class="z"><i></i></td></tr></table>
+  <table id="contentPercent" class="bp" style="box-sizing: content-box; width: 50%"><tr><td class="z"><i></i></td></tr></table>
+  <table id="contentHeight" class="bp" style="box-sizing: content-box; height: 100px"><tr><td class="z"><i></i></td></tr></table>
+  <table id="contentMinWidth" class="bp" style="box-sizing: content-box; min-width: 200px"><tr><td class="z"><i></i></td></tr></table>
+  <table id="contentMaxWidth" class="bp" style="box-sizing: content-box; width: 300px; max-width: 100px"><tr><td class="z"><i></i></td></tr></table>
+  <div id="cssPercent" class="bp" style="display: table; width: 50%"><div class="z" style="display: table-cell"><i></i></div></div>
+  <div id="cssBorderBoxPercent" class="bp" style="display: table; box-sizing: border-box; width: 50%"><div class="z" style="display: table-cell"><i></i></div></div>
+  <div style="float: left"><table id="floatContent" class="bp" style="box-sizing: content-box; width: 200px"><tr><td class="z"><i></i></td></tr></table></div>
+  <div style="clear: both"></div>
+  <div style="display: grid; grid-template-columns: 100px"><table id="gridItem" class="bp"><tr><td class="z"><i></i></td></tr></table></div>
+  <table><tr><td id="cellBorderBox" class="z" style="width: 100px; box-sizing: border-box; padding: 0 10px"><i></i></td><td class="z"><i></i></td></tr></table>
+  <table style="table-layout: fixed; width: 300px"><tr><td id="fixedCellBorderBox" class="z" style="width: 100px; box-sizing: border-box; padding: 0 10px"><i></i></td><td class="z"><i></i></td></tr></table>
+  <div style="display: flex; width: 100px"><table id="fixedFlexItem" style="table-layout: fixed; width: 300px"><tr><td class="z" style="width: 150px; box-sizing: border-box; padding: 0 10px"><i></i></td></tr></table></div>
+</div>
+<script>
+// HTML §15.3.8: the UA style sheet gives tables box-sizing: border-box.
+// Otherwise a table's width and height properties apply to the box that
+// box-sizing names (css-sizing-3 §4.1), as for any other box.
+function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+function check(what, actual, expected) { console.assert(Math.abs(actual - expected) < 0.01, what + ": " + actual + " != " + expected); }
+
+console.assert(getComputedStyle(document.getElementById("htmlWidth")).boxSizing === "border-box",
+               "computed box-sizing: " + getComputedStyle(document.getElementById("htmlWidth")).boxSizing);
+check("htmlWidth", rect("htmlWidth").width, 200);
+check("htmlHeight", rect("htmlHeight").height, 100);
+check("htmlMinHeight", rect("htmlMinHeight").height, 100);
+check("contentWidth", rect("contentWidth").width, 230);
+check("contentPercent", rect("contentPercent").width, 230);
+check("contentHeight", rect("contentHeight").height, 130);
+check("contentMinWidth", rect("contentMinWidth").width, 230);
+check("contentMaxWidth", rect("contentMaxWidth").width, 130);
+check("cssPercent", rect("cssPercent").width, 230);
+check("cssBorderBoxPercent", rect("cssBorderBoxPercent").width, 200);
+check("floatContent", rect("floatContent").width, 230);
+check("gridItem", rect("gridItem").width, 100);
+// A cell's width is a column width by its own box-sizing.
+check("cellBorderBox", rect("cellBorderBox").width, 100);
+check("fixedCellBorderBox", rect("fixedCellBorderBox").width, 100);
+check("fixedFlexItem", rect("fixedFlexItem").width, 150);
+testEnd();
+</script>

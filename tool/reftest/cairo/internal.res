@@ -416,7 +416,13 @@ tests/assertion/css/table/th-without-parent-element.html
 tests/crash/table-cell-computed-style-display-none.html
 tests/assertion/css/table/table_border-spacing_computed_value.html
 tests/assertion/css/table/table-min-max-width.html
+tests/assertion/css/table/table-border-collapse-spacing.html
+tests/assertion/css/table/table-box-sizing.html
+tests/assertion/css/table/table-calc-width.html
+tests/assertion/css/table/table-fixed-min-content.html
+tests/assertion/css/table/table-cell-content-height.html
 tests/assertion/css/table/th-text-align-initial-parent.html
+tests/assertion/css/table/table-spacing-and-mode-edges.html
 tests/crash/table-intrinsic-min-max-width.html
 tests/pixel/css/border/next-line-dont-show-end-mbp.html
 tests/assertion/event/click.html
@@ -432,6 +438,8 @@ tests/pixel/css/minmaxwidthheight/minwidth_mincontent_sample.html
 tests/assertion/css/minmaxwidthheight/replaced_percent_max_width_shrink_to_fit.html
 tests/assertion/css/minmaxwidthheight/intrinsic-keywords.html
 tests/assertion/css/minmaxwidthheight/min-width-wins-over-max-width.html
+tests/assertion/css/minmaxwidthheight/intrinsic-width-keywords-items.html
+tests/assertion/css/minmaxwidthheight/intrinsic-height-keywords.html
 tests/pixel/css/text/text-indent-basic.html
 tests/pixel/css/text/text-align-001.html
 tests/pixel/css/width/dont-break-line.html
@@ -827,6 +835,7 @@ tests/assertion/css/flex/flex_row-gap_axis_role.html
 tests/assertion/css/flex/flex_row-gap_percentage_block_size.html
 tests/assertion/css/flex/nested-inline-flex-details-relayout.html
 tests/assertion/css/flex/flex-cross-size-fractional.html
+tests/assertion/css/flex/flex-item-container-shrink.html
 tests/assertion/svg/animation/animate_begin_endEvent.html
 tests/assertion/svg/animation/animate_beginElement_01.html
 tests/assertion/svg/animation/animate_keySplines_computedStyle.html

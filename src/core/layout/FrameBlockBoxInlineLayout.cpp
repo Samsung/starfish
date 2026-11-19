@@ -4737,7 +4737,14 @@ void InlineNonReplacedBox::layoutInline(LineFormattingContext& ctx)
 
 void PreferredWidthContext::computePreferredWidth()
 {
-    PreferredWidthKey key(m_remainingWidth, m_frame);
+    // A box measuring itself may size differently from its contribution to
+    // another box, so the two are cached apart.
+    uint8_t ownerMode = 0;
+    if (m_frame == m_owner) {
+        ownerMode =
+            1 | m_ignoresOwnerAspectRatio << 1 | m_measuresOwnerSize << 2;
+    }
+    PreferredWidthKey key(m_remainingWidth, m_frame, ownerMode);
     auto it = m_layoutContext.preferredWidthInfo(key);
     if (it.hasValue()) {
         updatePreferredWidth(it.getValue().m_preferredWidth);
@@ -4919,7 +4926,7 @@ LayoutUnit PreferredWidthContext::leftMBPWidth(Frame* f)
         width += borderLeftWidth.specifiedValue(unused, f);
     }
 
-    if (paddingLeft.isDefinite(false)) {
+    if (paddingLeft.isDefinite(false) && !f->isPaddingIgnored()) {
         width += paddingLeft.specifiedValue(unused, f);
     }
 
@@ -4945,7 +4952,7 @@ LayoutUnit PreferredWidthContext::rightMBPWidth(Frame* f)
         width += borderRightWidth.specifiedValue(unused, f);
     }
 
-    if (paddingRight.isDefinite(false)) {
+    if (paddingRight.isDefinite(false) && !f->isPaddingIgnored()) {
         width += paddingRight.specifiedValue(unused, f);
     }
 
@@ -5314,6 +5321,10 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
         ctx.updatePreferredWidth(transferred);
     }
 
+    if (this == ctx.owner() && ctx.measuresOwnerSize()) {
+        return;
+    }
+
     LayoutUnit unused;
     LayoutUnit w = widthAfterApplyingMinMaxWidths(
         ctx.layoutContext(), ctx.preferredWidth(), unused, true);
@@ -5334,7 +5345,8 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
     computeBorderMarginPadding(ctx.layoutContext(), cb->contentWidth());
     Length width = style()->width();
 
-    if (width.isDefinite(false)) {
+    // Measuring itself, a box sizes its content, as a block does.
+    if (width.isDefinite(false) && this != ctx.owner()) {
         LayoutUnit unused;
         LayoutUnit w = width.specifiedValue(unused, this);
         w = contentWidthAfterApplyingBoxSizing(w);
@@ -5489,6 +5501,10 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
         }
     }
 
+    if (this == ctx.owner() && ctx.measuresOwnerSize()) {
+        return;
+    }
+
     LayoutUnit unused;
     LayoutUnit w = widthAfterApplyingMinMaxWidths(
         ctx.layoutContext(), ctx.preferredWidth(), unused, true);
@@ -5504,7 +5520,8 @@ void FrameGridBox::computePreferredWidth(PreferredWidthContext& ctx)
     LayoutUnit gridPreferredMinWidth = 0;
 
     Length width = style()->width();
-    if (width.isDefinite(false)) {
+    // Measuring itself, a box sizes its content, as a block does.
+    if (width.isDefinite(false) && this != ctx.owner()) {
         LayoutUnit unused;
         gridPreferredWidth = width.specifiedValue(unused, this);
         gridPreferredWidth =
@@ -5571,27 +5588,34 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
     computeBorderMarginPadding(ctx.layoutContext(),
                                containingBlock(this)->contentWidth());
     LayoutUnit unused;
-    LayoutUnit borderSpacing =
-        style()->horizontalBorderSpacing().specifiedValue(unused, this);
+    LayoutUnit borderSpacing = usedHorizontalBorderSpacing();
 
     LayoutUnit tablePreferredWidth = 0;
     LayoutUnit tablePreferredMinWidth = 0;
     Length width = style()->width();
+    // Measuring itself, a box sizes its content, as a block does.
+    bool usesWidth = width.isDefinite(false) && this != ctx.owner();
     // Percentages are cyclic here and ignored, as for other boxes.
     Length minWidth = style()->minWidth();
     Length maxWidth = style()->maxWidth();
     bool hasMinWidth = minWidth.isDefinite(false) || minWidth.isIntrinsic();
     bool hasMaxWidth = maxWidth.isDefinite(false) || maxWidth.isIntrinsic();
-    if (!width.isDefinite(false) || hasMinWidth || hasMaxWidth) {
+    bool fixedMode = isInFixedMode();
+    if (!usesWidth || hasMinWidth || hasMaxWidth) {
         // calCellWidth() would rewrite the laid-out columns, which a layout
         // skipped after this query would keep using.
         GCVector<ColSizeStruct*> columnWidths;
         collectColumnWidthInfo(ctx.layoutContext(), columnWidths, false);
+        if (fixedMode) {
+            collectColBoxes();
+            collectCellsInTheFirstRow();
+        }
         tablePreferredWidth += borderSpacing;
         tablePreferredMinWidth += borderSpacing;
-        for (auto& col : columnWidths) {
-            tablePreferredWidth += col->maxCellWidth;
-            tablePreferredMinWidth += col->minCellWidth;
+        for (size_t i = 0; i < columnWidths.size(); i++) {
+            tablePreferredWidth += columnWidths[i]->maxCellWidth;
+            tablePreferredMinWidth += fixedMode ? fixedModeColumnWidth(i)
+                                                : columnWidths[i]->minCellWidth;
             tablePreferredWidth += borderSpacing;
             tablePreferredMinWidth += borderSpacing;
         }
@@ -5599,9 +5623,9 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
     // The table's min-/max-content widths, without border and padding.
     LayoutUnit minContentWidth = tablePreferredMinWidth;
     LayoutUnit maxContentWidth = tablePreferredWidth;
-    if (width.isDefinite(false)) {
+    if (usesWidth) {
         tablePreferredWidth =
-            definiteBorderBoxWidth(width) - borderWidth() - paddingWidth();
+            borderBoxWidth(width, unused) - borderWidth() - paddingWidth();
         tablePreferredMinWidth = tablePreferredWidth;
     }
     // css-tables-3 §3.9.1: the table is at least as wide as its captions.
@@ -5611,13 +5635,11 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
     tablePreferredMinWidth = std::max(tablePreferredMinWidth, captionWidth);
     tablePreferredWidth = std::max(tablePreferredWidth, captionWidth);
 
-    if (hasMinWidth || hasMaxWidth) {
+    if ((hasMinWidth || hasMaxWidth) &&
+        !(this == ctx.owner() && ctx.measuresOwnerSize())) {
         // The min-width and max-width clamp the contributions as they clamp
         // the width in calCellWidth().
         LayoutUnit bp = borderWidth() + paddingWidth();
-        bool fixedMode =
-            style()->tableLayout() == TableLayoutValue::FixedTableLayoutValue &&
-            !width.isAuto() && !width.isFitContent();
         auto clamp = [&](LayoutUnit w, LayoutUnit availableWidth) {
             auto resolve = [&](Length l) {
                 return resolveMinMaxWidth(l, unused, availableWidth,

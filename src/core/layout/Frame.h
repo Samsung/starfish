@@ -219,15 +219,20 @@ public:
 
 struct PreferredWidthKey {
     LayoutUnit m_availableWidth;
+    // How a box measuring itself sizes (see PreferredWidthContext::owner()),
+    // 0 for a contribution to another box.
+    uint8_t m_ownerMode;
     Frame* m_frame;
 
     PreferredWidthKey()
-        : PreferredWidthKey(0, nullptr)
+        : PreferredWidthKey(0, nullptr, 0)
     {
     }
 
-    PreferredWidthKey(LayoutUnit availableWidth, Frame* frame)
+    PreferredWidthKey(LayoutUnit availableWidth, Frame* frame,
+                      uint8_t ownerMode)
         : m_availableWidth(availableWidth)
+        , m_ownerMode(ownerMode)
         , m_frame(frame)
     {
     }
@@ -241,6 +246,7 @@ struct hash<Starfish::PreferredWidthKey> {
     {
         std::size_t seed = 0;
         hash_combine(seed, x.m_availableWidth.toInt());
+        hash_combine(seed, x.m_ownerMode);
         hash_combine(seed, x.m_frame);
         return seed;
     }
@@ -252,7 +258,7 @@ struct equal_to<Starfish::PreferredWidthKey> {
                     Starfish::PreferredWidthKey const& b) const
     {
         return a.m_availableWidth == b.m_availableWidth &&
-               a.m_frame == b.m_frame;
+               a.m_ownerMode == b.m_ownerMode && a.m_frame == b.m_frame;
     }
 };
 } // namespace std
@@ -982,6 +988,7 @@ public:
         , m_isPendingWrapLine(false)
         , m_hasAppliedTextIndent(false)
         , m_ignoresOwnerAspectRatio(false)
+        , m_measuresOwnerSize(false)
         , m_wordGoesOn(false)
         , m_isWordAtLast(false)
     {
@@ -1217,6 +1224,19 @@ public:
         return m_ignoresOwnerAspectRatio;
     }
 
+    // Measure the owner's min-/max-content size, which its min-width and
+    // max-width don't clamp; they clamp its contributions (css-sizing-3
+    // §5.1, §5.2).
+    void setMeasuresOwnerSize(bool b)
+    {
+        m_measuresOwnerSize = b;
+    }
+
+    bool measuresOwnerSize()
+    {
+        return m_measuresOwnerSize;
+    }
+
 private:
     LayoutContext& m_layoutContext;
     PreferredWidthContext* m_upperContext;
@@ -1241,6 +1261,7 @@ private:
     bool m_isPendingWrapLine;
     bool m_hasAppliedTextIndent;
     bool m_ignoresOwnerAspectRatio;
+    bool m_measuresOwnerSize;
     bool m_wordGoesOn;
     bool m_isWordAtLast;
 
@@ -2031,7 +2052,6 @@ public:
         };
         ComputePurpose purpose;
         bool ignoreTransformOnce;
-        bool isForSpecialValueForTableCell;
         bool isVisibleRectCollapsible;
         StackingContext* sourceStackingContext;
         FrameBox* sourceFrameBox;
@@ -2068,7 +2088,6 @@ public:
             : purpose(purpose)
             , ignoreTransformOnce(purpose >= GraphicsBufferBySelf ? true
                                                                   : false)
-            , isForSpecialValueForTableCell(false)
             , isVisibleRectCollapsible(purpose >= GraphicsBufferBySelf)
             , sourceStackingContext(nullptr)
             , sourceFrameBox(sourceFrameBox)
@@ -2497,6 +2516,14 @@ public:
     }
 
     LayoutUnit lineHeight();
+
+    // CSS2 §17.6.2: a table in the collapsing border model has no padding.
+    bool isPaddingIgnored()
+    {
+        return isFrameTableBox() &&
+               style()->borderCollapse() ==
+                   BorderCollapseValue::CollapseBorderCollapseValue;
+    }
 
     bool shouldWrapLines()
     {
