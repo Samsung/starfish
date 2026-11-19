@@ -21,11 +21,14 @@
 
 #include "StarfishConfig.h"
 #include "core/dom/canvas/CanvasRenderingContext2D.h"
+#include "core/dom/canvas/HTMLCanvasElement.h"
 namespace Starfish {
 CanvasRenderingContext2D::CanvasRenderingContext2D(
     HTMLCanvasElement* canvasElement)
-    : CanvasRenderingContext2DMixIn(canvasElement)
+    : CanvasRenderingContext2DMixIn(canvasElement->executionContext(),
+                                    canvasElement)
 {
+    initialize();
 }
 } // namespace Starfish
 

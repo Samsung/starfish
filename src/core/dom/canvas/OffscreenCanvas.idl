@@ -1,0 +1,14 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#the-offscreencanvas-interface
+
+[STARFISH_ENABLE_CANVAS]
+enum OffscreenRenderingContextId { "2d", "bitmaprenderer", "webgl", "webgl2", "webgpu" };
+
+// The display-independent 2D surface currently uses the window renderer.
+[STARFISH_ENABLE_CANVAS, Exposed=Window,
+ CustomConstructor([EnforceRange] unsigned long long width, [EnforceRange] unsigned long long height),
+ ConstructorCallWith=ExecutionContext]
+interface OffscreenCanvas : EventTarget {
+  [Custom=Setter, EnforceRange] attribute unsigned long long width;
+  [Custom=Setter, EnforceRange] attribute unsigned long long height;
+  [RaisesException] OffscreenCanvasRenderingContext2D? getContext(OffscreenRenderingContextId contextId, optional any options = null);
+};

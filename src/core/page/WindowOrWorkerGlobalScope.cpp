@@ -367,10 +367,10 @@ namespace WindowOrWorkerGlobalScope {
                                      ->screenInfo()
                                      .devicePixelRatio;
         if (context.m_image
-                .isHTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapValue()) {
+                .isHTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapOrOffscreenCanvasValue()) {
             auto canvasImageSource =
                 context.m_image
-                    .getHTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapValue();
+                    .getHTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapOrOffscreenCanvasValue();
             // Check the usability of the image argument. If this throws an
             // exception or returns bad, then return p rejected with an
             // "InvalidStateError" DOMException.

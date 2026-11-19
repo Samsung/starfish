@@ -42,6 +42,7 @@ class ImageData;
 class ExecutionContext;
 class HTMLCanvasElement;
 class NativeImageData;
+class ComputedStyle;
 
 enum class CanvasTextAlign;
 enum class CanvasTextBaseline;
@@ -53,7 +54,8 @@ typedef DOMStringOrCanvasGradientOrCanvasPattern CanvasStyle;
 class CanvasRenderingContext2DMixIn : public CanvasRenderingContext,
                                       public CanvasPathInterfaceMixIn {
 public:
-    CanvasRenderingContext2DMixIn(HTMLCanvasElement* ownerHTMLCanvasElement);
+    CanvasRenderingContext2DMixIn(ExecutionContext* executionContext,
+                                  Optional<HTMLCanvasElement*> owner);
     virtual ~CanvasRenderingContext2DMixIn()
     {
     }
@@ -255,9 +257,11 @@ protected:
         GC_set_bit(desc,
                    GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_canvasPath));
     }
-    HTMLCanvasElement* m_ownerHTMLCanvasElement;
+    void initializeBitmap(uint32_t width, uint32_t height);
+    Optional<HTMLCanvasElement*> m_ownerHTMLCanvasElement;
 
 private:
+    Optional<ComputedStyle*> ownerStyle() const;
     void fill(Path* path, String* fillRule);
     void stroke(Path* path);
     void clip(Path* path, String* fillRule);

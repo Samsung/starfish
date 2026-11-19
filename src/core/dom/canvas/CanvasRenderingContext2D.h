@@ -35,7 +35,7 @@ public:
 
     HTMLCanvasElement* canvas()
     {
-        return m_ownerHTMLCanvasElement;
+        return m_ownerHTMLCanvasElement.value();
     }
 
     void* operator new(size_t size)

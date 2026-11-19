@@ -1002,6 +1002,7 @@ tests/assertion/window/location-fragment-navigation.html
 tests/assertion/url/URLsearchParams.html
 tests/assertion/blob/blob_arraybuffer_text_test.html
 tests/assertion/blob/blob-buffer-source-view.html
+tests/assertion/canvas/offscreen-bitmap-view.html
 tests/assertion/file/file_constructor.html
 tests/assertion/file/file_text.html
 tests/crash/gif-playback-crash.html

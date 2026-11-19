@@ -263,15 +263,14 @@ static inline bool stringToColor(String* color, Unit::Color& out)
 }
 
 CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
-    HTMLCanvasElement* ownerHTMLCanvasElement)
-    : CanvasRenderingContext(ownerHTMLCanvasElement->executionContext())
-    , m_ownerHTMLCanvasElement(ownerHTMLCanvasElement)
+    ExecutionContext* executionContext, Optional<HTMLCanvasElement*> owner)
+    : CanvasRenderingContext(executionContext)
+    , m_ownerHTMLCanvasElement(owner)
     , m_canvasSurfaceBufferAddressBefore(nullptr)
     , m_canvasSurface(nullptr)
     , m_canvas(nullptr)
     , m_canvasPath(nullptr)
 {
-    initialize();
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
@@ -284,21 +283,29 @@ CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
 
 void CanvasRenderingContext2DMixIn::initialize()
 {
+    auto* owner = m_ownerHTMLCanvasElement.value();
+    initializeBitmap(owner->width(), owner->height());
+}
+
+void CanvasRenderingContext2DMixIn::initializeBitmap(uint32_t bitmapWidth,
+                                                     uint32_t bitmapHeight)
+{
     STARFISH_ASSERT(m_canvasSurface == nullptr);
     STARFISH_ASSERT(m_canvas == nullptr);
 
     uint32_t width, height;
-    calculateDimension(width, height, m_ownerHTMLCanvasElement->width(),
-                       m_ownerHTMLCanvasElement->height());
+    calculateDimension(width, height, bitmapWidth, bitmapHeight);
 
-    m_canvasSurface = CanvasSurface::create(
-        m_ownerHTMLCanvasElement->webView()->renderer(), width, height, 1,
-        static_cast<CanvasSurface::CanvasSurfaceFlag>(
-            CanvasSurface::PreferEGLImage |
-            CanvasSurface::PreferRetainCPUBufferWhenUnmap));
-    m_canvas =
-        Canvas::create(m_ownerHTMLCanvasElement->webView(), m_canvasSurface,
-                       Canvas::CanvasFlag::CanvasElement);
+    auto* webView = m_ownerHTMLCanvasElement
+                        ? m_ownerHTMLCanvasElement.value()->webView()
+                        : executionContext()->document()->webView();
+    auto flags = static_cast<CanvasSurface::CanvasSurfaceFlag>(
+        CanvasSurface::PreferRetainCPUBufferWhenUnmap |
+        (m_ownerHTMLCanvasElement ? CanvasSurface::PreferEGLImage : 0));
+    m_canvasSurface =
+        CanvasSurface::create(webView->renderer(), width, height, 1, flags);
+    m_canvas = Canvas::create(webView, m_canvasSurface,
+                              Canvas::CanvasFlag::CanvasElement);
     m_canvasSurfaceBufferAddressBefore = nullptr;
     m_canvas->unsetDevicePixelRatio();
     m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
@@ -359,7 +366,15 @@ void CanvasRenderingContext2DMixIn::onResize()
     finalize();
     initialize();
 
-    m_ownerHTMLCanvasElement->setNeedsComposite();
+    if (m_ownerHTMLCanvasElement) {
+        m_ownerHTMLCanvasElement.value()->setNeedsComposite();
+    }
+}
+
+Optional<ComputedStyle*> CanvasRenderingContext2DMixIn::ownerStyle() const
+{
+    return m_ownerHTMLCanvasElement ? m_ownerHTMLCanvasElement.value()->style()
+                                    : nullptr;
 }
 
 float CanvasRenderingContext2DMixIn::lineWidth()
@@ -1132,17 +1147,13 @@ bool CanvasRenderingContext2DMixIn::isLtrDirection()
         return true;
     }
     if (canvasDirection == CanvasDirection::Inherit) {
-        if (m_ownerHTMLCanvasElement->style() != nullptr) {
-            if (m_ownerHTMLCanvasElement->style()->direction() ==
-                DirectionValue::LtrDirectionValue) {
-                return true;
-            }
-        } else {
-            if (executionContext()->document()->style()->direction() ==
-                DirectionValue::LtrDirectionValue) {
-                return true;
-            }
+        if (auto style = ownerStyle()) {
+            return style.value()->direction() ==
+                   DirectionValue::LtrDirectionValue;
         }
+        return !m_ownerHTMLCanvasElement ||
+               executionContext()->document()->style()->direction() ==
+                   DirectionValue::LtrDirectionValue;
     }
     return false;
 }
@@ -1202,12 +1213,9 @@ void CanvasRenderingContext2DMixIn::drawTextNormal(String* text, float x,
     } else if (canvasDirection == CanvasDirection::Rtl) {
         style.setDirection(DirectionValue::RtlDirectionValue);
     } else {
-        if (m_ownerHTMLCanvasElement->style() != nullptr) {
-            style.setDirection(m_ownerHTMLCanvasElement->style()->direction());
-        } else {
-            style.setDirection(
-                executionContext()->document()->style()->direction());
-        }
+        style.setDirection(isLtrDirection()
+                               ? DirectionValue::LtrDirectionValue
+                               : DirectionValue::RtlDirectionValue);
     }
 
     FrameDocument dummyFrameDocument =
@@ -1344,7 +1352,9 @@ void CanvasRenderingContext2DMixIn::willCanvasSurfaceUpdate()
         STARFISH_RELEASE_ASSERT(m_canvasSurfaceBufferAddressBefore == buffer);
         m_canvasSurfaceBufferAddressBefore = nullptr;
     }
-    m_ownerHTMLCanvasElement->setNeedsComposite();
+    if (m_ownerHTMLCanvasElement) {
+        m_ownerHTMLCanvasElement.value()->setNeedsComposite();
+    }
 }
 
 void CanvasRenderingContext2DMixIn::fillText(String* text, float x, float y,
@@ -1984,7 +1994,10 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
     CSSStyleDeclaration::parseFontShorthand(tokens, &style, &weight, &size,
                                             &lineHeight, &fontFamily);
 
-    FontSelector* fs = m_ownerHTMLCanvasElement->document()->fontSelector();
+    auto* document = m_ownerHTMLCanvasElement
+                         ? m_ownerHTMLCanvasElement.value()->document()
+                         : executionContext()->document();
+    FontSelector* fs = document->fontSelector();
     STARFISH_ASSERT(fs != nullptr);
 
     String** familyNameArray;
@@ -2014,8 +2027,8 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
         if (targetWeight == FontWeightValue::BolderFontWeightValue ||
             targetWeight == FontWeightValue::LighterFontWeightValue) {
             FontWeightValue baseWeight = FontWeightValue::NormalFontWeightValue;
-            if (m_ownerHTMLCanvasElement->style() != nullptr) {
-                baseWeight = m_ownerHTMLCanvasElement->style()->fontWeight();
+            if (auto style = ownerStyle()) {
+                baseWeight = style.value()->fontWeight();
             }
             if (targetWeight == FontWeightValue::BolderFontWeightValue) {
                 targetWeight = StyleUtil::bolderWeight(baseWeight);
@@ -2079,9 +2092,9 @@ void CanvasRenderingContext2DMixIn::setFont(String* font)
 
     // font fallback
     if (fontFamilyStr == nullptr) {
-        String* initialFontFamily = m_ownerHTMLCanvasElement->webView()
-                                        ->initialFontFamilyDatas()[1]
-                                        .m_familyName.string();
+        auto* webView = document->webView();
+        String* initialFontFamily =
+            webView->initialFontFamilyDatas()[1].m_familyName.string();
         if (initialFontFamily != nullptr) {
             fontFamilyStr = initialFontFamily;
         } else {

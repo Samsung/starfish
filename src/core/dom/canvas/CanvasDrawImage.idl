@@ -12,8 +12,8 @@ typedef (HTMLImageElement or
          SVGImageElement or
          HTMLVideoElement or
          HTMLCanvasElement or
-         ImageBitmap /*or
-         OffscreenCanvas*/) CanvasImageSource;
+         ImageBitmap or
+         OffscreenCanvas) CanvasImageSource;
 
 [STARFISH_ENABLE_CANVAS]
 enum PredefinedColorSpace { "srgb", "display-p3" };

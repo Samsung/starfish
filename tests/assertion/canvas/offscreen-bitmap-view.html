@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Read a PNG from a Blob view through an offscreen canvas</title>
+<link rel="help" href="https://w3c.github.io/FileAPI/#constructorParams">
+<link rel="help" href="https://html.spec.whatwg.org/multipage/canvas.html#the-offscreencanvas-interface">
+<script>
+(async () => {
+  const source = document.createElement('canvas');
+  source.width = source.height = 1;
+  const sourceContext = source.getContext('2d');
+  sourceContext.fillStyle = '#00ff00';
+  sourceContext.fillRect(0, 0, 1, 1);
+  const png = atob(source.toDataURL().split(',')[1]);
+  const packet = new Uint8Array(png.length + 6);
+  packet.set([1, 2, 3]);
+  for (let i = 0; i < png.length; i++) {
+    packet[i + 3] = png.charCodeAt(i);
+  }
+
+  const view = packet.subarray(3, packet.length - 3);
+  const image = new Blob([view], {type: 'image/png'});
+  const dataView = new Blob([new DataView(packet.buffer, 1, 2)]);
+  const data = new Uint8Array(await dataView.arrayBuffer());
+  console.assert(data.join(',') === '2,3', 'Blob copies only the DataView bytes');
+  const bitmap = await createImageBitmap(image, {
+    premultiplyAlpha: 'none', colorSpaceConversion: 'none'
+  });
+  const canvas = new OffscreenCanvas(1, 1);
+  const context = canvas.getContext('2d', {willReadFrequently: true});
+  console.assert(context.canvas === canvas, 'The context references its owner');
+  console.assert(context === canvas.getContext('2d'), 'getContext returns the existing context');
+  context.drawImage(bitmap, 0, 0);
+  bitmap.close();
+  console.assert(context.getImageData(0, 0, 1, 1).data.join(',') === '0,255,0,255',
+                 'A sliced PNG can be drawn and read back');
+  sourceContext.clearRect(0, 0, 1, 1);
+  sourceContext.drawImage(canvas, 0, 0);
+  console.assert(sourceContext.getImageData(0, 0, 1, 1).data.join(',') === '0,255,0,255',
+                 'An offscreen canvas is a CanvasImageSource');
+  const copy = await createImageBitmap(canvas);
+  sourceContext.clearRect(0, 0, 1, 1);
+  sourceContext.drawImage(copy, 0, 0);
+  copy.close();
+  console.assert(sourceContext.getImageData(0, 0, 1, 1).data.join(',') === '0,255,0,255',
+                 'An offscreen canvas is an ImageBitmapSource');
+  context.lineWidth = 4;
+  canvas.width = 1;
+  console.assert(context.lineWidth === 1, 'Setting the width resets the context state');
+  console.assert(context.getImageData(0, 0, 1, 1).data.join(',') === '0,0,0,0',
+                 'Setting the width resets the bitmap even when unchanged');
+})().catch(error => console.assert(false, String(error))).finally(() => {
+  if (typeof testEnd === 'function') {
+    testEnd();
+  }
+});
+</script>

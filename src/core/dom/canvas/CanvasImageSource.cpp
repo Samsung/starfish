@@ -28,6 +28,8 @@
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/dom/HTMLImageElement.h"
 #include "core/dom/ImageBitmap.h"
+#include "core/dom/canvas/OffscreenCanvas.h"
+#include "core/dom/canvas/OffscreenCanvasRenderingContext2D.h"
 #include "core/dom/svg/SVGImageElement.h"
 #include "core/dom/DOMException.h"
 #include "core/modules/canvas/Canvas.h"
@@ -80,6 +82,13 @@ DOMExceptionOr<bool> CanvasImageSourceUtils::checkUsability(
                                     DOMException::Code::INVALID_STATE_ERR,
                                     "The image argument is a canvas element "
                                     "with a width or height of 0.");
+        }
+        return true;
+    } else if (image.isOffscreenCanvasValue()) {
+        auto* canvas = image.getOffscreenCanvasValue();
+        if (!canvas->width() || !canvas->height()) {
+            return new DOMException(executionContext,
+                                    DOMException::Code::INVALID_STATE_ERR);
         }
         return true;
     } else if (image.isImageBitmapValue()) {
@@ -148,6 +157,14 @@ CanvasImageSourceImage CanvasImageSourceUtils::toNativeImageData(
             }
             result.originClean = context->originCleanFlag();
 #endif
+        }
+    } else if (image.isOffscreenCanvasValue()) {
+        auto* canvas = image.getOffscreenCanvasValue();
+        if (auto context = canvas->context2D()) {
+            context.value()->flushForReadback();
+            result.image = NativeImageData::attach(
+                context.value()->CanvasRenderingContext2DMixIn::canvas());
+            result.originClean = context.value()->originCleanFlag();
         }
     } else if (image.isImageBitmapValue()) {
         auto imageBitmap = image.getImageBitmapValue();

@@ -668,11 +668,16 @@ http://web-platform.test:8000/html/canvas/element/transformations/2d.transformat
 http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.transform.nonfinite.html
 http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.translate.basic.html
 http://web-platform.test:8000/html/canvas/element/transformations/2d.transformation.translate.nonfinite.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-1.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-3.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-4.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-1.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-3.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-4.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-5.html
-# [auto-fail] http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-6.html
+http://web-platform.test:8000/html/canvas/offscreen/drawing-images-to-the-canvas/2d.drawImage.3arg.html
+http://web-platform.test:8000/html/canvas/offscreen/drawing-images-to-the-canvas/2d.drawImage.canvas.html
+http://web-platform.test:8000/html/canvas/offscreen/manual/the-offscreen-canvas/offscreencanvas.constructor.html
+http://web-platform.test:8000/html/canvas/offscreen/pixel-manipulation/2d.imageData.get.basic.html
+http://web-platform.test:8000/html/canvas/offscreen/pixel-manipulation/2d.imageData.put.basic.html
+http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-1.html
+http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-3.html
+http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-4.html
+http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-1.html
+http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-3.html
+http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-4.html
+http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-5.html
+http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsla-clamp-6.html

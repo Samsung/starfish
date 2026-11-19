@@ -22,11 +22,11 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
-#include "binding/generated/HTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapUnion.h"
+#include "binding/generated/HTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapOrOffscreenCanvasUnion.h"
 #include "core/dom/DOMExceptionOr.h"
 
 namespace Starfish {
-typedef HTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmap
+typedef HTMLImageElementOrSVGImageElementOrHTMLVideoElementOrHTMLCanvasElementOrImageBitmapOrOffscreenCanvas
     CanvasImageSource;
 
 class NativeImageData;
