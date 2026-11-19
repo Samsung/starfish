@@ -51,7 +51,8 @@
         // The shell consumes WPTR results. The visual report also retains a
         // stack for every successful assertion and builds a DOM table, which
         // can exhaust the timeout for sample-by-sample audio checks.
-        setup({output: false});
+        // The runner applies the per-test deadline to the browser process.
+        setup({output: false, explicit_timeout: true});
         add_completion_callback(emit);
         return true;
     }

@@ -61,7 +61,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)                                      # sibling wpt_*
 sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
 from repo_paths import REPO_ROOT  # noqa: E402
-from wpt_server import DEFAULT_WPT_ROOT  # noqa: E402
+from wpt_server import DEFAULT_WPT_ROOT, DEFAULT_TEST_TIMEOUT  # noqa: E402
 from wpt_urls import ORIGINS, test_url  # noqa: E402
 
 STARFISH = os.path.join(REPO_ROOT, "Starfish")
@@ -311,8 +311,8 @@ def _images_differ(png_a, png_b, timeout):
     return float(m.group(1)) > 0.0
 
 
-def run_reftest(url, wpt_root=DEFAULT_WPT_ROOT, manifest=None, timeout=15,
-                tmp_dir=None, width=800, height=600):
+def run_reftest(url, wpt_root=DEFAULT_WPT_ROOT, manifest=None,
+                timeout=DEFAULT_TEST_TIMEOUT, tmp_dir=None, width=800, height=600):
     """Run one WPT reftest. Return (ok, reason, log).
 
     ok=True means the test's own pass condition (relation vs the actual pixel
@@ -388,7 +388,8 @@ if __name__ == "__main__":
     p.add_argument("url", help="full test URL, e.g. "
                    "http://web-platform.test:8000/css/css-flexbox/foo.html")
     p.add_argument("--wpt-root", default=DEFAULT_WPT_ROOT)
-    p.add_argument("--timeout", type=int, default=15)
+    p.add_argument("--timeout", type=int, default=DEFAULT_TEST_TIMEOUT,
+                   help="per-render seconds (default: %(default)s)")
     args = p.parse_args()
     ensure_manifest(args.wpt_root, _manifest_path(args.wpt_root))
     ok, reason, log = run_reftest(args.url, wpt_root=args.wpt_root, timeout=args.timeout)

@@ -57,7 +57,7 @@ from urllib.parse import urlsplit
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)                                      # sibling wpt_*
 sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
-from wpt_server import wpt_serve, DEFAULT_WPT_ROOT  # noqa: E402
+from wpt_server import wpt_serve, DEFAULT_WPT_ROOT, DEFAULT_TEST_TIMEOUT  # noqa: E402
 from wpt_manifest_inventory import (DEFAULT_TARGETS,  # noqa: E402
                                     enumerate_tests, read_targets)
 from wpt_runner import (RE_PASS, RE_FAIL, RE_DONE, STARFISH,  # noqa: E402
@@ -500,7 +500,8 @@ def main(argv):
     p.add_argument("--manifest", default=None,
                    help="MANIFEST.json path (default: <wpt-root>/MANIFEST.json)")
     p.add_argument("-j", "--jobs", type=int, default=8, help="parallel shells")
-    p.add_argument("--timeout", type=int, default=15, help="per-test seconds")
+    p.add_argument("--timeout", type=int, default=DEFAULT_TEST_TIMEOUT,
+                   help="per-test seconds (default: %(default)s)")
     p.add_argument("--limit", type=int, default=0,
                    help="cap tests per category (0 = no cap; quick trials)")
     p.add_argument("-o", "--output", default="report.html",

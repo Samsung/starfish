@@ -55,7 +55,8 @@ sys.path.insert(0, _HERE)                                      # sibling wpt_*
 sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
 from repo_paths import REPO_ROOT  # noqa: E402
 from wpt_scope import collect, read_res  # noqa: E402, F401
-from wpt_server import wpt_serve, inject_script_for, DEFAULT_WPT_ROOT  # noqa: E402
+from wpt_server import (wpt_serve, inject_script_for, DEFAULT_WPT_ROOT,  # noqa: E402
+                        DEFAULT_TEST_TIMEOUT)
 from wpt_reftest import (run_reftest, load_manifest, ensure_manifest,  # noqa: E402
                          ensure_imgdiff, starfish_env)
 
@@ -441,7 +442,8 @@ def main(argv):
     p.add_argument("--wpt-root", default=DEFAULT_WPT_ROOT,
                    help="path to the wpt checkout (default: third_party/wpt)")
     p.add_argument("-j", "--jobs", type=int, default=8, help="parallel shells")
-    p.add_argument("--timeout", type=int, default=15, help="per-test seconds")
+    p.add_argument("--timeout", type=int, default=DEFAULT_TEST_TIMEOUT,
+                   help="per-test seconds (default: %(default)s)")
     p.add_argument("-f", "--force", action="store_true",
                    help="also run commented-out (#) entries")
     p.add_argument("--results", default=None, help="write per-test verdicts here")

@@ -34,6 +34,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(_HERE), "wpt", "scripts"))
 from repo_paths import REPO_ROOT
 from drivers.basics.constants import ENVOPTS, ERRORCODE
 from execution_worker import WorkerRunner
+from wpt_server import DEFAULT_TEST_TIMEOUT
 
 script_path = "./tool/drivers/run_test.py"
 working_directory = REPO_ROOT
@@ -300,7 +301,7 @@ def _wpt_collect(patterns, exclude):
     return items
 
 
-def _wpt_serve_run(*patterns, jobs=8, timeout=20, daemons=(), exclude=()):
+def _wpt_serve_run(*patterns, jobs=8, timeout=DEFAULT_TEST_TIMEOUT, daemons=(), exclude=()):
     _wpt_serve_run_groups([(patterns, exclude, jobs, timeout)], daemons=daemons)
 
 
@@ -435,7 +436,7 @@ def wpt_serve_testharness_webrtc():
 
 # Offline audio renders can consume substantial memory per case; keep
 # concurrent renderers low so the timeout remains meaningful on CI hosts.
-_WPT_WEBAUDIO_GROUP = (("webaudio_*.res",), (), 2, 60)
+_WPT_WEBAUDIO_GROUP = (("webaudio_*.res",), (), 2, DEFAULT_TEST_TIMEOUT)
 
 
 def wpt_serve_testharness_webaudio():
@@ -470,9 +471,10 @@ def wpt_serve_testharness():
     # are gated separately by the daemon-equipped wpt_serve_testharness_worker/
     # _serviceworker suites, so exclude them here and skip daemon startup.
     # Web Audio lists run in the same `wpt serve` session, but with the
-    # dedicated wpt_serve_testharness_webaudio concurrency and timeout.
+    # dedicated wpt_serve_testharness_webaudio concurrency.
     _wpt_serve_run_groups([
-        ((), ("worker.res", "serviceworker.res", "webaudio_*.res"), 8, 20),
+        ((), ("worker.res", "serviceworker.res", "webaudio_*.res"), 8,
+         DEFAULT_TEST_TIMEOUT),
         _WPT_WEBAUDIO_GROUP,
     ])
 
@@ -490,7 +492,7 @@ _WPT_REFTEST_LISTS_DIR = os.path.join(working_directory, "tool/wpt/reftest_lists
 _WPT_CRASHTEST_LISTS_DIR = os.path.join(working_directory, "tool/wpt/crashtest_lists")
 
 
-def _wpt_manifest_run(list_dir, mode, jobs=8, timeout=20):
+def _wpt_manifest_run(list_dir, mode, jobs=8, timeout=DEFAULT_TEST_TIMEOUT):
     import wpt_runner
     from wpt_server import wpt_serve, inject_script_for, DEFAULT_WPT_ROOT, WptServerError
 

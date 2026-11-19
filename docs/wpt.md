@@ -198,11 +198,12 @@ executables. See `.github/workflows/worker.yml` for the `uv_cairo_gl` build,
 suite invocations. `test_runner.py` starts the peers and shares their storage
 directory with clients; the generic status reporter does not do this.
 
+WPT runners default to 60 seconds per Starfish process. The standalone
+commands accept `--timeout` to override the default.
 `wpt_serve_testharness` runs `webaudio_*.res` as a second group in the same
-`wpt serve` session, with `wpt_serve_testharness_webaudio`'s settings (2 jobs,
-60 s per test) instead of the default 8 jobs / 20 s, because offline audio
-renders are memory- and CPU-heavy in Debug builds; the run fails if either
-group regresses. `STARFISH_BIN=<binary>` overrides `./Starfish` for every
+`wpt serve` session. Web Audio uses 2 jobs because offline audio renders
+are memory- and CPU-heavy in Debug builds. The other group uses 8 jobs.
+`STARFISH_BIN=<binary>` overrides `./Starfish` for every
 `wpt_runner.py`-based run.
 
 `wpt_serve_reftest`/`wpt_serve_crashtest` run lists generated straight from
@@ -275,10 +276,11 @@ testharness page loads; `wpt_server.py` aliases it) because the injector
 leaves non-HTML responses alone — without the alias an `.xhtml`/`.xml`
 testharness page never reports and shows up as `TIMEOUT`. An HTML page
 therefore receives the script twice; a window flag makes the second copy a
-no-op. For a testharness page it calls `setup({output: false})` when the
-harness script loads (a capture `load` listener on `document`, backed by
-polling), before test scripts execute. This applies to every testharness
-suite. It disables the visual results table and per-assertion stack
+no-op. The reporter calls `setup({output: false, explicit_timeout: true})`
+when the harness script loads, using a capture `load` listener on
+`document` backed by polling. This gives the Python runner control of the
+process deadline while preserving test timers.
+The reporter disables the visual results table and per-assertion stack
 recording, which otherwise consume substantial memory and time for
 sample-by-sample audio checks in Debug builds; assertions and verdicts still
 run normally. It registers `add_completion_callback`; when the test finishes
@@ -352,7 +354,7 @@ verdict mechanism:
 
 ```sh
 xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py tool/wpt/testharness_lists  # whole testharness baseline
-xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py .../dom_basic.res -j8 --timeout 20
+xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py .../dom_basic.res -j8
 xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py \
     tool/wpt/reftest_lists --mode reftest      # reftest
 xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_runner.py \
@@ -476,9 +478,8 @@ histogram. A reason with a `:` or `(...)` suffix (`IMGDIFF_ERROR: ...`,
 
 testharness (`run_one`):
 - `OK` — `DONE status=0`, at least one subtest, no `FAIL`.
-- `TIMEOUT` — the shell didn't exit within `--timeout` (default 15s; 20s in
-  `test_runner.py` suites) — a hang, an infinite loop, or a page whose
-  completion signal never fires.
+- `TIMEOUT` — the shell didn't exit within `--timeout` (default 60 s) — a
+  hang, an infinite loop, or a page whose completion signal never fires.
 - `SHELL_ERROR` — failed to exec Starfish (`OSError`).
 - `NO_COMPLETION` — the shell exited but no `WPTR DONE` line was printed
   (injection didn't run, the page exited early, testharness.js never loaded).
@@ -575,10 +576,10 @@ outputs, even if tests failed. Tool or infrastructure errors can still fail
 the job.
 
 `.github/workflows/wpt_status_nightly.yml` explicitly requests
-**testharness, reftest, and crashtest**, with 16 parallel shells and a
-15-second per-test timeout. The standalone `wpt_status.py` CLI still defaults
-to testharness only. SharedWorker/ServiceWorker daemon setup and CI's separate
-Web Audio execution settings are not currently part of the nightly reporter.
+**testharness, reftest, and crashtest**, with 16 parallel shells and the
+default 60-second process timeout. The standalone `wpt_status.py` CLI still
+defaults to testharness only. SharedWorker/ServiceWorker daemon setup and CI's
+separate Web Audio execution settings are not part of the nightly reporter.
 
 ### Inventory helpers
 

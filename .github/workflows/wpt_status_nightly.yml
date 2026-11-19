@@ -124,7 +124,7 @@ jobs:
       - name: Generate WPT status report
         run: |
           xvfb-run -s '-screen 0 1920x1080x24' -a python3 tool/wpt/scripts/wpt_status.py \
-            -j16 --timeout 15 --test-types testharness,reftest,crashtest \
+            -j16 --test-types testharness,reftest,crashtest \
             -o report-$(date +%Y%m%d).html \
             --output-json metrics.json
 

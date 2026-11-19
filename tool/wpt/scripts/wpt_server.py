@@ -51,6 +51,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(_HERE, os.pardir, os.pardir))  # tool/
 from repo_paths import REPO_ROOT as _REPO_ROOT  # noqa: E402
 
+DEFAULT_TEST_TIMEOUT = 60
 DEFAULT_INJECT = os.path.join(_REPO_ROOT, "tool", "wpt", "inject_report.js")
 # Pinned WPT checkout (the `third_party/wpt` submodule). Override with WPT_ROOT.
 DEFAULT_WPT_ROOT = os.environ.get(
