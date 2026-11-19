@@ -99,10 +99,9 @@ void Blob::initialize(const GCVector<BufferSourceOrBlobOrDOMString>& blobParts,
             if (itemValue.isArrayBufferViewValue()) {
                 ArrayBufferViewRef* arrayBufferView =
                     itemValue.getArrayBufferViewValue();
-                bufferInfo.push_back(
-                    std::make_pair(reinterpret_cast<void*>(
-                                       arrayBufferView->buffer()->rawBuffer()),
-                                   arrayBufferView->byteLength()));
+                // File API copies only the bytes covered by the view.
+                bufferInfo.emplace_back(arrayBufferView->rawBuffer(),
+                                        arrayBufferView->byteLength());
                 totalByteLength += arrayBufferView->byteLength();
             } else if (itemValue.isArrayBufferValue()) {
                 ArrayBufferObjectRef* arrayBuffer =
@@ -127,8 +126,10 @@ void Blob::initialize(const GCVector<BufferSourceOrBlobOrDOMString>& blobParts,
     char* buffer = reinterpret_cast<char*>(
         GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(totalByteLength));
     for (size_t i = 0; i < bufferInfo.size(); i++) {
-        memcpy(buffer + offset, bufferInfo[i].first, bufferInfo[i].second);
-        offset += bufferInfo[i].second;
+        if (bufferInfo[i].second) {
+            memcpy(buffer + offset, bufferInfo[i].first, bufferInfo[i].second);
+            offset += bufferInfo[i].second;
+        }
     }
 
     m_blobData.m_size = totalByteLength;

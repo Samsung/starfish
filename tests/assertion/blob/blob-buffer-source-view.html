@@ -1,0 +1,29 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Copy the byte range of each Blob part view</title>
+<link rel="help" href="https://w3c.github.io/FileAPI/#process-blob-parts">
+<script>
+(async () => {
+  const bytes = Uint8Array.of(17, 0, 255, 33, 49);
+  const typedArray = bytes.subarray(1, 3);
+  const dataView = new DataView(bytes.buffer, 2, 2);
+  const emptyView = new DataView(bytes.buffer, bytes.byteLength, 0);
+
+  async function assertBytes(parts, expected, description) {
+    const blob = new Blob(parts);
+    const actual = new Uint8Array(await blob.arrayBuffer());
+    console.assert(actual.join(',') === expected, description);
+  }
+
+  await assertBytes([typedArray], '0,255', 'TypedArray view respects its byte offset');
+  await assertBytes([dataView], '255,33', 'DataView respects its byte offset');
+  await assertBytes([typedArray, emptyView, dataView], '0,255,255,33',
+                    'Empty views contribute no bytes between non-empty views');
+})().catch(error => {
+  console.assert(false, String(error));
+}).finally(() => {
+  if (typeof testEnd === 'function') {
+    testEnd();
+  }
+});
+</script>
