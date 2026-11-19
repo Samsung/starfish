@@ -118,9 +118,19 @@ Requires(postun): /sbin/ldconfig
 %define enable_codecache 0
 %endif
 
+# "prod_tv" enables by default every optional feature its Tizen version can
+# build: WebAssembly and WebGL on every version, Web Audio from Tizen 8 (its
+# decoder needs FFmpeg 5.1 and libswresample, which older platforms lack) and
+# the esplusplayer MSE backend from Tizen 6.5 (the oldest esplusplayer whose
+# API the backend builds against). Other profiles keep their defaults, and
+# --define 'enable_<feature> {0|1}' overrides any of them.
 %if 0%{?enable_wasm:1}
 %else
+%if "%{rpm}" == "prod_tv"
+%define enable_wasm 1
+%else
 %define enable_wasm 0
+%endif
 %endif
 
 %if 0%{?enable_debugger:1}
@@ -140,11 +150,16 @@ Requires(postun): /sbin/ldconfig
 
 %if 0%{?enable_webaudio:1}
 %else
+%if "%{rpm}" == "prod_tv" && 0%{?tizen_version_major} >= 8
+%define enable_webaudio 1
+%else
 %define enable_webaudio 0
+%endif
 %endif
 
 # -DENABLE_ESPLUSPLAYER flag: only turned on for the "common" profile on
-# Tizen 10 or higher (esplusplayer MSE backend is unsupported before Tizen 10).
+# Tizen 10 or higher (esplusplayer MSE backend is unsupported before Tizen 10)
+# and for "prod_tv" on Tizen 6.5 or higher (see above).
 # It is fed through the shared features_config, so leaving it off for "all" keeps
 # the unified_tv/etc. sub-builds from linking the esplusplayer backend.
 # (The unified_common sub-build does not need this flag anyway: config.cmake
@@ -154,7 +169,11 @@ Requires(postun): /sbin/ldconfig
 %if "%{rpm}" == "common" && 0%{?tizen_version_major} >= 10
 %define enable_esplusplayer 1
 %else
+%if "%{rpm}" == "prod_tv" && (0%{?tizen_version_major} > 6 || (0%{?tizen_version_major} == 6 && 0%{?tizen_version_minor} >= 5))
+%define enable_esplusplayer 1
+%else
 %define enable_esplusplayer 0
+%endif
 %endif
 %endif
 
@@ -162,12 +181,17 @@ Requires(postun): /sbin/ldconfig
 # runs for both "common" and "all", and config.cmake force-requires
 # pkgconfig(esplusplayer) for that CUSTOM on Tizen 10+. Without this the
 # buildroot never pulls the package in and cmake configuration fails for "all".
+# "prod_tv" needs it exactly when its -DENABLE_ESPLUSPLAYER is on.
 %if 0%{?need_esplusplayer_pkg:1}
 %else
 %if ("%{rpm}" == "common" || "%{rpm}" == "all") && 0%{?tizen_version_major} >= 10
 %define need_esplusplayer_pkg 1
 %else
+%if "%{rpm}" == "prod_tv"
+%define need_esplusplayer_pkg %{enable_esplusplayer}
+%else
 %define need_esplusplayer_pkg 0
+%endif
 %endif
 %endif
 
@@ -217,7 +241,11 @@ Requires(postun): /sbin/ldconfig
 
 %if 0%{?enable_webgl:1}
 %else
+%if "%{rpm}" == "prod_tv"
+%define enable_webgl 1
+%else
 %define enable_webgl %{is_webgl_supported}
+%endif
 %endif
 
 %if 0%{?enable_worker:1}

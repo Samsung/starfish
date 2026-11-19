@@ -347,8 +347,18 @@ Default values are in **bold**.
 
 * --define 'build_profile [ tv | common | headless | **all** ]'<br>
   Genereate RPMs for TV, common and headless platforms.
-* --define 'enable_webaudio [ **0** | 1 ]'<br>
-  Build with Web Audio (`-DWEBAUDIO=1`).
+* --define 'enable_webaudio [ 0 | 1 ]'<br>
+  Build with Web Audio (`-DWEBAUDIO=1`). Defaults to **1** for `prod_tv` on
+  Tizen 8 or higher, **0** otherwise.
+* --define 'enable_wasm [ 0 | 1 ]'<br>
+  Build `prod_tv` with WebAssembly (`-DENABLE_WASM=1`). Defaults to **1**.
+* --define 'enable_webgl [ 0 | 1 ]'<br>
+  Build with WebGL (`-DWEBGL=1`). Defaults to **1** for `prod_tv`, and for
+  the other non-headless profiles on Tizen 9 or higher.
+* --define 'enable_esplusplayer [ 0 | 1 ]'<br>
+  Use the esplusplayer MSE backend (`-DENABLE_ESPLUSPLAYER=1`). Defaults to
+  **1** for `common` on Tizen 10 or higher and `prod_tv` on Tizen 6.5 or
+  higher, **0** otherwise.
 
 ### How to Compile: Windows x86/x64
 
