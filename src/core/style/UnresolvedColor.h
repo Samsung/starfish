@@ -68,11 +68,11 @@ public:
     }
 
     // `currentcolor` carries no data, so one instance serves every use.
+    // Use static storage because the collector skips shared-library roots.
     static UnresolvedColor* currentColor()
     {
-        static UnresolvedColor* s_currentColor =
-            new UnresolvedColor(CurrentColorKind);
-        return s_currentColor;
+        static UnresolvedColor currentColor(CurrentColorKind);
+        return &currentColor;
     }
 
     static UnresolvedColor* createLightDark(UnresolvedColor* light,
