@@ -490,7 +490,7 @@ IF (${CMAKE_CXX_COMPILER_ID} MATCHES  "GNU")
     SET (LWE_CXXFLAGS_COMPILER ${LWE_CXXFLAGS_COMPILER} -fno-gnu-unique)
     # -Wstringop-overread first appeared in GCC 11. Older GCC (Tizen 6.0 ships
     # 9.2) rejects the -Wno- form under -Werror once any other warning fires.
-    IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 11)
+    IF (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11)
         SET (LWE_CXXFLAGS_COMPILER ${LWE_CXXFLAGS_COMPILER} -Wno-stringop-overread)
     ENDIF()
 ELSEIF (${CMAKE_CXX_COMPILER_ID} MATCHES  "Clang")
@@ -504,7 +504,7 @@ endif()
 
 # -Wmismatched-new-delete first appeared in GCC 10; GCC 9 (Tizen 6.0) needs
 # this gate, since "> 9" also admits 9.2.
-if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10)
+if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10)
     SET (LWE_CXXFLAGS_COMPILER ${LWE_CXXFLAGS_COMPILER} -Wno-mismatched-new-delete)
 endif()
 
