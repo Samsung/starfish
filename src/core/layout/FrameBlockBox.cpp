@@ -28,6 +28,7 @@
 #include "core/layout/FrameFlexibleBox.h"
 #include "core/layout/FrameGridBox.h"
 #include "core/layout/FrameInline.h"
+#include "core/layout/FrameOptionBox.h"
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameTableCellBox.h"
 #include "core/layout/FrameText.h"
@@ -1000,10 +1001,16 @@ bool FrameBlockBox::canSkipCleanSubtreeLayout(LayoutContext& ctx)
         return false;
     }
 #if !defined(NDEBUG)
-    // The invariant markNeedsLayout() maintains: nothing under a block whose
-    // childNeedsLayout bit is clear may need layout.
-    iterateChildFrameBox(
-        [](FrameBox* box) { STARFISH_ASSERT(!box->needsLayout()); });
+    // Suppressed options keep their pending layout for when they are drawn.
+    // Only frames that participated in layout must now be clean.
+    iterateChildFrameBoxOnCondition([](FrameBox* box) {
+        if (box->isFrameOptionBox() &&
+            box->asFrameOptionBox()->isLayoutSuppressed()) {
+            return false;
+        }
+        STARFISH_ASSERT(!box->needsLayout());
+        return true;
+    });
 #endif
     return true;
 }

@@ -127,39 +127,40 @@ FrameOptionBox* FrameOptionBox::buildFrameTree(Node* currentNode,
 void FrameOptionBox::layout(LayoutContext& ctx,
                             Frame::LayoutWantToResolve resolveWhat)
 {
-    if (node() && node()->isHTMLOptionElement() &&
-        node()->asHTMLOptionElement()->isDisabled()) {
+#if !defined(NDEBUG)
+    const bool recordSuppression = !ctx.inComputingBasisSize();
+    if (recordSuppression) {
+        m_layoutSuppressed = true;
+    }
+#endif
+
+    auto* option = node()->asHTMLOptionElement();
+    if (option->isDisabled()) {
         return;
     }
 
-    STARFISH_ASSERT(node()->isHTMLOptionElement());
-    HTMLOptionElement* optionNode = node()->asHTMLOptionElement();
-    HTMLSelectElement* selectNode = optionNode->selectElement();
-
-    if (!selectNode) {
-        FrameBlockBox::layout(ctx, resolveWhat);
-    } else {
-        if (selectNode->displaySize() == 1) {
-            if (optionNode->selectedness() &&
-                selectBox()->m_drawOptionsCount == 0) {
-                if (resolveWhat & ResolveHeight) {
-                    selectBox()->m_drawOptionsCount++;
-                }
-                FrameBlockBox::layout(ctx, resolveWhat);
-                return;
-            }
-        } else if (selectNode->displaySize() > 1 &&
-                   selectBox()->m_drawOptionsCount <
-                       selectNode->displaySize()) {
-            if (resolveWhat & ResolveHeight) {
-                selectBox()->m_drawOptionsCount++;
-            }
-            FrameBlockBox::layout(ctx, resolveWhat);
+    if (auto* select = option->selectElement()) {
+        const auto displaySize = select->displaySize();
+        const bool drawsOption =
+            (displaySize == 1 && option->selectedness() &&
+             selectBox()->m_drawOptionsCount == 0) ||
+            (displaySize > 1 && selectBox()->m_drawOptionsCount < displaySize);
+        if (!drawsOption) {
+            // Rebuilt descendants can invalidate line boxes from when the
+            // option was drawn, for example its marker after deselection.
+            clearLineBoxes(ctx);
             return;
         }
-        // Line boxes from when this option was drawn may still point at
-        // frames rebuilt since, e.g. the marker it lost on deselection.
-        clearLineBoxes(ctx);
+        if (resolveWhat & ResolveHeight) {
+            selectBox()->m_drawOptionsCount++;
+        }
     }
+
+#if !defined(NDEBUG)
+    if (recordSuppression) {
+        m_layoutSuppressed = false;
+    }
+#endif
+    FrameBlockBox::layout(ctx, resolveWhat);
 }
 } // namespace Starfish

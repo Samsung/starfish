@@ -49,6 +49,13 @@ public:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
 
+#if !defined(NDEBUG)
+    bool isLayoutSuppressed() const
+    {
+        return m_layoutSuppressed;
+    }
+#endif
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
@@ -57,6 +64,11 @@ protected:
     {
         FrameBlockBox::fillGCDescriptor(desc);
     }
+
+#if !defined(NDEBUG)
+private:
+    bool m_layoutSuppressed{ false };
+#endif
 };
 } // namespace Starfish
 
