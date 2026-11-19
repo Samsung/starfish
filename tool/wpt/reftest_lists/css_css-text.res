@@ -283,70 +283,70 @@ http://web-platform.test:8000/css/css-text/letter-spacing/letter-spacing-ligatur
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/letter-spacing/letter-spacing-percent-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/letter-spacing/letter-spacing-trim-start-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-004.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-002.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-003.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-007.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-009.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-010.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-011.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-012.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-013.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-014.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-015.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-016.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-017.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-006.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-007.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-008.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-009.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-010.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-011.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-012.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-013.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-014.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-015.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-016.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-017.html
 http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-and-white-space-001.html
 http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-and-white-space-002.html
 http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-and-white-space-003.html
 http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-and-white-space-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-and-white-space-005.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-and-white-space-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-and-white-space-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-and-white-space-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-and-white-space-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-and-white-space-009.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-007.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-009.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-001.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-002.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-003.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-004.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-005.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-006.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-007.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-008.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-011.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-012.html
+http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-014.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-015.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-anywhere-overrides-uax-behavior-016.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-011.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-012.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-013.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-014.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-015.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-016a.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-016b.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-017a.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-loose-011.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-loose-012.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-loose-013.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-loose-014.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-loose-015.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-loose-016a.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-loose-016b.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-loose-017a.xht
 http://web-platform.test:8000/css/css-text/line-break/line-break-loose-017b.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-018.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-loose-018.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-loose-hyphens-001.html
 http://web-platform.test:8000/css/css-text/line-break/line-break-loose-hyphens-002.html
 http://web-platform.test:8000/css/css-text/line-break/line-break-loose-hyphens-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-011.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-012.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-013.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-014.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-015a.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-015b.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-016a.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-016b.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-017a.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-017b.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-normal-014.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-normal-015a.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-normal-015b.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-normal-016a.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-normal-016b.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-normal-017a.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-normal-017b.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-018.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-hyphens-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-normal-hyphens-002.html
@@ -354,14 +354,14 @@ http://web-platform.test:8000/css/css-text/line-break/line-break-normal-hyphens-
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-shaping-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-011.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-012.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-013.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-014.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-015a.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-015b.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-016a.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-016b.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-017a.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-017b.xht
+# [vacuous-pass:LINE_BREAK_VALUE_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-013.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-strict-014.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-strict-015a.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-strict-015b.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-strict-016a.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-strict-016b.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-strict-017a.xht
+http://web-platform.test:8000/css/css-text/line-break/line-break-strict-017b.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-018.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-hyphens-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/line-break/line-break-strict-hyphens-002.html
@@ -530,11 +530,11 @@ http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-cluster-0
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-004.html
+http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-004.html
 http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-005.html
 http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-006.html
 http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-007.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-008.html
+http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-normal-keep-all-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-shaping-001.html
@@ -1023,19 +1023,19 @@ http://web-platform.test:8000/css/css-text/white-space/break-spaces-002.html
 http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-001.html
 http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-002.html
 http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-005.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-007.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-008.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-009.html
+http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-004.html
+http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-005.html
+http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-006.html
+http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-007.html
+http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-008.html
+http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-009.html
 http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-010.html
 http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-011.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-012.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-013.html
 http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-014.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-015.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-016.html
+http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-015.html
+http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-016.html
 http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-017.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-before-first-ideographic-char-018.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-newline-011.html
@@ -1057,7 +1057,7 @@ http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideogra
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-005.html
 http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-006.html
 # http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-007.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-008.html
+http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-ideographic-space-010.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/white-space/break-spaces-with-overflow-wrap-001.html
@@ -1425,7 +1425,7 @@ http://web-platform.test:8000/css/css-text/word-break/auto-phrase/word-break-aut
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/auto-phrase/word-break-auto-phrase-overflow-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/auto-phrase/word-break-auto-phrase-wbr-nobr-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/auto-phrase/word-break-auto-phrase-wbr-nobr-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/break-boundary-2-chars-001.html
+http://web-platform.test:8000/css/css-text/word-break/break-boundary-2-chars-001.html
 http://web-platform.test:8000/css/css-text/word-break/break-boundary-2-chars-002.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-000.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-001.html
@@ -1442,25 +1442,25 @@ http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-011.h
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-013.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-014.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-015.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-016.html
+http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-016.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-017.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-018.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-019.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-020.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-021.html
+http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-018.html
+http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-019.html
+http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-020.html
+http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-021.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-022.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-023.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-024.html
+http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-024.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-025.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-026.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-027.html
+http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-026.html
+http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-027.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-028.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-029.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-030.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-031.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-032.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-062.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-ethiopic.html
+http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-ethiopic.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-inline-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-inline-002.html
 http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-inline-003.html
@@ -1468,7 +1468,7 @@ http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-inlin
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-inline-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-inline-006.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-inline-007.tentative.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-inline-008.html
+http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-inline-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-inline-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-all-inline-010.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-break-word-overflow-wrap-interactions.html
@@ -1488,7 +1488,7 @@ http://web-platform.test:8000/css/css-text/word-break/word-break-keep-all-u002d.
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-manual-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-min-content-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-min-content-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-min-content-003.html
+http://web-platform.test:8000/css/css-text/word-break/word-break-min-content-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-min-content-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-min-content-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-break/word-break-min-content-006.html
@@ -1551,7 +1551,7 @@ http://web-platform.test:8000/css/css-text/word-spacing/word-spacing-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/word-spacing/word-spacing-percent-001.html
 http://web-platform.test:8000/css/css-text/writing-system/writing-system-font-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/writing-system/writing-system-line-break-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/writing-system/writing-system-line-break-002.html
+http://web-platform.test:8000/css/css-text/writing-system/writing-system-line-break-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/writing-system/writing-system-segment-break-001.html
 http://web-platform.test:8000/css/css-text/writing-system/writing-system-text-transform-001.html
 http://web-platform.test:8000/css/css-text/zwnj-renders-invisible.html

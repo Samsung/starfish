@@ -185,7 +185,6 @@ public:
         UserSelect,
         CaretColor,
         Hyphens,
-        LineBreak,
         WordBreak,
         TextOverflow,
         CounterReset,
@@ -248,7 +247,6 @@ public:
         NamedGridAreaDataMap* m_gridTemplateAreas;
         Unit::Color m_color;
         HyphensValue m_hyphens;
-        LineBreakValue m_lineBreak;
         WordBreakValue m_wordBreak;
         TextDecorationStyleValue m_textDecorationStyle;
         TextUnderlinePositionValue m_textUnderlinePosition;
@@ -464,11 +462,6 @@ public:
         {
         }
 
-        RareComputedStyleValue(LineBreakValue v)
-            : m_lineBreak(v)
-        {
-        }
-
         RareComputedStyleValue(WordBreakValue v)
             : m_wordBreak(v)
         {
@@ -664,8 +657,6 @@ public:
     GETTER_VALUE(float, floatValue, stopOpacity, StopOpacity, 1);
     GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect,
                  NoneUserSelectValue);
-    GETTER_VALUE(LineBreakValue, lineBreak, lineBreak, LineBreak,
-                 NormalLineBreakValue);
     GETTER_VALUE(AppearanceValue, appearance, appearance, Appearance,
                  AutoAppearanceValue);
     GETTER_VALUE(Unit::Color, color, textDecorationColor, TextDecorationColor,
@@ -886,6 +877,7 @@ class ComputedStyle : public gc {
         TextUnderlinePositionValue m_textUnderlinePosition : 3;
         PointerEventsValue m_pointerEventsValue : 4;
         CursorValue m_cursorValue : 3;
+        LineBreakValue m_lineBreak : 2;
 
         Length m_letterSpacing;
         Length m_textIndent;
@@ -951,6 +943,7 @@ class ComputedStyle : public gc {
                 TextUnderlinePositionValue::AutoTextUnderlinePositionValue;
             m_pointerEventsValue = PointerEventsValue::PointerEventsAutoValue;
             m_cursorValue = CursorValue::CursorAutoValue;
+            m_lineBreak = LineBreakValue::NormalLineBreakValue;
             m_extendedColor = nullptr;
             m_colorScheme = nullptr;
             m_colorSchemeLight = false;
@@ -5490,21 +5483,15 @@ public:
 
     LineBreakValue lineBreak()
     {
-        if (!m_rareComputedStyleData.m_styles.size()) {
-            return LineBreakValue::NormalLineBreakValue;
+        if (m_inheritedStyles.m_rareData) {
+            return m_inheritedStyles.m_rareData->m_lineBreak;
         }
-
-        Optional<LineBreakValue> v = rareComputedStyleData()->lineBreak();
-        if (v.hasValue()) {
-            return v.getValue();
-        }
-
         return LineBreakValue::NormalLineBreakValue;
     }
 
     void setLineBreak(LineBreakValue v)
     {
-        *m_rareComputedStyleData.ensureLineBreak() = v;
+        ensureInheritedRareData()->m_lineBreak = v;
     }
 
     void setLineClamp(int32_t v)

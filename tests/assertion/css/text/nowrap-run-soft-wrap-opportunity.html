@@ -1,0 +1,78 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A run that does not wrap breaks only at the opportunities around it</title>
+<style>
+  body { margin: 0; font: 20px/20px Ahem; }
+  div { width: 6ch; }
+  .n { white-space: nowrap; }
+  .w { white-space: normal; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[nowrap-run-soft-wrap-opportunity] " + document.title);
+  };
+}
+</script>
+<div id="word">ab <span class="n">cdefgh</span></div>
+<div id="run">ab <span class="n">cd ef</span></div>
+<div id="nested">ab <span class="n">cd <b>ef</b></span></div>
+<div id="between">x <span class="n">ab cd</span> <span class="n">ef gh</span></div>
+<div id="spaces">ab <span class="n">cd</span> <span class="n">ef</span></div>
+<div id="preWrap" style="white-space: pre-wrap">ab <span class="n">cd ef</span></div>
+<div id="nowrapSpace"><span class="n">ab </span>cdefg</div>
+<div id="nowrapParent"><span class="n">ab <span class="w">cdefg</span></span></div>
+<div id="twoRuns" style="width: 3ch"><span class="n">ab</span> <span class="n">cd</span></div>
+<div id="hyphen">ab <span class="n">c-d ef</span></div>
+<div id="ideograph" style="width: 5ch"><span class="n">ab cd</span>漢</div>
+<div id="hangs" style="width: 5ch">ab <span class="n">cd </span></div>
+<div id="spaceJoins" style="width: 5ch">ab <span class="n">cd </span>e</div>
+<div id="badge" class="n">ab <i id="badgeFloat" style="float: right; width: 1ch; height: 20px"></i>cdefghij</div>
+<div class="n" style="font: 20px sans-serif">ab&shy; <b id="afterShySpace">cd</b></div>
+<div class="n" style="font: 20px sans-serif">ab <b id="afterSpace">cd</b></div>
+<script>
+// css-text-3 §5.1: white space that wraps is a soft wrap opportunity even
+// before text that does not, while white space that does not wrap (it is
+// the box directly containing the space that decides) is none, so a run
+// of such text moves to the next line as a whole.
+function lines(id) {
+  return Math.round(document.getElementById(id).getBoundingClientRect().height / 20);
+}
+function check(id, expected) {
+  console.assert(lines(id) == expected, id + ": " + lines(id) + " lines != " + expected);
+}
+check("word", 2);
+check("run", 2);
+check("nested", 2);
+check("between", 3);
+check("spaces", 2);
+check("preWrap", 2);
+check("nowrapSpace", 1);
+check("nowrapParent", 1);
+check("twoRuns", 2);
+// A hyphen inside the run is no opportunity either.
+check("hyphen", 2);
+// After the run, the nearest common ancestor of the two characters decides.
+check("ideograph", 2);
+// A collapsible space ending the run hangs at the end of the line.
+check("hangs", 1);
+check("spaceJoins", 2);
+// A float in a run that starts the line, and so cannot move, goes where it
+// occurs if it fits beside what precedes it (CSS2 §9.5.1 rule 8).
+var badgeTop = document.getElementById("badge").getBoundingClientRect().top;
+var floatTop = document.getElementById("badgeFloat").getBoundingClientRect().top;
+console.assert(floatTop == badgeTop, "badge: float at " + (floatTop - badgeTop));
+// A soft hyphen not ending a line is invisible, and a space after it,
+// which does not wrap here, still separates the words.
+var shyLeft = document.getElementById("afterShySpace").getBoundingClientRect().left;
+var spaceLeft = document.getElementById("afterSpace").getBoundingClientRect().left;
+console.assert(shyLeft == spaceLeft, "shySpace: " + shyLeft + " != " + spaceLeft);
+testEnd();
+</script>

@@ -1,0 +1,18 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A word ends where it meets overflow-wrap: break-word text</title>
+<style>
+  body { font: 20px/20px Ahem; }
+  div { width: 3ch; overflow-wrap: break-word; }
+  span { overflow-wrap: normal; }
+</style>
+<div><span>foo</span>bar baz</div>
+<div style="white-space: nowrap"><span>foo</span> bar baz</div>
+<div style="white-space: nowrap"><span><b>foo</b></span> bar</div>
+<script>
+// A word of overflow-wrap: normal text, still open at the end of its
+// inline box, does not go on into the parent's overflow-wrap: break-word
+// text; the test passes if laying them out does not crash.
+document.body.offsetHeight;
+if (typeof testEnd === "function") testEnd();
+</script>

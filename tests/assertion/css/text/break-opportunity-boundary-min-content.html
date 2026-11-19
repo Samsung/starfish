@@ -1,0 +1,60 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Line break opportunities across inline boundaries agree between min-content and layout</title>
+<link rel="help" href="https://drafts.csswg.org/css-text-3/#line-break-details">
+<link rel="help" href="https://drafts.csswg.org/css-text-3/#word-break-property">
+<style>
+  body { margin: 0; font: 20px/20px Ahem; }
+  .mc { display: inline-block; width: min-content; }
+  .seg { display: inline-block; white-space: nowrap; }
+  .fit { overflow: hidden; }
+  .ba { word-break: break-all; }
+  .nw { white-space: nowrap; }
+</style>
+<div id="host"></div>
+<script>
+// css-text-3 #line-break-details: inline box boundaries are not soft wrap
+// opportunities, so breaking is decided by the characters on both sides
+// (UAX #14: no break before closing punctuation, exclamation, postfix or
+// after a word joiner, no-break space or opening punctuation). For
+// white-space, the nearest common ancestor of the two characters decides,
+// and a float between them is no opportunity either.
+// #word-break-property: break-all treats letters and digits as ideographs,
+// keeping the other classes' rules (UAX #14 LB23a: no break before a
+// postfix or after a prefix next to an ideograph). The min-content width is
+// the widest unbreakable piece, and laying the text out at that width must
+// not overflow.
+var cases = [
+  // id, content, the widest piece that must not break, class
+  ["closing", "가<span>」</span>나", "가」"],
+  ["exclamation", "가<span>！</span>나", "가！"],
+  ["opening", "나<span>「</span>가", "「가"],
+  ["nested", "<span>가</span><span><u>。</u></span>나", "가。"],
+  ["wordJoiner", "가&#x2060;<span>나</span>다", "가&#x2060;나"],
+  ["noBreakSpace", "가<span>&nbsp;나</span>다", "가&nbsp;나"],
+  ["postfix", "가100<span>%</span>", "100%"],
+  ["breakAllPostfix", "12%34", "2%", "ba"],
+  ["breakAllPrefix", "가<span>$</span>12", "$1", "ba"],
+  ["nowrapAfterIdeograph", "가<span class=\"nw\">나다</span>", "나다"],
+  ["nowrapBeforeIdeograph", "<span class=\"nw\">나다</span>가", "나다"],
+  ["floatInNowrap", "ab <span class=\"nw\">cd <i style=\"float: right; width: 1ch; height: 1ch\"></i>ef</span>", "cd ef"]
+];
+var host = document.getElementById("host");
+cases.forEach(function (c) {
+  var cls = c[3] ? " " + c[3] : "";
+  host.insertAdjacentHTML("beforeend",
+    "<div><span class=\"mc" + cls + "\" id=\"" + c[0] + "\">" + c[1] + "</span></div>" +
+    "<div><span class=\"seg\" id=\"" + c[0] + "Seg\">" + c[2] + "</span></div>" +
+    "<div class=\"fit" + cls + "\" id=\"" + c[0] + "Fit\">" + c[1] + "</div>");
+});
+function width(id) { return document.getElementById(id).getBoundingClientRect().width; }
+cases.forEach(function (c) {
+  var min = width(c[0]), piece = width(c[0] + "Seg");
+  console.assert(Math.abs(min - piece) < 0.5, c[0] + ": min-content " + min + " != " + piece);
+  var fit = document.getElementById(c[0] + "Fit");
+  fit.style.width = Math.ceil(min) + "px";
+  console.assert(fit.scrollWidth <= fit.clientWidth,
+                 c[0] + ": overflows its min-content width, " + fit.scrollWidth + " > " + fit.clientWidth);
+});
+if (typeof testEnd === "function") testEnd();
+</script>

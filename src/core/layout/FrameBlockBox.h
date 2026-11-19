@@ -1347,6 +1347,7 @@ private:
     void splitInlineBoxes(GCVector<FrameBox*>& boxes);
 
     bool canAppendToCurrentLineBox(FrameBox* f, LayoutUnit width);
+    bool shouldWrapLines(Frame* f, Frame* layoutParent);
     bool hasFloatingBoxAlreadyInLineBox(Frame* f);
     bool canInsertFloatingBox(FrameBox* f, bool allowPendingFloatingBox);
 
@@ -1370,6 +1371,7 @@ public:
     void tryInsertInlineBox(FrameBox* box);
     void tryInsertFloatingBox(FrameBox* box);
     void insertWord(Frame* next);
+    void insertWordBefore(FrameBox* box);
     void markInlineBoxIndex(FrameBox* box);
 
     bool removeLastLineBoxIfEmpty();
@@ -1413,7 +1415,7 @@ public:
         return m_currentLineWidth;
     }
 
-    void registerInlineContent(FrameLineBreak* br);
+    void registerInlineContent(LineBox* line, FrameLineBreak* br);
 
     void registerInlineBlockAscender(LayoutUnit ascender, FrameBlockBox* box)
     {
@@ -1567,6 +1569,10 @@ public:
     InlineBoxLayoutParentBox* m_currentLayoutParent;
     bool m_isPendingBreakLine;
     bool m_isWhiteSpaceAtLast;
+    // The line ends at a soft wrap opportunity of text that wraps, which
+    // allows a break before what follows even if that does not wrap
+    // (css-text-3 §5.1).
+    bool m_isSoftWrapOpportunityAtLast;
     bool m_isSoftHyphenAtLast;
     bool m_canConcatWord;
     bool m_isLastLineBox;

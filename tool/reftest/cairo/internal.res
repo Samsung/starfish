@@ -442,6 +442,14 @@ tests/assertion/css/text/text-wrap-mode.html
 tests/assertion/css/text/overflow-wrap-anywhere-graphemes.html
 tests/assertion/css/text/text-shadow-change.html
 tests/assertion/css/text/text-shadow-grown-in-layer.html
+tests/assertion/css/text/min-content-inline-boundary.html
+tests/assertion/css/text/nowrap-run-soft-wrap-opportunity.html
+tests/crash/overflow-wrap-word-at-inline-end.html
+tests/assertion/css/text/word-break-break-all-punctuation.html
+tests/assertion/css/text/line-break-inline-boundary.html
+tests/assertion/css/text/line-break-anywhere-loose.html
+tests/assertion/css/text/text-overflow-first-atomic-inline.html
+tests/assertion/css/text/break-opportunity-boundary-min-content.html
 tests/pixel/css/border/starting_unprocessed_mbp_with_pre.html
 tests/pixel/css/length/simple_calc.html
 tests/pixel/css/length/simple_calc2.html
@@ -767,6 +775,7 @@ tests/assertion/css/incremental/quicklayout-rel-pos-box-bug-01.html
 tests/assertion/css/incremental/quicklayout-abspos-offset-in-padding-box.html
 tests/assertion/css/incremental/quicklayout-abspos-in-basis-measurement.html
 tests/assertion/css/incremental/flex-item-resolve-height-correctly.html
+tests/assertion/css/incremental/quicklayout-table-cell-first-baseline.html
 tests/pixel/css/stackingcontext/iframe_border_with_composite.html
 tests/pixel/css/stackingcontext/fixed-inside-buffered-ancestors.html
 tests/assertion/css/flex/flex-webkit-prefix.html

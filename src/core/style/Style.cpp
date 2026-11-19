@@ -2603,6 +2603,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("normal");
         case StrictLineBreakValue:
             return String::fromUTF8("strict");
+        case AnywhereLineBreakValue:
+            return String::fromUTF8("anywhere");
         }
         break;
     case CSSStyleValuePair::ValueKind::WordBreakValueKind:
@@ -8231,12 +8233,11 @@ void StyleResolver::applyProperty(Element* element,
     case CSSStyleValuePair::KeyKind::LineBreak:
         switch (newCssValue.valueKind()) {
         case CSSStyleValuePair::ValueKind::Inherit:
-            MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+        case CSSStyleValuePair::ValueKind::Unset:
             style->setLineBreak(parentStyle->lineBreak());
             break;
         case CSSStyleValuePair::ValueKind::Initial:
         case CSSStyleValuePair::ValueKind::Auto:
-        case CSSStyleValuePair::ValueKind::Unset:
             style->setLineBreak(LineBreakValue::NormalLineBreakValue);
             break;
         default:
@@ -18829,6 +18830,8 @@ bool CSSStyleValuePair::updateValueLineBreak(Document* document,
         m_value.m_lineBreak = LineBreakValue::NormalLineBreakValue;
     } else if (value.equals("strict")) {
         m_value.m_lineBreak = LineBreakValue::StrictLineBreakValue;
+    } else if (value.equals("anywhere")) {
+        m_value.m_lineBreak = LineBreakValue::AnywhereLineBreakValue;
     } else {
         return false;
     }

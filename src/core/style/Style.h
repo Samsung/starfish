@@ -643,6 +643,7 @@ enum LineBreakValue ENSURE_ENUM_UNSIGNED {
     LooseLineBreakValue,
     NormalLineBreakValue,
     StrictLineBreakValue,
+    AnywhereLineBreakValue,
 };
 
 enum WordBreakValue ENSURE_ENUM_UNSIGNED {

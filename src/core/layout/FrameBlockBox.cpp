@@ -699,7 +699,7 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
             m_lineBoxes[i]->quickInlineLayout(&lCtx);
             m_lineBoxes[i]->resetChildrenVerticalPositions(ctx);
             lCtx.computeVerticalProperties(m_lineBoxes[i], false);
-            lCtx.registerInlineContent(nullptr);
+            lCtx.registerInlineContent(m_lineBoxes[i], nullptr);
             m_lineBoxes[i]->coordinateVerticalProperties(&lCtx, 0);
         }
         addToRelativePositionedBoxes(ctx);

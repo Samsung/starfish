@@ -1,0 +1,46 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Baseline-aligned cells keep their first-line baseline on relayout</title>
+<!--
+  A baseline-aligned cell's baseline is that of its first line box
+  (css-tables-3). When a sibling of the clean table changes, the table is
+  laid out again with clean cells; the multi-line cell must still report
+  its first line, or the single-line cells move down to its last line.
+-->
+<style>
+  body { margin: 0; font: 20px/30px sans-serif; }
+  table { border-spacing: 0; }
+  td { width: 120px; padding: 0; vertical-align: baseline; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[quicklayout-table-cell-first-baseline] " + document.title);
+  };
+}
+</script>
+<table><tr>
+  <td><span id="one">one</span></td>
+  <td><span id="many">several words that wrap onto more lines</span></td>
+</tr></table>
+<div id="sibling">sibling</div>
+<script>
+function check(when) {
+  var one = document.getElementById("one").getBoundingClientRect();
+  var many = document.getElementById("many").getBoundingClientRect();
+  console.assert(many.height > 60, when + ": the second cell wraps, height " + many.height);
+  console.assert(Math.abs(one.top - many.top) < 1,
+                 when + ": first lines share a baseline, tops " + one.top + " vs " + many.top);
+}
+check("initial");
+document.getElementById("sibling").textContent = "sibling changed";
+check("after a sibling change");
+testEnd();
+</script>

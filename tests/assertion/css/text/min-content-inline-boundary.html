@@ -1,0 +1,60 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>No soft wrap opportunity at an inline box boundary</title>
+<style>
+  body { margin: 0; font: 20px/1 sans-serif; }
+  .mc { width: min-content; }
+  #refs { white-space: nowrap; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[min-content-inline-boundary] " + document.title);
+  };
+}
+</script>
+<div class="mc" id="spans"><span>ab</span><span>cd</span></div>
+<div class="mc" id="nested">ab<span>cd</span>ef</div>
+<div class="mc" id="punct"><span>X</span><span>.</span></div>
+<div class="mc" id="abspos">ab<span style="position: absolute"></span>cd</div>
+<div class="mc" id="padding">ab<span style="padding-left: 10px">cd</span></div>
+<div class="mc" id="emptyBox">ab<span style="padding-left: 10px"></span>cd</div>
+<div class="mc" id="space">ab <span>cd</span></div>
+<div class="mc" id="nowrap">ab <span style="white-space: nowrap">cd ef</span> gh</div>
+<div style="display: flex; width: 0"><div id="flexitem">ab<span>cd</span></div></div>
+<div class="mc" id="endCJK"><span style="padding-right: 40px">가나</span></div>
+<div class="mc" id="endHyphen"><span style="padding-right: 40px">ab-</span></div>
+<div id="refs"><span id="ab">ab</span> <span id="cd">cd</span> <span id="abcd">abcd</span> <span id="abcdef">abcdef</span> <span id="xdot">X.</span> <span id="cdef">cd ef</span> <span id="na">나</span> <span id="abHyphen">ab-</span></div>
+<script>
+// css-text-3 §5.1: soft wrap opportunities come from the text across inline
+// box boundaries, which are not opportunities themselves, so the words
+// joined across them are what the min-content size cannot break.
+function width(id) {
+  return document.getElementById(id).getBoundingClientRect().width;
+}
+function check(id, expected) {
+  var w = width(id);
+  console.assert(Math.abs(w - expected) < 1, id + ": " + w + " != " + expected);
+}
+check("spans", width("abcd"));
+check("nested", width("abcdef"));
+check("punct", width("xdot"));
+check("abspos", width("abcd"));
+check("padding", width("abcd") + 10);
+check("emptyBox", width("abcd") + 10);
+check("space", Math.max(width("ab"), width("cd")));
+check("nowrap", width("cdef"));
+check("flexitem", width("abcd"));
+// A box end right after a word that ends at a soft wrap opportunity stays
+// with that word.
+check("endCJK", width("na") + 40);
+check("endHyphen", width("abHyphen") + 40);
+testEnd();
+</script>

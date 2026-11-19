@@ -1,0 +1,65 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>word-break: break-all keeps the UAX #14 rules around punctuation</title>
+<style>
+  body { margin: 0; font: 20px/20px Ahem; }
+  div { word-break: break-all; }
+  .mc { width: min-content; }
+  .z { width: 0; }
+  #ch { word-break: normal; white-space: nowrap; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[word-break-break-all-punctuation] " + document.title);
+  };
+}
+</script>
+<div class="mc" id="letters">abcdef</div>
+<div class="mc" id="spaced">ab cd</div>
+<div class="mc" id="period">ab.cd</div>
+<div class="mc" id="spans"><span>X</span><span>.</span></div>
+<div class="mc" id="parens">a(b)</div>
+<div class="mc" id="number">1.5%</div>
+<div class="mc" id="boundary">ab<span>cd</span></div>
+<div class="z" id="zPeriod">X.Y</div>
+<div class="z" id="zSpans"><span>X</span><span>.</span></div>
+<div class="z" id="zParens">a(b)</div>
+<div class="z" id="zNbsp">a&nbsp;b</div>
+<div id="ch"><span id="one">X</span></div>
+<script>
+// css-text-3 §5.2: break-all treats letters and numbers as ideographic
+// characters (UAX #14 ID), so they break from each other and from what
+// follows or precedes them, except where UAX #14 keeps a character with
+// its neighbour: no break before "." ")" "%" or a no-break space, none
+// after "(" or a no-break space. The min-content size takes the pieces
+// line layout cannot break.
+var ch = document.getElementById("one").getBoundingClientRect().width;
+function checkWidth(id, chars) {
+  var w = document.getElementById(id).getBoundingClientRect().width;
+  console.assert(Math.abs(w - chars * ch) < 1, id + ": " + w + " != " + chars + "ch");
+}
+function checkLines(id, expected) {
+  var n = Math.round(document.getElementById(id).getBoundingClientRect().height / 20);
+  console.assert(n == expected, id + ": " + n + " lines != " + expected);
+}
+checkWidth("letters", 1);
+checkWidth("spaced", 1);
+checkWidth("period", 2);
+checkWidth("spans", 2);
+checkWidth("parens", 3);
+checkWidth("number", 2);
+checkWidth("boundary", 1);
+checkLines("zPeriod", 2);
+checkLines("zSpans", 1);
+checkLines("zParens", 2);
+checkLines("zNbsp", 1);
+testEnd();
+</script>

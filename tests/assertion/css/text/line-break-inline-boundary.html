@@ -1,0 +1,72 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Line breaks around inline box boundaries and no-break spaces</title>
+<style>
+  body { margin: 0; font: 20px/20px sans-serif; }
+  .z { width: 0; }
+  .mc { width: min-content; }
+  #refs { white-space: nowrap; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[line-break-inline-boundary] " + document.title);
+  };
+}
+</script>
+<div class="z" id="numberHangul">12<span>개</span></div>
+<div class="z" id="latinHangul">abc<b>한글</b></div>
+<div class="z" id="hangulPeriod">가<span>.</span></div>
+<div class="z" id="hangulParen">가<span>)</span></div>
+<div class="z" id="hangulComma">가<span>、</span></div>
+<div class="z" id="nbsp">가&nbsp;나</div>
+<div class="z" id="nbspWord">원&nbsp;할인</div>
+<div class="z" id="latinNbsp">ab&nbsp;가</div>
+<div class="mc" id="mcNumberHangul">12<span>개</span></div>
+<div class="mc" id="mcHangulPeriod">가<span>.</span></div>
+<div id="refs"><span id="r12">12</span> <span id="rGae">개</span> <span id="rGaPeriod">가.</span></div>
+<script>
+// css-text-3 §5.1: an inline box boundary is no soft wrap opportunity
+// itself; the characters on either side decide (UAX #14). A CJK
+// character breaks from a number or a letter before it, but not from
+// closing punctuation after it, and a no-break space glues to both sides.
+// The min-content size breaks where line layout does.
+function lines(id) {
+  var e = document.getElementById(id);
+  var ref = e.cloneNode(true);
+  ref.removeAttribute("id");
+  ref.style.width = "auto";
+  ref.style.whiteSpace = "nowrap";
+  e.parentNode.insertBefore(ref, e.nextSibling);
+  var n = e.getBoundingClientRect().height / ref.getBoundingClientRect().height;
+  ref.parentNode.removeChild(ref);
+  return Math.round(n);
+}
+function checkLines(id, expected) {
+  console.assert(lines(id) == expected, id + ": " + lines(id) + " lines != " + expected);
+}
+function width(id) {
+  return document.getElementById(id).getBoundingClientRect().width;
+}
+function checkWidth(id, expected) {
+  console.assert(Math.abs(width(id) - expected) < 1, id + ": " + width(id) + " != " + expected);
+}
+checkLines("numberHangul", 2);
+checkLines("latinHangul", 3);
+checkLines("hangulPeriod", 1);
+checkLines("hangulParen", 1);
+checkLines("hangulComma", 1);
+checkLines("nbsp", 1);
+checkLines("nbspWord", 2);
+checkLines("latinNbsp", 1);
+checkWidth("mcNumberHangul", Math.max(width("r12"), width("rGae")));
+checkWidth("mcHangulPeriod", width("rGaPeriod"));
+testEnd();
+</script>

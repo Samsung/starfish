@@ -1,0 +1,66 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>line-break: anywhere and loose add soft wrap opportunities</title>
+<link rel="help" href="https://drafts.csswg.org/css-text-3/#line-break-property">
+<style>
+  body { margin: 0; }
+  .ahem { font: 20px/20px Ahem; }
+  .mc { width: min-content; }
+  .anywhere { line-break: anywhere; }
+  .loose { line-break: loose; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[line-break-anywhere-loose] " + document.title);
+  };
+}
+</script>
+<div id="parent" class="anywhere"><span id="child">x</span></div>
+<div id="lines" class="ahem anywhere" style="width: 3ch">abcdefgh</div>
+<div id="glue" class="ahem anywhere" style="width: 3ch">ab&nbsp;cd&#x2060;ef</div>
+<div id="minContent" class="ahem anywhere mc">ab<span>cd</span>e</div>
+<div lang="ja">
+  <div class="mc"><span id="postfixNormal">文&#x2103;</span></div>
+  <div class="mc loose"><span id="postfixLoose">文&#x2103;</span></div>
+  <div class="mc loose"><span id="postfixBoundary">文<span>&#x2103;</span></span></div>
+  <div class="mc"><span id="iterationNormal">人&#x3005;</span></div>
+  <div class="mc loose"><span id="iterationLoose">人&#x3005;</span></div>
+  <div class="mc loose"><span id="prolongedLoose">人&#x30FC;</span></div>
+  <div class="mc loose"><span id="openingLoose">&#x300C;&#x3083;</span></div>
+  <div class="mc loose"><span id="prefixLoose">&#xFF04;&#x300D;</span></div>
+  <span id="wen">文</span> <span id="degree">&#x2103;</span> <span id="ren">人</span> <span id="mark">&#x3005;</span> <span id="prolonged">&#x30FC;</span> <span id="opening">&#x300C;&#x3083;</span> <span id="prefix">&#xFF04;&#x300D;</span>
+</div>
+<script>
+// css-text-3 §5.2: line-break is inherited; anywhere is a soft wrap
+// opportunity around every character, in the min-content size too, and
+// loose adds breaks before postfixes, iteration marks and the prolonged sound
+// mark, among others, but none right after an opening bracket or before a
+// closing one.
+function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+function width(id) { return rect(id).width; }
+function parentWidth(id) { return document.getElementById(id).parentNode.getBoundingClientRect().width; }
+function check(what, actual, expected) { console.assert(Math.abs(actual - expected) < 0.5, what + ": " + actual + " != " + expected); }
+
+console.assert(getComputedStyle(document.getElementById("child")).lineBreak === "anywhere",
+               "inherited: " + getComputedStyle(document.getElementById("child")).lineBreak);
+check("lines", rect("lines").height, 60);
+check("glue", rect("glue").height, 60);
+check("minContent", width("minContent"), 20);
+check("postfixNormal", parentWidth("postfixNormal"), width("postfixNormal"));
+check("postfixLoose", parentWidth("postfixLoose"), Math.max(width("wen"), width("degree")));
+check("postfixBoundary", parentWidth("postfixBoundary"), Math.max(width("wen"), width("degree")));
+check("iterationNormal", parentWidth("iterationNormal"), width("iterationNormal"));
+check("iterationLoose", parentWidth("iterationLoose"), Math.max(width("ren"), width("mark")));
+check("prolongedLoose", parentWidth("prolongedLoose"), Math.max(width("ren"), width("prolonged")));
+check("openingLoose", parentWidth("openingLoose"), width("opening"));
+check("prefixLoose", parentWidth("prefixLoose"), width("prefix"));
+testEnd();
+</script>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>text-overflow clips the first atomic inline on a line</title>
+<link rel="help" href="https://drafts.csswg.org/css-ui/#text-overflow">
+<!--
+  The first character or atomic inline-level element on a line is clipped
+  rather than ellipsed, and the ellipsis does not reach into an atomic
+  inline. The inline-block's text must run to the clip edge: the top half
+  of the line near the end edge, where an ellipsis would leave no ink, has
+  glyph strokes.
+-->
+<style>
+  body { margin: 0; background: white; }
+  #box { position: absolute; left: 0; top: 0; width: 200px;
+         font: 40px/60px sans-serif; color: black; white-space: nowrap;
+         overflow: hidden; text-overflow: ellipsis; }
+  #box span { display: inline-block; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  window.testEnd = function () { document.title = "PASS (needs screenShot)"; };
+}
+</script>
+</head>
+<body>
+<div id="box"><span>MMMMMMMMMMMM</span></div>
+<script>
+  var shot = "text-overflow-first-atomic-inline.html.png";
+  function darkPixels(x0, x1, y0, y1) {
+    var n = 0;
+    for (var y = y0; y < y1; y += 2) {
+      for (var x = x0; x < x1; x += 2) {
+        var p = getPixelColor(shot, x, y);
+        if (p && p.r < 128 && p.g < 128 && p.b < 128)
+          n++;
+      }
+    }
+    return n;
+  }
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      testEnd();
+      return;
+    }
+    setTimeout(function () {
+      screenShot(shot, function () {
+        console.assert(darkPixels(10, 40, 15, 35) > 0, "text is painted");
+        console.assert(darkPixels(180, 200, 15, 35) > 0,
+                       "the inline-block is clipped at the end edge, not ellipsed");
+        testEnd();
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

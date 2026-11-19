@@ -1999,7 +1999,7 @@ http://web-platform.test:8000/css/CSS2/generated-content/content-157.xht
 http://web-platform.test:8000/css/CSS2/generated-content/content-158.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/generated-content/content-159.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/generated-content/content-171.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/generated-content/content-172.xht
+http://web-platform.test:8000/css/CSS2/generated-content/content-172.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/generated-content/content-173.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/generated-content/content-174.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/generated-content/content-175.xht

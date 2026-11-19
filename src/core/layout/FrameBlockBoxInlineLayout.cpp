@@ -646,6 +646,249 @@ static bool isSoftWrapOpportunity(char32_t d)
     }
 }
 
+static ULineBreak lineBreakClass(char32_t c)
+{
+    return (ULineBreak)u_getIntPropertyValue(c, UCHAR_LINE_BREAK);
+}
+
+// UAX #14 LB9: a combining mark takes the class of its base.
+static bool isCombining(char32_t c)
+{
+    ULineBreak lb = lineBreakClass(c);
+    int8_t gc = u_charType(c);
+    return lb == U_LB_COMBINING_MARK || lb == U_LB_ZWJ ||
+           (lb == U_LB_COMPLEX_CONTEXT &&
+            (gc == U_NON_SPACING_MARK || gc == U_COMBINING_SPACING_MARK));
+}
+
+// UAX #14 classes that take no break before them (LB8a-LB13, LB19,
+// LB21-LB23a).
+static bool prohibitsBreakBefore(char32_t c)
+{
+    switch (lineBreakClass(c)) {
+    case U_LB_CLOSE_PUNCTUATION:
+    case U_LB_CLOSE_PARENTHESIS:
+    case U_LB_EXCLAMATION:
+    case U_LB_INFIX_NUMERIC:
+    case U_LB_BREAK_SYMBOLS:
+    case U_LB_NONSTARTER:
+    case U_LB_BREAK_AFTER:
+    case U_LB_HYPHEN:
+    case U_LB_INSEPARABLE:
+    case U_LB_POSTFIX_NUMERIC:
+    case U_LB_QUOTATION:
+    case U_LB_GLUE:
+    case U_LB_WORD_JOINER:
+        return true;
+    default:
+        return isCombining(c);
+    }
+}
+
+// UAX #14 classes that take no break after them (LB8a, LB11-LB14, LB19,
+// LB21, LB23a).
+static bool prohibitsBreakAfter(char32_t c)
+{
+    switch (lineBreakClass(c)) {
+    case U_LB_OPEN_PUNCTUATION:
+    case U_LB_QUOTATION:
+    case U_LB_GLUE:
+    case U_LB_WORD_JOINER:
+    case U_LB_ZWJ:
+    case U_LB_BREAK_BEFORE:
+    case U_LB_PREFIX_NUMERIC:
+        return true;
+    default:
+        return false;
+    }
+}
+
+// word-break: break-all treats letters and numbers as ideographic
+// characters (css-text-3 §5.2).
+static bool isBreakAllLetter(char32_t c)
+{
+    switch (lineBreakClass(c)) {
+    case U_LB_ALPHABETIC:
+    case U_LB_AMBIGUOUS:
+    case U_LB_HEBREW_LETTER:
+    case U_LB_NUMERIC:
+    case U_LB_COMPLEX_CONTEXT:
+    case U_LB_IDEOGRAPHIC:
+    case U_LB_CONDITIONAL_JAPANESE_STARTER:
+    case U_LB_H2:
+    case U_LB_H3:
+    case U_LB_JL:
+    case U_LB_JV:
+    case U_LB_JT:
+        return !isCombining(c);
+    default:
+        return false;
+    }
+}
+
+// UAX #14 with letters as ID breaks between them and on either side of
+// punctuation that does not glue to them.
+static bool isBreakAllOpportunity(char32_t before, char32_t after)
+{
+    if (isBreakAllLetter(after)) {
+        return !prohibitsBreakAfter(before);
+    }
+    return isBreakAllLetter(before) && !prohibitsBreakBefore(after);
+}
+
+// East Asian Width Ambiguous, Fullwidth or Wide (UAX #11).
+static bool isWideOrAmbiguous(char32_t c)
+{
+    int width = u_getIntPropertyValue(c, UCHAR_EAST_ASIAN_WIDTH);
+    return width == U_EA_AMBIGUOUS || width == U_EA_FULLWIDTH ||
+           width == U_EA_WIDE;
+}
+
+// The character before end in text, a combining mark judged by its base
+// (UAX #14 LB9).
+static char32_t baseCharBefore(String* text, size_t end)
+{
+    size_t i = end - 1;
+    while (i > 0 && isCombining(text->charAt(i))) {
+        i--;
+    }
+    return text->charAt(i);
+}
+
+// The breaks line-break: loose adds to the normal ones (css-text-3 §5.3).
+// The one after a prefix only lifts the rule against breaking after it, the
+// others only those against breaking before `after`; the other UAX #14 rules
+// still hold, `before` being a base character.
+// shortcut: the content language is not checked, so the breaks for Chinese
+// and Japanese apply to any text; check it once layout knows the language.
+static bool isLooseOpportunity(char32_t before, char32_t after, bool breakAll)
+{
+    ULineBreak lbBefore = lineBreakClass(before);
+    if (lbBefore == U_LB_PREFIX_NUMERIC) {
+        return isWideOrAmbiguous(before) && !prohibitsBreakBefore(after);
+    }
+    if (prohibitsBreakAfter(before)) {
+        return false;
+    }
+    switch (after) {
+    // CJK hyphen-like characters and iteration marks
+    case 0x301C:
+    case 0x30A0:
+    case 0x3005:
+    case 0x303B:
+    case 0x309D:
+    case 0x309E:
+    case 0x30FD:
+    case 0x30FE:
+    // centered punctuation
+    case 0x30FB:
+    case 0xFF1A:
+    case 0xFF1B:
+    case 0xFF65:
+    case 0x203C:
+    case 0x2047:
+    case 0x2048:
+    case 0x2049:
+    case 0xFF01:
+    case 0xFF1F:
+        return true;
+    // hyphens after an ideograph, or a letter break-all takes as one
+    case 0x2010:
+    case 0x2013:
+        return lbBefore == U_LB_IDEOGRAPHIC ||
+               (breakAll && isBreakAllLetter(before));
+    }
+    ULineBreak lb = lineBreakClass(after);
+    return lb == U_LB_CONDITIONAL_JAPANESE_STARTER ||
+           (lb == U_LB_INSEPARABLE && lbBefore == U_LB_INSEPARABLE) ||
+           (lb == U_LB_POSTFIX_NUMERIC && isWideOrAmbiguous(after));
+}
+
+// The first character after f in its inline formatting context, across
+// inline box boundaries, or 0 when anything else comes first. ancestor is
+// set to the nearest common ancestor of f and that character.
+static char32_t firstCharAfter(Frame* f, Frame*& ancestor)
+{
+    ancestor = f->parent();
+    while (true) {
+        while (!f->next()) {
+            f = f->parent();
+            if (!f->isFrameInline()) {
+                return 0;
+            }
+            if (f == ancestor) {
+                ancestor = f->parent();
+            }
+        }
+        f = f->next();
+        while (f->isFrameInline() && f->firstChild()) {
+            f = f->firstChild();
+        }
+        if (f->isFrameText()) {
+            String* text = f->asFrameText()->text();
+            if (text->length()) {
+                return text->charAt(0);
+            }
+        } else if (!f->isFrameInline() && !f->isAbsolutePositioned()) {
+            return 0;
+        }
+    }
+}
+
+// Whether a soft wrap opportunity follows the word that ends at end of f's
+// text (css-text-3 §5.1), where wraps is whether f's text wraps; past its
+// last character, white-space on the nearest common ancestor of the two
+// characters decides instead. A word ends at a UAX #14 break; line layout and
+// the min-content size both take those after a hyphen, after or before a
+// CJK character and under word-break: break-all. shortcut: other UAX #14
+// breaks are ignored; honor them here to take them in both. An inline box
+// boundary is no opportunity itself, so the characters around it decide.
+static bool isSoftWrapOpportunityAfter(FrameText* f, size_t end, bool wraps)
+{
+    String* text = f->text();
+    char32_t c = text->charAt(end - 1);
+    char32_t next;
+    if (end < text->length()) {
+        next = text->charAt(end);
+    } else {
+        Frame* ancestor;
+        next = firstCharAfter(f, ancestor);
+        if (next) {
+            wraps = ancestor->shouldWrapLines();
+        }
+    }
+    if (!wraps) {
+        return false;
+    }
+    LineBreakValue lineBreak = f->style()->lineBreak();
+    // line-break: anywhere breaks around every character (css-text-3 §5.2).
+    if (isSoftHyphen(c) || isHyphen(c) ||
+        lineBreak == LineBreakValue::AnywhereLineBreakValue) {
+        return true;
+    }
+    WordBreakValue wb = f->style()->wordBreak();
+    bool breakAll = wb == WordBreakValue::BreakAllWordBreakValue;
+    if (lineBreak == LineBreakValue::LooseLineBreakValue && next &&
+        isLooseOpportunity(baseCharBefore(text, end), next, breakAll)) {
+        return true;
+    }
+    if (end < text->length()) {
+        return breakAll ||
+               ((isSoftWrapOpportunity(c) || isSoftWrapOpportunity(next)) &&
+                wb != WordBreakValue::KeepAllWordBreakValue);
+    }
+    if (!next) {
+        return breakAll || (isSoftWrapOpportunity(c) &&
+                            wb != WordBreakValue::KeepAllWordBreakValue);
+    }
+    if (breakAll && isBreakAllOpportunity(baseCharBefore(text, end), next)) {
+        return true;
+    }
+    return (isSoftWrapOpportunity(c) || isSoftWrapOpportunity(next)) &&
+           wb != WordBreakValue::KeepAllWordBreakValue &&
+           !prohibitsBreakAfter(c) && !prohibitsBreakBefore(next);
+}
+
 static bool isWhiteSpace(const TextRun& run)
 {
     const StringView& sv = run.m_stringView;
@@ -1250,6 +1493,7 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
     , m_currentLayoutParent(nullptr)
     , m_isPendingBreakLine(false)
     , m_isWhiteSpaceAtLast(false)
+    , m_isSoftWrapOpportunityAtLast(false)
     , m_isSoftHyphenAtLast(false)
     , m_canConcatWord(false)
     , m_isLastLineBox(false)
@@ -1290,12 +1534,12 @@ LineFormattingContext::LineFormattingContext(FrameBlockBox* block,
     }
 }
 
-void LineFormattingContext::registerInlineContent(FrameLineBreak* br)
+void LineFormattingContext::registerInlineContent(LineBox* line,
+                                                  FrameLineBreak* br)
 {
-    LineBox* back = currentLine();
     bool hasNormalFlowContent = br != nullptr;
-    for (size_t i = 0; i < back->boxes().size(); i++) {
-        if (back->boxes()[i]->isNormalFlow()) {
+    for (size_t i = 0; i < line->boxes().size(); i++) {
+        if (line->boxes()[i]->isNormalFlow()) {
             hasNormalFlowContent = true;
             break;
         }
@@ -1305,7 +1549,7 @@ void LineFormattingContext::registerInlineContent(FrameLineBreak* br)
             m_layoutContext.registerFirstLineCandidate(m_block);
             m_isFirstLineCandidate = false;
         }
-        m_layoutContext.registerLineBoxAscender(m_block, back, ascender(back));
+        m_layoutContext.registerLineBoxAscender(m_block, line, ascender(line));
     }
 }
 
@@ -2386,6 +2630,16 @@ void LineFormattingContext::insertPendingInlineBoxes()
     }
 }
 
+// NOTE When word-wrap value is break-word or anywhere, we do not concat word
+// TODO Support word concat for break-word and anywhere word-wrap values
+static bool canConcatWordIn(FrameBlockBox* block,
+                            InlineBoxLayoutParentBox* parent)
+{
+    ComputedStyle* style =
+        parent->isLineBox() ? block->style() : parent->style();
+    return style->wordWrap() == NormalWordWrapValue;
+}
+
 void LineFormattingContext::updateCurrentLayoutParent(Frame* parent)
 {
     m_currentLayoutParent = parent->asInlineBoxLayoutParentBox();
@@ -2398,14 +2652,7 @@ void LineFormattingContext::updateCurrentLayoutParent(Frame* parent)
                                      ->origin()];
     }
 
-    // NOTE When word-wrap value is break-word, we do not concat word
-    // TODO Support word concat for break-word word-wrap value
-    if (m_currentLayoutParent->isLineBox()) {
-        m_canConcatWord = m_block->style()->wordWrap() == NormalWordWrapValue;
-    } else {
-        m_canConcatWord =
-            m_currentLayoutParent->style()->wordWrap() == NormalWordWrapValue;
-    }
+    m_canConcatWord = canConcatWordIn(m_block, m_currentLayoutParent);
 }
 
 void LineFormattingContext::resetLineBox()
@@ -2427,6 +2674,7 @@ void LineFormattingContext::resetLineBox()
     m_isPendingBreakLine = false;
     m_isSoftHyphenAtLast = false;
     m_isWhiteSpaceAtLast = true;
+    m_isSoftWrapOpportunityAtLast = false;
     m_floatingBoxesSizeBeforeCurrentLine = m_layoutContext.floatingBoxesSize();
 }
 
@@ -2514,7 +2762,7 @@ void LineFormattingContext::finishLineForLineBox(FrameLineBreak* br,
     insertPendingFloatingBoxes();
     back->coordinateVerticalProperties(this, 0);
     computeHorizontalProperties();
-    registerInlineContent(br);
+    registerInlineContent(back, br);
 
     if (m_layoutContext.isCollidedWithFloatingBoxes(
             LayoutLocation(m_absPosition.x() + m_lineBoxX,
@@ -2669,27 +2917,32 @@ bool LineFormattingContext::breakableWord(FrameBox* box) const
            (box->asInlineTextBox()->text().length() > 1);
 }
 
-// TODO: when concatenating word, we should check if word to concatenate
-// is shouldWrapLines.
-bool LineFormattingContext::canAppendToCurrentLine(FrameBox* box,
-                                                   LayoutUnit width)
+bool LineFormattingContext::shouldWrapLines(Frame* f, Frame* layoutParent)
 {
-    bool wrapLine;
-    if (box->isInlineTextBox() && box->Frame::style()->parentIsBoxless()) {
+    if ((f->isFrameText() || f->isInlineTextBox()) &&
+        f->Frame::style()->parentIsBoxless()) {
         // Text under a `display: contents` element wraps per that element's
         // `white-space`, which its own style carries (css-text-3: the
         // property applies to text); the layout parent's value would be the
         // box parent's. Everywhere else the layout parent decides, as it does
         // for a textarea's inner editor whose box overrides the text's value.
-        wrapLine = box->shouldWrapLines();
-    } else if (box->layoutParent()->isLineBox()) {
-        wrapLine = m_block->shouldWrapLines();
-    } else {
-        wrapLine = box->layoutParent()->shouldWrapLines();
+        return f->shouldWrapLines();
     }
-    if (box->isFloating()) {
-        wrapLine = true;
+    if (layoutParent->isLineBox()) {
+        return m_block->shouldWrapLines();
     }
+    return layoutParent->shouldWrapLines();
+}
+
+// TODO: when concatenating word, we should check if word to concatenate
+// is shouldWrapLines.
+bool LineFormattingContext::canAppendToCurrentLine(FrameBox* box,
+                                                   LayoutUnit width)
+{
+    // A soft wrap opportunity of text that wraps allows a break even before
+    // text that does not (css-text-3 §5.1).
+    bool wrapLine = box->isFloating() || m_isSoftWrapOpportunityAtLast ||
+                    shouldWrapLines(box, box->layoutParent());
     return (!hasFloatingBoxAlreadyInLineBox(box) && m_currentLineWidth == 0 &&
             !breakableWord(box)) ||
            !wrapLine || canAppendToCurrentLineBox(box, width);
@@ -2739,10 +2992,17 @@ void LineFormattingContext::insertWord(Frame* next)
     }
 
     STARFISH_ASSERT(m_canConcatWord);
-    if (canAppendToCurrentLine(m_word.boxes()[0], m_word.width())) {
+    // Collapsible white space ending the word hangs (css-text-3 §4.1.3).
+    LayoutUnit width = m_word.width();
+    for (auto it = m_word.boxes().rbegin();
+         it != m_word.boxes().rend() && isCollapsibleWhiteSpace(*it); it++) {
+        width -= (*it)->outerWidth();
+    }
+    if (canAppendToCurrentLine(m_word.boxes()[0], width)) {
         handleSoftHyphenate(false);
         auto& boxes = m_word.boxes();
         auto iter = boxes.begin();
+        GCVector<FrameBox*> floats;
         updateCurrentLayoutParent(boxes[0]->layoutParent());
 
         while (true) {
@@ -2792,6 +3052,8 @@ void LineFormattingContext::insertWord(Frame* next)
             } else {
                 if (box->isAbsolutePositioned()) {
                     handleAbsoluteBox(box, true, true);
+                } else if (box->isFloating()) {
+                    floats.push_back(box);
                 } else {
                     insertInlineBox(box);
                     markInlineBoxIndex(box);
@@ -2802,6 +3064,9 @@ void LineFormattingContext::insertWord(Frame* next)
         }
 
         m_word.clear();
+        for (FrameBox* f : floats) {
+            tryInsertFloatingBox(f);
+        }
     } else {
         if (isFirstLineBox() && m_block->node() &&
             m_block->node()->style()->seenPseudoElement(
@@ -2854,6 +3119,7 @@ LayoutUnit PreferredWidthContext::wordSpacing(const TextToken& token)
 
 void LineFormattingContext::insertInlineBox(FrameBox* box)
 {
+    m_isSoftWrapOpportunityAtLast = false;
     m_currentLayoutParent->insertInlineBox(box);
     if (m_currentLayoutParent->isInlineNonReplacedBox()) {
         InlineNonReplacedBox* self =
@@ -2909,8 +3175,11 @@ void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
 {
     // NOTE When word-wrap value is break-word, we do not concat word
     // TODO Support word concat for break-word word-wrap value
-    if (m_canConcatWord && isWord(box)) {
+    // White space reaching here while a word is pending does not wrap, so it
+    // goes on with the word.
+    if (m_canConcatWord && (isWord(box) || isWordProcessing())) {
         m_word.concat(box);
+        setIsWhiteSpaceAtLast(isCollapsibleWhiteSpace(box));
         return;
     }
 
@@ -2977,9 +3246,32 @@ void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
     markInlineBoxIndex(box);
 }
 
+// CSS2 §9.5.1 does not settle where a float met in a run that does not wrap
+// goes. A run that starts the line cannot move, so the float goes where it
+// occurs, as high as possible (rule 8). A run that can still move to the
+// next line (an opportunity precedes it on a line with content) carries the
+// float, and insertWord() places it after the run, as WPT float-nowrap-9
+// expects (unlike Chrome, which places it where it occurs).
+void LineFormattingContext::insertWordBefore(FrameBox* box)
+{
+    if (box->isFloating() && isWordProcessing() &&
+        !shouldWrapLines(box, m_currentLayoutParent)) {
+        FrameBox* first = m_word.boxes()[0];
+        if (m_currentLineWidth > 0 &&
+            (m_isSoftWrapOpportunityAtLast ||
+             shouldWrapLines(first, first->layoutParent()))) {
+            return;
+        }
+    }
+    insertWord(box);
+}
+
 void LineFormattingContext::tryInsertFloatingBox(FrameBox* box)
 {
-    STARFISH_ASSERT(m_word.isEmpty());
+    if (isWordProcessing()) {
+        m_word.concat(box);
+        return;
+    }
 
     if (canInsertFloatingBox(box, false) &&
         canAppendToCurrentLine(box, box->outerWidth())) {
@@ -3179,8 +3471,18 @@ void LineFormattingContext::handleTextToken(TextToken& token)
         breakLine(nullptr);
     }
 
-    if (token.m_type != WordType::General) {
-        insertWord(token.m_frameText);
+    FrameText* f = token.m_frameText;
+    // Text that does not wrap has no soft wrap opportunity within it
+    // (css-text-3 §5.1): it goes on with the word, as one unbreakable run.
+    // shortcut: an atomic inline, a soft hyphen or overflow-wrap: break-word
+    // still splits the run; carry them in the word to keep the run whole.
+    bool wraps = shouldWrapLines(f, m_currentLayoutParent);
+    // With no word pending, this only takes out a soft hyphen ending the
+    // previous word.
+    if (token.m_type != WordType::General &&
+        (wraps || token.m_type == WordType::ForcedNewline ||
+         !isWordProcessing())) {
+        insertWord(f);
     }
 
     if (token.m_type == WordType::CollapsibleWhiteSpace &&
@@ -3188,61 +3490,35 @@ void LineFormattingContext::handleTextToken(TextToken& token)
         return;
     }
 
-    std::vector<TextToken> tokens;
-    size_t cur = token.m_start;
-    size_t end = token.m_end;
-    while (cur < end) {
-        WordBreakValue wb = token.m_frameText->style()->wordBreak();
-        if (String::isNonBreakingSpace(
-                token.m_frameText->text()->charAt(cur)) ||
-            wb == WordBreakValue::BreakAllWordBreakValue) {
-            TextToken t = TextToken(token.m_frameText, cur, cur + 1,
-                                    token.m_type, token.m_isFirstLine);
-            tokens.push_back(t);
-            cur++;
-        } else {
-            size_t offset = cur + 1;
-            while (offset < end &&
-                   !String::isNonBreakingSpace(
-                       token.m_frameText->text()->charAt(offset))) {
-                offset++;
+    String* text = f->text();
+    for (size_t cur = token.m_start; cur < token.m_end;) {
+        // A no-break space is a box of its own, which takes word-spacing.
+        size_t end = cur + 1;
+        if (!String::isNonBreakingSpace(text->charAt(cur))) {
+            while (end < token.m_end &&
+                   !String::isNonBreakingSpace(text->charAt(end))) {
+                end++;
             }
-            TextToken t = TextToken(token.m_frameText, cur, offset,
-                                    token.m_type, token.m_isFirstLine);
-            tokens.push_back(t);
-            cur = offset;
         }
+        TextToken t(f, cur, end, token.m_type, token.m_isFirstLine);
+        generateInlineTextBox(t);
+        cur = end;
     }
 
-    auto iter = tokens.begin();
-
-    while (iter != tokens.end()) {
-        TextToken& t = *iter;
-        generateInlineTextBox(t);
-
-        // Consider direction for hyphen
-        String* text = t.m_frameText->text();
-        char32_t c = text->charAt(t.m_end - 1);
-        bool isHyphenAtLast = isSoftHyphen(c) || isHyphen(c);
-        // The token ends at a UAX #14 break opportunity; besides after a
-        // CJK character, it is a soft wrap opportunity before one too, as
-        // between "2026" and a following Hangul syllable.
-        bool isSoftWrapOpportunityNext =
-            t.m_end < text->length() &&
-            isSoftWrapOpportunity(text->charAt(t.m_end));
-
-        WordBreakValue wb = t.m_frameText->style()->wordBreak();
-        if ((wb == WordBreakValue::BreakAllWordBreakValue) ||
-            ((isSoftWrapOpportunity(c) || isSoftWrapOpportunityNext) &&
-             wb != WordBreakValue::KeepAllWordBreakValue) ||
-            isHyphenAtLast) {
-            insertWord(t.m_frameText);
+    if (token.m_type == WordType::General) {
+        // A soft hyphen is taken out of the text when the next word comes,
+        // even where lines do not wrap.
+        char32_t c = text->charAt(token.m_end - 1);
+        // From here on, whether a line may break after the word.
+        wraps = isSoftWrapOpportunityAfter(f, token.m_end, wraps);
+        if (!wraps && !isSoftHyphen(c)) {
+            return;
         }
-        if (isHyphenAtLast) {
-            m_isSoftHyphenAtLast = isSoftHyphen(c);
-        }
-
-        iter++;
+        insertWord(f);
+        m_isSoftHyphenAtLast = isSoftHyphen(c);
+    }
+    if (wraps) {
+        m_isSoftWrapOpportunityAtLast = true;
     }
 }
 
@@ -3266,6 +3542,12 @@ static void tokenizeText(Starfish* starfish, FrameText* f, Context& ctx)
 
     bool collapseSpace = !f->shouldPreserveWhiteSpaces();
     bool collapseNewline = f->shouldIgnoreNewlineChar();
+    bool breakAll =
+        f->style()->wordBreak() == WordBreakValue::BreakAllWordBreakValue;
+    LineBreakValue lineBreak = f->style()->lineBreak();
+    bool addsBreaks = breakAll ||
+                      lineBreak == LineBreakValue::LooseLineBreakValue ||
+                      lineBreak == LineBreakValue::AnywhereLineBreakValue;
 
     auto breaker = starfish->lineBreakIteratorPool()->get(
         "en-US", LineBreakIteratorModeUAX14, false);
@@ -3362,8 +3644,27 @@ static void tokenizeText(Starfish* starfish, FrameText* f, Context& ctx)
             }
         } else {
             int32_t offset = cur + 1;
+            int32_t base = cur;
 
             while (offset < next && !isSeparator(txt->charAt(offset))) {
+                if (addsBreaks) {
+                    // shortcut: a typographic character unit is taken as a
+                    // character and its combining marks, so line-break:
+                    // anywhere may split other grapheme clusters; break at
+                    // grapheme boundaries once such text needs it.
+                    char32_t c = txt->charAt(offset);
+                    char32_t b = txt->charAt(base);
+                    if (!isCombining(c) &&
+                        (lineBreak == LineBreakValue::AnywhereLineBreakValue ||
+                         (breakAll && isBreakAllOpportunity(b, c)) ||
+                         (lineBreak == LineBreakValue::LooseLineBreakValue &&
+                          isLooseOpportunity(b, c, breakAll)))) {
+                        break;
+                    }
+                    if (!isCombining(c)) {
+                        base = offset;
+                    }
+                }
                 offset++;
             }
 
@@ -3579,7 +3880,7 @@ void FrameReplaced::layoutInline(LineFormattingContext& ctx)
         ctx.breakLine(nullptr);
     }
 
-    ctx.insertWord(this);
+    ctx.insertWordBefore(this);
 
     setLayoutParent(ctx.m_currentLayoutParent);
     layout(ctx.m_layoutContext, Frame::LayoutWantToResolve::ResolveAll);
@@ -3597,7 +3898,7 @@ void FrameBlockBox::layoutInline(LineFormattingContext& ctx)
         ctx.breakLine(nullptr);
     }
 
-    ctx.insertWord(this);
+    ctx.insertWordBefore(this);
 
     if (isFloating()) {
         setLayoutParent(ctx.m_currentLayoutParent);
@@ -4211,6 +4512,36 @@ LayoutUnit LineFormattingContext::contentHeightForBlock()
     return LayoutUnit(0);
 }
 
+// css-ui-3 text-overflow: the first atomic inline-level element on a line is
+// clipped rather than ellipsed, and the ellipsis never reaches into it.
+// shortcut: a later overflowing atomic inline is still ellipsed inside
+// instead of hidden whole; hide it once paint can skip an atomic box.
+static bool isFirstAtomicInlineOnLine(FrameBox* box)
+{
+    if (box->isLineBox() || box->isInlineBox() ||
+        !box->layoutParent()->isInlineBoxLayoutParentBox() ||
+        !box->isAtomicInlineLevel()) {
+        return false;
+    }
+    for (FrameBox* child = box;; child = child->layoutParent()->asFrameBox()) {
+        Frame* parent = child->layoutParent();
+        if (!parent->isInlineBoxLayoutParentBox()) {
+            return false;
+        }
+        for (FrameBox* b : parent->asInlineBoxLayoutParentBox()->boxes()) {
+            if (b->isNormalFlow()) {
+                if (b != child) {
+                    return false;
+                }
+                break;
+            }
+        }
+        if (parent->isLineBox()) {
+            return true;
+        }
+    }
+}
+
 LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
 {
     if (!isNecessaryBlockBox()) {
@@ -4284,7 +4615,10 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
             while (true) {
                 bool seenHiddenText = false;
                 if (isLtr) {
-                    iterateChildFrameBox([&](FrameBox* box) {
+                    iterateChildFrameBoxOnCondition([&](FrameBox* box) {
+                        if (box != this && isFirstAtomicInlineOnLine(box)) {
+                            return false;
+                        }
                         LayoutRect absRect;
                         if (box->isInlineTextBox() &&
                             (absRect = box->absoluteRect(this)).maxX() >=
@@ -4307,9 +4641,13 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                                 }
                             }
                         }
+                        return true;
                     });
                 } else {
-                    iterateChildFrameBox([&](FrameBox* box) {
+                    iterateChildFrameBoxOnCondition([&](FrameBox* box) {
+                        if (box != this && isFirstAtomicInlineOnLine(box)) {
+                            return false;
+                        }
                         LayoutRect absRect;
                         if (box->isInlineTextBox() &&
                             (absRect = box->absoluteRect(this)).x() <=
@@ -4339,6 +4677,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                                 }
                             }
                         }
+                        return true;
                     });
                 }
 
@@ -4385,6 +4724,12 @@ void InlineNonReplacedBox::layoutInline(LineFormattingContext& ctx)
     ctx.updateCurrentLayoutParent(this);
     ctx.layoutInline(origin());
 
+    // The word ends here if it cannot go on into the parent's text.
+    if (ctx.isWordProcessing() &&
+        !canConcatWordIn(ctx.m_block, ctx.m_currentLayoutParent->layoutParent()
+                                          ->asInlineBoxLayoutParentBox())) {
+        ctx.insertWord(origin()->lastChild());
+    }
     if (!ctx.isWordProcessing()) {
         ctx.finishLineForInlineNonReplacedBox(nullptr, true);
     }
@@ -4441,8 +4786,14 @@ void PreferredWidthContext::handleTextToken(TextToken& token)
         breakLine(true, false);
     }
 
+    bool wraps = token.m_frameText->shouldWrapLines();
+    m_isWordAtLast = token.m_type == WordType::General;
     if (token.m_type != WordType::General) {
         updateCurrentLineWidthByWordWidth();
+        // White space that does not wrap goes on with the word.
+        if (wraps || token.m_type == WordType::ForcedNewline) {
+            m_wordGoesOn = false;
+        }
     }
 
     if (token.m_type == WordType::CollapsibleWhiteSpace &&
@@ -4451,12 +4802,41 @@ void PreferredWidthContext::handleTextToken(TextToken& token)
     }
 
     LayoutUnit w = token.width() + wordSpacing(token);
+    bool splitsAnywhere = false;
     if (token.m_type != WordType::CollapsibleWhiteSpace) {
         if (token.m_type == WordType::General) {
             w = widthAppliedByTextIndent(w);
-            updatePreferredMinWidth(minContentWidth(token, w));
+            if (wraps && token.m_frameText->style()->wordWrap() ==
+                             AnywhereWordWrapValue) {
+                // overflow-wrap: anywhere puts a soft wrap opportunity between
+                // grapheme clusters, so the word joins no neighbour.
+                updatePreferredMinWidth(minContentWidth(token, w));
+                splitsAnywhere = true;
+            }
         }
         w += m_unprocessedStartingMBPWidth;
+    }
+
+    if (splitsAnywhere) {
+        m_wordGoesOn = false;
+        m_wordSoFar = 0;
+        m_wordSpaces = 0;
+    } else if (token.m_type == WordType::General) {
+        // css-text-3 §5.1: an inline box boundary is no soft wrap
+        // opportunity, and text that does not wrap has none within it. A word
+        // ends where line layout ends it
+        // (LineFormattingContext::handleTextToken).
+        if (!m_wordGoesOn) {
+            m_wordSoFar = 0;
+            m_wordSpaces = 0;
+        }
+        m_wordGoesOn = true;
+        extendWord(m_wordSpaces + w);
+        m_wordSpaces = 0;
+        m_wordGoesOn =
+            !isSoftWrapOpportunityAfter(token.m_frameText, token.m_end, wraps);
+    } else if (m_wordGoesOn) {
+        m_wordSpaces += w;
     }
 
     setIsWhiteSpaceAtLast(token.m_type == WordType::CollapsibleWhiteSpace, w);
@@ -4653,6 +5033,14 @@ void PreferredWidthContext::computePreferredWidthInline(Frame* parent)
             continue;
         }
 
+        // Atomic inlines, floats and line breaks end a word, except a float
+        // in text that does not wrap (LineFormattingContext::insertWordBefore).
+        if (!f->isFrameText() && !f->isFrameInline() &&
+            !(f->isFloating() && !parent->shouldWrapLines())) {
+            m_wordGoesOn = false;
+            m_isWordAtLast = false;
+        }
+
         if (f->isFrameBlockBox()) {
             if (isPendingWrapLine()) {
                 breakLine(true, false);
@@ -4707,10 +5095,13 @@ void FrameInline::computePreferredWidth(PreferredWidthContext& ctx)
     ctx.computePreferredWidthInline(this);
 
     if (ctx.unprocessedStartingMBPWidth() > 0) {
+        // An empty box joins the word it is in.
+        ctx.extendWord(ctx.unprocessedStartingMBPWidth());
         ctx.updateCurrentLineWidth(this, ctx.unprocessedStartingMBPWidth());
     }
 
     ctx.setCurrentLineWidth(ctx.currentLineWidth() + ctx.endingMBPWidth(this));
+    ctx.extendWord(ctx.endingMBPWidth(this));
 }
 
 void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
@@ -4888,13 +5279,11 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                 ctx.layoutContext().checkIfThisIsFirstLineCandidate(this);
             if (isFirstLineCandidate) {
                 Length textIndent = style()->textIndent();
-                // css-sizing-3 §5.2.1: with no available width to resolve
-                // against, a percentage is cyclic and resolves against zero.
-                LayoutUnit textIndentWidth = textIndent.specifiedValue(
-                    ctx.remainingWidth() == intMaxForLayoutUnit
-                        ? LayoutUnit()
-                        : ctx.remainingWidth(),
-                    this);
+                // A percentage refers to this box's own inline size, which
+                // these widths determine: it is cyclic and resolves against
+                // zero here (css-text-3 §8.1, css-sizing-3 §5.2.1).
+                LayoutUnit textIndentWidth =
+                    textIndent.specifiedValue(LayoutUnit(), this);
                 ctx.setTextIndentWidth(textIndentWidth);
             }
             ctx.computePreferredWidthInline(this);

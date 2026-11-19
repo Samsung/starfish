@@ -975,11 +975,15 @@ public:
         , m_lastWhiteSpaceWidth(0)
         , m_wordWidth(0)
         , m_remainingWidth(std::max(lastKnownWidth, LayoutUnit(0)))
+        , m_wordSoFar(0)
+        , m_wordSpaces(0)
         , m_hasFloat(HasNone)
         , m_isWhiteSpaceAtLast(true)
         , m_isPendingWrapLine(false)
         , m_hasAppliedTextIndent(false)
         , m_ignoresOwnerAspectRatio(false)
+        , m_wordGoesOn(false)
+        , m_isWordAtLast(false)
     {
     }
 
@@ -1040,6 +1044,17 @@ public:
     void updatePreferredMinWidth(LayoutUnit w)
     {
         m_preferredMinWidthSoFar = std::max(m_preferredMinWidthSoFar, w);
+    }
+
+    // An inline box boundary is no soft wrap opportunity (css-text-3 §5.1):
+    // a word that goes on into the next text or box end takes all of it,
+    // and a box end right after a word joins it.
+    void extendWord(LayoutUnit w)
+    {
+        if (m_wordGoesOn || m_isWordAtLast) {
+            m_wordSoFar += w;
+            updatePreferredMinWidth(m_wordSoFar);
+        }
     }
 
     LayoutUnit currentLineWidth() const
@@ -1217,11 +1232,17 @@ private:
     LayoutUnit m_lastWhiteSpaceWidth;
     LayoutUnit m_wordWidth;
     LayoutUnit m_remainingWidth;
+    // The min-content word so far, and white space that does not wrap,
+    // which joins it only if the word goes on after it.
+    LayoutUnit m_wordSoFar;
+    LayoutUnit m_wordSpaces;
     int m_hasFloat;
     bool m_isWhiteSpaceAtLast;
     bool m_isPendingWrapLine;
     bool m_hasAppliedTextIndent;
     bool m_ignoresOwnerAspectRatio;
+    bool m_wordGoesOn;
+    bool m_isWordAtLast;
 
     bool canAppendToCurrentLineBox(LayoutUnit width);
     bool hasFloatingBoxAlreadyInLineBox() const
