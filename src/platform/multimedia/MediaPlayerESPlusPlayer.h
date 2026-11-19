@@ -267,9 +267,6 @@ private:
     volatile uint64_t m_lastPositionMs;
     double m_volume;
     bool m_muted;
-    // Applied on prepare completion when set earlier (the native API only
-    // accepts a rate in READY/PAUSED/PLAYING).
-    double m_playbackRate;
 
     Mutex* m_fillBufferMutex;
 

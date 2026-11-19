@@ -1996,15 +1996,8 @@ MediaPlayer* MediaPlayer::create(HTMLMediaElement* element, ResourceURL* url)
 #if defined(STARFISH_USE_ESPLUSPLAYER)
     // MediaSource playback goes to the esplusplayer backend; plain URL and
     // Blob playback stays on capi-media-player (esplusplayer has no URI
-    // mode). STARFISH_FORCE_ESPP=1/0 overrides the automatic routing for
-    // debugging.
-    static int forceESPP = []() {
-        const char* v = getenv("STARFISH_FORCE_ESPP");
-        return v && *v ? (atoi(v) != 0 ? 1 : 0) : -1;
-    }();
-    bool useESPP =
-        forceESPP >= 0 ? (forceESPP == 1) : isMediaSourceBlob(element, url);
-    if (useESPP) {
+    // mode).
+    if (isMediaSourceBlob(element, url)) {
         return new MediaPlayerESPlusPlayer(element);
     }
 #endif
@@ -2026,8 +2019,7 @@ bool MediaPlayer::isSupport(MediaCodec codec)
         // PLAYER_ERROR_CLASS | 0x31. Advertising VP9 through
         // MediaSource::isTypeSupported and MediaCapabilities.decodingInfo
         // lets YouTube serve VP9 video (same quality at a significantly
-        // lower bitrate than avc1). STARFISH_FORCE_ESPP=0 (the capi debug
-        // override) must not be combined with VP9 content.
+        // lower bitrate than avc1).
         return true;
 #else
         return false;

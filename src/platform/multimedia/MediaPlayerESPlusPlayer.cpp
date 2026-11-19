@@ -195,7 +195,6 @@ MediaPlayerESPlusPlayer::MediaPlayerESPlusPlayer(HTMLMediaElement* element)
     , m_lastPositionMs(0)
     , m_volume(1.0)
     , m_muted(false)
-    , m_playbackRate(1.0)
     , m_fillBufferMutex(new Mutex())
     , m_decodedVideoFrameMutex(new Mutex())
     , m_lastDecodedPacket(nullptr)
@@ -1115,12 +1114,6 @@ void MediaPlayerESPlusPlayer::handlePrepared(bool success)
     }
 
     m_prepared = true;
-    if (m_container->playbackRate() != 1.0) {
-        m_playbackRate = m_container->playbackRate();
-    }
-    if (m_playbackRate != 1.0) {
-        setPlaybackRate(m_playbackRate);
-    }
     m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
         HTMLMediaElement::HAVE_ENOUGH_DATA);
     if (m_container->isHTMLVideoElement() == true &&
@@ -1748,48 +1741,12 @@ void MediaPlayerESPlusPlayer::setVolume(double volume)
 
 void MediaPlayerESPlusPlayer::setPlaybackRate(double rate)
 {
-    STARFISH_LOG_INFO("ESPP: setPlaybackRate(%lf)", rate);
-    if (rate <= 0) {
-        // esplusplayer has no negative/zero rate; pause semantics are
-        // handled by the element.
-        return;
-    }
     // Device-verified on Tizen 10.0 mobile: the trackrenderer accepts a
     // non-1.0 rate but then stops consuming; even a full flush/preroll
     // cycle completes without playback ever progressing at the new rate.
-    // Keep real-time playback (the element still reflects the requested
-    // rate) unless native rate application is explicitly opted in for
-    // platforms where it works.
-    static bool nativeRateEnabled = []() {
-        const char* v = getenv("STARFISH_ESPP_NATIVE_RATE");
-        return v && *v && atoi(v) != 0;
-    }();
-    if (!nativeRateEnabled) {
-        STARFISH_LOG_INFO(
-            "ESPP: native rate application disabled on this platform; "
-            "keeping 1.0");
-        return;
-    }
-    m_playbackRate = rate;
-    if (m_player == nullptr || !m_prepared) {
-        return;
-    }
-    int ret = esplusplayer_set_playback_rate(m_player, rate,
-                                             /* audio_mute = */ false);
-    if (ret != ESPLUSPLAYER_ERROR_TYPE_NONE) {
-        PLAYER_LOGE("ESPP: set_playback_rate(%lf) failed: %s", rate,
-                    esplusplayer_get_error_string(
-                        static_cast<esplusplayer_error_type>(ret)));
-        return;
-    }
-    if (m_started && playbackState() == MediaPlayer::PLAYBACK_STATE_PLAYING) {
-        // Observed on Tizen 10.0 mobile: after a live rate change the
-        // trackrenderer stops consuming and does not recover even when
-        // the rate is restored to 1.0. Re-arm the pipeline through the
-        // proven seek path (flush + IDR-aligned refeed + preroll) at the
-        // current position.
-        seek(currentTime());
-    }
+    // Keep real-time playback; the element still reflects the requested
+    // rate.
+    STARFISH_LOG_INFO("ESPP: setPlaybackRate(%lf) ignored; keeping 1.0", rate);
 }
 
 void MediaPlayerESPlusPlayer::setMuted(bool muted)
