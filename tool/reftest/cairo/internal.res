@@ -1014,6 +1014,7 @@ tests/crash/js-module-01.html
 tests/crash/svg-gradient-href-crash.html
 tests/crash/removed-iframe-window-callbacks-gc.html
 tests/crash/media-image-url.html
+tests/crash/svg-text-overflow-ellipsis.html
 tests/pixel/css/scroll/scroll-into-view-options.html
 tests/assertion/css/scroll/scrollLeft_setter_and_event.html
 tests/assertion/css/scroll/scrollTop_setter_and_event.html

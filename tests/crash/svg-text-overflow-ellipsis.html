@@ -1,0 +1,18 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>text-overflow on SVG text is handled without a crash</title>
+<svg width="100" height="80">
+  <text y="20" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">text wider than the viewport of this svg</text>
+  <text y="40" style="overflow: scroll; text-overflow: ellipsis; white-space: pre">text wider than the viewport of this svg</text>
+  <text y="60"><tspan style="overflow: hidden; text-overflow: ellipsis">text wider than the viewport of this svg</tspan></text>
+</svg>
+<script>
+// css-overflow-4 #text-overflow: the ellipsis follows the scroll position of
+// the box it applies to. SVG text lays its glyphs out in an anonymous block
+// whose parent is not a scroll container; the test passes if that lays out
+// without crashing.
+onload = function () {
+  document.body.offsetWidth;
+  if (typeof testEnd === "function") testEnd();
+};
+</script>

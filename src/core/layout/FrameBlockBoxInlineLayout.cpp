@@ -4165,9 +4165,13 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
             // css-overflow-4 "ellipsis scrolling": scrolling reveals more
             // content, so the ellipsis sits at the scrolled edge and goes
             // away once the end of the content is in view.
-            LayoutUnit scrolled =
-                isAnonymous() ? parent()->asFrameBlockBox()->scrollLeft()
-                              : scrollLeft();
+            // An anonymous block scrolls with its parent, unless that is SVG
+            // text, which is not a scroll container.
+            Frame* scroller = isAnonymous() ? parent() : this;
+            LayoutUnit scrolled;
+            if (scroller->isFrameBlockBox()) {
+                scrolled = scroller->asFrameBlockBox()->scrollLeft();
+            }
             // Scroll offsets are whole pixels, so the last fraction of a
             // pixel of the content can never be scrolled into view.
             LayoutUnit unreachable = scrolled > 0
