@@ -1777,7 +1777,9 @@ void Frame::computeStyleFlags()
     m_flags.m_needToEstablishStackingContext |= (style->hasTransforms(this));
     m_flags.m_needToEstablishStackingContext |=
         (node && node->isRunningTransformAnimation());
-    m_flags.m_needToEstablishStackingContext |= (style->hasAvailableFilter());
+    // Any filter but none does, an identity one included (Filter Effects 1,
+    // the filter property): one animated through its identity keeps it.
+    m_flags.m_needToEstablishStackingContext |= (style->hasFilter());
     auto wc = style->willChange();
     if (wc && (wc->transform() || wc->opacity())) {
         m_flags.m_needToEstablishStackingContext |= true;

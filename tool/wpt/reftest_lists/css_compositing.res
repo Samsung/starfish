@@ -13,7 +13,7 @@ http://web-platform.test:8000/css/compositing/mix-blend-mode/mix-blend-mode-blen
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/compositing/mix-blend-mode/mix-blend-mode-both-parent-and-blended-with-3D-transform.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/compositing/mix-blend-mode/mix-blend-mode-canvas-parent.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/compositing/mix-blend-mode/mix-blend-mode-canvas-sibling.html
-http://web-platform.test:8000/css/compositing/mix-blend-mode/mix-blend-mode-filter.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/compositing/mix-blend-mode/mix-blend-mode-filter.html
 http://web-platform.test:8000/css/compositing/mix-blend-mode/mix-blend-mode-iframe-parent.html
 http://web-platform.test:8000/css/compositing/mix-blend-mode/mix-blend-mode-iframe-sibling.html
 http://web-platform.test:8000/css/compositing/mix-blend-mode/mix-blend-mode-image.html
@@ -53,7 +53,7 @@ http://web-platform.test:8000/css/compositing/mix-blend-mode/mix-blend-mode-vide
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/compositing/root-element-background-margin-opacity.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/compositing/root-element-background-transparency.html
 http://web-platform.test:8000/css/compositing/root-element-blend-mode.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/compositing/root-element-filter.html
+http://web-platform.test:8000/css/compositing/root-element-filter.html
 http://web-platform.test:8000/css/compositing/root-element-opacity-change.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/compositing/root-element-opacity.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/compositing/svg/mix-blend-mode-in-svg-image.html

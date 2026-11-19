@@ -2043,7 +2043,20 @@ RenderResult WebView::rendering(bool force)
             auto bgColor = mainBrowsingContext()->hasWindowBackgroundColor();
             bool colorFill = bgColor.first;
             if (colorFill) {
-                compositor->clearColor(bgColor.second);
+                // The root element's filter takes the canvas background it
+                // gives (Filter Effects 1), which is filled out of its layer.
+                Unit::Color color = bgColor.second;
+                HTMLHtmlElement* root =
+                    mainBrowsingContext()->document()->rootElement();
+                // shortcut: an alpha-changing function (opacity()) leaves
+                // the target translucent here instead of the colour over
+                // the base background; blend it over what
+                // clearingBeforePaint fills, the transparent-background
+                // meta included, if that shows.
+                if (root && root->style()->hasAvailableFilter()) {
+                    color = root->style()->filter()->filterColor(color);
+                }
+                compositor->clearColor(color);
             } else {
                 mainBrowsingContext()->clearingBeforePaint(compositor);
             }

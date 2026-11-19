@@ -34,7 +34,7 @@ http://web-platform.test:8000/css/css-color/color-mix-currentcolor-nested-for-co
 http://web-platform.test:8000/css/css-color/color-mix-non-srgb-001.html
 http://web-platform.test:8000/css/css-color/color-mix-percents-01.html
 http://web-platform.test:8000/css/css-color/color-mix-percents-02.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/composited-filters-under-opacity.html
+http://web-platform.test:8000/css/css-color/composited-filters-under-opacity.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/contrast-color-001.html
 http://web-platform.test:8000/css/css-color/currentcolor-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/currentcolor-002.html
@@ -77,7 +77,7 @@ http://web-platform.test:8000/css/css-color/display-p3-linear-003.html
 http://web-platform.test:8000/css/css-color/display-p3-linear-004.html
 http://web-platform.test:8000/css/css-color/display-p3-linear-005.html
 http://web-platform.test:8000/css/css-color/display-p3-linear-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-color/filters-under-will-change-opacity.html
+http://web-platform.test:8000/css/css-color/filters-under-will-change-opacity.html
 http://web-platform.test:8000/css/css-color/hex-001.html
 http://web-platform.test:8000/css/css-color/hex-002.html
 http://web-platform.test:8000/css/css-color/hex-003.html

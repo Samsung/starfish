@@ -143,7 +143,7 @@ http://web-platform.test:8000/css/css-masking/clip-path/clip-path-ellipse-008.ht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-fillBox-1a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-fillBox-1b.html
 http://web-platform.test:8000/css/css-masking/clip-path/clip-path-filter-order.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-filter-radius-clips.html
+http://web-platform.test:8000/css/css-masking/clip-path/clip-path-filter-radius-clips.html
 http://web-platform.test:8000/css/css-masking/clip-path/clip-path-fixed-nested.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-fixed-scroll.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip-path/clip-path-foreignobject-non-zero-xy.html
@@ -418,9 +418,9 @@ http://web-platform.test:8000/css/css-masking/mask-image/mask-image-svg-viewport
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/mask-image/mask-mode-luminance-with-mask-size.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/mask-image/mask-mode-to-mask-type-svg.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/mask-image/mask-mode-to-mask-type.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/mask-image/mask-opacity-1a.html
+http://web-platform.test:8000/css/css-masking/mask-image/mask-opacity-1a.html
 http://web-platform.test:8000/css/css-masking/mask-image/mask-opacity-1b.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/mask-image/mask-opacity-1c.html
+http://web-platform.test:8000/css/css-masking/mask-image/mask-opacity-1c.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/mask-image/mask-opacity-1d.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/mask-image/mask-opacity-1e.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/mask-image/mask-origin-1.html

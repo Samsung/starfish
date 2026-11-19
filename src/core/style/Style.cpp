@@ -8533,7 +8533,9 @@ void StyleResolver::applyProperty(Element* element,
         switch (newCssValue.valueKind()) {
         case CSSStyleValuePair::ValueKind::Inherit:
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            style->setFilter(parentStyle->filter());
+            style->setFilter(parentStyle->filter()
+                                 ? parentStyle->filter()->forInheritance()
+                                 : nullptr);
             break;
         case CSSStyleValuePair::ValueKind::Initial:
         case CSSStyleValuePair::ValueKind::None:

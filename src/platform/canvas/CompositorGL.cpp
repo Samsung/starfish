@@ -28,6 +28,7 @@
 #include "core/style/Style.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
+#include "core/modules/canvas/ShadowBlur.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/page/WebView.h"
 #include "core/modules/renderer/Renderer.h"
@@ -534,14 +535,15 @@ struct CompositorImplGLState {
     bool matrixStaysInRect;
     SkMatrix matrix;
     float opacity;
-    float blurRadius;
     Unit::Color color;
     Unit::Rect clipRect;
 
     Clipper2Lib::PathsD abbreviatedClipPaths;
 
     struct PathCommand {
-        enum class Command { MoveTo, LineTo, ArcNegative };
+        // EvenOdd draws nothing: it heads a path filled by the even-odd rule,
+        // which the clip path cache then tells from the same nonzero path.
+        enum class Command { MoveTo, LineTo, ArcNegative, EvenOdd };
         Command command;
         float x;
         float y;
@@ -577,6 +579,12 @@ struct CompositorImplGLState {
     bool roundedClipChainOk = true;
 
     BlendMode blendMode;
+
+    // CSS filter functions for the next draws, in list order: a range of
+    // CompositorImplGL::m_filterOperations, so save() copies no list; see
+    // Compositor::enableFilterEffect.
+    size_t filterBegin = 0;
+    size_t filterCount = 0;
 };
 
 struct CanvasSurfaceTextureInfo {
@@ -767,7 +775,6 @@ public:
     GLint m_texBlurShaderProgramEGLImageExternalWTextureHeight;
     GLint m_texBlurShaderProgramEGLImageExternalWAlphaMask;
 
-    GLuint m_texFragmentBlurShaderHWithMask;
     GLuint m_texBlurShaderProgramH; // Without mask
     GLint m_texBlurShaderProgramHTexPos;
     GLint m_texBlurShaderProgramHTexIdx;
@@ -778,24 +785,96 @@ public:
     GLint m_texBlurShaderProgramHTextureHeight;
     GLint m_texBlurShaderProgramHAlpha;
 
-    GLuint m_texBlurShaderProgramHWithMask; // With mask
-    GLint m_texBlurShaderProgramHWithMaskTexPos;
-    GLint m_texBlurShaderProgramHWithMaskTexIdx;
-    GLint m_texBlurShaderProgramHWithMaskPosition;
-    GLint m_texBlurShaderProgramHWithMaskTexture;
-    GLint m_texBlurShaderProgramHWithMaskBlurRadius;
-    GLint m_texBlurShaderProgramHWithMaskTextureWidth;
-    GLint m_texBlurShaderProgramHWithMaskTextureHeight;
-    GLint m_texBlurShaderProgramHWithMaskAlpha;
-    GLint m_texBlurShaderProgramHWithMaskMaskTexture;
-    GLint m_texBlurShaderProgramHWithMaskMaskUV;
-    GLint m_texBlurShaderProgramHWithMaskMaskShear;
-    GLint m_texBlurShaderProgramHWithMaskSecondMaskTexture;
-    GLint m_texBlurShaderProgramHWithMaskSecondMaskUV;
-    GLint m_texBlurShaderProgramHWithMaskSecondMaskShear;
-    GLint m_texBlurShaderProgramHWithMaskSecondMaskEnabled;
-
     GLuint m_texTexPosBuffer;
+
+    // Color matrices one pass applies, few enough for the 16 fragment
+    // uniform vectors GLES 2 guarantees; [0] sampler2D, [1]
+    // samplerExternalOES.
+    static const size_t kMaxColorMatrices = 2;
+    struct ColorMatrixProgram {
+        GLuint program = 0;
+        GLuint fragmentShader = 0;
+        GLint texPos = 0, texIdx = 0, position = 0, matrix = 0, offset = 0,
+              count = 0, alpha = 0;
+        // The values last given, so draws with the same skip the upload.
+        float values[kMaxColorMatrices * 20 + 2] = {};
+    };
+    ColorMatrixProgram m_colorMatrixPrograms[2];
+
+    ColorMatrixProgram& texColorMatrixProgram(bool isEGLImage)
+    {
+        ColorMatrixProgram& p = m_colorMatrixPrograms[isEGLImage];
+        if (p.program) {
+            if (m_lastProgram != p.program) {
+                m_lastProgram = p.program;
+                useProgram(p.program);
+                bindTexPos(p.texPos);
+                bindTexIdx(p.texIdx, true);
+            }
+            return p;
+        }
+        std::string n = std::to_string(kMaxColorMatrices);
+        std::string src;
+        if (isEGLImage) {
+            src += "#extension GL_OES_EGL_image_external : require\n";
+        }
+        src += "#ifdef GL_ES\n  precision mediump float;\n#endif\n";
+        src += isEGLImage ? "uniform samplerExternalOES uTexture;\n"
+                          : "uniform sampler2D uTexture;\n";
+        // Filter primitives work on unpremultiplied colors and clamp.
+        src +=
+            "varying vec2 vTexPos;\n"
+            "uniform mat4 uColorMatrix[" +
+            n +
+            "];\n"
+            "uniform vec4 uColorOffset[" +
+            n +
+            "];\n"
+            "uniform int uColorMatrixCount;\n"
+            "uniform float uAlpha;\n"
+            "void main(void)\n{\n"
+            "  vec4 c = texture2D(uTexture, vTexPos);\n"
+            "  if (uColorMatrixCount > 0) {\n"
+            "    c.rgb = c.a > 0.0 ? c.rgb / c.a : vec3(0.0);\n"
+            "    for (int i = 0; i < " +
+            n +
+            "; i++) {\n"
+            "      if (i >= uColorMatrixCount) break;\n"
+            "      c = clamp(uColorMatrix[i] * c + uColorOffset[i], 0.0, "
+            "1.0);\n"
+            "    }\n"
+            "    c.rgb *= c.a;\n"
+            "  }\n"
+            "  gl_FragColor = c * uAlpha;\n"
+            "}\n";
+        p.fragmentShader = loadShader(gl(), GL_FRAGMENT_SHADER, src.data());
+        p.program = gl()->createProgram();
+        gl()->attachShader(p.program, texVertexShader());
+        gl()->attachShader(p.program, p.fragmentShader);
+        gl()->linkProgram(p.program);
+        checkError(gl());
+
+        m_lastProgram = p.program;
+        useProgram(p.program);
+        p.position = gl()->getUniformLocation(p.program, "uPosition");
+        p.texPos = gl()->getAttribLocation(p.program, "aTexPos");
+        p.texIdx = gl()->getAttribLocation(p.program, "aTexIdx");
+        p.matrix = gl()->getUniformLocation(p.program, "uColorMatrix");
+        p.offset = gl()->getUniformLocation(p.program, "uColorOffset");
+        p.count = gl()->getUniformLocation(p.program, "uColorMatrixCount");
+        p.alpha = gl()->getUniformLocation(p.program, "uAlpha");
+        gl()->uniform1i(gl()->getUniformLocation(p.program, "uTexture"), 0);
+
+        gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+        gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
+                         GL_STREAM_DRAW);
+        gl()->vertexAttribPointer(p.texPos, 2, GL_FLOAT, false, 0, 0);
+        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
+        bindTexPos(p.texPos);
+        bindTexIdx(p.texIdx, false);
+        return p;
+    }
+
     GLuint m_texIdxBuffer;
 
     GLuint m_lastProgram;
@@ -815,6 +894,30 @@ public:
         GLenum format = GL_RGBA;
     };
     std::vector<FBOCacheEntry> m_cachedFBOs;
+
+    // A layer's filtered image, kept until the layer is repainted or its
+    // filter, scale or shown part changes.
+    struct FilterResult {
+        const void* surface = nullptr;
+        uint64_t version = 0;
+        std::vector<Compositor::FilterOperation> operations;
+        bool shadowOnly = false;
+        float scaleX = 0;
+        float scaleY = 0;
+        // In the units the layer is drawn in, from its origin.
+        Unit::Rect region;
+        GLuint fboId = 0;
+        GLuint textureId = 0;
+        size_t width = 0;
+        size_t height = 0;
+        uint64_t frame = 0;
+        // The pass targets that made it, dropped from the FBO cache when it
+        // is drawn again: a layer that does not change needs them no more.
+        std::vector<GLuint> passes;
+    };
+    std::vector<FilterResult> m_filterResults;
+    // Counts composite passes, so a full cache keeps what this one draws.
+    uint64_t m_frame = 0;
 
     struct ClipPathCacheKey {
         Unit::Rect clipRect;
@@ -1080,21 +1183,6 @@ public:
         m_texBlurShaderProgramHTextureHeight = 0;
         m_texBlurShaderProgramHAlpha = 0;
 
-        // texBlurShaderProgramHWithMask
-        m_texFragmentBlurShaderHWithMask = 0;
-        m_texBlurShaderProgramHWithMask = 0;
-        m_texBlurShaderProgramHWithMaskPosition = 0;
-        m_texBlurShaderProgramHWithMaskTexture = 0;
-        m_texBlurShaderProgramHWithMaskBlurRadius = 0;
-        m_texBlurShaderProgramHWithMaskTextureWidth = 0;
-        m_texBlurShaderProgramHWithMaskTextureHeight = 0;
-        m_texBlurShaderProgramHWithMaskAlpha = 0;
-        m_texBlurShaderProgramHWithMaskMaskTexture = 0;
-        m_texBlurShaderProgramHWithMaskMaskUV = 0;
-        m_texBlurShaderProgramHWithMaskMaskShear = 0;
-        m_texBlurShaderProgramHWithMaskTexPos = 0;
-        m_texBlurShaderProgramHWithMaskTexIdx = 0;
-
         m_texShaderProgramTexPos = 0;
         m_texShaderProgramEGLImageExternalTexPos = 0;
         m_texBlurShaderProgramWTexPos = 0;
@@ -1140,6 +1228,14 @@ public:
 
     void cleanUpGLPrograms()
     {
+        for (auto& p : m_colorMatrixPrograms) {
+            if (p.program) {
+                gl()->deleteProgram(p.program);
+                gl()->deleteShader(p.fragmentShader);
+            }
+            p = ColorMatrixProgram();
+        }
+
         if (m_texBlurShaderProgramW) {
             gl()->detachShader(m_texBlurShaderProgramW, m_texVertexShader);
             gl()->detachShader(m_texBlurShaderProgramW,
@@ -1160,14 +1256,6 @@ public:
             gl()->detachShader(m_texBlurShaderProgramH,
                                m_texFragmentBlurShaderH);
             gl()->deleteProgram(m_texBlurShaderProgramH);
-        }
-
-        if (m_texBlurShaderProgramHWithMask) {
-            gl()->detachShader(m_texBlurShaderProgramHWithMask,
-                               m_texVertexShader);
-            gl()->detachShader(m_texBlurShaderProgramHWithMask,
-                               m_texFragmentBlurShaderHWithMask);
-            gl()->deleteProgram(m_texBlurShaderProgramHWithMask);
         }
 
         if (m_texFragmentBlurShaderW) {
@@ -1303,15 +1391,37 @@ public:
         return 0;
     }
 
+    // The FBO cache may hold a screen's pixels, or one target up to
+    // filterBudget() alone.
+    size_t cacheBudget()
+    {
+        return m_renderer->width() * m_renderer->height();
+    }
+
+    // The pixels the filter results may hold, and the most one filter pass
+    // target holds: a layer as large as the screen with its blurs' reach,
+    // or the shadows of the many small layers a screen shows.
+    size_t filterBudget()
+    {
+        return cacheBudget() * 3 / 2;
+    }
+
     void putFBOToCache(GLuint fboId, GLuint textureId, size_t width,
                        size_t height, GLenum format)
     {
-        size_t maxCacheSize = m_renderer->width() * m_renderer->height();
+        size_t maxCacheSize = cacheBudget();
+        size_t newEntrySize = width * height;
+        // One past the budget stays alone, so the next pass of its size
+        // reuses it; one past any filter pass would stay for nothing.
+        if (newEntrySize > filterBudget()) {
+            gl()->deleteFramebuffers(1, &fboId);
+            gl()->deleteTextures(1, &textureId);
+            return;
+        }
         size_t currentCacheSize = 0;
         for (const auto& e : m_cachedFBOs) {
             currentCacheSize += e.width * e.height;
         }
-        size_t newEntrySize = width * height;
         while (!m_cachedFBOs.empty() &&
                currentCacheSize + newEntrySize > maxCacheSize) {
             FBOCacheEntry& oldest = m_cachedFBOs.front();
@@ -1327,6 +1437,121 @@ public:
         entry.height = height;
         entry.format = format;
         m_cachedFBOs.push_back(entry);
+    }
+
+    // Whether a result was made by these functions; a shadow drawn apart
+    // is the same image wherever it is moved.
+    static bool sameOperations(const FilterResult& e,
+                               const Compositor::FilterOperation* ops,
+                               size_t count)
+    {
+        if (e.operations.size() != count) {
+            return false;
+        }
+        const size_t whole = e.shadowOnly ? count - 1 : count;
+        const auto* a = e.operations.data();
+        if (memcmp(a, ops, sizeof(*ops) * whole)) {
+            return false;
+        }
+        return !e.shadowOnly ||
+               (a[whole].kind == ops[whole].kind &&
+                !memcmp(a[whole].values + 2, ops[whole].values + 2,
+                        sizeof(ops->values) - sizeof(float) * 2));
+    }
+
+    // key without its operations, which are ops.
+    Optional<FilterResult*> findFilterResult(
+        const FilterResult& key, const Compositor::FilterOperation* ops,
+        size_t count)
+    {
+        for (auto& e : m_filterResults) {
+            if (e.surface == key.surface && e.version == key.version &&
+                e.shadowOnly == key.shadowOnly && e.scaleX == key.scaleX &&
+                e.scaleY == key.scaleY && sameOperations(e, ops, count) &&
+                e.region.contains(key.region)) {
+                e.frame = m_frame;
+                return &e;
+            }
+        }
+        return nullptr;
+    }
+
+    // Takes over the FBO when the budget has room for it. Results the last
+    // two passes drew stay: a full budget leaves the rest uncached rather
+    // than taking turns.
+    bool storeFilterResult(FilterResult&& result)
+    {
+        // The one it replaces had its content: a pass of the new one reuses
+        // its target.
+        dropFilterResults(result.surface, result.shadowOnly, true);
+        size_t budget = filterBudget();
+        size_t pixels = result.width * result.height;
+        for (const auto& e : m_filterResults) {
+            pixels += e.width * e.height;
+        }
+        for (size_t i = 0; i < m_filterResults.size() && pixels > budget;) {
+            FilterResult& e = m_filterResults[i];
+            if (e.frame + 1 >= m_frame) {
+                i++;
+                continue;
+            }
+            pixels -= e.width * e.height;
+            gl()->deleteFramebuffers(1, &e.fboId);
+            gl()->deleteTextures(1, &e.textureId);
+            m_filterResults.erase(m_filterResults.begin() + i);
+        }
+        if (pixels > budget) {
+            return false;
+        }
+        result.frame = m_frame;
+        m_filterResults.push_back(std::move(result));
+        return true;
+    }
+
+    void dropFilterResults(const void* surface, Optional<bool> shadowOnly,
+                           bool toFBOCache = false)
+    {
+        for (size_t i = 0; i < m_filterResults.size();) {
+            FilterResult& e = m_filterResults[i];
+            if (e.surface != surface ||
+                (shadowOnly && e.shadowOnly != shadowOnly.value())) {
+                i++;
+                continue;
+            }
+            if (toFBOCache) {
+                putFBOToCache(e.fboId, e.textureId, e.width, e.height, GL_RGBA);
+            } else {
+                gl()->deleteFramebuffers(1, &e.fboId);
+                gl()->deleteTextures(1, &e.textureId);
+            }
+            m_filterResults.erase(m_filterResults.begin() + i);
+        }
+    }
+
+    // Whether the surface's filtered image was made of an older content:
+    // one that changes is made again each frame.
+    bool hasOutdatedFilterResult(const void* surface, uint64_t version)
+    {
+        return std::any_of(m_filterResults.begin(), m_filterResults.end(),
+                           [&](const FilterResult& e) {
+                               return e.surface == surface &&
+                                      e.version != version;
+                           });
+    }
+
+    void dropCachedFBOs(const std::vector<GLuint>& fboIds)
+    {
+        for (size_t i = 0; i < m_cachedFBOs.size();) {
+            FBOCacheEntry& e = m_cachedFBOs[i];
+            if (std::find(fboIds.begin(), fboIds.end(), e.fboId) ==
+                fboIds.end()) {
+                i++;
+                continue;
+            }
+            gl()->deleteFramebuffers(1, &e.fboId);
+            gl()->deleteTextures(1, &e.textureId);
+            m_cachedFBOs.erase(m_cachedFBOs.begin() + i);
+        }
     }
 
     bool takeFBOFromCache(size_t width, size_t height, GLenum format,
@@ -1351,6 +1576,11 @@ public:
             gl()->deleteFramebuffers(1, &entry.fboId);
         }
         m_cachedFBOs.clear();
+        for (auto& entry : m_filterResults) {
+            gl()->deleteTextures(1, &entry.textureId);
+            gl()->deleteFramebuffers(1, &entry.fboId);
+        }
+        m_filterResults.clear();
     }
 
     void putMaskTextureToCache(GLuint textureId, size_t width, size_t height,
@@ -2546,7 +2776,7 @@ public:
     }
 
     static std::string generateBlurEffectFragmentShader(
-        bool isEGLImage, bool addColorAlign = false, bool withMask = false)
+        bool isEGLImage, bool addColorAlign = false)
     {
         // Don't support when needsRGBShuffle is true.
         STARFISH_ASSERT(!g_needsRGBShuffle);
@@ -2570,12 +2800,6 @@ public:
         ss << "uniform float uTextureHeight;\n";
         if (addColorAlign) {
             ss << "uniform float uAlpha;\n";
-        }
-        if (withMask) {
-            ss << "uniform sampler2D uMaskTexture;\n";
-            ss << "uniform vec4 uMaskUV;\n";
-            ss << "uniform vec2 uMaskShear;\n";
-            ss << SECOND_MASK_UNIFORMS;
         }
         ss << "uniform vec2 uBlurRadius;\n";
         ss << "varying vec2 vTexPos;\n";
@@ -2602,30 +2826,10 @@ public:
                << gaussianKernel[i] << ";\n";
         }
 
-        if (withMask) {
-            ss << "  vec2 maskCoord = vec2(vTexPos.x * uMaskUV.z + uMaskUV.x + "
-                  "vTexPos.y * uMaskShear.x, 1.0 - (vTexPos.y * uMaskUV.w + "
-                  "uMaskUV.y + vTexPos.x * uMaskShear.y));\n";
-            ss << "  float maskAlpha = 0.0;\n";
-            ss << "  if (maskCoord.x >= 0.0 && maskCoord.x <= 1.0 && "
-                  "maskCoord.y "
-                  ">= 0.0 && maskCoord.y <= 1.0) {\n";
-            ss << "    maskAlpha = texture2D(uMaskTexture, maskCoord).a;\n";
-            ss << "  }\n";
-            ss << SECOND_MASK_ALPHA;
-            if (addColorAlign) {
-                ss << "  gl_FragColor = total * uAlpha * maskAlpha * "
-                      "secondMaskAlpha;\n";
-            } else {
-                ss << "  gl_FragColor = total * maskAlpha * "
-                      "secondMaskAlpha;\n";
-            }
+        if (addColorAlign) {
+            ss << "  gl_FragColor = total * uAlpha;\n";
         } else {
-            if (addColorAlign) {
-                ss << "  gl_FragColor = total * uAlpha;\n";
-            } else {
-                ss << "  gl_FragColor = total;\n";
-            }
+            ss << "  gl_FragColor = total;\n";
         }
 
         ss << "}\n";
@@ -2832,93 +3036,6 @@ public:
         bindTexIdx(m_texBlurShaderProgramHTexIdx, false);
         return m_texBlurShaderProgramH;
     }
-
-    GLuint texFragmentBlurShaderHWithMask()
-    {
-        if (m_texFragmentBlurShaderHWithMask) {
-            return m_texFragmentBlurShaderHWithMask;
-        }
-        m_texFragmentBlurShaderHWithMask = loadShader(
-            gl(), GL_FRAGMENT_SHADER,
-            generateBlurEffectFragmentShader(false, true, true).data());
-        checkError(gl());
-        return m_texFragmentBlurShaderHWithMask;
-    }
-
-    GLuint texBlurShaderProgramHWithMask()
-    {
-        if (m_texBlurShaderProgramHWithMask) {
-            if (m_lastProgram != m_texBlurShaderProgramHWithMask) {
-                m_lastProgram = m_texBlurShaderProgramHWithMask;
-                useProgram(m_texBlurShaderProgramHWithMask);
-                bindTexPos(m_texBlurShaderProgramHWithMaskTexPos);
-                bindTexIdx(m_texBlurShaderProgramHWithMaskTexIdx, true);
-            }
-            return m_texBlurShaderProgramHWithMask;
-        }
-        m_texBlurShaderProgramHWithMask = gl()->createProgram();
-
-        gl()->attachShader(m_texBlurShaderProgramHWithMask, texVertexShader());
-        gl()->attachShader(m_texBlurShaderProgramHWithMask,
-                           texFragmentBlurShaderHWithMask());
-        gl()->linkProgram(m_texBlurShaderProgramHWithMask);
-        checkError(gl());
-
-        m_lastProgram = m_texBlurShaderProgramHWithMask;
-        useProgram(m_texBlurShaderProgramHWithMask);
-
-        m_texBlurShaderProgramHWithMaskPosition = gl()->getUniformLocation(
-            m_texBlurShaderProgramHWithMask, "uPosition");
-        m_texBlurShaderProgramHWithMaskTexPos =
-            gl()->getAttribLocation(m_texBlurShaderProgramHWithMask, "aTexPos");
-        m_texBlurShaderProgramHWithMaskTexIdx =
-            gl()->getAttribLocation(m_texBlurShaderProgramHWithMask, "aTexIdx");
-        m_texBlurShaderProgramHWithMaskTexture = gl()->getUniformLocation(
-            m_texBlurShaderProgramHWithMask, "uTexture");
-        m_texBlurShaderProgramHWithMaskBlurRadius = gl()->getUniformLocation(
-            m_texBlurShaderProgramHWithMask, "uBlurRadius");
-        m_texBlurShaderProgramHWithMaskTextureWidth = gl()->getUniformLocation(
-            m_texBlurShaderProgramHWithMask, "uTextureWidth");
-        m_texBlurShaderProgramHWithMaskTextureHeight = gl()->getUniformLocation(
-            m_texBlurShaderProgramHWithMask, "uTextureHeight");
-        m_texBlurShaderProgramHWithMaskAlpha =
-            gl()->getUniformLocation(m_texBlurShaderProgramHWithMask, "uAlpha");
-        m_texBlurShaderProgramHWithMaskMaskTexture = gl()->getUniformLocation(
-            m_texBlurShaderProgramHWithMask, "uMaskTexture");
-        m_texBlurShaderProgramHWithMaskMaskUV = gl()->getUniformLocation(
-            m_texBlurShaderProgramHWithMask, "uMaskUV");
-        m_texBlurShaderProgramHWithMaskMaskShear = gl()->getUniformLocation(
-            m_texBlurShaderProgramHWithMask, "uMaskShear");
-        m_texBlurShaderProgramHWithMaskSecondMaskTexture =
-            gl()->getUniformLocation(m_texBlurShaderProgramHWithMask,
-                                     "uSecondMaskTexture");
-        m_texBlurShaderProgramHWithMaskSecondMaskUV = gl()->getUniformLocation(
-            m_texBlurShaderProgramHWithMask, "uSecondMaskUV");
-        m_texBlurShaderProgramHWithMaskSecondMaskShear =
-            gl()->getUniformLocation(m_texBlurShaderProgramHWithMask,
-                                     "uSecondMaskShear");
-        m_texBlurShaderProgramHWithMaskSecondMaskEnabled =
-            gl()->getUniformLocation(m_texBlurShaderProgramHWithMask,
-                                     "uSecondMaskEnabled");
-
-        gl()->uniform1i(m_texBlurShaderProgramHWithMaskTexture, 0);
-        gl()->uniform1i(m_texBlurShaderProgramHWithMaskMaskTexture, 1);
-        initSecondMaskUniforms(
-            m_texBlurShaderProgramHWithMaskSecondMaskTexture,
-            m_texBlurShaderProgramHWithMaskSecondMaskEnabled);
-        gl()->uniform1f(m_texBlurShaderProgramHWithMaskAlpha, 1);
-        gl()->uniform4f(m_texBlurShaderProgramHWithMaskMaskUV, 0, 0, 1, 1);
-
-        gl()->bindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-        gl()->bufferData(GL_ARRAY_BUFFER, sizeof(float) * 8, NULL,
-                         GL_STREAM_DRAW);
-        gl()->vertexAttribPointer(m_texBlurShaderProgramHWithMaskTexPos, 2,
-                                  GL_FLOAT, false, 0, 0);
-        gl()->bindBuffer(GL_ARRAY_BUFFER, 0);
-        bindTexPos(m_texBlurShaderProgramHWithMaskTexPos);
-        bindTexIdx(m_texBlurShaderProgramHWithMaskTexIdx, false);
-        return m_texBlurShaderProgramHWithMask;
-    }
 };
 
 void CompositorFactory::destroyCompositorContextGl(Renderer* renderer,
@@ -3079,6 +3196,8 @@ uint32_t CompositorFactory::maximumTextureSizeGl()
     return g_maxTextureSize;
 }
 
+static uint64_t g_canvasSurfaceContentVersion;
+
 class CanvasSurfaceGL : public CanvasSurface {
 public:
     void* operator new(size_t size);
@@ -3204,6 +3323,9 @@ public:
             if (ret) {
                 CompositorContextGL* ctx =
                     (CompositorContextGL*)m_renderer->compositorContext();
+                if (ctx) {
+                    ctx->dropFilterResults(this, Optional<bool>());
+                }
                 for (size_t i = 0; i < m_textureFragments.size(); i++) {
                     if (m_textureFragments[i].sharedTexture) {
                         // The lifetime of externally created shared textures is
@@ -3667,6 +3789,7 @@ public:
         if (m_textureFragments.size() == 0) {
             return;
         }
+        m_contentVersion = ++g_canvasSurfaceContentVersion;
 
         if (m_isEGLImageExternal) {
 #if defined(STARFISH_TIZEN)
@@ -4026,6 +4149,8 @@ protected:
     bool m_isFrameBuffer{ false };
     bool m_isEGLImageExternal;
     bool m_isEGLBufferOwner;
+    // Changes with what the textures hold; keys the filter results.
+    uint64_t m_contentVersion{ 0 };
 #if defined(STARFISH_TIZEN) && defined(STARFISH_SHELL_EFL) && \
     defined(STARFISH_GLIB_CAIRO_GL)
     tbm_surface_h m_tbmSurface;
@@ -4206,6 +4331,7 @@ public:
             m_screenHeight = externalTarget.value().height;
         }
         m_compositorContext = (CompositorContextGL*)compositorContext;
+        m_compositorContext->m_frame++;
         TransformationMatrix m = m_webView->renderer()->screenMatrix();
         m_screenMatrix.setAll(m.scaleX, m.skewX, m.translateX, m.skewY,
                               m.scaleY, m.translateY, m.perspectiveX,
@@ -4228,7 +4354,6 @@ public:
         lastState.matrixStaysInRect = true;
         lastState.matrix = SkMatrix::I();
         lastState.opacity = externalTarget ? externalTarget.value().opacity : 1;
-        lastState.blurRadius = 0;
         lastState.blendMode = BlendMode::Normal;
         lastState.clipRect = Unit::Rect(0, 0, m_webView->renderer()->width(),
                                         m_webView->renderer()->height());
@@ -4768,7 +4893,35 @@ public:
         gl()->deleteTextures(1, &backdrop);
     }
 
-    void drawTessellatedPolygon(const Clipper2Lib::PathsD& paths,
+    // Orders Clipper's output as pieces earcut can fill, each an outer contour
+    // and its holes, and notes where each piece ends.
+    static void splitIntoPieces(const Clipper2Lib::PathsD& paths,
+                                Clipper2Lib::PathsD& pieces,
+                                std::vector<size_t>& pieceEnds)
+    {
+        Clipper2Lib::PolyTreeD tree;
+        Clipper2Lib::BooleanOp(Clipper2Lib::ClipType::Union,
+                               Clipper2Lib::FillRule::NonZero, paths, {}, tree);
+        std::vector<const Clipper2Lib::PolyPathD*> outers;
+        for (const auto& outer : tree) {
+            outers.push_back(outer.get());
+        }
+        while (!outers.empty()) {
+            const Clipper2Lib::PolyPathD* outer = outers.back();
+            outers.pop_back();
+            pieces.push_back(outer->Polygon());
+            for (const auto& hole : *outer) {
+                pieces.push_back(hole->Polygon());
+                // An island in a hole is a piece of its own.
+                for (const auto& island : *hole) {
+                    outers.push_back(island.get());
+                }
+            }
+            pieceEnds.push_back(pieces.size());
+        }
+    }
+
+    void drawTessellatedPolygon(const Clipper2Lib::PathsD& input,
                                 const Unit::Color& color, float opacity,
                                 bool drawOutline,
                                 const SkMatrix* customScreenMatrix = nullptr,
@@ -4776,6 +4929,20 @@ public:
                                 size_t customScreenHeight = 0)
     {
         m_compositorContext->polygonProgram();
+        // earcut fills one outer contour less its holes, but a clip can come
+        // in pieces: an even-odd one does around each part wound twice.
+        const bool inPieces =
+            std::count_if(input.begin(), input.end(),
+                          [](const Clipper2Lib::PathD& path) {
+                              return Clipper2Lib::IsPositive(path);
+                          }) > 1;
+        Clipper2Lib::PathsD pieces;
+        std::vector<size_t> pieceEnds;
+        if (inPieces) {
+            splitIntoPieces(input, pieces, pieceEnds);
+        }
+        const Clipper2Lib::PathsD& paths = inPieces ? pieces : input;
+
         size_t count = 0;
         for (size_t i = 0; i < paths.size(); i++) {
             count += paths[i].size();
@@ -4787,7 +4954,23 @@ public:
             return;
         }
 
-        std::vector<N> indices = mapbox::earcut<N>(paths);
+        std::vector<N> indices;
+        if (!inPieces) {
+            indices = mapbox::earcut<N>(paths);
+        } else {
+            size_t first = 0;
+            N base = 0;
+            for (size_t end : pieceEnds) {
+                Clipper2Lib::PathsD piece(paths.begin() + first,
+                                          paths.begin() + end);
+                for (N i : mapbox::earcut<N>(piece)) {
+                    indices.push_back(base + i);
+                }
+                for (; first < end; first++) {
+                    base += paths[first].size();
+                }
+            }
+        }
 
         // Use custom parameters if provided, otherwise use defaults
         const SkMatrix& screenMatrix =
@@ -5035,6 +5218,10 @@ public:
                 Clipper2Lib::PathsD computedPathCommands = { std::move(
                     rectClip) };
                 for (const auto& pathCommand : lastState.pathCommands) {
+                    const bool evenOdd = !pathCommand.empty() &&
+                                         pathCommand.front().command ==
+                                             CompositorImplGLState::
+                                                 PathCommand::Command::EvenOdd;
                     Clipper2Lib::PathD path;
                     size_t estimatedSize = pathCommand.size();
                     for (const auto& command : pathCommand) {
@@ -5100,14 +5287,19 @@ public:
                                 float y = command.y + dy * radius;
                                 addToPath(path, command.matrix, x, y);
                             }
-                        } else {
+                        } else if (command.command !=
+                                   CompositorImplGLState::PathCommand::Command::
+                                       EvenOdd) {
                             addToPath(path, command.matrix, command.x,
                                       command.y);
                         }
                     }
+                    // The clip so far is Clipper's output, which both rules
+                    // fill alike: the new path's rule decides.
                     computedPathCommands = Clipper2Lib::Intersect(
                         computedPathCommands, { std::move(path) },
-                        Clipper2Lib::FillRule::NonZero);
+                        evenOdd ? Clipper2Lib::FillRule::EvenOdd
+                                : Clipper2Lib::FillRule::NonZero);
                 }
 
                 if (m_compositorContext->m_clipPathCache.size() >= 16) {
@@ -5174,17 +5366,12 @@ public:
         gl()->uniform1fv(enabledUniform, SECOND_MASK_COUNT, enabled);
     }
 
-    void drawFilteredTexture(CanvasSurfaceGL* cs, float position[8],
-                             GLuint textureID, GLenum textureKind,
-                             GLenum textureBindNumber, size_t textureWidth,
-                             size_t textureHeight, GLuint maskTextureID,
-                             float maskUV[6],
-                             GLuint secondMasks[SECOND_MASK_COUNT],
-                             float secondMaskUV[SECOND_MASK_COUNT][6])
+    // Blurs the texture by radius texels onto the current target.
+    void drawFilteredTexture(float position[8], GLuint textureID,
+                             GLenum textureKind, size_t textureWidth,
+                             size_t textureHeight, float radius, float alpha,
+                             bool flipY)
     {
-        auto& lastState = m_state.back();
-        bool enableMask = maskTextureID != 0;
-
         // Use FBO in order to 2-pass blur
         pushFBOContext(textureWidth, textureHeight,
                        LayoutRect(0, 0, textureWidth, textureHeight));
@@ -5199,12 +5386,12 @@ public:
         gl()->clear(GL_COLOR_BUFFER_BIT);
 
         bool isEGLImage = textureKind != GL_TEXTURE_2D;
-        float blurMainRadius = lastState.blurRadius;
+        float blurMainRadius = radius;
         // original code don't set sub radius but we set magic number
         // because we don't have antialias yet
         // setting sub radius reduce glitch
-        float blurSubRadius = lastState.blurRadius / 5;
-        if (blurSubRadius == (int)lastState.blurRadius) {
+        float blurSubRadius = radius / 5;
+        if (blurSubRadius == (int)radius) {
             blurSubRadius *= 0.85;
         }
         // blur W
@@ -5272,7 +5459,8 @@ public:
             gl()->disableVertexAttribArray(*texIdx);
         }
 
-        auto fboState = popFBOContext();
+        // Out of the FBO cache until the H pass has read it.
+        auto fboState = popFBOContext(false);
         checkError(gl());
 
         if (isScissorEnabled) {
@@ -5281,67 +5469,25 @@ public:
 
         // blur H
         {
-            // Select appropriate shader program based on mask requirement
-            if (enableMask) {
-                m_compositorContext->texBlurShaderProgramHWithMask();
-            } else {
-                m_compositorContext->texBlurShaderProgramH();
-            }
+            m_compositorContext->texBlurShaderProgramH();
 
-            GLint* texPos;
-            GLint* texIdx;
-            GLint* positionPos;
-            GLint* width;
-            GLint* height;
-            GLint* blurRadius;
-            GLint* alphaPos;
-            GLint* maskUVUniform = nullptr;
-            GLint* maskShearUniform = nullptr;
-
-            if (enableMask) {
-                texPos =
-                    &m_compositorContext->m_texBlurShaderProgramHWithMaskTexPos;
-                texIdx =
-                    &m_compositorContext->m_texBlurShaderProgramHWithMaskTexIdx;
-                positionPos = &m_compositorContext
-                                   ->m_texBlurShaderProgramHWithMaskPosition;
-                width = &m_compositorContext
-                             ->m_texBlurShaderProgramHWithMaskTextureWidth;
-                height = &m_compositorContext
-                              ->m_texBlurShaderProgramHWithMaskTextureHeight;
-                blurRadius = &m_compositorContext
-                                  ->m_texBlurShaderProgramHWithMaskBlurRadius;
-                alphaPos =
-                    &m_compositorContext->m_texBlurShaderProgramHWithMaskAlpha;
-                maskUVUniform =
-                    &m_compositorContext->m_texBlurShaderProgramHWithMaskMaskUV;
-                maskShearUniform =
-                    &m_compositorContext
-                         ->m_texBlurShaderProgramHWithMaskMaskShear;
-            } else {
-                texPos = &m_compositorContext->m_texBlurShaderProgramHTexPos;
-                texIdx = &m_compositorContext->m_texBlurShaderProgramHTexIdx;
-                positionPos =
-                    &m_compositorContext->m_texBlurShaderProgramHPosition;
-                width =
-                    &m_compositorContext->m_texBlurShaderProgramHTextureWidth;
-                height =
-                    &m_compositorContext->m_texBlurShaderProgramHTextureHeight;
-                blurRadius =
-                    &m_compositorContext->m_texBlurShaderProgramHBlurRadius;
-                alphaPos = &m_compositorContext->m_texBlurShaderProgramHAlpha;
-            }
+            GLint* texPos = &m_compositorContext->m_texBlurShaderProgramHTexPos;
+            GLint* texIdx = &m_compositorContext->m_texBlurShaderProgramHTexIdx;
+            GLint* positionPos =
+                &m_compositorContext->m_texBlurShaderProgramHPosition;
+            GLint* width =
+                &m_compositorContext->m_texBlurShaderProgramHTextureWidth;
+            GLint* height =
+                &m_compositorContext->m_texBlurShaderProgramHTextureHeight;
+            GLint* blurRadius =
+                &m_compositorContext->m_texBlurShaderProgramHBlurRadius;
+            GLint* alphaPos =
+                &m_compositorContext->m_texBlurShaderProgramHAlpha;
 
             gl()->enableVertexAttribArray(*texPos);
             gl()->enableVertexAttribArray(*texIdx);
 
             gl()->uniform2fv(*positionPos, 4, position);
-
-            if (enableMask) {
-                gl()->activeTexture(GL_TEXTURE1);
-                gl()->bindTexture(GL_TEXTURE_2D, maskTextureID);
-                bindSecondMasks(secondMasks);
-            }
 
             gl()->activeTexture(GL_TEXTURE0);
             gl()->bindTexture(GL_TEXTURE_2D, fboState.fboTex);
@@ -5351,26 +5497,12 @@ public:
 
             gl()->uniform2f(*blurRadius, blurSubRadius, blurMainRadius);
 
-            float a = lastState.opacity;
+            float a = alpha;
             if (a != 1) {
                 gl()->uniform1f(*alphaPos, a);
             }
 
-            if (enableMask) {
-                gl()->uniform4f(*maskUVUniform, maskUV[0], maskUV[1], maskUV[2],
-                                maskUV[3]);
-                gl()->uniform2f(*maskShearUniform, maskUV[4], maskUV[5]);
-                setSecondMaskUniforms(
-                    m_compositorContext
-                        ->m_texBlurShaderProgramHWithMaskSecondMaskUV,
-                    m_compositorContext
-                        ->m_texBlurShaderProgramHWithMaskSecondMaskShear,
-                    m_compositorContext
-                        ->m_texBlurShaderProgramHWithMaskSecondMaskEnabled,
-                    secondMasks, secondMaskUV);
-            }
-
-            if (UNLIKELY(cs->isFlipYNeeded())) {
+            if (UNLIKELY(flipY)) {
                 m_compositorContext->bindTexPos(*texPos, true);
             }
 
@@ -5382,12 +5514,564 @@ public:
             if (a != 1) {
                 gl()->uniform1f(*alphaPos, 1);
             }
-            if (UNLIKELY(cs->isFlipYNeeded())) {
+            if (UNLIKELY(flipY)) {
                 m_compositorContext->bindTexPos(*texPos, false);
             }
             checkError(gl());
         }
         checkError(gl());
+        putFilterPassToCache(fboState);
+    }
+
+    struct FBOState {
+        GLuint fboId = 0;
+        GLuint fboTex = 0;
+        LayoutRect viewport;
+        GLenum textureFormat = 0;
+        Unit::IntSize textureSize;
+    };
+
+    // Draws the texture onto position, a quad in the target's clip space as
+    // drawTexture takes it, through count color matrices (none: as it is),
+    // with opacity alpha.
+    void drawColorMatrices(GLuint textureID, GLenum textureKind,
+                           const float position[8], const float* matrices,
+                           size_t count, float alpha = 1, bool flipY = false)
+    {
+        auto& p = m_compositorContext->texColorMatrixProgram(textureKind !=
+                                                             GL_TEXTURE_2D);
+        float columns[CompositorContextGL::kMaxColorMatrices * 16];
+        float offsets[CompositorContextGL::kMaxColorMatrices * 4];
+        for (size_t i = 0; i < count; i++) {
+            const float* m = matrices + i * 20;
+            for (size_t r = 0; r < 4; r++) {
+                for (size_t c = 0; c < 4; c++) {
+                    columns[i * 16 + c * 4 + r] = m[r * 5 + c];
+                }
+                offsets[i * 4 + r] = m[r * 5 + 4];
+            }
+        }
+        gl()->enableVertexAttribArray(p.texPos);
+        gl()->enableVertexAttribArray(p.texIdx);
+        gl()->uniform2fv(p.position, 4, position);
+        float values[CompositorContextGL::kMaxColorMatrices * 20 + 2] = {};
+        std::copy(matrices, matrices + count * 20, values);
+        values[CompositorContextGL::kMaxColorMatrices * 20] = count;
+        values[CompositorContextGL::kMaxColorMatrices * 20 + 1] = alpha;
+        if (memcmp(values, p.values, sizeof(values))) {
+            std::copy(values, values + sizeof(values) / sizeof(*values),
+                      p.values);
+            if (count) {
+                gl()->uniformMatrix4fv(p.matrix, count, GL_FALSE, columns);
+                gl()->uniform4fv(p.offset, count, offsets);
+            }
+            gl()->uniform1i(p.count, count);
+            gl()->uniform1f(p.alpha, alpha);
+        }
+        if (UNLIKELY(flipY)) {
+            m_compositorContext->bindTexPos(p.texPos, true);
+        }
+        gl()->activeTexture(GL_TEXTURE0);
+        gl()->bindTexture(textureKind, textureID);
+        gl()->drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        if (UNLIKELY(flipY)) {
+            m_compositorContext->bindTexPos(p.texPos, false);
+        }
+        gl()->disableVertexAttribArray(p.texPos);
+        gl()->disableVertexAttribArray(p.texIdx);
+    }
+
+    // The clip-space quad of rect, in pixels of a width x height target.
+    static void quadOf(const Unit::Rect& rect, size_t width, size_t height,
+                       float quad[8])
+    {
+        const float x0 = rect.x() * 2 / width - 1;
+        const float y0 = rect.y() * 2 / height - 1;
+        const float x1 = rect.maxX() * 2 / width - 1;
+        const float y1 = rect.maxY() * 2 / height - 1;
+        const float q[8] = { x0, y0, x0, y1, x1, y0, x1, y1 };
+        std::copy(q, q + 8, quad);
+    }
+
+    const Compositor::FilterOperation* filterOperations()
+    {
+        return m_filterOperations.data() + m_state.back().filterBegin;
+    }
+
+    // The leading color functions of ops, up to the matrices one pass
+    // applies, copied into matrices.
+    static size_t takeColorMatrices(const Compositor::FilterOperation* ops,
+                                    size_t count, float* matrices)
+    {
+        size_t n = 0;
+        while (n < count && n < CompositorContextGL::kMaxColorMatrices &&
+               ops[n].kind == Compositor::FilterOperation::ColorMatrix) {
+            std::copy(ops[n].values, ops[n].values + 20, matrices + n * 20);
+            n++;
+        }
+        return n;
+    }
+
+    // Blend state for drawing filter passes into their own targets; undone
+    // by endFilterPasses().
+    bool beginFilterPasses()
+    {
+        bool isScissorEnabled = gl()->isEnabled(GL_SCISSOR_TEST);
+        if (isScissorEnabled) {
+            gl()->disable(GL_SCISSOR_TEST);
+        }
+        setBlendEnabled(true);
+        gl()->blendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        gl()->blendEquation(GL_FUNC_ADD);
+        return isScissorEnabled;
+    }
+
+    void endFilterPasses(bool isScissorEnabled)
+    {
+        checkError(gl());
+        updateBlendMode();
+        if (isScissorEnabled) {
+            gl()->enable(GL_SCISSOR_TEST);
+        }
+    }
+
+    // Draws a texture through the color functions in the filter state, in
+    // the draw itself (see drawsColorFunctions()): each takes a pixel to a
+    // pixel, so every texture (and tile) goes on its own.
+    void drawColorFilteredTexture(CanvasSurfaceGL* cs, float position[8],
+                                  GLuint textureID, GLenum textureKind)
+    {
+        auto& state = m_state.back();
+        float matrices[CompositorContextGL::kMaxColorMatrices * 20];
+        const size_t count =
+            takeColorMatrices(filterOperations(), state.filterCount, matrices);
+        STARFISH_ASSERT(count == state.filterCount);
+        // The target's blending is already set.
+        if (textureKind != GL_TEXTURE_2D &&
+            (!g_isOpenGLES3 || !cs->m_isEGLBufferOwner)) {
+            m_webView->renderer()->mayNeedsSync();
+        }
+        drawColorMatrices(textureID, textureKind, position, matrices, count,
+                          state.opacity, cs->isFlipYNeeded());
+    }
+
+    // Whether a surface goes through these color functions in its draw:
+    // as many as one pass applies, and no mask or clip shape, which go
+    // after the filter (CSS Masking). The others make a filtered image of
+    // the surface first (drawFilteredSurface()).
+    bool drawsColorFunctions(const Compositor::FilterOperation* ops,
+                             size_t count)
+    {
+        auto& state = m_state.back();
+        return !count ||
+               (count <= CompositorContextGL::kMaxColorMatrices &&
+                isColorOnly(ops, count) && !m_maskCount &&
+                !state.roundedRectClipCount &&
+                state.abbreviatedClipPaths.empty() && state.matrixStaysInRect);
+    }
+
+    static bool isColorOnly(const Compositor::FilterOperation* ops,
+                            size_t count)
+    {
+        return std::all_of(ops, ops + count, [](const FilterOperation& op) {
+            return op.kind == Compositor::FilterOperation::ColorMatrix;
+        });
+    }
+
+    // How far a blur of this standard deviation (in any unit) reaches.
+    static float blurReach(float deviation)
+    {
+        return deviation > 0
+                   ? ShadowBlur::computeKernelSizeAtStdDeviation(deviation)
+                   : 0;
+    }
+
+    // Where a filter list paints, in the units of dst: the input, each
+    // drop-shadow() adding a moved copy of what came before (Filter
+    // Effects 1). Pieces beyond the few kept merge into their bounds.
+    struct FilterPieces {
+        static const size_t kMax = 8;
+        Unit::Rect rects[kMax];
+        size_t count = 0;
+
+        Unit::Rect bounds() const
+        {
+            Unit::Rect r;
+            for (size_t i = 0; i < count; i++) {
+                r.unite(rects[i]);
+            }
+            return r;
+        }
+    };
+
+    static void inflate(Unit::Rect& r, float e)
+    {
+        r = Unit::Rect(r.x() - e, r.y() - e, r.width() + e * 2,
+                       r.height() + e * 2);
+    }
+
+    static FilterPieces filterPieces(const Unit::Rect& dst,
+                                     const Compositor::FilterOperation* ops,
+                                     size_t count)
+    {
+        FilterPieces pieces;
+        pieces.rects[pieces.count++] = dst;
+        for (size_t i = 0; i < count; i++) {
+            const Compositor::FilterOperation& op = ops[i];
+            if (op.kind == Compositor::FilterOperation::Blur) {
+                for (size_t j = 0; j < pieces.count; j++) {
+                    inflate(pieces.rects[j], blurReach(op.values[0]));
+                }
+            } else if (op.kind == Compositor::FilterOperation::DropShadow) {
+                if (pieces.count * 2 > FilterPieces::kMax) {
+                    pieces.rects[0] = pieces.bounds();
+                    pieces.count = 1;
+                }
+                const size_t n = pieces.count;
+                for (size_t j = 0; j < n; j++) {
+                    Unit::Rect r = pieces.rects[j];
+                    r.setX(r.x() + op.values[0]);
+                    r.setY(r.y() + op.values[1]);
+                    inflate(r, blurReach(op.values[2]));
+                    pieces.rects[pieces.count++] = r;
+                }
+            }
+        }
+        return pieces;
+    }
+
+    // The part of the drawing space the target shows, or nothing under a
+    // perspective, whose inverse is not a plain rect.
+    Optional<Unit::Rect> visibleDrawingRect()
+    {
+        auto& state = m_state.back();
+        SkMatrix inverse;
+        if (state.matrix.hasPerspective() || !state.matrix.invert(&inverse)) {
+            return Optional<Unit::Rect>();
+        }
+        const Unit::Rect& clip = state.clipRect;
+        SkRect r =
+            SkRect::MakeXYWH(clip.x(), clip.y(), clip.width(), clip.height());
+        inverse.mapRect(&r);
+        return Unit::Rect(r.x(), r.y(), r.width(), r.height());
+    }
+
+    // The part of the filtered image of dst to make, in its units: what
+    // the target can show of each piece, grown by how far the blurs read,
+    // and on the grid of the source's pixels.
+    // shortcut: a drop-shadow() whose input lies farther off the target
+    // than that is left out, which only a list with more functions after
+    // the shadow shows (drawFilteredSurface draws a last one apart); sample
+    // the source at the offset if pages put shadows of such lists far.
+    Unit::Rect filterRegion(const Unit::Rect& dst, const FilterPieces& pieces,
+                            float reach, float slack, float sx, float sy)
+    {
+        Unit::Rect region;
+        Optional<Unit::Rect> visible = visibleDrawingRect();
+        if (visible) {
+            Unit::Rect area = visible.value();
+            inflate(area, reach + slack);
+            for (size_t i = 0; i < pieces.count; i++) {
+                Unit::Rect r = pieces.rects[i];
+                r.intersect(area);
+                region.unite(r);
+            }
+        } else {
+            region = pieces.bounds();
+        }
+        if (region.isEmpty()) {
+            return region;
+        }
+        const float x0 = std::floor((region.x() - dst.x()) * sx);
+        const float y0 = std::floor((region.y() - dst.y()) * sy);
+        const float maxSize = g_maxTextureSize;
+        const float x1 =
+            std::min(std::ceil((region.maxX() - dst.x()) * sx), x0 + maxSize);
+        const float y1 =
+            std::min(std::ceil((region.maxY() - dst.y()) * sy), y0 + maxSize);
+        return Unit::Rect(dst.x() + x0 / sx, dst.y() + y0 / sy, (x1 - x0) / sx,
+                          (y1 - y0) / sy);
+    }
+
+    // Runs the source through the filter list into a new target that holds
+    // region of the result (in the units of dst), each pass taking the
+    // result of the one before, in sx x sy texels per unit. shadowOnly: the
+    // last function is a drop-shadow() and only its shadow, unmoved, is
+    // made.
+    FBOState renderFilterRegion(CanvasSurfaceGL* cs, const Unit::Rect& dst,
+                                const Compositor::FilterOperation* ops,
+                                size_t count, bool shadowOnly,
+                                const Unit::Rect& region, float sx, float sy)
+    {
+        const size_t w = std::lround(region.width() * sx);
+        const size_t h = std::lround(region.height() * sy);
+        const bool flip = cs->isFlipYNeeded();
+        // Rows of a flipped source run bottom up, and so do the targets'.
+        const float dy = flip ? -sy : sy;
+        const float sourceX = (dst.x() - region.x()) * sx;
+        const float sourceY = flip ? (region.maxY() - dst.maxY()) * sy
+                                   : (dst.y() - region.y()) * sy;
+        const float sourceWidth = dst.width() * sx;
+        const float sourceHeight = dst.height() * sy;
+#if defined(STARFISH_USE_FFMPEG_MEDIAPLAYER)
+        const GLenum externalKind = GL_TEXTURE_2D;
+#else
+        const GLenum externalKind = GL_TEXTURE_EXTERNAL_OES;
+#endif
+        const GLenum sourceKind =
+            cs->m_isEGLImageExternal ? externalKind : GL_TEXTURE_2D;
+        if (sourceKind != GL_TEXTURE_2D &&
+            (!g_isOpenGLES3 || !cs->m_isEGLBufferOwner)) {
+            m_webView->renderer()->mayNeedsSync();
+        }
+
+        static const float fullQuad[] = { -1, -1, -1, 1, 1, -1, 1, 1 };
+        auto blur = [&](GLuint texture, float radius) {
+            drawFilteredTexture(const_cast<float*>(fullQuad), texture,
+                                GL_TEXTURE_2D, w, h, radius, 1, false);
+        };
+        bool isScissorEnabled = beginFilterPasses();
+        float matrices[CompositorContextGL::kMaxColorMatrices * 20];
+        // The source where the region has it, through the first color
+        // functions.
+        size_t i = takeColorMatrices(ops, count, matrices);
+        FBOState result = drawFilterPass(w, h, [&] {
+            for (const auto& f : cs->m_textureFragments) {
+                if (!f.textureID) {
+                    continue;
+                }
+                float quad[8];
+                quadOf(Unit::Rect(sourceX + f.srcX * sourceWidth,
+                                  sourceY + f.srcY * sourceHeight,
+                                  f.srcWidth * sourceWidth,
+                                  f.srcHeight * sourceHeight),
+                       w, h, quad);
+                drawColorMatrices(f.textureID, sourceKind, quad, matrices, i);
+            }
+        });
+        while (i < count) {
+            const Compositor::FilterOperation& op = ops[i];
+            FBOState pass;
+            if (op.kind == Compositor::FilterOperation::ColorMatrix) {
+                size_t n = takeColorMatrices(ops + i, count - i, matrices);
+                pass = drawFilterPass(w, h, [&] {
+                    drawColorMatrices(result.fboTex, GL_TEXTURE_2D, fullQuad,
+                                      matrices, n);
+                });
+                i += n;
+            } else if (op.kind == Compositor::FilterOperation::Blur) {
+                pass = drawFilterPass(
+                    w, h, [&] { blur(result.fboTex, op.values[0] * sx); });
+                i++;
+            } else {
+                // The input's alpha in the shadow color, moved by the
+                // offset, blurred, and the input over it. Every color turns
+                // into the shadow color, whose alpha scales the input's.
+                const bool onlyShadow = shadowOnly && i + 1 == count;
+                float flood[20] = {};
+                flood[4] = op.values[3];
+                flood[9] = op.values[4];
+                flood[14] = op.values[5];
+                flood[18] = op.values[6];
+                float quad[8];
+                quadOf(Unit::Rect(onlyShadow ? 0 : op.values[0] * sx,
+                                  onlyShadow ? 0 : op.values[1] * dy, w, h),
+                       w, h, quad);
+                auto drawShadow = [&] {
+                    drawColorMatrices(result.fboTex, GL_TEXTURE_2D, quad, flood,
+                                      1);
+                };
+                auto drawInput = [&] {
+                    if (!onlyShadow) {
+                        drawColorMatrices(result.fboTex, GL_TEXTURE_2D,
+                                          fullQuad, nullptr, 0);
+                    }
+                };
+                if (op.values[2] > 0) {
+                    FBOState shadow = drawFilterPass(w, h, drawShadow);
+                    pass = drawFilterPass(w, h, [&] {
+                        blur(shadow.fboTex, op.values[2] * sx);
+                        drawInput();
+                    });
+                    putFilterPassToCache(shadow);
+                } else {
+                    pass = drawFilterPass(w, h, [&] {
+                        drawShadow();
+                        drawInput();
+                    });
+                }
+                i++;
+            }
+            putFilterPassToCache(result);
+            result = pass;
+        }
+        endFilterPasses(isScissorEnabled);
+        return result;
+    }
+
+    // Draws a surface through a filter list its draw cannot apply (see
+    // drawsColorFunctions()). blur() and drop-shadow() read neighbouring
+    // pixels and paint around the surface, so the passes run on targets
+    // holding only the part the target can show (plus the blurs' reach),
+    // kept per layer until it changes.
+    void drawFilteredSurface(CanvasSurfaceGL* cs, const Unit::Rect& dst)
+    {
+        // Nothing shows, and the scales below would divide by zero.
+        if (dst.isEmpty()) {
+            return;
+        }
+        auto& state = m_state.back();
+        const Compositor::FilterOperation* ops = filterOperations();
+        const size_t count = state.filterCount;
+        // Filter values are in units of dst; the passes work in texels.
+        float sx = cs->m_bufferWidth / dst.width();
+        float sy = cs->m_bufferHeight / dst.height();
+        float reach = 0;
+        for (size_t i = 0; i < count; i++) {
+            if (ops[i].kind == Compositor::FilterOperation::Blur) {
+                reach += blurReach(ops[i].values[0]);
+            } else if (ops[i].kind == Compositor::FilterOperation::DropShadow) {
+                reach += blurReach(ops[i].values[2]);
+            }
+        }
+        // The bound the layer's ink has too (FilterFunctions::inkRect).
+        const float kMaxReach = 2048;
+        reach = std::min(reach, kMaxReach);
+
+        // A last drop-shadow() under the layer's own pixels is drawn from a
+        // shadow of the layer's size, moved, and the layer over it: no
+        // target spans the offset. Opacity, blending and masks apply to
+        // both together, so those draw the whole result instead.
+        size_t colors = 0;
+        while (colors < count &&
+               ops[colors].kind == Compositor::FilterOperation::ColorMatrix) {
+            colors++;
+        }
+        const bool shadowApart =
+            colors + 1 == count &&
+            ops[colors].kind == Compositor::FilterOperation::DropShadow &&
+            state.opacity == 1 && state.blendMode == BlendMode::Normal &&
+            !m_maskCount && drawsColorFunctions(ops, colors);
+        const float offsetX = shadowApart ? ops[colors].values[0] : 0;
+        const float offsetY = shadowApart ? ops[colors].values[1] : 0;
+
+        FilterPieces pieces;
+        if (shadowApart) {
+            // The shadow's pieces, unmoved: the layer grown by the blur.
+            pieces.rects[pieces.count++] = dst;
+            inflate(pieces.rects[0], reach);
+        } else {
+            pieces = filterPieces(dst, ops, count);
+        }
+        // Where the target is, seen from the unmoved shadow.
+        auto region = [&](float slack) {
+            const SkMatrix matrix = state.matrix;
+            state.matrix.preTranslate(offsetX, offsetY);
+            Unit::Rect r = filterRegion(dst, pieces, reach, slack, sx, sy);
+            state.matrix = matrix;
+            return r;
+        };
+        Unit::Rect needed = region(0);
+        auto* context = m_compositorContext;
+        // shortcut: past the budget the passes run at a lower resolution.
+        // Only a long reach of blurs gets there, which hides it, or a large
+        // layer under a perspective, which comes out softer; tile the passes
+        // if that ever matters.
+        const float budget = context->filterBudget();
+        const float area = needed.width() * sx * needed.height() * sy;
+        if (area > budget) {
+            const float k = std::sqrt(budget / area);
+            sx *= k;
+            sy *= k;
+            needed = region(0);
+        }
+        if (!needed.isEmpty()) {
+            CompositorContextGL::FilterResult key;
+            key.surface = cs;
+            key.version = cs->m_contentVersion;
+            key.shadowOnly = shadowApart;
+            key.scaleX = sx;
+            key.scaleY = sy;
+            key.region = Unit::Rect(needed.x() - dst.x(), needed.y() - dst.y(),
+                                    needed.width(), needed.height());
+            // Externally updated textures change without a new version.
+            bool cacheable =
+                (!cs->m_isEGLImageExternal || cs->m_isEGLBufferOwner) &&
+                std::none_of(cs->m_textureFragments.begin(),
+                             cs->m_textureFragments.end(),
+                             [](const CanvasSurfaceTextureInfo::
+                                    CanvasSurfaceTextureInfoFragment& f) {
+                                 return f.sharedTexture;
+                             });
+            CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment image;
+            image.srcWidth = image.srcHeight = 1;
+            Unit::Rect imageRect;
+            Optional<FBOState> transient;
+            Optional<CompositorContextGL::FilterResult*> cached =
+                cacheable ? context->findFilterResult(key, ops, count)
+                          : Optional<CompositorContextGL::FilterResult*>();
+            if (cached) {
+                if (!cached.value()->passes.empty()) {
+                    context->dropCachedFBOs(cached.value()->passes);
+                    std::vector<GLuint>().swap(cached.value()->passes);
+                }
+                image.textureID = cached.value()->textureId;
+                image.textureWidth = cached.value()->width;
+                image.textureHeight = cached.value()->height;
+                imageRect = cached.value()->region;
+                imageRect.setX(imageRect.x() + dst.x());
+                imageRect.setY(imageRect.y() + dst.y());
+            } else {
+                // Some room around what is shown, so a scroll does not make
+                // it again every frame, while that fits the cache and the
+                // content stays: targets as small as can be pass from frame
+                // to frame through the FBO cache.
+                const float kSlack = 256;
+                imageRect = needed;
+                if (cacheable && !context->hasOutdatedFilterResult(
+                                     cs, cs->m_contentVersion)) {
+                    Unit::Rect room = region(kSlack);
+                    if (room.width() * sx * room.height() * sy <=
+                        context->cacheBudget()) {
+                        imageRect = room;
+                    }
+                }
+                std::vector<GLuint> passes;
+                m_passRecord = &passes;
+                FBOState result = renderFilterRegion(
+                    cs, dst, ops, count, shadowApart, imageRect, sx, sy);
+                m_passRecord = nullptr;
+                image.textureID = result.fboTex;
+                image.textureWidth = result.textureSize.width();
+                image.textureHeight = result.textureSize.height();
+                key.region =
+                    Unit::Rect(imageRect.x() - dst.x(), imageRect.y() - dst.y(),
+                               imageRect.width(), imageRect.height());
+                key.operations.assign(ops, ops + count);
+                key.fboId = result.fboId;
+                key.textureId = result.fboTex;
+                key.width = image.textureWidth;
+                key.height = image.textureHeight;
+                key.passes = std::move(passes);
+                if (!cacheable || !context->storeFilterResult(std::move(key))) {
+                    transient = result;
+                }
+            }
+            imageRect.setX(imageRect.x() + offsetX);
+            imageRect.setY(imageRect.y() + offsetY);
+            state.filterCount = 0;
+            drawSurfaceTextures(cs, imageRect, &image);
+            state.filterCount = count;
+            if (transient) {
+                putFilterPassToCache(transient.value());
+            }
+        }
+        if (shadowApart) {
+            // The layer over its shadow, through its color functions.
+            state.filterCount = colors;
+            drawSurfaceTextures(cs, dst, nullptr);
+            state.filterCount = count;
+        }
     }
 
     void drawTexture(
@@ -5401,11 +6085,9 @@ public:
         int roundedClipCount = 0)
     {
         auto& lastState = m_state.back();
-        if (lastState.blurRadius) {
-            drawFilteredTexture(cs, position, textureID, textureKind,
-                                textureBindNumber, textureWidth, textureHeight,
-                                maskTextureID, maskUV, secondMasks,
-                                secondMaskUV);
+        if (lastState.filterCount) {
+            STARFISH_ASSERT(!maskTextureID && !roundedClipCount);
+            drawColorFilteredTexture(cs, position, textureID, textureKind);
             return;
         }
         bool isEGLImage = textureKind != GL_TEXTURE_2D;
@@ -5742,6 +6424,22 @@ public:
         // commit any deferred clear before it.
         flushPendingClear();
 
+        if (!drawsColorFunctions(filterOperations(), lastState.filterCount)) {
+            drawFilteredSurface(csGL, dst);
+            return;
+        }
+        drawSurfaceTextures(csGL, dst, nullptr);
+    }
+
+    // Draws the surface's textures onto dst, or instead replacement: one
+    // texture made from them, oriented like them.
+    void drawSurfaceTextures(
+        CanvasSurfaceGL* csGL, const Unit::Rect& dst,
+        const CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment*
+            replacement)
+    {
+        auto& textureInfo = csGL->m_textureFragments;
+        auto& lastState = m_state.back();
         bool scissorClippingEnabled = false;
         bool shouldSkipTexturePainting = false;
         Unit::Rect visibleArea =
@@ -6003,7 +6701,7 @@ public:
                     }
                 }
             };
-            if (csGL->m_isEGLImageExternal) {
+            if (!replacement && csGL->m_isEGLImageExternal) {
                 float texPosition[8];
                 float clipPosition[8];
                 computeTexturePosition(dst, ctm, screenMatrix, screenWidth,
@@ -6028,10 +6726,13 @@ public:
             } else {
                 size_t coveredRowsCount = 0;
                 size_t i = 0;
-                for (size_t y = 0; y < csGL->hTextureCount(); y++) {
+                const size_t rows = replacement ? 1 : csGL->hTextureCount();
+                const size_t cols = replacement ? 1 : csGL->wTextureCount();
+                for (size_t y = 0; y < rows; y++) {
                     size_t coveredColsCount = 0;
-                    for (size_t x = 0; x < csGL->wTextureCount(); x++) {
-                        auto& fragment = textureInfo[i];
+                    for (size_t x = 0; x < cols; x++) {
+                        const auto& fragment =
+                            replacement ? *replacement : textureInfo[i];
 
                         if (fragment.textureID) {
                             size_t texureDataX = coveredColsCount;
@@ -6397,6 +7098,11 @@ public:
         return true;
     }
 
+    virtual void setFillRule(bool nonZero) override
+    {
+        m_fillRuleNonZero = nonZero;
+    }
+
     virtual void clipPath() override
     {
         auto& lastState = m_state.back();
@@ -6439,23 +7145,73 @@ public:
             }
             lastState.abbreviatedClipPaths.push_back(
                 std::move(m_abbreviatedPath));
+            if (!m_fillRuleNonZero) {
+                m_pathCommands.insert(
+                    m_pathCommands.begin(),
+                    { CompositorImplGLState::PathCommand::Command::EvenOdd,
+                      0,
+                      0,
+                      { 0, 0, 0 },
+                      SkMatrix::I() });
+            }
             lastState.pathCommands.push_back(std::move(m_pathCommands));
             lastState.computedPathCommands = Optional<Clipper2Lib::PathsD>();
         }
     }
 
-    virtual void enableBlurEffect(float blurRadius) override
+    virtual void enableFilterEffect(const FilterOperation* operations,
+                                    size_t count) override
     {
-        m_state.back().blurRadius = blurRadius;
+        auto& state = m_state.back();
+        state.filterBegin = m_filterOperations.size();
+        for (size_t i = 0; i < count; i++) {
+            const FilterOperation& op = operations[i];
+            if (m_filterOperations.size() > state.filterBegin &&
+                foldColorMatrix(m_filterOperations.back(), op)) {
+                continue;
+            }
+            m_filterOperations.push_back(op);
+        }
+        state.filterCount = m_filterOperations.size() - state.filterBegin;
     }
 
-    struct FBOState {
-        GLuint fboId = 0;
-        GLuint fboTex = 0;
-        LayoutRect viewport;
-        GLenum textureFormat = 0;
-        Unit::IntSize textureSize;
-    };
+    // Folds op into the color matrix before it, into, when one matrix makes
+    // the same image: each filter primitive clamps its result (Filter
+    // Effects 1), so only when into never leaves [0, 1].
+    static bool foldColorMatrix(FilterOperation& into,
+                                const FilterOperation& op)
+    {
+        if (into.kind != FilterOperation::ColorMatrix ||
+            op.kind != FilterOperation::ColorMatrix) {
+            return false;
+        }
+        const float* a = into.values;
+        for (size_t r = 0; r < 4; r++) {
+            float low = a[r * 5 + 4];
+            float high = low;
+            for (size_t c = 0; c < 4; c++) {
+                (a[r * 5 + c] < 0 ? low : high) += a[r * 5 + c];
+            }
+            // Allows for the rounding of rows that sum to 1.
+            const float kEpsilon = 1e-5f;
+            if (low < -kEpsilon || high > 1 + kEpsilon) {
+                return false;
+            }
+        }
+        const float* b = op.values;
+        float m[20];
+        for (size_t r = 0; r < 4; r++) {
+            for (size_t c = 0; c < 5; c++) {
+                float v = c == 4 ? b[r * 5 + 4] : 0;
+                for (size_t k = 0; k < 4; k++) {
+                    v += b[r * 5 + k] * a[k * 5 + c];
+                }
+                m[r * 5 + c] = v;
+            }
+        }
+        std::copy(m, m + 20, into.values);
+        return true;
+    }
 
     void pushFBOContext(size_t width, size_t height, LayoutRect viewport,
                         GLenum textureFormat = GL_RGBA)
@@ -6561,6 +7317,29 @@ public:
         return lastState;
     }
 
+    // A target the size of the input for one filter pass, which draw()
+    // paints. It stays out of the FBO cache until putFilterPassToCache(): a
+    // pass after it would take it while it is still read.
+    template <typename Draw>
+    FBOState drawFilterPass(size_t width, size_t height, const Draw& draw)
+    {
+        pushFBOContext(width, height, LayoutRect(0, 0, width, height));
+        gl()->clearColor(0, 0, 0, 0);
+        gl()->clear(GL_COLOR_BUFFER_BIT);
+        draw();
+        return popFBOContext(false);
+    }
+
+    void putFilterPassToCache(const FBOState& pass)
+    {
+        if (m_passRecord) {
+            m_passRecord->push_back(pass.fboId);
+        }
+        m_compositorContext->putFBOToCache(
+            pass.fboId, pass.fboTex, pass.textureSize.width(),
+            pass.textureSize.height(), pass.textureFormat);
+    }
+
 protected:
     bool m_seenFBOUsage;
     bool m_gotBaseFBORBOId;
@@ -6571,6 +7350,10 @@ protected:
     CompositorContextGL* m_compositorContext;
     std::vector<CompositorImplGLState> m_state;
     std::vector<FBOState> m_fboState;
+    // The filter lists of this pass; states point into it.
+    std::vector<Compositor::FilterOperation> m_filterOperations;
+    // Collects the pass targets of the filtered image being made.
+    std::vector<GLuint>* m_passRecord = nullptr;
     GLuint m_baseFBOId;
     GLuint m_baseRBOId;
     // A clip-path mask takes the primary slot and pushes every CSS mask into
@@ -6582,6 +7365,7 @@ protected:
 
     Clipper2Lib::PathD m_abbreviatedPath;
     std::vector<CompositorImplGLState::PathCommand> m_pathCommands;
+    bool m_fillRuleNonZero = true;
     SkMatrix m_screenMatrix;
 
     // Lazy full-screen clear: clearColor() defers the glClear; it is dropped if

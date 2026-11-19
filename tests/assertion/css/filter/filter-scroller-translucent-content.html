@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A scroller's filter takes its background and translucent content as one image</title>
+<link rel="help" href="https://drafts.fxtf.org/filter-effects-1/#FilterProperty">
+<style>
+  /* Red and blue are left equal: a screenshot may swap them. */
+  body { margin: 0; background: rgb(0, 255, 0); }
+  .s { position: absolute; top: 20px; width: 150px; height: 150px;
+       overflow: auto; background: white; }
+  .s > div { height: 600px; }
+  .s p { margin: 0; width: 60px; height: 40px; }
+  #opacity { left: 20px; filter: opacity(0.5); }
+  #opacity p { background: black; }
+  /* contrast(2) clamps the white background, not the gray it mixes into. */
+  #contrast { left: 200px; filter: contrast(2); }
+  #contrast p { background: rgba(64, 64, 64, 0.5); }
+</style>
+</head>
+<body>
+<div class="s" id="opacity"><div><p></p></div></div>
+<div class="s" id="contrast"><div><p></p></div></div>
+<script>
+  var shot = "filter-scroller-translucent-content.html.png";
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      return;
+    }
+    setTimeout(function () {
+      screenShot(shot, function () {
+        console.assert(checkPixelColors(shot, [
+          // Black over white, then half of it over green.
+          { x: 40, y: 40, r: 0, g: 128, b: 0, a: 255 },
+          // Half gray over white is 0.625, which contrast(2) makes 0.75.
+          { x: 220, y: 40, r: 191, g: 191, b: 191, a: 255 },
+        ], 3), "background and content filtered as one image");
+        testEnd();
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

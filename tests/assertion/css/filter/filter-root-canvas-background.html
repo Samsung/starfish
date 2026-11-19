@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>The root element's filter applies to the canvas background</title>
+<link rel="help" href="https://drafts.fxtf.org/filter-effects-1/#FilterProperty">
+<link rel="help" href="https://drafts.csswg.org/css-backgrounds-3/#body-background">
+<style>
+  /* The body's background is the canvas's, which the root's filter takes. */
+  html { filter: invert(1) hue-rotate(180deg); }
+  body { margin: 0; height: 3000px; background: white; }
+</style>
+</head>
+<body>
+<script>
+  var shot = "filter-root-canvas-background.html.png";
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      return;
+    }
+    setTimeout(function () {
+      screenShot(shot, function () {
+        console.assert(checkPixelColor(shot, 400, 300, 0, 0, 0, 255, 3),
+                       "canvas filtered");
+        window.scrollTo(0, 10);
+        setTimeout(function () {
+          screenShot(shot, function () {
+            console.assert(checkPixelColor(shot, 400, 300, 0, 0, 0, 255, 3),
+                           "canvas filtered while scrolled");
+            testEnd();
+          });
+        }, 300);
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

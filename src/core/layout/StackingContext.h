@@ -55,6 +55,7 @@ enum RepaintingWhenScrollingReason ENSURE_ENUM_UNSIGNED {
     RepaintingWhenScrollingReasonBoxShadow,
     RepaintingWhenScrollingReasonOutline,
     RepaintingWhenScrollingReasonBackgroundSize,
+    RepaintingWhenScrollingReasonFilter,
 };
 
 class GraphicsBufferHolder : public gc {
@@ -116,6 +117,8 @@ protected:
     size_t m_horizontalTileCount;
     size_t m_verticalTileCount;
     float m_additionalPixelRatio;
+    // Made as one image, for a filter that reads neighbouring pixels.
+    bool m_wholeImage;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -187,6 +190,9 @@ public:
     }
 
     LayoutRect visibleRect();
+    // visibleRect() grown by what the compositor's filter passes paint
+    // around the buffer.
+    LayoutRect compositedVisibleRect();
     // visibleRect() minus its own-frame seed: only what the traversal
     // actually united (things that paint). This is what the composed
     // recursion contributes to ancestors - the seed is a lower bound for
@@ -389,6 +395,11 @@ public:
     {
         return needsGraphicsBuffer() && inScrollActive();
     }
+    // Whether the compositor fills the scrolling buffer's background-color
+    // under it, through the color functions of the filters over it; a
+    // filter of its own that cannot take the fill and the buffer apart
+    // (FilterFunctions::filtersLayersApart) needs it in the buffer.
+    bool scrollBackgroundDrawnByCompositor();
 
     // True when this layer's own background-color may be drawn by the
     // compositor (as a full border-box fill, rounded when border-radius is

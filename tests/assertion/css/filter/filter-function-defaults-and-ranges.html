@@ -1,0 +1,57 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Filter function defaults, ranges, units and list order in computed values</title>
+<link rel="help" href="https://drafts.fxtf.org/filter-effects-1/#supported-filter-functions">
+<style>
+  #target { color: rgb(0, 0, 255); font-size: 10px; --amount: 0.25; --shadow: 1px 2px; }
+</style>
+<div id="target"></div>
+<div id="parent" style="color: rgb(255, 0, 0); filter: drop-shadow(1px 1px currentcolor)"><div id="child" style="color: rgb(0, 255, 0); filter: inherit"></div></div>
+<script>
+// filter-effects-1 #supported-filter-functions: an omitted argument is the
+// function's default (1, 0deg, 0px); grayscale, invert, opacity and sepia
+// clamp values above 1 to 1 at computed-value time, the others don't;
+// negative values are invalid except for hue-rotate; lengths compute to
+// absolute px. #FilterProperty: the functions apply, and serialize, in the
+// order given, and the same function may repeat.
+var target = document.getElementById("target");
+function computed(value) {
+  target.style.filter = "";
+  target.style.filter = value;
+  return getComputedStyle(target).filter;
+}
+[["sepia()", "sepia(1)"], ["invert()", "invert(1)"], ["opacity()", "opacity(1)"],
+ ["saturate()", "saturate(1)"], ["brightness()", "brightness(1)"], ["contrast()", "contrast(1)"],
+ ["hue-rotate()", "hue-rotate(0deg)"],
+ ["sepia(2)", "sepia(1)"], ["invert(150%)", "invert(1)"], ["opacity(3)", "opacity(1)"],
+ ["saturate(3)", "saturate(3)"], ["brightness(250%)", "brightness(2.5)"], ["contrast(300%)", "contrast(3)"],
+ ["invert(25%)", "invert(0.25)"], ["hue-rotate(-90deg)", "hue-rotate(-90deg)"],
+ ["blur(0)", "blur(0px)"], ["blur(2em)", "blur(20px)"],
+ ["drop-shadow(1em 2em 0.5em)", "drop-shadow(rgb(0, 0, 255) 10px 20px 5px)"],
+ ["drop-shadow(1px 2px red)", "drop-shadow(rgb(255, 0, 0) 1px 2px 0px)"],
+ ["drop-shadow(red 1px 2px 3px)", "drop-shadow(rgb(255, 0, 0) 1px 2px 3px)"],
+ ["drop-shadow(-1px -2px)", "drop-shadow(rgb(0, 0, 255) -1px -2px 0px)"],
+ ["blur(2px) grayscale(1) drop-shadow(1px 1px)", "blur(2px) grayscale(1) drop-shadow(rgb(0, 0, 255) 1px 1px 0px)"],
+ ["drop-shadow(1px 1px) blur(2px)", "drop-shadow(rgb(0, 0, 255) 1px 1px 0px) blur(2px)"],
+ ["grayscale(0.5) grayscale(0.5)", "grayscale(0.5) grayscale(0.5)"],
+ ["grayscale(var(--amount)) drop-shadow(var(--shadow))", "grayscale(0.25) drop-shadow(rgb(0, 0, 255) 1px 2px 0px)"]
+].forEach(function (c) {
+  var got = computed(c[0]);
+  console.assert(got === c[1], "computed " + c[0] + ": " + got + " != " + c[1]);
+});
+// Invalid declarations leave the previous value in place.
+["grayscale(-1)", "brightness(-0.5)", "blur(-1px)", "blur(10)", "hue-rotate(90)", "drop-shadow()",
+ "drop-shadow(1px)", "drop-shadow(red blue 1px 2px)", "drop-shadow(1px red 2px)",
+ "drop-shadow(1px 2px 3px 4px)", "none grayscale(1)", "grayscale(1), blur(1px)", "grayscale(1px)"
+].forEach(function (value) {
+  target.style.filter = "sepia(0.5)";
+  target.style.filter = value;
+  var got = getComputedStyle(target).filter;
+  console.assert(got === "sepia(0.5)", "invalid " + value + ": " + got);
+});
+// css-color-4 #resolving-other-colors: currentcolor computes to itself, so
+// an inherited shadow takes the color of the element that inherits it.
+var inherited = getComputedStyle(document.getElementById("child")).filter;
+console.assert(inherited === "drop-shadow(rgb(0, 255, 0) 1px 1px 0px)", "inherited currentcolor: " + inherited);
+if (typeof testEnd === "function") testEnd();
+</script>

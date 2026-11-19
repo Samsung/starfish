@@ -752,7 +752,7 @@ public:
                     childFrameBox->makeRect(BoxValue::PaddingBoxBoxValue));
             } else {
                 compositor->beginOpacityLayer(
-                    m_opacity, childStackingContext->visibleRect());
+                    m_opacity, childStackingContext->compositedVisibleRect());
             }
         }
     }

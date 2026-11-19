@@ -5,13 +5,16 @@
 <link rel="help" href="https://drafts.csswg.org/css-animations/#animation-delay">
 <style>
   @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes gray { from { filter: grayscale(1); } to { filter: none; } }
   .paused { animation-duration: 4s; animation-delay: -1s;
             animation-timing-function: linear; animation-play-state: paused; }
   #fade { animation-name: fade; }
+  #gray { animation-name: gray; }
 </style>
 </head>
 <body>
 <div id="fade" class="paused">fade</div>
+<div id="gray" class="paused">gray</div>
 <script>
   // A negative delay starts the animation part way through its run, paused
   // or not: here a quarter of the way.
@@ -19,6 +22,9 @@
     requestAnimationFrame(function () {
       var opacity = parseFloat(getComputedStyle(document.getElementById("fade")).opacity);
       console.assert(Math.abs(opacity - 0.25) < 0.01, "opacity paused at a quarter: " + opacity);
+      var filter = getComputedStyle(document.getElementById("gray")).filter;
+      var amount = parseFloat((/^grayscale\(([\d.]+)\)$/.exec(filter) || [])[1]);
+      console.assert(Math.abs(amount - 0.75) < 0.01, "filter paused at a quarter: " + filter);
       if (window.testEnd) {
         testEnd();
       }

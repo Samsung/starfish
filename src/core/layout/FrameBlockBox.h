@@ -387,6 +387,13 @@ public:
         for (size_t i = 0; i < m_boxes.size(); i++) {
             auto childBox = m_boxes[i];
 
+            // An inline box takes its flags from the style when it is laid
+            // out; a property that starts or ends a stacking context
+            // (filter, opacity, ...) changes without a relayout.
+            if (childBox->isInlineNonReplacedBox()) {
+                childBox->computeStyleFlags();
+            }
+
             childBox->markSeenNormalFlowInline();
 
             if (!childBox->needToEstablishStackingContext()) {

@@ -183,10 +183,61 @@ struct StackingContext::ComputeStackingContextContext {
     }
 };
 
+// Whether the compositor's filter passes read neighbouring pixels of the
+// layer (blur(), drop-shadow(); the SVG filter path too), so its buffer has
+// to be one image. Color functions go pixel by pixel, tiles and all.
+static bool filterNeedsWholeImage(StackingContext* sc)
+{
+    auto style = sc->owner()->style();
+    if (style->hasFilter() && !style->filter()->isColorOnly()) {
+        return true;
+    }
+    for (auto ancestor : sc->ancestorsThatHasFilters()) {
+        if (!ancestor->owner()->style()->filter()->isColorOnly()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// rect grown by where the compositor's filter passes paint around it: the
+// layer's functions, then those of each filtered ancestor.
+static LayoutRect withCompositedFilterInk(StackingContext* sc, LayoutRect rect)
+{
+    if (!sc->hasFilterEffect()) {
+        return rect;
+    }
+    if (sc->owner()->style()->hasAvailableFilter()) {
+        rect = sc->owner()->style()->filter()->inkRect(rect);
+    }
+    for (auto ancestor : sc->ancestorsThatHasFilters()) {
+        rect = ancestor->owner()->style()->filter()->inkRect(rect);
+    }
+    return rect;
+}
+
+// color as the compositor's filter on sc makes a plain fill of it: the
+// layer's functions, then those of each filtered ancestor.
+// shortcut: under an ancestor's filter the fill and the layer are filtered
+// apart, so a blur() leaves the fill's edges sharp and a function that
+// changes alpha or clamps (FilterFunctions::filtersLayersApart) lets the
+// fill show through translucent content; paint the fill in the buffer there
+// too, at the cost of repainting on scroll, if that shows.
+static Unit::Color filteredFillColor(StackingContext* sc, Unit::Color color)
+{
+    if (sc->owner()->style()->hasAvailableFilter()) {
+        color = sc->owner()->style()->filter()->filterColor(color);
+    }
+    for (auto ancestor : sc->ancestorsThatHasFilters()) {
+        color = ancestor->owner()->style()->filter()->filterColor(color);
+    }
+    return color;
+}
+
 static bool canSplitBuffer(StackingContext* sc)
 {
     bool canSplitGraphicsBufferCond = true;
-    if (sc->owner()->style()->hasFilter() || sc->owner()->isFrameSVGSVGBox()) {
+    if (filterNeedsWholeImage(sc) || sc->owner()->isFrameSVGSVGBox()) {
         canSplitGraphicsBufferCond = false;
     } else {
         sc->owner()->iterateChildFrameBox([&](FrameBox* fb) {
@@ -223,6 +274,7 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
     , m_horizontalTileCount(1)
     , m_verticalTileCount(1)
     , m_additionalPixelRatio(sc->additionalPixelRatio())
+    , m_wholeImage(filterNeedsWholeImage(sc))
 {
     bool canSplitGraphicsBufferCond = canSplitBuffer(sc);
 
@@ -238,7 +290,13 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
     // Tiling only pays off for layers that actually scroll. A layer that won't
     // scroll gains nothing from being split and only multiplies draw calls, so
     // keep it as a single surface as long as it still fits in one GL texture.
-    if (canSplitGraphicsBufferCond && !sc->inScrollWithGraphicsBufferActive()) {
+    // A filter gives an element of any size a layer, a whole page body even,
+    // so one larger than the screen keeps tiles for only what is shown.
+    bool filteredBeyondScreen =
+        sc->owner()->style()->hasAvailableFilter() &&
+        (bufferWidth > screenWidth || bufferHeight > screenHeight);
+    if (canSplitGraphicsBufferCond && !sc->inScrollWithGraphicsBufferActive() &&
+        !filteredBeyondScreen) {
         uint32_t maxTextureSize =
             Compositor::maximumTextureSize(sc->owner()->document()->starfish());
         float effectiveWidth = bufferWidth * m_additionalPixelRatio;
@@ -486,6 +544,13 @@ RepaintingWhenScrollingReason StackingContext::repaintingWhenScrollingReason()
         return RepaintingWhenScrollingReasonOutline;
     }
 
+    // The overflow clip cuts the content before the filter, whose output
+    // reaches past the clip, so the buffer has to hold clipped content.
+    if (owner()->shouldApplyOverflow() &&
+        owner()->style()->hasAvailableFilter()) {
+        return RepaintingWhenScrollingReasonFilter;
+    }
+
     bool rootBackgroundSizeIsExempt =
         m_owner->isRootElement() && !ownerHasFixedBackgroundAttachment(owner());
     if (owner()->style()->backgroundLayerSize() &&
@@ -534,6 +599,15 @@ bool StackingContext::needsToDrawScrollbar()
         frame->appliedOverflowX() >= OverflowValue::AutoOverflow &&
         frame->width();
     return hasVerticalScroll || hasHorizontalScroll;
+}
+
+bool StackingContext::scrollBackgroundDrawnByCompositor()
+{
+    if (!inScrollWithGraphicsBufferActive()) {
+        return false;
+    }
+    ComputedStyle* s = owner()->style();
+    return !s->hasAvailableFilter() || s->filter()->filtersLayersApart();
 }
 
 bool StackingContext::inScrollActive()
@@ -954,10 +1028,13 @@ void StackingContext::computeStackingContextProperties(
         }
     }
 
+    // The filter applies to the element and its descendants as one image
+    // (Filter Effects 1), so descendants paint into this layer rather than
+    // each into its own.
     if (Compositor::supportsFilterEffect(m_owner->document()->starfish(), 1,
                                          1) ==
             true /* test whatever compositor supports filter */
-        && m_hasFilterEffect) {
+        && owner()->style()->hasAvailableFilter()) {
         compositedBySelf = true;
         compositedOnItsOwn = true;
     }
@@ -1032,6 +1109,9 @@ void StackingContext::computeStackingContextProperties(
             reason = NeedsGraphicsLayerReason::
                 NeedsGraphicsLayerReasonNotCoveredByParent;
         } else if (parentIsRootElementLayer ||
+                   // A filter takes its descendants as one image, so its
+                   // layer holds them wherever they reach.
+                   compositedAncestor->owner()->style()->hasAvailableFilter() ||
                    (parentExtent.containsInVisual(selfExtent.x(),
                                                   selfExtent.y()) == true &&
                     parentExtent.containsInVisual(selfExtent.maxX(),
@@ -1336,7 +1416,7 @@ static CanvasSurface::CanvasSurfaceFlag computeSurfaceFlag(StackingContext* sc,
             CanvasSurface::PreferRetainCPUBufferWhenUnmap |
             CanvasSurface::PreferUnitedTexture);
     }
-    if (sc->hasFilterEffect()) {
+    if (filterNeedsWholeImage(sc)) {
         return CanvasSurface::PreferUnitedTexture;
     }
     // A layer that won't scroll gains nothing from CanvasSurfaceGL splitting it
@@ -1375,14 +1455,16 @@ bool StackingContext::isOwnerBackgroundDrawnByCompositor()
     if (owner()->hasChildren()) {
         return false;
     }
+    // A filter applies to the texture only; a solid fill would skip it.
     ComputedStyle* s = owner()->style();
-    if (s->maskLayerSize() || s->clipPathShape()) {
+    if (s->maskLayerSize() || s->clipPathShape() || s->hasAvailableFilter()) {
         return false;
     }
     for (StackingContext* ancestor = parent(); ancestor;
          ancestor = ancestor->parent()) {
         ComputedStyle* ancestorStyle = ancestor->owner()->style();
-        if (ancestorStyle->maskLayerSize() || ancestorStyle->clipPathShape()) {
+        if (ancestorStyle->maskLayerSize() || ancestorStyle->clipPathShape() ||
+            ancestorStyle->hasAvailableFilter()) {
             return false;
         }
     }
@@ -1448,6 +1530,13 @@ void StackingContext::applyStackingContextProperties(
                 prevDrawnMapIter->second.graphicsBufferHolder;
         }
     }
+    if (m_rareData && m_rareData->m_graphicsBufferHolder &&
+        m_rareData->m_graphicsBufferHolder->m_wholeImage !=
+            filterNeedsWholeImage(this)) {
+        // Its filter, or an ancestor's, came to read neighbouring pixels or
+        // stopped: painted again into a holder made for that.
+        m_owner->node()->setNeedsPainting();
+    }
     bool willBeComposited = m_passWillBeComposited;
     bool willBeCompositedDueToSelf = m_passCompositedBySelf;
 
@@ -1504,6 +1593,18 @@ void StackingContext::applyStackingContextProperties(
             }
 
             computeVisibleRect(this, this, ctx);
+
+            // The filter draws outside everything it is applied to, the
+            // descendants included (Filter Effects 1 ink overflow). The
+            // compositor's passes paint that around the buffer; a filter
+            // applied in the buffer needs the room in it.
+            if (m_owner->style()->hasAvailableFilter() &&
+                !m_rareData->m_visibleRect.isEmpty() &&
+                !Compositor::supportsFilterEffect(
+                    m_owner->document()->starfish(), 1, 1)) {
+                m_rareData->m_visibleRect = m_owner->style()->filter()->inkRect(
+                    m_rareData->m_visibleRect);
+            }
 
             if (shouldPaintWindowBackgroundImage) {
                 LayoutRect scrollRect(
@@ -1756,27 +1857,51 @@ public:
         , m_canvasToApplyFilter(nullptr)
     {
         auto style = m_ownerStackingContext->owner()->style();
-
-        Length standardDeviation;
-        if (style->hasAvailableFilter() &&
-            style->filter()->getStandardDeviationOfBlurFilter(
-                standardDeviation)) {
-            m_maxRadiusOffset = std::max(
-                m_maxRadiusOffset, (standardDeviation.numberData() * 2 * 1.8f));
+        // Filter values are CSS px. A buffer painted through the canvas'
+        // matrix has its pixels; one painted unscaled and scaled when drawn
+        // back has CSS px (none under a perspective, without a single scale).
+        m_scale = 1;
+        if (m_ownerStackingContext->needsGraphicsBuffer() ||
+            owner->owner()->node()->webView()->needsComposite()) {
+            float scale =
+                m_originCanvas->currentTransformMatrix().getMaxScale();
+            m_scale = scale > 0 ? scale : 1;
         }
 
+        // Each function reaches out from what the ones before drew, the
+        // ancestors' after the layer's own: the room adds up. An ancestor's
+        // drop-shadow() counts too, as applyAllFilter applies it here.
+        auto room = [](FilterFunctions* filters) {
+            float total = 0;
+            for (auto f : *filters) {
+                if (f->type() == FilterFunctionType::BlurFilterFunctionType) {
+                    total += static_cast<BlurFilterFunction*>(f)
+                                 ->standardDeviation()
+                                 .numberData() *
+                             2 * 1.8f;
+                } else if (f->type() ==
+                           FilterFunctionType::DropShadowFilterFunctionType) {
+                    // Each side: the offset plus the blur's extent.
+                    auto ds = static_cast<DropShadowFilterFunction*>(f);
+                    total += (std::max(std::abs(ds->offsetX()),
+                                       std::abs(ds->offsetY())) +
+                              ShadowBlur::computeKernelSizeAtStdDeviation(
+                                  ds->stdDeviation())) *
+                             2;
+                }
+            }
+            return total;
+        };
+        if (style->hasAvailableFilter()) {
+            m_maxRadiusOffset = room(style->filter().value());
+        }
         for (auto ancestor :
              m_ownerStackingContext->ancestorsThatHasFilters()) {
-            auto s = ancestor->owner()->style();
-            if (s->filter()->getStandardDeviationOfBlurFilter(
-                    standardDeviation)) {
-                m_maxRadiusOffset =
-                    std::max(m_maxRadiusOffset,
-                             (standardDeviation.numberData() * 2 * 1.8f));
-            }
+            m_maxRadiusOffset +=
+                room(ancestor->owner()->style()->filter().value());
         }
         m_maxRadiusOffset =
-            std::min(ShadowBlur::RADIUS_LIMIT, m_maxRadiusOffset);
+            std::min(ShadowBlur::RADIUS_LIMIT, m_maxRadiusOffset * m_scale);
 
         if (!m_ownerStackingContext->needsGraphicsBuffer()) {
             LayoutRect rect = m_ownerStackingContext->screenExtent();
@@ -1792,10 +1917,34 @@ public:
             computeBufferSizeFromVisibleRect(minX, minY, maxX, maxY,
                                              bufferWidth, bufferHeight);
 
+            SkMatrix matrix;
             if (owner->owner()->node()->webView()->needsComposite()) {
+                // Only the part of the render target the context paints: a
+                // buffer as large as the target, per paint, is megabytes.
+                // The owner's own ink is in the rect already
+                // (FrameBox::frameVisibleRect) and the margin below holds
+                // the rest of its filter's.
                 auto& renderTarget = m_originCanvas->renderTargetInfo();
-                bufferWidth = renderTarget.m_width;
-                bufferHeight = renderTarget.m_height;
+                LayoutRect rect = m_ownerStackingContext->visibleRect();
+                for (auto ancestor :
+                     m_ownerStackingContext->ancestorsThatHasFilters()) {
+                    rect = ancestor->owner()->style()->filter()->inkRect(rect);
+                }
+                SkRect area = SkRect::MakeXYWH(rect.x(), rect.y(), rect.width(),
+                                               rect.height());
+                matrix = m_originCanvas->currentTransformMatrix();
+                matrix.mapRect(&area);
+                area.roundOut(&area);
+                if (!area.intersect(SkRect::MakeWH(renderTarget.m_width,
+                                                   renderTarget.m_height))) {
+                    area.setEmpty();
+                }
+                m_bufferX = area.x();
+                m_bufferY = area.y();
+                bufferWidth = area.width();
+                bufferHeight = area.height();
+                matrix.postTranslate(ceil(m_maxRadiusOffset / 2) - m_bufferX,
+                                     ceil(m_maxRadiusOffset / 2) - m_bufferY);
             }
 
             m_nativeImageToApplyFilter = BufferedNativeImageData::create(
@@ -1814,12 +1963,11 @@ public:
                 m_originCanvas->textDecorationData());
 
             if (owner->owner()->node()->webView()->needsComposite()) {
-                m_canvasToApplyFilter->postMatrix(
-                    m_originCanvas->currentTransformMatrix());
+                m_canvasToApplyFilter->setMatrix(matrix);
+            } else {
+                m_canvasToApplyFilter->translate(ceil(m_maxRadiusOffset / 2),
+                                                 ceil(m_maxRadiusOffset / 2));
             }
-
-            m_canvasToApplyFilter->translate(ceil(m_maxRadiusOffset / 2),
-                                             ceil(m_maxRadiusOffset / 2));
 
             (*m_origin) = m_canvasToApplyFilter;
         }
@@ -1893,9 +2041,9 @@ public:
             auto style = m_ownerStackingContext->owner()->style();
             if (style->hasAvailableFilter()) {
                 for (auto filter : *style->filter()) {
-                    filter->apply(webView,
-                                  buffer + imageStartYPosition * stride, width,
-                                  height - imageStartYPosition, stride);
+                    filter->apply(
+                        webView, buffer + imageStartYPosition * stride, width,
+                        height - imageStartYPosition, stride, m_scale);
                 }
             }
 
@@ -1903,9 +2051,9 @@ public:
                  m_ownerStackingContext->ancestorsThatHasFilters()) {
                 style = ancestor->owner()->style();
                 for (auto filter : *style->filter()) {
-                    filter->apply(webView,
-                                  buffer + imageStartYPosition * stride, width,
-                                  height - imageStartYPosition, stride);
+                    filter->apply(
+                        webView, buffer + imageStartYPosition * stride, width,
+                        height - imageStartYPosition, stride, m_scale);
                 }
             }
         }
@@ -1922,7 +2070,8 @@ public:
                         ->needsComposite()) {
                     m_originCanvas->setMatrix(SkMatrix::I());
                 }
-                m_originCanvas->translate(-offset, -offset);
+                m_originCanvas->translate(m_bufferX - offset,
+                                          m_bufferY - offset);
                 m_originCanvas->drawImage(m_nativeImageToApplyFilter, rect);
                 m_originCanvas->restore();
             }
@@ -1936,9 +2085,14 @@ private:
     Canvas* m_originCanvas;
     StackingContext* m_ownerStackingContext;
     float m_maxRadiusOffset;
+    // Where the buffer sits on the render target.
+    float m_bufferX = 0;
+    float m_bufferY = 0;
 
     NativeImageData* m_nativeImageToApplyFilter;
     Canvas* m_canvasToApplyFilter;
+    // Pixels of the buffers per CSS px.
+    float m_scale;
 };
 
 static bool canCullChildStackingContextVisit(bool hasClipRect,
@@ -1971,7 +2125,14 @@ void StackingContext::fillGraphicsBufferContents(
         }
     }
 
-    if (auto shape = owner()->style()->clipPathShape()) {
+    // The clip-path goes after the filter (CSS Masking placement): on a layer
+    // the compositor filters, it clips the composited result instead.
+    auto shape = owner()->style()->clipPathShape();
+    if (shape && !(owner()->style()->hasAvailableFilter() &&
+                   Compositor::supportsFilterEffect(
+                       m_owner->document()->starfish(),
+                       canvas->renderTargetInfo().m_width,
+                       canvas->renderTargetInfo().m_height))) {
         owner()->clipToClipPathShape(canvas, shape.value());
     }
 
@@ -2439,6 +2600,11 @@ LayoutRect StackingContext::visibleRect()
     return m_rareData ? m_rareData->m_visibleRect : LayoutRect(0, 0, 0, 0);
 }
 
+LayoutRect StackingContext::compositedVisibleRect()
+{
+    return withCompositedFilterInk(this, visibleRect());
+}
+
 LayoutRect StackingContext::visibleRectContentOnly()
 {
     visibleRect();
@@ -2598,9 +2764,10 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                             coveredRowsCount);
 
                     LayoutRect tileExtent = computeBoxExtent(
-                        LayoutRect(minX + (LayoutUnit)tileDataX,
-                                   minY + (LayoutUnit)tileDataY, tileDataWidth,
-                                   tileDataHeight),
+                        withCompositedFilterInk(
+                            this, LayoutRect(minX + (LayoutUnit)tileDataX,
+                                             minY + (LayoutUnit)tileDataY,
+                                             tileDataWidth, tileDataHeight)),
                         screenMatrix);
 
                     bool willPaintOnScreen =
@@ -2870,11 +3037,15 @@ bool StackingContext::fillGraphicsBufferContents(
 
     LayoutRect deviceLayerClipRect;
 
+    // A filter that came to read neighbouring pixels needs the tiles as one
+    // image: the holder is made again.
+    const bool wholeImage = filterNeedsWholeImage(this);
     if (m_rareData->m_graphicsBufferHolder == nullptr ||
         m_rareData->m_graphicsBufferHolder->bufferWidth() != bufferWidth ||
         m_rareData->m_graphicsBufferHolder->bufferHeight() != bufferHeight ||
         m_rareData->m_graphicsBufferHolder->additionalPixelRatio() !=
-            additionalPixelRatio()) {
+            additionalPixelRatio() ||
+        m_rareData->m_graphicsBufferHolder->m_wholeImage != wholeImage) {
         bool reuse = false;
         auto iter =
             globalCtx.prevDrawnStackingContextInfoMap.find(m_owner->node());
@@ -2885,7 +3056,8 @@ bool StackingContext::fillGraphicsBufferContents(
                 iter->second.graphicsBufferHolder->bufferHeight() ==
                     bufferHeight &&
                 iter->second.graphicsBufferHolder->additionalPixelRatio() ==
-                    additionalPixelRatio()) {
+                    additionalPixelRatio() &&
+                iter->second.graphicsBufferHolder->m_wholeImage == wholeImage) {
                 reuse = true;
                 m_rareData->m_graphicsBufferHolder =
                     iter->second.graphicsBufferHolder;
@@ -2946,11 +3118,12 @@ bool StackingContext::fillGraphicsBufferContents(
                 m_rareData->m_graphicsBufferHolder->tileBufferHeight() -
                     coveredRowsCount);
 
-            LayoutRect tileExtent =
-                computeBoxExtent(LayoutRect(minX + (LayoutUnit)tileDataX,
-                                            minY + (LayoutUnit)tileDataY,
-                                            tileDataWidth, tileDataHeight),
-                                 screenMatrix);
+            LayoutRect tileExtent = computeBoxExtent(
+                withCompositedFilterInk(
+                    this, LayoutRect(minX + (LayoutUnit)tileDataX,
+                                     minY + (LayoutUnit)tileDataY,
+                                     tileDataWidth, tileDataHeight)),
+                screenMatrix);
 
             bool willPaintOnScreen = screenRect.intersects(tileExtent) &&
                                      windowRect.intersects(tileExtent);
@@ -3122,6 +3295,13 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         return;
     }
 
+    // Unless the compositor applies them to the layer this paints into.
+    const bool appliesFilters =
+        m_hasFilterEffect &&
+        !Compositor::supportsFilterEffect(m_owner->document()->starfish(),
+                                          canvas->renderTargetInfo().m_width,
+                                          canvas->renderTargetInfo().m_height);
+
     canvas->save();
 
     if (owner()->style()->mixBlendMode() != BlendMode::Normal) {
@@ -3190,7 +3370,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     applyMask(canvas, ctx);
 
     if (!canRejectPainting) {
-        if (m_hasFilterEffect) {
+        if (appliesFilters) {
             FilterContext filterContext(&canvas, this, ctx);
             m_owner->paintBackgroundAndBorders(canvas);
             filterContext.applyAllFilter(ctx);
@@ -3286,7 +3466,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     }
 
     if (!canRejectPainting) {
-        if (m_hasFilterEffect) {
+        if (appliesFilters) {
             FilterContext filterContext(&canvas, this, ctx);
             m_owner->paintStackingContextContent(canvas, ctx.memos);
             m_owner->paintOutline(canvas);
@@ -3416,6 +3596,56 @@ void StackingContext::compositeScrollbar(Compositor* compositor)
     }
 }
 
+// The compositor passes for a filter list, in its order (Filter Effects 1:
+// each function takes the result of the one before).
+static void addFilterOperations(FilterFunctions* filters, bool withDropShadows,
+                                std::vector<Compositor::FilterOperation>& out)
+{
+    for (auto f : *filters) {
+        Compositor::FilterOperation op = {};
+        switch (f->type()) {
+        case FilterFunctionType::BlurFilterFunctionType:
+            op.kind = Compositor::FilterOperation::Blur;
+            op.values[0] = static_cast<BlurFilterFunction*>(f)
+                               ->standardDeviation()
+                               .numberData();
+            if (op.values[0] <= 0) {
+                continue;
+            }
+            break;
+        case FilterFunctionType::DropShadowFilterFunctionType: {
+            if (!withDropShadows) {
+                continue;
+            }
+            auto shadow = static_cast<DropShadowFilterFunction*>(f);
+            const Unit::Color& c = shadow->color();
+            if (!c.a()) {
+                continue;
+            }
+            op.kind = Compositor::FilterOperation::DropShadow;
+            op.values[0] = shadow->offsetX();
+            op.values[1] = shadow->offsetY();
+            op.values[2] = shadow->stdDeviation();
+            op.values[3] = c.r() / 255.f;
+            op.values[4] = c.g() / 255.f;
+            op.values[5] = c.b() / 255.f;
+            op.values[6] = c.a() / 255.f;
+        } break;
+        case FilterFunctionType::SVGUrlFilterFunctionType:
+            // Rendered by the SVG filter path.
+            continue;
+        default:
+            if (static_cast<ColorFilterFunction*>(f)->isIdentity()) {
+                continue;
+            }
+            op.kind = Compositor::FilterOperation::ColorMatrix;
+            static_cast<ColorFilterFunction*>(f)->colorMatrix(op.values);
+            break;
+        }
+        out.push_back(op);
+    }
+}
+
 void StackingContext::compositeStackingContext(Compositor* compositor)
 {
     STARFISH_ASSERT(compositor != nullptr);
@@ -3466,7 +3696,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     auto screenMatrix = m_owner->computeScreenMatrix(true);
     LayoutRect screenRect = computeScreenRect(this);
     LayoutRect stackingContextExtent =
-        computeBoxExtent(visibleRect, screenMatrix);
+        computeBoxExtent(compositedVisibleRect(), screenMatrix);
     // stacking context owner's bg-color is excluded from visibleRect so the
     // buffer is sized to content only; compositor draws it directly
     bool isOwnerBackgroundDrawnByCompositor =
@@ -3516,6 +3746,13 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                           ->browsingContext();
             auto bgColor = bc->hasWindowBackgroundColor();
 
+            // shortcut: a composited inner root never draws its canvas
+            // colour (its buffer leaves it out, FrameBox::paintBackground);
+            // only a composited iframe draws it here. A filter on an iframe
+            // document's root element, which composites that root, so drops
+            // the document's canvas background otherwise. Fill it from the
+            // inner root's composite, before its own transform and under its
+            // opacity, if pages need it.
             if (bgColor.first || visibleRect.isEmpty()) {
                 if (bgColor.second.a()) {
                     ComputeOverflow<Compositor> r(compositor, this,
@@ -3613,37 +3850,51 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         isOwnerBackgroundDrawnByCompositor) {
         owner()->willCompositeStackingContext(compositor);
 
+        // The compositor filters each texture: a tile or the united buffer.
+        auto holder = m_rareData->m_graphicsBufferHolder;
         bool hasFilterEffect = false;
-        if (Compositor::supportsFilterEffect(m_owner->document()->starfish(),
-                                             bufferWidth, bufferHeight) &&
-            m_hasFilterEffect) {
+        if (m_hasFilterEffect &&
+            Compositor::supportsFilterEffect(
+                m_owner->document()->starfish(),
+                holder ? holder->m_tileDataWidth : bufferWidth,
+                holder ? holder->m_tileDataHeight : bufferHeight)) {
             hasFilterEffect = true;
-            Length standardDeviation;
-            float maxRadiusOffset = 0;
-            if (ownerStyle->hasAvailableFilter() &&
-                ownerStyle->filter()->getStandardDeviationOfBlurFilter(
-                    standardDeviation)) {
-                maxRadiusOffset =
-                    std::max(maxRadiusOffset, (standardDeviation.numberData()));
+            compositor->save();
+            // shortcut: a descendant composited apart from a filtered
+            // ancestor (for a reason of its own, a filter of its own among
+            // them; the others paint into the ancestor's layer) goes through
+            // the ancestor's functions after its own, but casts none of the
+            // ancestor's drop-shadow(), which would fall on the ancestor's
+            // content. Compositing the subtree into one surface would give
+            // it the group's shadow, at the cost of a target per group.
+            // Kept between composites: the compositor copies the list.
+            static thread_local std::vector<Compositor::FilterOperation>
+                operations;
+            operations.clear();
+            if (ownerStyle->hasAvailableFilter()) {
+                addFilterOperations(ownerStyle->filter().value(), true,
+                                    operations);
             }
-
             for (auto ancestor : ancestorsThatHasFilters()) {
-                auto s = ancestor->owner()->style();
-                if (s->filter()->getStandardDeviationOfBlurFilter(
-                        standardDeviation)) {
-                    maxRadiusOffset = std::max(
-                        maxRadiusOffset, (standardDeviation.numberData()));
-                }
+                addFilterOperations(
+                    ancestor->owner()->style()->filter().value(), false,
+                    operations);
             }
-
-            if (maxRadiusOffset) {
-                compositor->save();
-                compositor->enableBlurEffect(maxRadiusOffset);
+            if (!operations.empty()) {
+                compositor->enableFilterEffect(operations.data(),
+                                               operations.size());
             }
         }
 
         if (m_rareData->m_graphicsBufferHolder) {
             compositor->save();
+
+            // The clip-path the buffer was painted without, after the filter.
+            auto clipPathShape = ownerStyle->clipPathShape();
+            if (hasFilterEffect && ownerStyle->hasAvailableFilter() &&
+                clipPathShape) {
+                m_owner->clipToClipPathShape(compositor, clipPathShape.value());
+            }
 
             // bg-color was skipped in paintBackground; compositor draws it
             // before tiles so the buffer only needs to hold content
@@ -3662,8 +3913,12 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     fullRect = m_owner->makeRect(BoxValue::PaddingBoxBoxValue);
                 }
 
-                if (inScrollWithGraphicsBufferActive()) {
+                if (scrollBackgroundDrawnByCompositor()) {
                     auto clr = owner()->style()->backgroundColor();
+                    if (m_hasFilterEffect) {
+                        // The filter applies to the background too.
+                        clr = filteredFillColor(this, clr);
+                    }
                     if (!clr.isTransparent()) {
                         compositor->save();
                         if (compositingMaskCount && maskContexts[0] == this) {
@@ -3710,6 +3965,13 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                         fullRect.unite(Unit::Rect(
                             shadowRect.x(), shadowRect.y(), shadowRect.width(),
                             shadowRect.height()));
+                    }
+                    if (owner()->style()->hasAvailableFilter()) {
+                        LayoutRect ink = owner()->style()->filter()->inkRect(
+                            LayoutRect(fullRect.x(), fullRect.y(),
+                                       fullRect.width(), fullRect.height()));
+                        fullRect = Unit::Rect(ink.x(), ink.y(), ink.width(),
+                                              ink.height());
                     }
                 }
 
@@ -3760,9 +4022,10 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                             coveredRowsCount);
 
                     LayoutRect tileExtent = computeBoxExtent(
-                        LayoutRect(minX + (LayoutUnit)tileDataX,
-                                   minY + (LayoutUnit)tileDataY, tileDataWidth,
-                                   tileDataHeight),
+                        withCompositedFilterInk(
+                            this, LayoutRect(minX + (LayoutUnit)tileDataX,
+                                             minY + (LayoutUnit)tileDataY,
+                                             tileDataWidth, tileDataHeight)),
                         screenMatrix);
 
                     bool willPaintOnScreen = screenRect.intersects(tileExtent);

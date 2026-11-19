@@ -186,35 +186,7 @@ bool ComputedStyle::hasFilter()
 
 bool ComputedStyle::hasAvailableFilter()
 {
-    if (!hasFilter()) {
-        return false;
-    }
-
-    for (auto filter : *(m_rareComputedStyleData.filter())) {
-        switch (filter->type()) {
-        case FilterFunctionType::BlurFilterFunctionType:
-            if (!(static_cast<BlurFilterFunction*>(filter)
-                      ->standardDeviation()
-                      .isZero())) {
-                return true;
-            }
-            break;
-        case FilterFunctionType::DropShadowFilterFunctionType:
-        case FilterFunctionType::HueRotateFilterFunctionType:
-        case FilterFunctionType::BrightnessFilterFunctionType:
-        case FilterFunctionType::ContrastFilterFunctionType:
-        case FilterFunctionType::GrayScaleFilterFunctionType:
-        case FilterFunctionType::InvertFilterFunctionType:
-        case FilterFunctionType::OpacityFilterFunctionType:
-        case FilterFunctionType::SaturateFilterFunctionType:
-        case FilterFunctionType::SVGUrlFilterFunctionType:
-        default:
-            // UNIMPLEMENTED.
-            return false;
-            break;
-        }
-    }
-    return false;
+    return hasFilter() && m_rareComputedStyleData.filter()->hasEffect();
 }
 
 bool ComputedStyle::hasTransforms(Frame* frame)
@@ -2989,8 +2961,9 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                     ComputedStyleDamage::
                         ComputedStyleDamageComputeStackingContextProperties |
                     damage);
-                if (newStyle->hasAvailableFilter() !=
-                    oldStyle->hasAvailableFilter()) {
+                if (newStyle->hasFilter() != oldStyle->hasFilter() ||
+                    newStyle->hasAvailableFilter() !=
+                        oldStyle->hasAvailableFilter()) {
                     damage = static_cast<ComputedStyleDamage>(
                         ComputedStyleDamage::
                             ComputedStyleDamageEstablishesStackingContext |

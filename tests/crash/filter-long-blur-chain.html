@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A long chain of large blurs renders in bounded memory</title>
+<link rel="help" href="https://drafts.fxtf.org/filter-effects-1/#funcdef-filter-blur">
+<style>
+  body { margin: 0; }
+  /* Each blur reaches further around the box than the one before. */
+  #box { position: absolute; left: 100px; top: 100px; width: 50px; height: 50px;
+         background: green;
+         filter: blur(100px) blur(100px) blur(100px) blur(100px) blur(100px)
+                 blur(100px) blur(100px) blur(100px) blur(100px) blur(100px)
+                 blur(100px) blur(100px) blur(100px) blur(100px) blur(100px)
+                 blur(100px) blur(100px) blur(100px) blur(100px) blur(100px)
+                 blur(100px) blur(100px) blur(100px) blur(100px) blur(100px)
+                 blur(100px) blur(100px) blur(100px) blur(100px) blur(100px); }
+</style>
+</head>
+<body>
+<div id="box"></div>
+<script>
+  window.onload = function () {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        if (typeof testEnd === "function") testEnd();
+      });
+    });
+  };
+</script>
+</body>
+</html>

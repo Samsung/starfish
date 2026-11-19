@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A filter applies to the background of a scroller under it</title>
+<link rel="help" href="https://drafts.fxtf.org/filter-effects-1/#FilterProperty">
+<style>
+  body { margin: 0; background: white; }
+  .s { position: absolute; top: 20px; width: 150px; height: 150px;
+       overflow: auto; background: white; }
+  .s > div { height: 600px; }
+  #auto { left: 20px; filter: invert(1); }
+  #layer { left: 200px; filter: invert(1); will-change: transform; }
+  /* A blur reads the pixels around: the background has to be among them. */
+  #blur { left: 380px; filter: blur(1px) invert(1); }
+  #wrap { position: absolute; left: 560px; top: 0; width: 200px; height: 200px;
+          filter: invert(1); }
+  #inner { left: 0; }
+</style>
+</head>
+<body>
+<div class="s" id="auto"><div></div></div>
+<div class="s" id="layer"><div></div></div>
+<div class="s" id="blur"><div></div></div>
+<div id="wrap"><div class="s" id="inner"><div></div></div></div>
+<script>
+  var shot = "filter-scroller-background.html.png";
+  // Inverted white, in the middle of each scroller.
+  var black = [95, 275, 455, 635].map(function (x) {
+    return { x: x, y: 100, r: 0, g: 0, b: 0, a: 255 };
+  });
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      return;
+    }
+    setTimeout(function () {
+      screenShot(shot, function () {
+        console.assert(checkPixelColors(shot, black, 3), "backgrounds filtered");
+        ["auto", "layer", "blur", "inner"].forEach(function (id) {
+          document.getElementById(id).scrollTop = 5;
+        });
+        setTimeout(function () {
+          screenShot(shot, function () {
+            console.assert(checkPixelColors(shot, black, 3),
+                           "backgrounds filtered while scrolled");
+            testEnd();
+          });
+        }, 300);
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

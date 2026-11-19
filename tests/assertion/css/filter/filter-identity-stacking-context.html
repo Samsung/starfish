@@ -1,0 +1,46 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A filter other than none establishes a stacking context, an identity one included</title>
+<link rel="help" href="https://drafts.fxtf.org/filter-effects-1/#FilterProperty">
+<style>
+  body { margin: 0; }
+  /* Positioned with z-index: auto, so only the filter can make a context. */
+  .p { position: absolute; width: 40px; height: 40px; background: green; }
+  /* Under the box unless the box's context holds it. */
+  .c { position: relative; z-index: -1; width: 20px; height: 20px; background: blue; }
+</style>
+<div class="p" style="left: 0px" id="none"><div class="c"></div></div>
+<div class="p" style="left: 50px; filter: brightness(1)"><div class="c"></div></div>
+<div class="p" style="left: 100px; filter: grayscale(0)"><div class="c"></div></div>
+<div class="p" style="left: 150px; filter: opacity(1)"><div class="c"></div></div>
+<div class="p" style="left: 200px; filter: blur(0px)"><div class="c"></div></div>
+<div class="p" style="left: 250px; filter: hue-rotate(0deg)"><div class="c"></div></div>
+<div class="p" style="left: 300px; filter: drop-shadow(0 0 0 transparent)"><div class="c"></div></div>
+<div class="p" style="left: 350px" id="toIdentity"><div class="c"></div></div>
+<div class="p" style="left: 400px; filter: brightness(2)" id="effectToIdentity"><div class="c"></div></div>
+<div class="p" style="left: 450px; filter: brightness(1)" id="identityToNone"><div class="c"></div></div>
+<script>
+function topAt(x) {
+  var e = document.elementFromPoint(x + 10, 10);
+  return e ? e.className : "nothing";
+}
+function check(x, expected, what) {
+  console.assert(topAt(x) === expected, what + ": " + topAt(x) + " on top");
+}
+check(0, "p", "no filter");
+check(50, "c", "brightness(1)");
+check(100, "c", "grayscale(0)");
+check(150, "c", "opacity(1)");
+check(200, "c", "blur(0px)");
+check(250, "c", "hue-rotate(0deg)");
+check(300, "c", "drop-shadow(0 0 0 transparent)");
+document.getElementById("toIdentity").style.filter = "brightness(1)";
+document.getElementById("effectToIdentity").style.filter = "brightness(1)";
+document.getElementById("identityToNone").style.filter = "none";
+requestAnimationFrame(function () { requestAnimationFrame(function () {
+  check(350, "c", "none to brightness(1)");
+  check(400, "c", "brightness(2) to brightness(1)");
+  check(450, "p", "brightness(1) to none");
+  if (typeof testEnd === "function") testEnd();
+}); });
+</script>

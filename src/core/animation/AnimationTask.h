@@ -581,11 +581,7 @@ public:
     void execute(double progress, ComputedStyle* style) override;
 
 private:
-    BlurFilterFunction* interpolateBlurFilter(BlurFilterFunction* from,
-                                              BlurFilterFunction* to,
-                                              double progress);
-    void applyBlurFilterToStyle(BlurFilterFunction* blurFilter,
-                                ComputedStyle* style);
+    void applyFilterToStyle(FilterFunction* filter, ComputedStyle* style);
 };
 
 } // namespace Starfish

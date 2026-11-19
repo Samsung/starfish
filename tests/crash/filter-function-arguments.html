@@ -1,0 +1,109 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Malformed, extreme and animated filter function lists do not crash</title>
+<style>
+  body { margin: 0; }
+  .b { position: relative; width: 20px; height: 20px; background: #0f0; color: blue;
+       display: inline-block; margin: 2px; --len: 3px; --num: 0.5; }
+  #scroller { width: 60px; height: 60px; overflow: scroll; filter: drop-shadow(2px 2px 1px red) blur(1px); }
+  #scroller > div { height: 300px; background: linear-gradient(#0f0, blue); }
+  @keyframes grow { from { filter: grayscale(1); } to { filter: grayscale(0) blur(4px) drop-shadow(1px 1px red); } }
+  @keyframes swap { from { filter: drop-shadow(1px 1px 1px red); } to { filter: blur(3px); } }
+  @keyframes shrink { from { filter: blur(2px) sepia(1) invert(1); } to { filter: none; } }
+  @keyframes tint { from { filter: drop-shadow(currentcolor 0 0 1px); color: red; }
+                    to { filter: drop-shadow(currentcolor 9px 9px 9px); color: blue; } }
+  @keyframes url { from { filter: none; } to { filter: url(#missing); } }
+  @keyframes urlBack { from { filter: url(#missing); } to { filter: none; } }
+  @keyframes urlShadow { from { filter: url(#missing); } to { filter: drop-shadow(1em 1em currentcolor); } }
+  .grow { animation: grow 1s linear infinite; }
+  .url { animation: url 1s linear -0.25s paused; }
+  .urlBack { animation: urlBack 1s linear -0.75s paused; }
+  .urlShadow { animation: urlShadow 1s linear infinite; }
+  .swap { animation: swap 1s linear -0.4s infinite paused; }
+  .shrink { animation: shrink 0.2s linear infinite alternate; }
+  .tint { animation: tint 1s linear infinite; }
+  .t { transition: filter 1s linear; }
+</style>
+<div id="root"></div>
+<div id="scroller"><div></div></div>
+<div id="nest" class="b" style="filter: drop-shadow(1px 1px red)"><div class="b" style="filter: grayscale(1) drop-shadow(1px 1px blue)"><div class="b" style="filter: blur(1px); will-change: transform; transform: translateX(1px)"><div class="b" style="position: fixed; filter: opacity(0.5)"></div></div></div></div>
+<script>
+// filter-effects-1 #FilterProperty: drop-shadow() takes <color>? && <length>{2,3}
+// with a non-negative standard deviation, the other functions one optional
+// argument; anything else makes the declaration invalid and it is dropped.
+// Huge arguments are valid and must not make the engine allocate without
+// bound. Interpolating lists of different length or different functions
+// is defined (filter-effects-1 #interpolation-of-filters).
+var values = [
+  "drop-shadow(1px 2px 3px 4px)", "drop-shadow(1px 2px 3px 4px 5px 6px 7px 8px)",
+  "drop-shadow(1px 2px -3px)", "drop-shadow(-1px -2px)", "drop-shadow(red blue 1px 2px)",
+  "drop-shadow(1px red 2px)", "drop-shadow(red 1px 2px blue)", "drop-shadow(red)", "drop-shadow()",
+  "drop-shadow(1px)", "drop-shadow(1px 2px 3px red red)", "drop-shadow(currentcolor 1px 2px 3px)",
+  "drop-shadow(calc(1px + 1em) calc(2px - 1em) calc(1em))", "drop-shadow(1em 1ex 1rem)",
+  "drop-shadow(var(--len) var(--len) var(--len) currentcolor)", "drop-shadow(var(--len))",
+  "drop-shadow(1px 2px 3px, 4px 5px)", "drop-shadow(1px, 2px)", "drop-shadow(1 2)",
+  "drop-shadow(10% 20%)", "drop-shadow(1px 2px 3px transparent)", "drop-shadow(1px 2px 3px rgba(0,0,0,0))",
+  "blur(-1px)", "blur(10)", "blur(1%)", "blur(calc(1px + 1em))", "blur(var(--len))", "blur(1px 2px)",
+  "grayscale(-1)", "grayscale(1 2)", "grayscale(calc(2))", "grayscale(calc(-1))", "grayscale(var(--num))",
+  "grayscale(1px)", "sepia(1e30)", "invert(1e30)", "opacity(1e30)", "brightness(1e30)", "contrast(1e30)",
+  "saturate(1e30)", "hue-rotate(1e30deg)", "hue-rotate(-1e30deg)", "hue-rotate(90)", "hue-rotate(1turn)",
+  "brightness(-1)", "brightness(calc(-10))", "contrast(calc(1 / 0))", "opacity(calc(infinity))",
+  "blur(1e9px)", "blur(calc(infinity * 1px))", "drop-shadow(1e9px 1e9px 1e9px red)",
+  "drop-shadow(-1e9px 1e9px)", "drop-shadow(0 0 calc(infinity * 1px) red)", "blur(3.4e38px)",
+  "none grayscale(1)", "grayscale(1) none", "grayscale(1), blur(1px)", "url(#missing) drop-shadow(1px 1px)",
+  "url(#missing)", "unknown(1) grayscale(1)", "grayscale(1) unknown(1)", "sephia(1)", "grayscale(",
+  "drop-shadow(1px 2px", "blur(1px) drop-shadow(", "GRAYSCALE(1) Drop-Shadow(1PX 1PX)", "inherit", "initial"
+];
+var root = document.getElementById("root");
+values.forEach(function (v) {
+  var el = document.createElement("div");
+  el.className = "b";
+  el.style.filter = v;
+  root.appendChild(el);
+  getComputedStyle(el).filter;
+});
+// Long lists: many color functions and a run of shadows and blurs on one box.
+var colors = [], shadows = [];
+for (var i = 0; i < 256; i++) colors.push(["grayscale(0.5)", "sepia(0.5)", "invert(0.1)", "hue-rotate(7deg)"][i % 4]);
+for (var j = 0; j < 24; j++) shadows.push(j % 2 ? "drop-shadow(1px 1px 1px red)" : "blur(1px)");
+[colors.join(" "), shadows.join(" "), colors.slice(0, 64).concat(shadows).join(" ")].forEach(function (v) {
+  var el = document.createElement("div");
+  el.className = "b";
+  el.style.filter = v;
+  root.appendChild(el);
+  getComputedStyle(el).filter;
+});
+// Animated lists of different length, of different functions, with
+// currentcolor, and between none and url().
+["grow", "swap", "shrink", "tint", "url", "urlBack", "urlShadow"].forEach(function (name) {
+  var el = document.createElement("div");
+  el.className = "b " + name;
+  root.appendChild(el);
+});
+var transitioned = document.createElement("div");
+transitioned.className = "b t";
+transitioned.style.filter = "grayscale(1)";
+root.appendChild(transitioned);
+document.body.offsetWidth;
+transitioned.style.filter = "grayscale(0) blur(4px) drop-shadow(1px 1px red) sepia(1)";
+var animated = document.createElement("div");
+animated.className = "b";
+root.appendChild(animated);
+if (animated.animate) {
+  animated.animate([{ filter: "none" }, { filter: "blur(2px) drop-shadow(2px 2px red) opacity(0.5)" },
+                    { filter: "hue-rotate(90deg)" }], { duration: 300, iterations: Infinity });
+}
+var frames = 0;
+function step() {
+  document.getElementById("scroller").scrollTop = frames * 20;
+  document.getElementById("nest").style.color = frames % 2 ? "red" : "blue";
+  root.lastChild.style.filter = frames % 2 ? "blur(1e9px)" : "drop-shadow(1e9px 1e9px 1e9px red) grayscale(1)";
+  Array.prototype.forEach.call(document.querySelectorAll(".b"), function (el) { getComputedStyle(el).filter; });
+  if (++frames < 8) {
+    requestAnimationFrame(step);
+  } else if (typeof testEnd === "function") {
+    testEnd();
+  }
+}
+requestAnimationFrame(step);
+</script>

@@ -1018,11 +1018,37 @@ template void FrameBox::applyBorderRadiusClippingIfNeeds<Canvas*>(
 template void FrameBox::applyBorderRadiusClippingIfNeeds<Compositor*>(
     Compositor*, const LayoutRect& rect, float spreadDistance, bool inset);
 
-void FrameBox::clipToBox(Canvas* canvas, BoxValue box)
+// The path calls a compositor goes without: its clipPath() takes the points
+// since the last one, closed.
+static void beginPath(Canvas* canvas)
+{
+    canvas->beginPath();
+}
+static void beginPath(Compositor*)
+{
+}
+static void closePath(Canvas* canvas)
+{
+    canvas->closePath();
+}
+static void closePath(Compositor*)
+{
+}
+static Unit::Rect snapRectToDevicePixels(Canvas* canvas, const Unit::Rect& rt)
+{
+    return canvas->snapRectToDevicePixels(rt);
+}
+static Unit::Rect snapRectToDevicePixels(Compositor*, const Unit::Rect& rt)
+{
+    return rt;
+}
+
+template <typename T>
+void FrameBox::clipToBox(T canvas, BoxValue box)
 {
     Unit::Rect rect = makeRect(box);
     if (!hasFrameBorderRadius()) {
-        canvas->clip(canvas->snapRectToDevicePixels(rect));
+        canvas->clip(snapRectToDevicePixels(canvas, rect));
         return;
     }
 
@@ -1047,15 +1073,18 @@ void FrameBox::clipToBox(Canvas* canvas, BoxValue box)
     shrink(fixed.m_bottomRightHorizontal, right);
     shrink(fixed.m_bottomRightVertical, bottom);
 
-    canvas->beginPath();
+    beginPath(canvas);
     emitBorderRadiusPath(
         canvas, LayoutRect(rect.x(), rect.y(), rect.width(), rect.height()),
         fixed);
     canvas->clipPath();
 }
 
+template void FrameBox::clipToBox<Canvas*>(Canvas*, BoxValue);
+
 // https://drafts.csswg.org/css-shapes/#basic-shape-functions
-void FrameBox::clipToClipPathShape(Canvas* canvas, ClipPathShape* shape)
+template <typename T>
+void FrameBox::clipToClipPathShape(T canvas, ClipPathShape* shape)
 {
     // On a CSS box, fill-box uses the content box, and stroke-box and view-box
     // the border box.
@@ -1105,7 +1134,7 @@ void FrameBox::clipToClipPathShape(Canvas* canvas, ClipPathShape* shape)
         return length.specifiedValue(LayoutUnit(basis), this);
     };
 
-    canvas->beginPath();
+    beginPath(canvas);
     switch (shape->type()) {
     case ClipPathShape::Type::Polygon: {
         const auto& points = shape->points();
@@ -1118,7 +1147,7 @@ void FrameBox::clipToClipPathShape(Canvas* canvas, ClipPathShape* shape)
                 canvas->moveTo(x, y);
             }
         }
-        canvas->closePath();
+        closePath(canvas);
         break;
     }
     case ClipPathShape::Type::Inset: {
@@ -1164,7 +1193,7 @@ void FrameBox::clipToClipPathShape(Canvas* canvas, ClipPathShape* shape)
                                     radii[2] * scale, radii[6] * scale,
                                     radii[3] * scale, radii[7] * scale);
         emitBorderRadiusPath(canvas, rect, fixed);
-        canvas->closePath();
+        closePath(canvas);
         break;
     }
     case ClipPathShape::Type::Circle:
@@ -1231,7 +1260,7 @@ void FrameBox::clipToClipPathShape(Canvas* canvas, ClipPathShape* shape)
         LayoutRect bounds(ref.x() + cx - rx, ref.y() + cy - ry, 2 * rx, 2 * ry);
         BorderRadiusFixedData fixed(rx, ry, rx, ry, rx, ry, rx, ry);
         emitBorderRadiusPath(canvas, bounds, fixed);
-        canvas->closePath();
+        closePath(canvas);
         break;
     }
     case ClipPathShape::Type::BoxOnly:
@@ -1242,6 +1271,10 @@ void FrameBox::clipToClipPathShape(Canvas* canvas, ClipPathShape* shape)
     canvas->clipPath();
     canvas->setFillRule(true);
 }
+
+template void FrameBox::clipToClipPathShape<Canvas*>(Canvas*, ClipPathShape*);
+template void FrameBox::clipToClipPathShape<Compositor*>(Compositor*,
+                                                         ClipPathShape*);
 
 void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
 {
@@ -2720,7 +2753,8 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
         if (rootOrBodyelement && isRootOrBodyElementNeedsInCompositeState) {
             // skip painting. compositor will draw color
         } else if (box->stackingContext() &&
-                   box->stackingContext()->inScrollWithGraphicsBufferActive()) {
+                   box->stackingContext()
+                       ->scrollBackgroundDrawnByCompositor()) {
             // skip painting. compositor will draw color
         } else if (box->stackingContext() &&
                    box->stackingContext()->owner() == box &&
@@ -4580,7 +4614,7 @@ bool FrameBox::canOwnsStackingContext()
         return true;
     } else if (style()->opacity() != 1 || isRunningOpacityAnimation()) {
         return true;
-    } else if (style()->hasAvailableFilter()) {
+    } else if (style()->hasFilter()) {
         return true;
     } else if (style()->maskLayerSize()) {
         return true;
@@ -4721,8 +4755,9 @@ void FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
                 // The content was composited into its own buffer, so the
                 // enclosing contexts' composed visibleRects excluded it. It
                 // now paints into them; keep their pre-rebuild rects from
-                // being restored or the buffer they size misses it.
-                markAncestorStackingContextVisibleRectDirty();
+                // being restored or the buffer they size misses it. Through
+                // the node: a line box fragment is not in the frame tree.
+                nd->markAncestorStackingContextVisibleRectDirty();
             }
         }
     }
@@ -4845,7 +4880,11 @@ LayoutRect FrameBox::frameVisibleRect()
         out.unite(shadowRect);
     }
 
-    if (filter) {
+    // A layer of its own grows by the filter around all it holds
+    // (StackingContext), descendants included; adding it here would grow
+    // that layer twice.
+    StackingContext* sc = stackingContext();
+    if (filter && !(sc && sc->needsGraphicsBuffer())) {
         LayoutRect filterRect = frameVisibleFilterRect(filter);
         out.unite(filterRect);
     }
@@ -4937,27 +4976,7 @@ LayoutRect FrameBox::frameVisibleShadowsRect(ShadowDataList* boxShadow)
 
 LayoutRect FrameBox::frameVisibleFilterRect(FilterFunctions* filter)
 {
-    STARFISH_ASSERT(filter != nullptr);
-
-    LayoutRect owner = frameRect();
-    owner.setX(0);
-    owner.setY(0);
-    LayoutRect ret = owner;
-
-    Length standardDeviation;
-    if (filter->getStandardDeviationOfBlurFilter(standardDeviation)) {
-        float sd = standardDeviation.numberData();
-        if (sd > 0) {
-            float radiusOffset =
-                ShadowBlur::computeKernelSizeAtStdDeviation(sd);
-            LayoutRect rect(owner.x() - radiusOffset, owner.y() - radiusOffset,
-                            ceil(owner.width() + radiusOffset * 2),
-                            ceil(owner.height() + radiusOffset * 2));
-            ret.unite(rect);
-        }
-    }
-
-    return ret;
+    return filter->inkRect(LayoutRect(0, 0, width(), height()));
 }
 
 LayoutRect FrameBox::frameScrollingRect()

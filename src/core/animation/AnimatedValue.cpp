@@ -511,6 +511,10 @@ Optional<AnimatedValue*> AnimatedValue::createAnimatedValueFromBackgroundSize(
 Optional<AnimatedValue*> AnimatedValue::createAnimatedValueFromFilter(
     const CSSStyleValuePair& property)
 {
+    if (property.valueKind() == CSSStyleValuePair::ValueKind::None) {
+        // none: the task interpolates with the other side's identity.
+        return new AnimatedValue(static_cast<FilterFunction*>(nullptr));
+    }
     if (property.valueKind() == CSSStyleValuePair::ValueKind::ValueListKind) {
         ValueList* list = property.multiValue();
         if (list->size() == 1) {
@@ -563,6 +567,13 @@ void AnimatedValue::changeToFixedIfNeeded(Length curFontSize,
                 curFontSize, rootFontSize, font, viewportWidth, viewportHeight,
                 cs);
         }
+    }
+
+    if (isFilter() && getFilterValue()) {
+        getFilterValue()->checkComputed(
+            curFontSize, rootFontSize, font,
+            LayoutSize(viewportWidth, viewportHeight),
+            cs ? cs.value() : nullptr);
     }
 }
 

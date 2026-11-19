@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A clip-path polygon() keeps its fill rule on a filtered element</title>
+<link rel="help" href="https://drafts.csswg.org/css-shapes-1/#funcdef-basic-shape-polygon">
+<link rel="help" href="https://drafts.fxtf.org/css-masking-1/#placement">
+<style>
+  body { margin: 0; background: white; }
+  /* A pentagram: its middle pentagon is wound twice. */
+  div { position: absolute; top: 20px; width: 100px; height: 100px; background: black; }
+  #evenodd { left: 20px; filter: blur(1px);
+             clip-path: polygon(evenodd, 50% 0%, 79% 90%, 2% 35%, 98% 35%, 21% 90%); }
+  #nonzero { left: 140px; filter: blur(1px);
+             clip-path: polygon(nonzero, 50% 0%, 79% 90%, 2% 35%, 98% 35%, 21% 90%); }
+  #unfiltered { left: 260px;
+                clip-path: polygon(evenodd, 50% 0%, 79% 90%, 2% 35%, 98% 35%, 21% 90%); }
+</style>
+</head>
+<body>
+<div id="evenodd"></div>
+<div id="nonzero"></div>
+<div id="unfiltered"></div>
+<script>
+  var shot = "filter-clip-path-evenodd.html.png";
+  function gray(left, x, y) {
+    var c = getPixelColor(shot, left + x, 20 + y);
+    return (c.r + c.g + c.b) / 3;
+  }
+  // The middle of the pentagon, and inside each of the five points.
+  var points = [[50, 25], [24, 42], [76, 42], [34, 72], [66, 72]];
+  function check(left, middleIsHole, what) {
+    var middle = gray(left, 50, 50);
+    console.assert(middleIsHole ? middle > 200 : middle < 50,
+                   what + " middle: " + middle);
+    points.forEach(function (p) {
+      var g = gray(left, p[0], p[1]);
+      console.assert(g < 50, what + " point " + p + ": " + g);
+    });
+  }
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      return;
+    }
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        screenShot(shot, function () {
+          check(20, true, "filtered evenodd");
+          check(140, false, "filtered nonzero");
+          check(260, true, "unfiltered evenodd");
+          testEnd();
+        });
+      });
+    });
+  };
+</script>
+</body>
+</html>

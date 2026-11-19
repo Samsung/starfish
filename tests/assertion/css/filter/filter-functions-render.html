@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Filter functions apply in order to the element and its descendants</title>
+<link rel="help" href="https://drafts.csswg.org/filter-effects-1/#FilterProperty">
+<link rel="help" href="https://drafts.csswg.org/filter-effects-1/#supported-filter-functions">
+<link rel="help" href="https://drafts.fxtf.org/css-masking-1/#placement">
+<style>
+  body { margin: 0; background: white; }
+  div { position: absolute; width: 40px; height: 40px; background: #0f0; }
+  #gray { left: 20px; top: 20px; filter: grayscale(1); }
+  /* Each function takes the result of the one before: the shadow turns gray. */
+  #order { left: 100px; top: 20px; filter: drop-shadow(10px 10px 0 #0f0) grayscale(1); }
+  /* The second shadow is also cast by the first one. */
+  #twice { left: 180px; top: 20px; filter: drop-shadow(10px 0 0 black) drop-shadow(0 10px 0 black); }
+  /* The descendant is part of the image the shadow is cast from. */
+  #group { left: 260px; top: 20px; filter: drop-shadow(10px 10px 0 black); }
+  #group > div, #half > div { left: 20px; top: 20px; z-index: 1; background: black; }
+  /* The overflow clip cuts the content, not the shadow it casts. */
+  #clip { left: 340px; top: 20px; overflow: hidden; filter: drop-shadow(10px 10px 0 black); }
+  #clip > div { position: static; width: 80px; height: 80px; }
+  /* A plain colored box is blurred too. */
+  #blur { left: 420px; top: 20px; filter: blur(4px); }
+  /* opacity() applies to the group: the child is not mixed with its parent. */
+  #half { left: 500px; top: 20px; filter: opacity(0.5); }
+  /* The shadow of a box off the screen comes on it. */
+  #far { left: 600px; top: -100px; filter: drop-shadow(0 160px 0 black); }
+  /* opacity applies to the box and its shadow, which it does not cut. */
+  #faded { left: 20px; top: 120px; opacity: 0.5; filter: drop-shadow(10px 10px 0 black); }
+  /* The clip-path cuts the filter's output, the shadow included. */
+  #clipped { left: 100px; top: 120px; clip-path: inset(0 20px 20px 0);
+             filter: drop-shadow(10px 10px 0 black); }
+  /* Each function clamps its result before the next one takes it. */
+  #three { left: 180px; top: 120px; filter: contrast(2) saturate(2) brightness(0.5); }
+  /* The clip-path cuts the filtered box. */
+  #roundGray { left: 260px; top: 120px; filter: grayscale(1);
+               clip-path: inset(0 round 10px); }
+</style>
+</head>
+<body>
+<div id="gray"></div>
+<div id="order"></div>
+<div id="twice"></div>
+<div id="group"><div></div></div>
+<div id="clip"><div></div></div>
+<div id="blur"></div>
+<div id="half"><div></div></div>
+<div id="far"></div>
+<div id="faded"></div>
+<div id="clipped"></div>
+<div id="three"></div>
+<div id="roundGray"></div>
+<script>
+  var shot = "filter-functions-render.html.png";
+  // Red and blue are compared as a pair, which a screenshot may swap.
+  function near(x, y, gray, green, tolerance) {
+    var c = getPixelColor(shot, x, y);
+    return Math.abs(c.r - gray) <= tolerance && Math.abs(c.b - gray) <= tolerance &&
+           Math.abs(c.g - green) <= tolerance;
+  }
+  function text(x, y) {
+    var c = getPixelColor(shot, x, y);
+    return x + "," + y + ": " + [c.r, c.g, c.b].join(",");
+  }
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      return;
+    }
+    setTimeout(function () {
+      screenShot(shot, function () {
+        // grayscale(1) of #0f0 is its luminance, 0.7152.
+        console.assert(near(40, 40, 182, 182, 3), "grayscale: " + text(40, 40));
+        console.assert(near(145, 65, 182, 182, 3), "shadow then grayscale: " + text(145, 65));
+        console.assert(near(225, 65, 0, 0, 3), "second shadow of the first: " + text(225, 65));
+        console.assert(near(325, 85, 0, 0, 3), "shadow of the descendant: " + text(325, 85));
+        console.assert(near(385, 65, 0, 0, 3), "shadow of the clipped box: " + text(385, 65));
+        var corner = getPixelColor(shot, 421, 21);
+        console.assert(corner.r > 40 && corner.b > 40, "blurred corner: " + text(421, 21));
+        // Black at half opacity over white, where the child covers its parent.
+        console.assert(near(530, 50, 128, 128, 4), "opacity of the group: " + text(530, 50));
+        console.assert(near(620, 80, 0, 0, 3), "shadow of a box off the screen: " + text(620, 80));
+        console.assert(near(65, 150, 128, 128, 4), "shadow under opacity: " + text(65, 150));
+        console.assert(near(125, 145, 255, 255, 3), "shadow outside the clip-path: " + text(125, 145));
+        console.assert(near(200, 140, 0, 128, 3), "three functions, each clamped: " + text(200, 140));
+        console.assert(near(280, 140, 182, 182, 3), "grayscale under a clip-path: " + text(280, 140));
+        console.assert(near(261, 121, 255, 255, 3), "corner the clip-path cuts: " + text(261, 121));
+        testEnd();
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

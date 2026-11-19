@@ -2085,6 +2085,9 @@ ActiveFilterAnimationTask::ActiveFilterAnimationTask(
     const ActiveAnimationTaskInit& init)
     : ActiveAnimationTask(init)
 {
+    // Filter values need no layout to resolve, so a paused animation, which
+    // nothing steps again after layout, applies from its first step.
+    m_isEveryAnimiatedValueResolved = true;
 }
 
 void ActiveFilterAnimationTask::execute(double progress, ComputedStyle* style)
@@ -2093,48 +2096,111 @@ void ActiveFilterAnimationTask::execute(double progress, ComputedStyle* style)
 
     FilterFunction* from = currentAnimatedFromValue()->getFilterValue();
     FilterFunction* to = currentAnimatedToValue()->getFilterValue();
+    auto lerp = [&](float a, float b) {
+        return interpolate(a, b, progress, m_isForward);
+    };
+    // A currentcolor shadow takes the element's color (css-color-4).
+    auto shadowColor = [&](FilterFunction* f) {
+        auto s = static_cast<DropShadowFilterFunction*>(f);
+        return s->isCurrentColor() ? style->color() : s->color();
+    };
+    auto shadow = [](float x, float y, float sd, const Unit::Color& c) {
+        return new DropShadowFilterFunction(
+            Length(Length::Fixed, x), Length(Length::Fixed, y),
+            Length(Length::Fixed, std::max(0.f, sd)), true, c);
+    };
 
-    STARFISH_ASSERT(from->type() == to->type());
+    // Filter Effects 1 "Interpolation of Filters": none stands for the other
+    // side's function at its initial value for interpolation, unless that
+    // side is a url(); a url() and two different functions are discrete.
+    // shortcut: lists of several functions are not animated at all
+    // (AnimatedValue::createAnimatedValueFromFilter); pair them up function
+    // by function if pages animate such lists.
+    FilterFunction* either = from ? from : to;
+    if (!either || (from && to && from->type() != to->type()) ||
+        either->type() == FilterFunctionType::SVGUrlFilterFunctionType) {
+        FilterFunction* f = lerp(0, 1) < 0.5 ? from : to;
+        if (f &&
+            f->type() == FilterFunctionType::DropShadowFilterFunctionType) {
+            auto s = static_cast<DropShadowFilterFunction*>(f);
+            f = shadow(s->offsetX(), s->offsetY(), s->stdDeviation(),
+                       shadowColor(f));
+        }
+        applyFilterToStyle(f, style);
+        return;
+    }
 
-    if (to->type() == FilterFunctionType::BlurFilterFunctionType) {
-        BlurFilterFunction* interpolatedBlur = interpolateBlurFilter(
-            static_cast<BlurFilterFunction*>(from),
-            static_cast<BlurFilterFunction*>(to), progress);
-        applyBlurFilterToStyle(interpolatedBlur, style);
-    } else {
-        STARFISH_UNIMPLEMENTED();
+    switch (either->type()) {
+    case FilterFunctionType::BlurFilterFunctionType: {
+        auto deviation = [](FilterFunction* f) {
+            return f ? static_cast<BlurFilterFunction*>(f)
+                           ->standardDeviation()
+                           .fixed()
+                     : 0.f;
+        };
+        applyFilterToStyle(
+            new BlurFilterFunction(
+                Length(Length::Fixed,
+                       std::max(0.f, lerp(deviation(from), deviation(to))))),
+            style);
+    } break;
+    case FilterFunctionType::DropShadowFilterFunctionType: {
+        auto f = static_cast<DropShadowFilterFunction*>(from);
+        auto t = static_cast<DropShadowFilterFunction*>(to);
+        // The initial value for interpolation is transparent.
+        const Unit::Color fc = f ? shadowColor(f) : Unit::Color(0, 0, 0, 0);
+        const Unit::Color tc = t ? shadowColor(t) : Unit::Color(0, 0, 0, 0);
+        // Colors interpolate premultiplied (css-color-4 12.3).
+        const float a = std::min(255.f, std::max(0.f, lerp(fc.a(), tc.a())));
+        auto channel = [&](unsigned char x, unsigned char y) {
+            float v = a > 0 ? lerp(x * fc.a(), y * tc.a()) / a : 0;
+            return (unsigned char)std::lround(
+                std::min(255.f, std::max(0.f, v)));
+        };
+        // A missing side is the initial value: no offset, no blur.
+        auto ox = [](DropShadowFilterFunction* s) {
+            return s ? s->offsetX() : 0.f;
+        };
+        auto oy = [](DropShadowFilterFunction* s) {
+            return s ? s->offsetY() : 0.f;
+        };
+        auto sd = [](DropShadowFilterFunction* s) {
+            return s ? s->stdDeviation() : 0.f;
+        };
+        applyFilterToStyle(
+            shadow(lerp(ox(f), ox(t)), lerp(oy(f), oy(t)), lerp(sd(f), sd(t)),
+                   Unit::Color(channel(fc.r(), tc.r()), channel(fc.g(), tc.g()),
+                               channel(fc.b(), tc.b()),
+                               (unsigned char)std::lround(a))),
+            style);
+    } break;
+    default: {
+        // The color functions; percentages interpolate as numbers and
+        // results stay non-negative.
+        const FilterFunctionType type = either->type();
+        auto amount = [type](FilterFunction* f) {
+            return f ? static_cast<ColorFilterFunction*>(f)->amount()
+                     : ColorFilterFunction::identityAmount(type);
+        };
+        float value = lerp(amount(from), amount(to));
+        if (type != FilterFunctionType::HueRotateFilterFunctionType) {
+            value = std::max(0.f, value);
+        }
+        applyFilterToStyle(new ColorFilterFunction(type, value), style);
+    } break;
     }
 }
 
-BlurFilterFunction* ActiveFilterAnimationTask::interpolateBlurFilter(
-    BlurFilterFunction* from, BlurFilterFunction* to, double progress)
+void ActiveFilterAnimationTask::applyFilterToStyle(FilterFunction* filter,
+                                                   ComputedStyle* style)
 {
-    BlurFilterFunction* newBlurFunction =
-        new BlurFilterFunction(*from->toCSSFilterFunction());
-
-    float fromStandardDeviation = from->standardDeviation().fixed();
-    float toStandardDeviation = to->standardDeviation().fixed();
-    float interpolatedStandardDeviation = interpolate(
-        fromStandardDeviation, toStandardDeviation, progress, m_isForward);
-
-    newBlurFunction->setStandardDeviation(
-        Length(Length::Fixed, interpolatedStandardDeviation));
-
-    return newBlurFunction;
-}
-
-void ActiveFilterAnimationTask::applyBlurFilterToStyle(
-    BlurFilterFunction* blurFilter, ComputedStyle* style)
-{
-    CSSStyleValuePair newValue;
-    newValue.setKeyKind(CSSStyleValuePair::KeyKind::Filter);
-
-    ValueList* list = new ValueList(Separator::SpaceSeparator);
-    list->emplace_back(CSSStyleValuePair::ValueKind::FilterFunctionValueKind,
-                       blurFilter->toCSSFilterFunction());
-    newValue.setValueList(list);
-
-    style->setFilter(FilterFunctions::create(newValue));
+    if (!filter) {
+        style->setFilter(nullptr);
+        return;
+    }
+    FilterFunctions* list = new FilterFunctions();
+    list->push_back(filter);
+    style->setFilter(list);
 }
 
 } // namespace Starfish

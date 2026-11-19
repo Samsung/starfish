@@ -2,6 +2,17 @@ tests/assertion/css/float/float-rtl-line-reflow-order.html
 tests/assertion/css/flex/align-self-column-auto-width.html
 tests/assertion/css/box-shadow/calc-shadow-lengths.html
 tests/assertion/css/box-shadow/shadow-currentcolor.html
+tests/assertion/css/filter/filter-functions-computed.html
+tests/assertion/css/filter/filter-functions-render.html
+tests/assertion/css/filter/filter-function-defaults-and-ranges.html
+tests/assertion/css/filter/filter-interpolation-identity.html
+tests/assertion/css/filter/filter-opacity-toggled-on-inline.html
+tests/assertion/css/filter/filter-scroller-background.html
+tests/assertion/css/filter/filter-root-canvas-background.html
+tests/assertion/css/filter/filter-switch-to-blur-seams.html
+tests/assertion/css/filter/filter-scroller-translucent-content.html
+tests/assertion/css/filter/filter-identity-stacking-context.html
+tests/assertion/css/filter/filter-clip-path-evenodd.html
 tests/assertion/css/box-shadow/box-shadow-rounded-partial-repaint.html
 tests/assertion/css/box-shadow/box-shadow-moved-box-repaint.html
 tests/assertion/css/box-shadow/box-shadow-added-after-forced-rebuild.html
@@ -389,6 +400,9 @@ tests/assertion/css/values/line-height-percent-recomputed.html
 tests/crash/calc-empty-comparison-function.html
 tests/crash/style-currentcolor-and-calc.html
 tests/crash/currentcolor-outside-css-properties.html
+tests/crash/filter-function-arguments.html
+tests/crash/filter-long-blur-chain.html
+tests/crash/filter-zero-size-surface.html
 tests/assertion/css/cssom/cssfontfacerule-style.html
 tests/assertion/css/text/font-face-set-load.html
 tests/assertion/css/cssom/rule-csstext-custom-properties.html

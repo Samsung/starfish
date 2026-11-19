@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Filtered layers drawn with no width or height</title>
+<link rel="help" href="https://drafts.fxtf.org/filter-effects-1/#funcdef-filter-blur">
+<style>
+  body { margin: 0; }
+  canvas { will-change: transform; }
+</style>
+</head>
+<body>
+<canvas id="w" width="300" height="150" style="width: 0; filter: blur(2px)"></canvas>
+<canvas id="h" width="300" height="150" style="height: 0; filter: drop-shadow(4px 4px 2px red)"></canvas>
+<canvas id="b" width="300" height="150" style="width: 0; height: 0; filter: blur(2px) drop-shadow(4px 4px 2px red)"></canvas>
+<script>
+  ["w", "h", "b"].forEach(function (id) {
+    var ctx = document.getElementById(id).getContext("2d");
+    ctx.fillStyle = "blue";
+    ctx.fillRect(0, 0, 300, 150);
+  });
+  window.onload = function () {
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        if (typeof testEnd === "function") testEnd();
+      });
+    });
+  };
+</script>
+</body>
+</html>

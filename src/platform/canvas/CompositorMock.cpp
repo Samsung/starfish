@@ -118,6 +118,10 @@ public:
     {
     }
 
+    virtual void setFillRule(bool nonZero)
+    {
+    }
+
     virtual void clipPath()
     {
     }

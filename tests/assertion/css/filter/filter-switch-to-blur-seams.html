@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A filter that comes to blur a layer blurs it as one image</title>
+<link rel="help" href="https://drafts.fxtf.org/filter-effects-1/#FilterProperty">
+<style>
+  body { margin: 0; background: rgb(0, 255, 0); }
+  /* Taller than the screen: a color filter alone lets it go in tiles. */
+  #layer { position: absolute; left: 20px; top: 0; width: 300px; height: 3000px;
+           background: white; will-change: transform; filter: invert(1); }
+</style>
+</head>
+<body>
+<div id="layer"></div>
+<script>
+  var shot = "filter-switch-to-blur-seams.html.png";
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      document.getElementById("layer").style.filter = "blur(2px) invert(1)";
+      return;
+    }
+    setTimeout(function () {
+      screenShot(shot, function () {
+        document.getElementById("layer").style.filter = "blur(2px) invert(1)";
+        screenShot(shot, function () {
+          // Away from its edges the inverted white is black, with no seam
+          // where tiles would meet.
+          var seams = [];
+          for (var y = 10; y < 590; y += 2) {
+            var c = getPixelColor(shot, 170, y);
+            if (c.r > 3 || c.g > 3 || c.b > 3) seams.push(y);
+          }
+          for (var x = 40; x < 300; x += 2) {
+            var d = getPixelColor(shot, x, 300);
+            if (d.r > 3 || d.g > 3 || d.b > 3) seams.push(x);
+          }
+          console.assert(!seams.length, "seams at " + seams.join(" "));
+          testEnd();
+        });
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

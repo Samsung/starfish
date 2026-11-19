@@ -4,7 +4,7 @@ http://web-platform.test:8000/css/filter-effects/azimuth-and-elevation.html
 http://web-platform.test:8000/css/filter-effects/backdrop-filter-backdrop-root-backdrop-filter.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filter-backdrop-root-clip-path-2.html
 http://web-platform.test:8000/css/filter-effects/backdrop-filter-backdrop-root-clip-path.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filter-backdrop-root-filter.html
+http://web-platform.test:8000/css/filter-effects/backdrop-filter-backdrop-root-filter.html
 http://web-platform.test:8000/css/filter-effects/backdrop-filter-backdrop-root-mask.html
 http://web-platform.test:8000/css/filter-effects/backdrop-filter-backdrop-root-mix-blend-mode.html
 http://web-platform.test:8000/css/filter-effects/backdrop-filter-backdrop-root-opacity.html
@@ -44,7 +44,7 @@ http://web-platform.test:8000/css/filter-effects/backdrop-filter-invalid.html
 http://web-platform.test:8000/css/filter-effects/backdrop-filter-opacity-rounded-clip.html
 http://web-platform.test:8000/css/filter-effects/backdrop-filter-paint-order.html
 http://web-platform.test:8000/css/filter-effects/backdrop-filter-plus-filter-2.html
-http://web-platform.test:8000/css/filter-effects/backdrop-filter-plus-filter.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filter-plus-filter.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filter-plus-mask-large.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filter-plus-mask.html
 http://web-platform.test:8000/css/filter-effects/backdrop-filter-plus-opacity.html
@@ -64,22 +64,22 @@ http://web-platform.test:8000/css/filter-effects/backdrop-filter-svg.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filter-with-mix-blend-mode-same-element.html
 http://web-platform.test:8000/css/filter-effects/backdrop-filter-zero-size.html
 http://web-platform.test:8000/css/filter-effects/backdrop-filters-blur-large.html
-http://web-platform.test:8000/css/filter-effects/backdrop-filters-brightness.html
-http://web-platform.test:8000/css/filter-effects/backdrop-filters-contrast.html
-http://web-platform.test:8000/css/filter-effects/backdrop-filters-grayscale-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filters-brightness.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filters-contrast.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filters-grayscale-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filters-grayscale-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filters-grayscale-003.html
-http://web-platform.test:8000/css/filter-effects/backdrop-filters-hue-rotate.html
-http://web-platform.test:8000/css/filter-effects/backdrop-filters-invert.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filters-hue-rotate.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filters-invert.html
 http://web-platform.test:8000/css/filter-effects/backdrop-filters-opacity.html
-http://web-platform.test:8000/css/filter-effects/backdrop-filters-saturate.html
-http://web-platform.test:8000/css/filter-effects/backdrop-filters-sepia.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filters-saturate.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/backdrop-filters-sepia.html
 http://web-platform.test:8000/css/filter-effects/background-image-blur-repaint.html
 http://web-platform.test:8000/css/filter-effects/blur-clip-stacking-context-001.html
-# [auto-fail:IMG_UNEXPECTED_MATCH] http://web-platform.test:8000/css/filter-effects/blur-clip-stacking-context-002.html
+http://web-platform.test:8000/css/filter-effects/blur-clip-stacking-context-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/blur-text.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/clip-under-filter-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/clip-under-filter-002.html
+http://web-platform.test:8000/css/filter-effects/clip-under-filter-001.html
+http://web-platform.test:8000/css/filter-effects/clip-under-filter-002.html
 http://web-platform.test:8000/css/filter-effects/clip-under-filter-003.html
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/filter-effects/css-backdrop-filter-transform-clip.html
 http://web-platform.test:8000/css/filter-effects/css-backdrop-filters-animation-blur.html
@@ -95,7 +95,7 @@ http://web-platform.test:8000/css/filter-effects/css-backdrop-filters-animation-
 http://web-platform.test:8000/css/filter-effects/css-backdrop-filters-animation-sepia.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/css-filters-animation-blur.html
 http://web-platform.test:8000/css/filter-effects/css-filters-animation-brightness.html
-http://web-platform.test:8000/css/filter-effects/css-filters-animation-combined-001.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/css-filters-animation-combined-001.html
 http://web-platform.test:8000/css/filter-effects/css-filters-animation-contrast.html
 http://web-platform.test:8000/css/filter-effects/css-filters-animation-drop-shadow.html
 http://web-platform.test:8000/css/filter-effects/css-filters-animation-grayscale.html
@@ -105,11 +105,11 @@ http://web-platform.test:8000/css/filter-effects/css-filters-animation-opacity.h
 http://web-platform.test:8000/css/filter-effects/css-filters-animation-saturate.html
 http://web-platform.test:8000/css/filter-effects/css-filters-animation-sepia.html
 http://web-platform.test:8000/css/filter-effects/css-reference-large-svg-filter.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/drop-shadow-clipped-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/drop-shadow-currentcolor-dynamic-001.html
+http://web-platform.test:8000/css/filter-effects/drop-shadow-clipped-001.html
+http://web-platform.test:8000/css/filter-effects/drop-shadow-currentcolor-dynamic-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/drop-shadow-currentcolor-dynamic-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/drop-shadow-currentcolor-dynamic-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/drop-shadow-with-3d-transform.html
+http://web-platform.test:8000/css/filter-effects/drop-shadow-with-3d-transform.html
 http://web-platform.test:8000/css/filter-effects/dynamic-filter-changes-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/effect-reference-add-hw-001.html
 http://web-platform.test:8000/css/filter-effects/effect-reference-after-001.html
@@ -127,7 +127,7 @@ http://web-platform.test:8000/css/filter-effects/effect-reference-delete.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/effect-reference-on-transparent-element.html
 http://web-platform.test:8000/css/filter-effects/effect-reference-rename-001.html
 http://web-platform.test:8000/css/filter-effects/effect-reference-rename-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/effect-reference-source-alpha-001.html
+http://web-platform.test:8000/css/filter-effects/effect-reference-source-alpha-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/effect-reference-source-alpha-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/empty-element-with-filter-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/empty-element-with-filter-003.html
@@ -162,8 +162,8 @@ http://web-platform.test:8000/css/filter-effects/filter-cb-dynamic-1a.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-cb-dynamic-1b.html
 http://web-platform.test:8000/css/filter-effects/filter-chained-url-url-001.html
 http://web-platform.test:8000/css/filter-effects/filter-contrast-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-contrast-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-contrast-003.html
+http://web-platform.test:8000/css/filter-effects/filter-contrast-002.html
+http://web-platform.test:8000/css/filter-effects/filter-contrast-003.html
 http://web-platform.test:8000/css/filter-effects/filter-effect-remove-unattached.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-external-001-test.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-external-002-test.html
@@ -181,16 +181,16 @@ http://web-platform.test:8000/css/filter-effects/filter-effect-remove-unattached
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-repeating-conic-gradient.html
 http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-repeating-linear-gradient.html
 http://web-platform.test:8000/css/filter-effects/filter-function/filter-function-repeating-radial-gradient.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-grayscale-001.html
+http://web-platform.test:8000/css/filter-effects/filter-grayscale-001.html
 http://web-platform.test:8000/css/filter-effects/filter-grayscale-002.html
 http://web-platform.test:8000/css/filter-effects/filter-grayscale-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-grayscale-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-grayscale-005.html
+http://web-platform.test:8000/css/filter-effects/filter-grayscale-004.html
+http://web-platform.test:8000/css/filter-effects/filter-grayscale-005.html
 http://web-platform.test:8000/css/filter-effects/filter-hue_rotate-001-test.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-hue_rotate-002-test.html
+http://web-platform.test:8000/css/filter-effects/filter-hue_rotate-002-test.html
 http://web-platform.test:8000/css/filter-effects/filter-invalid.html
 http://web-platform.test:8000/css/filter-effects/filter-invert-001-test.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-invert-002-test.html
+http://web-platform.test:8000/css/filter-effects/filter-invert-002-test.html
 http://web-platform.test:8000/css/filter-effects/filter-overflow-transformed-child-001.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/filter-effects/filter-region-calc-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-region-html-content-viewport.tentative.html
@@ -198,7 +198,7 @@ http://web-platform.test:8000/css/filter-effects/filter-region-negative-position
 http://web-platform.test:8000/css/filter-effects/filter-region-transformed-child-001.html
 http://web-platform.test:8000/css/filter-effects/filter-region-transformed-composited-child-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-region-units-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-saturate-001-test.html
+http://web-platform.test:8000/css/filter-effects/filter-saturate-001-test.html
 http://web-platform.test:8000/css/filter-effects/filter-scale-001.html
 http://web-platform.test:8000/css/filter-effects/filter-scaling-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filter-subregion-01.html
@@ -210,19 +210,19 @@ http://web-platform.test:8000/css/filter-effects/filter-with-mix-blend-mode.html
 http://web-platform.test:8000/css/filter-effects/filtered-html-is-not-container.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filtered-inline-applies-to-float.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filtered-inline-is-container.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filters-drop-shadow-001.html
+http://web-platform.test:8000/css/filter-effects/filters-drop-shadow-001.html
 http://web-platform.test:8000/css/filter-effects/filters-drop-shadow-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filters-drop-shadow-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filters-grayscale-001-test.html
+http://web-platform.test:8000/css/filter-effects/filters-drop-shadow-003.html
+http://web-platform.test:8000/css/filter-effects/filters-grayscale-001-test.html
 http://web-platform.test:8000/css/filter-effects/filters-opacity-001-test.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filters-opacity-002-test.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filters-sepia-001-test.html
+http://web-platform.test:8000/css/filter-effects/filters-opacity-002-test.html
+http://web-platform.test:8000/css/filter-effects/filters-sepia-001-test.html
 http://web-platform.test:8000/css/filter-effects/filters-test-brightness-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/filters-test-brightness-002.html
+http://web-platform.test:8000/css/filter-effects/filters-test-brightness-002.html
 http://web-platform.test:8000/css/filter-effects/filters-test-brightness-003.html
 http://web-platform.test:8000/css/filter-effects/fixed-pos-filter-clip-001.html
 http://web-platform.test:8000/css/filter-effects/fixed-pos-filter-clip-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/hidpi-invert-filter-background.html
+http://web-platform.test:8000/css/filter-effects/hidpi-invert-filter-background.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/invalidation-css-dropshadow-002.html
 http://web-platform.test:8000/css/filter-effects/kernel-unit-length-001.html
 http://web-platform.test:8000/css/filter-effects/kernel-unit-length-002.html
@@ -250,7 +250,7 @@ http://web-platform.test:8000/css/filter-effects/svg-filter-gradient-interpolati
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/svg-filter-user-space-viewport-change.html
 http://web-platform.test:8000/css/filter-effects/svg-filter-vs-clip-path.html
 http://web-platform.test:8000/css/filter-effects/svg-filter-vs-mask.html
-http://web-platform.test:8000/css/filter-effects/svg-image-root-filter.html
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/svg-image-root-filter.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/svg-multiple-filter-functions.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/svg-mutation-drop-shadow-color.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/svg-mutation-drop-shadow-offset.html

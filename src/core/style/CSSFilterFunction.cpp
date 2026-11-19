@@ -30,7 +30,7 @@ namespace Starfish {
 static const int kFilterSize = 10;
 static const char* kFilters[kFilterSize] = {
     "blur",      "drop-shadow", "hue-rotate", "brightness", "contrast",
-    "grayscale", "invert",      "opacity",    "saturate",   "sephia"
+    "grayscale", "invert",      "opacity",    "saturate",   "sepia"
 };
 
 static bool parseLengthOrColor(const CSSTokenValue& token,
@@ -61,11 +61,18 @@ static bool parseDropShadowFilter(const CSSTokenValue& data,
         }
         if (item.valueKind() == CSSStyleValuePair::ValueKind::Length) {
             lengthTypes++;
+            // The third length is a standard deviation, never negative.
+            if (lengthTypes == 3 && item.cssLengthValue().value() < 0) {
+                return false;
+            }
+        } else if (i != 0 && i != total - 1) {
+            // The lengths are contiguous, so a color comes first or last.
+            return false;
         }
         list->push_back(item);
     }
-    // NOTE length type items: 2~4, color type items: 0~1
-    if (lengthTypes <= 4 && lengthTypes >= 2 && total - lengthTypes <= 1) {
+    // <color>? && <length>{2,3}: unlike box-shadow there is no spread.
+    if (lengthTypes <= 3 && lengthTypes >= 2 && total - lengthTypes <= 1) {
         result.setValueList(list);
         return true;
     }

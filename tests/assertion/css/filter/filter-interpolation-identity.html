@@ -1,0 +1,77 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>none interpolates with each filter function's identity; different functions and url() are discrete</title>
+<link rel="help" href="https://drafts.fxtf.org/filter-effects-1/#interpolation-of-filters">
+<link rel="help" href="https://drafts.csswg.org/css-color-4/#interpolation-alpha">
+<style>
+  div { animation-duration: 4s; animation-delay: -1s; animation-timing-function: linear;
+        animation-play-state: paused; }
+  @keyframes sepia { from { filter: none; } to { filter: sepia(1); } }
+  @keyframes invert { from { filter: invert(1); } to { filter: none; } }
+  @keyframes opacity { from { filter: opacity(0); } to { filter: none; } }
+  @keyframes saturate { from { filter: saturate(0); } to { filter: none; } }
+  @keyframes contrast { from { filter: none; } to { filter: contrast(3); } }
+  @keyframes brightness { from { filter: brightness(0); } to { filter: none; } }
+  @keyframes hue { from { filter: none; } to { filter: hue-rotate(180deg); } }
+  @keyframes blur { from { filter: none; } to { filter: blur(8px); } }
+  @keyframes shadow { from { filter: none; } to { filter: drop-shadow(8px 4px 4px rgb(0, 0, 255)); } }
+  @keyframes kinds { from { filter: grayscale(1); } to { filter: sepia(1); } }
+  @keyframes shadowColor { from { filter: drop-shadow(0 0 0 rgba(255, 0, 0, 0)); }
+                           to { filter: drop-shadow(0 0 0 rgb(0, 0, 255)); } }
+  @keyframes shadowFont { from { filter: drop-shadow(0 0 0 currentcolor); }
+                          to { filter: drop-shadow(1em 1em 0 red); } }
+  @keyframes url { from { filter: none; } to { filter: url(#f); } }
+  #sepia { animation-name: sepia; } #invert { animation-name: invert; }
+  #opacity { animation-name: opacity; } #saturate { animation-name: saturate; }
+  #contrast { animation-name: contrast; } #brightness { animation-name: brightness; }
+  #hue { animation-name: hue; } #blur { animation-name: blur; } #shadow { animation-name: shadow; }
+  #kindsEarly { animation-name: kinds; }
+  #kindsLate { animation-name: kinds; animation-delay: -3s; }
+  #shadowColor { animation-name: shadowColor; }
+  #shadowFont { animation-name: shadowFont; animation-delay: -2s; font-size: 20px; color: blue; }
+  #url { animation-name: url; }
+</style>
+<div id="sepia"></div><div id="invert"></div><div id="opacity"></div><div id="saturate"></div>
+<div id="contrast"></div><div id="brightness"></div><div id="hue"></div><div id="blur"></div>
+<div id="shadow"></div><div id="kindsEarly"></div><div id="kindsLate"></div>
+<div id="shadowColor"></div><div id="shadowFont"></div><div id="url"></div>
+<script>
+// filter-effects-1 #interpolation-of-filters: none is replaced by the other
+// side's function with its initial value for interpolation (0 for sepia,
+// invert and grayscale, 1 for opacity, saturate, contrast and brightness,
+// 0deg, 0px, and a transparent zero shadow); lists whose functions differ
+// interpolate discretely, which flips at the half way point
+// (web-animations-1 #discrete), and so does none with a url(). Colors
+// interpolate premultiplied by alpha (css-color-4 #interpolation-alpha), the
+// lengths and currentcolor of keyframes resolve against the element. Every
+// animation is paused a quarter of the way through unless noted
+// (css-animations-1 #animation-delay).
+function filterOf(id) { return getComputedStyle(document.getElementById(id)).filter; }
+function numbers(id) { return (filterOf(id).match(/-?[\d.]+/g) || []).map(Number); }
+function near(id, name, expected) {
+  var got = numbers(id);
+  var ok = filterOf(id).indexOf(name + "(") === 0 && got.length === expected.length &&
+    got.every(function (v, i) { return Math.abs(v - expected[i]) < 0.01 * Math.max(1, Math.abs(expected[i])); });
+  console.assert(ok, id + ": " + filterOf(id) + " != " + name + "(" + expected.join(" ") + ")");
+}
+requestAnimationFrame(function () { requestAnimationFrame(function () {
+  near("sepia", "sepia", [0.25]);
+  near("invert", "invert", [0.75]);
+  near("opacity", "opacity", [0.25]);
+  near("saturate", "saturate", [0.25]);
+  near("contrast", "contrast", [1.5]);
+  near("brightness", "brightness", [0.25]);
+  near("hue", "hue-rotate", [45]);
+  near("blur", "blur", [2]);
+  // Offsets and blur at a quarter; the color keeps its own components, a
+  // quarter of its alpha.
+  near("shadow", "drop-shadow", [0, 0, 255, 0.25, 2, 1, 1]);
+  near("shadowColor", "drop-shadow", [0, 0, 255, 0.25, 0, 0, 0]);
+  // Half way from currentcolor (blue) to red, 1em being 20px.
+  near("shadowFont", "drop-shadow", [128, 0, 128, 10, 10, 0]);
+  console.assert(filterOf("url") === "none", "url() is discrete: " + filterOf("url"));
+  console.assert(filterOf("kindsEarly") === "grayscale(1)", "discrete before half way: " + filterOf("kindsEarly"));
+  console.assert(filterOf("kindsLate") === "sepia(1)", "discrete after half way: " + filterOf("kindsLate"));
+  if (typeof testEnd === "function") testEnd();
+}); });
+</script>

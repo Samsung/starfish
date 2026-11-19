@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>A filter or opacity set on an inline box after layout applies, and goes when removed</title>
+<link rel="help" href="https://drafts.fxtf.org/filter-effects-1/#FilterProperty">
+<link rel="help" href="https://drafts.csswg.org/css-color-4/#transparency">
+<style>
+  body { margin: 0; background: white; }
+  div { height: 50px; font-size: 20px; }
+  /* The text is the color of its background, so any pixel of the box reads it.
+     Red and blue are left equal: a screenshot may swap them. */
+  #f { background: rgb(0, 128, 0); color: rgb(0, 128, 0); }
+  #o { background: rgb(0, 128, 0); color: rgb(0, 128, 0); }
+  /* #box overlaps #layer, which is composited, so #box is composited too. The
+     filter gives #c a layer of its own in it, which has to go with the filter. */
+  #layer { position: absolute; left: 300px; top: 0; width: 50px; height: 50px;
+           background: silver; will-change: transform; }
+  #box { position: absolute; left: 320px; top: 20px; width: 100px; height: 20px;
+         border: 1px solid black; }
+  #c { background: rgb(0, 128, 0); color: rgb(0, 128, 0); }
+  #f.on { filter: grayscale(1); }
+  #o.on { opacity: 0.5; }
+  #c.on { filter: drop-shadow(0 0 2px black); }
+</style>
+</head>
+<body>
+<div><span id="f">XXXXXX</span></div>
+<div><span id="o">XXXXXX</span></div>
+<div id="layer"></div>
+<div id="box"><span id="c">XX</span></div>
+<script>
+  var shot = "filter-opacity-toggled-on-inline.html.png";
+  function toggle(on) {
+    ["f", "o", "c"].forEach(function (id) {
+      document.getElementById(id).className = on ? "on" : "";
+    });
+  }
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      toggle(true);
+      return;
+    }
+    setTimeout(function () {
+      // Laid out and painted without a filter or opacity first.
+      screenShot(shot, function () {
+        toggle(true);
+        screenShot(shot, function () {
+          // grayscale(1) of rgb(0, 128, 0) is 0.7152 * 128 in every channel.
+          console.assert(checkPixelColors(shot, [
+            { x: 5, y: 10, r: 92, g: 92, b: 92, a: 255 },
+            { x: 5, y: 60, r: 128, g: 192, b: 128, a: 255 },
+          ], 3), "filter and opacity set after layout apply");
+          toggle(false);
+          screenShot(shot, function () {
+            console.assert(checkPixelColors(shot, [
+              { x: 5, y: 10, r: 0, g: 128, b: 0, a: 255 },
+              { x: 5, y: 60, r: 0, g: 128, b: 0, a: 255 },
+              { x: 325, y: 30, r: 0, g: 128, b: 0, a: 255 },
+            ], 3), "removed filter and opacity no longer apply");
+            testEnd();
+          });
+        });
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

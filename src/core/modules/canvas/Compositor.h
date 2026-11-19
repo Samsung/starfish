@@ -138,14 +138,29 @@ public:
 
     virtual void setBlendMode(BlendMode blendMode) = 0;
 
-    // those four methods are needed for border-radius clipping
+    // those methods are needed for border-radius and clip-path clipping
     virtual void moveTo(float x, float y) = 0;
     virtual void lineTo(float x, float y) = 0;
     virtual void arcNegative(double xc, double yc, double radius, double angle1,
                              double angle2) = 0;
+    // The rule clipPath() fills the path by, nonzero or else even-odd.
+    virtual void setFillRule(bool nonZero) = 0;
     virtual void clipPath() = 0;
 
-    virtual void enableBlurEffect(float blurRadius)
+    // One CSS filter function, in the units of the surfaces drawn.
+    struct FilterOperation {
+        enum Kind { ColorMatrix, Blur, DropShadow };
+        Kind kind;
+        // ColorMatrix: a row-major 4x5 matrix on unpremultiplied colors.
+        // Blur: the standard deviation. DropShadow: the offset, the standard
+        // deviation, then the color's red, green, blue and alpha in [0, 1].
+        float values[20];
+    };
+
+    // The surfaces drawn next go through these, each taking the result of
+    // the one before (Filter Effects 1).
+    virtual void enableFilterEffect(const FilterOperation* operations,
+                                    size_t count)
     {
     }
 };

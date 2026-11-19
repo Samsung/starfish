@@ -1,0 +1,71 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Computed values and interpolation of filter functions</title>
+<link rel="help" href="https://drafts.csswg.org/filter-effects-1/#supported-filter-functions">
+<link rel="help" href="https://drafts.csswg.org/filter-effects-1/#interpolation-of-filters">
+<style>
+#target { color: lime; }
+@keyframes gray { from { filter: grayscale(1); } to { filter: none; } }
+@keyframes shadow { from { filter: drop-shadow(30px 30px 0px black); } to { filter: none; } }
+@keyframes bright { from { filter: brightness(0%); } to { filter: brightness(200%); } }
+.half { animation-duration: 1000s; animation-delay: -500s;
+  animation-timing-function: linear; }
+</style>
+<div id="target"></div>
+<div id="gray" class="half" style="animation-name: gray"></div>
+<div id="shadow" class="half" style="animation-name: shadow"></div>
+<div id="bright" class="half" style="animation-name: bright"></div>
+<script>
+if (typeof testEnd !== 'function') {
+  window.testEnd = function () { console.log('Test complete'); };
+}
+var target = document.getElementById('target');
+function computed(value) {
+  target.style.filter = '';
+  target.style.filter = value;
+  return getComputedStyle(target).filter;
+}
+[['grayscale(100%)', 'grayscale(1)'],
+ ['grayscale(2)', 'grayscale(1)'],
+ ['invert(1) grayscale(100%)', 'invert(1) grayscale(1)'],
+ ['sepia(50%)', 'sepia(0.5)'],
+ ['brightness(150%)', 'brightness(1.5)'],
+ ['hue-rotate(90deg)', 'hue-rotate(90deg)'],
+ ['opacity(0.25) saturate(3)', 'opacity(0.25) saturate(3)'],
+ ['contrast(0)', 'contrast(0)'],
+ ['drop-shadow(0 0 2px rgba(0,0,0,.2))', 'drop-shadow(rgba(0, 0, 0, 0.2) 0px 0px 2px)'],
+ ['drop-shadow(1px 2px)', 'drop-shadow(rgb(0, 255, 0) 1px 2px 0px)'],
+ // No spread, and no negative standard deviation.
+ ['drop-shadow(1px 2px 3px 4px)', 'none'],
+ ['drop-shadow(1px 2px -3px)', 'none']
+].forEach(function (c) {
+  console.assert(computed(c[0]) === c[1],
+    'computed ' + c[0] + ': ' + getComputedStyle(target).filter);
+});
+// The function is sepia(); a misspelling is invalid.
+console.assert(computed('sephia(1)') === 'none', 'sephia() is invalid');
+
+// none interpolates with the identity of the other side. The animations sit
+// half way through a long linear run; they apply with the next update.
+function numbers(id) {
+  return (getComputedStyle(document.getElementById(id)).filter.match(/[\d.]+/g) || [])
+    .map(Number);
+}
+function near(id, expected) {
+  var got = numbers(id);
+  return got.length === expected.length && got.every(function (v, i) {
+    return Math.abs(v - expected[i]) < 0.02 * Math.max(1, expected[i]);
+  });
+}
+function filterOf(id) { return getComputedStyle(document.getElementById(id)).filter; }
+requestAnimationFrame(function () { requestAnimationFrame(function () {
+  console.assert(/^grayscale\(/.test(filterOf('gray')) && near('gray', [0.5]),
+    'grayscale to none: ' + filterOf('gray'));
+  // drop-shadow(rgba(0, 0, 0, 0.5) 15px 15px 0px)
+  console.assert(/^drop-shadow\(rgba/.test(filterOf('shadow')) &&
+    near('shadow', [0, 0, 0, 0.5, 15, 15, 0]), 'drop-shadow to none: ' + filterOf('shadow'));
+  console.assert(/^brightness\(/.test(filterOf('bright')) && near('bright', [1]),
+    'brightness: ' + filterOf('bright'));
+  testEnd();
+}); });
+</script>

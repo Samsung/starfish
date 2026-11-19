@@ -484,6 +484,12 @@ public:
         cairo_arc_negative(m_canvas, xc, yc, radius, angle1, angle2);
     }
 
+    virtual void setFillRule(bool nonZero)
+    {
+        cairo_set_fill_rule(m_canvas, nonZero ? CAIRO_FILL_RULE_WINDING
+                                              : CAIRO_FILL_RULE_EVEN_ODD);
+    }
+
     virtual void clipPath()
     {
         cairo_clip(m_canvas);

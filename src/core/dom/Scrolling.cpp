@@ -471,6 +471,8 @@ static const char* repaintingWhenScrollingReasonToString(unsigned reason)
         return "Outline";
     case RepaintingWhenScrollingReasonBackgroundSize:
         return "BackgroundSize";
+    case RepaintingWhenScrollingReasonFilter:
+        return "Filter";
     default:
         return "None";
     }
