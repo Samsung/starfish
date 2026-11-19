@@ -43,6 +43,14 @@ Optional<AnimatedValue*> AnimatedValue::create(
         if (neededOriginProperty) {
             return new AnimatedValue(style->color());
         }
+        // css-color-4 #currentcolor-color: in color itself, currentcolor
+        // is the inherited color.
+        if (property.valueKind() ==
+                CSSStyleValuePair::ValueKind::NamedColorValueKind &&
+            property.namedColorValue() == NamedColor::currentColor) {
+            return new AnimatedValue(
+                element->renderingParentNode()->style()->color());
+        }
         return AnimatedValue::createAnimatedValueFromColor(style, property);
     case CSSStyleValuePair::BackgroundColor:
         if (neededOriginProperty) {
@@ -378,8 +386,12 @@ Optional<AnimatedValue*> AnimatedValue::createForSVGAnimation(
             return AnimatedValue::createAnimatedValueFromLength(property);
         }
     case CSSStyleValuePair::KeyKind::Fill:
-        return AnimatedValue::createAnimatedValueFromColor(element->style(),
-                                                           property);
+        // shortcut: a SMIL animation can begin before its element has a
+        // style; currentcolor then takes the document's, the initial color.
+        // Resolve it when sampling if pages need the element's.
+        return AnimatedValue::createAnimatedValueFromColor(
+            element->style() ? element->style() : element->document()->style(),
+            property);
     default:
         STARFISH_UNIMPLEMENTED();
         return Optional<AnimatedValue*>();
@@ -395,6 +407,12 @@ Optional<AnimatedValue*> AnimatedValue::createAnimatedValueFromColor(
         return new AnimatedValue(property.colorValue());
     } else if (property.valueKind() ==
                CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+        // currentcolor: the element's own color, as for color-mix() below.
+        // shortcut: taken when the animation starts, so a later change of
+        // color is not followed; resolve it per sample if pages need it.
+        if (property.namedColorValue() == NamedColor::currentColor) {
+            return new AnimatedValue(style->color());
+        }
         return new AnimatedValue(
             NamedColor::namedColorToColor(property.namedColorValue()));
     } else if (property.valueKind() ==
@@ -402,8 +420,9 @@ Optional<AnimatedValue*> AnimatedValue::createAnimatedValueFromColor(
         // Resolve against the animated element's style, as the cascade
         // does once the style is final (ComputedStyle::resolvePendingColors).
         // Deviation: for the `color` property itself css-color-4
-        // #currentcolor-color means the inherited color, which is not
-        // reachable from here; the element's own color stands in.
+        // #currentcolor-color means the inherited color (handled for a
+        // plain currentcolor in create()); the element's own color stands
+        // in here.
         return new AnimatedValue(property.unresolvedColorValue()->resolve(
             style->color(), style->usedColorSchemeIsDark()));
     } else {

@@ -1,0 +1,76 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>currentcolor in canvas fill, stroke, shadow and gradient colors</title>
+<link rel="help" href="https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-fillstyle">
+<link rel="help" href="https://html.spec.whatwg.org/multipage/canvas.html#dom-canvasgradient-addcolorstop">
+<canvas id="own" width="10" height="10" style="color: rgb(0, 128, 255)"></canvas>
+<canvas id="alpha" width="10" height="10" style="color: rgba(0, 0, 255, 0.5)"></canvas>
+<canvas id="changed" width="10" height="10" style="color: rgb(0, 255, 0)"></canvas>
+<canvas id="gradient" width="10" height="10" style="color: rgb(255, 0, 0)"></canvas>
+<script>
+// HTML #dom-context-2d-fillstyle: a string is parsed "with this's canvas
+// element", so currentcolor is that element's computed color at the time of
+// setting, and opaque black when there is no element in a document
+// (HTML #parse-a-css-color-value). addColorStop() parses with no element.
+function context(id) { return document.getElementById(id).getContext("2d"); }
+function pixel(ctx) { return Array.prototype.join.call(ctx.getImageData(5, 5, 1, 1).data, ","); }
+function check(what, actual, expected) { console.assert(actual === expected, what + ": " + actual + " != " + expected); }
+
+onload = function () {
+var ctx = context("own");
+ctx.fillStyle = "currentcolor";
+check("fillStyle", ctx.fillStyle, "#0080ff");
+ctx.fillRect(0, 0, 10, 10);
+check("filled pixel", pixel(ctx), "0,128,255,255");
+ctx.strokeStyle = "currentColor";
+check("strokeStyle", ctx.strokeStyle, "#0080ff");
+ctx.shadowColor = "CurrentColor";
+check("shadowColor", ctx.shadowColor, "#0080ff");
+
+ctx = context("alpha");
+ctx.fillStyle = "currentcolor";
+check("translucent color", ctx.fillStyle, "rgba(0, 0, 255, 0.5)");
+
+// The color is resolved when it is set, not when it is used.
+ctx = context("changed");
+ctx.fillStyle = "currentcolor";
+document.getElementById("changed").style.color = "rgb(255, 0, 255)";
+getComputedStyle(document.getElementById("changed")).color;
+ctx.fillRect(0, 0, 10, 10);
+check("color of the time of setting", pixel(ctx), "0,255,0,255");
+
+ctx = context("gradient");
+var g = ctx.createLinearGradient(0, 0, 10, 0);
+g.addColorStop(0, "currentcolor");
+g.addColorStop(1, "currentColor");
+ctx.fillStyle = g;
+ctx.fillRect(0, 0, 10, 10);
+check("gradient stop", pixel(ctx), "0,0,0,255");
+
+var detached = document.createElement("canvas");
+detached.width = detached.height = 10;
+detached.style.color = "rgb(255, 0, 0)";
+ctx = detached.getContext("2d");
+ctx.fillStyle = "red";
+ctx.fillStyle = "currentcolor";
+check("canvas not in a document", ctx.fillStyle, "#000000");
+ctx.fillRect(0, 0, 10, 10);
+check("canvas not in a document, pixel", pixel(ctx), "0,0,0,255");
+
+if (typeof OffscreenCanvas === "function") {
+  ctx = new OffscreenCanvas(10, 10).getContext("2d");
+  ctx.fillStyle = "red";
+  ctx.fillStyle = "currentcolor";
+  check("OffscreenCanvas", ctx.fillStyle, "#000000");
+  ctx.fillRect(0, 0, 10, 10);
+  check("OffscreenCanvas pixel", pixel(ctx), "0,0,0,255");
+}
+
+// A string that is not a color leaves the value unchanged.
+ctx = context("own");
+ctx.fillStyle = "#00ff00";
+ctx.fillStyle = "currentcolour";
+check("invalid keyword ignored", ctx.fillStyle, "#00ff00");
+if (typeof testEnd === "function") testEnd();
+};
+</script>

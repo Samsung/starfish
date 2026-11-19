@@ -168,39 +168,56 @@ String* CSSRadialGradientValue::toString()
 
     result.appendString("radial-gradient(");
 
+    // Shape, size and position are space-separated before a comma, each
+    // omitted at its default: ellipse, farthest-corner, center (css-images-3).
+    bool hasPrelude = false;
+    auto nextPart = [&]() -> StringBuilder& {
+        if (hasPrelude) {
+            result.appendChar(' ');
+        }
+        hasPrelude = true;
+        return result;
+    };
+
     if (m_shape == RadialGradientShape::Circle) {
-        result.appendString("circle ");
-    } else if (m_shape == RadialGradientShape::Elipse) {
-        result.appendString("elipse ");
+        nextPart().appendString("circle");
     }
 
     if (m_size.hasKeyword()) {
         if (m_size.keyword() == RadialGradientSizeKeyword::ClosetSide) {
-            result.appendString("closest-side ");
+            nextPart().appendString("closest-side");
         } else if (m_size.keyword() ==
                    RadialGradientSizeKeyword::FarthestSide) {
-            result.appendString("farthest-side ");
+            nextPart().appendString("farthest-side");
         } else if (m_size.keyword() ==
                    RadialGradientSizeKeyword::ClosetCorner) {
-            result.appendString("closest-corner ");
-        } else if (m_size.keyword() ==
-                   RadialGradientSizeKeyword::FarthestCorner) {
-            result.appendString("farthest-corner ");
+            nextPart().appendString("closest-corner");
         }
     } else if (m_size.hasFirstRadius()) {
-        result.appendString(m_size.firstRadius().toString());
-        result.appendChar(' ');
+        nextPart().appendString(m_size.firstRadius().toString());
         if (m_size.hasSecondRadius()) {
-            result.appendString(m_size.secondRadius().toString());
-            result.appendChar(' ');
+            nextPart().appendString(m_size.secondRadius().toString());
         }
     }
+    auto isCenter = [](const CSSStyleValuePair& list) {
+        if (list.multiValue()->size() != 1) {
+            return false;
+        }
+        auto& v = list.multiValue()->front();
+        return (v.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind &&
+                v.sideValue() == SideValue::CenterSideValue) ||
+               (v.valueKind() == CSSStyleValuePair::ValueKind::Percentage &&
+                v.percentageValue() == 0.5f);
+    };
     if (m_positionX.valueKind() ==
-        CSSStyleValuePair::ValueKind::ValueListKind) {
-        result.appendString("at ");
-        result.appendString(m_positionX.toString());
-        result.appendChar(' ');
-        result.appendString(m_positionY.toString());
+            CSSStyleValuePair::ValueKind::ValueListKind &&
+        m_positionX.multiValue()->size() &&
+        !(isCenter(m_positionX) && isCenter(m_positionY))) {
+        nextPart().appendString("at");
+        nextPart().appendString(m_positionX.toString());
+        nextPart().appendString(m_positionY.toString());
+    }
+    if (hasPrelude) {
         result.appendString(", ");
     }
 

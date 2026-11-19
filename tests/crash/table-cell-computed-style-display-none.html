@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>getComputedStyle of table parts in a display:none subtree does not crash</title>
+<style>
+.collapse { border-collapse: collapse }
+tr { border-top: 3px solid red }
+</style>
+<div style="display: none">
+  <table><tr><td id="td">x</td><th id="th">y</th></tr></table>
+  <table class="collapse" rules="all"><tbody id="tbody"><tr><td id="ctd">x</td></tr></tbody></table>
+</div>
+<script>
+// cssom-1 #dom-window-getcomputedstyle: an element without a box still has
+// computed values, its table ancestor's included.
+["td", "th", "tbody", "ctd"].forEach(function (id) {
+  var style = getComputedStyle(document.getElementById(id));
+  style.borderTopWidth;
+  style.textAlign;
+});
+if (typeof testEnd === "function") testEnd();
+</script>

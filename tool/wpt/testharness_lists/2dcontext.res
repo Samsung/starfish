@@ -133,7 +133,10 @@ http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canv
 http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.zero.4.html
 http://web-platform.test:8000/html/canvas/element/drawing-rectangles-to-the-canvas/2d.strokeRect.zero.5.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.default.html
+http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.get.halftransparent.html
+http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.get.semitransparent.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.get.solid.html
+http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.get.transparent.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.invalidstring.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.invalidtype.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.css-color-4-hsl-2.html
@@ -160,6 +163,9 @@ http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fill
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.css-color-4-rgba-3.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.css-color-4-rgba-5.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.css-color-4-rgba-6.html
+http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.current.basic.html
+http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.current.changed.html
+http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.current.removed.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.hex3.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.hex4.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.fillStyle.parse.hex6.html
@@ -249,6 +255,7 @@ http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.grad
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.gradient.linear.transform.3.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.gradient.object.compare.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.gradient.object.crosscanvas.html
+http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.gradient.object.current.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.gradient.object.invalidoffset.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.gradient.object.return.html
 http://web-platform.test:8000/html/canvas/element/fill-and-stroke-styles/2d.gradient.object.type.html
@@ -558,6 +565,9 @@ http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.alpha.5.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.attributes.shadowBlur.initial.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.attributes.shadowBlur.invalid.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.attributes.shadowBlur.valid.html
+http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.attributes.shadowColor.current.basic.html
+http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.attributes.shadowColor.current.changed.html
+http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.attributes.shadowColor.current.removed.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.attributes.shadowColor.initial.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.attributes.shadowColor.invalid.html
 http://web-platform.test:8000/html/canvas/element/shadows/2d.shadow.attributes.shadowColor.valid.html
@@ -673,6 +683,9 @@ http://web-platform.test:8000/html/canvas/offscreen/drawing-images-to-the-canvas
 http://web-platform.test:8000/html/canvas/offscreen/manual/the-offscreen-canvas/offscreencanvas.constructor.html
 http://web-platform.test:8000/html/canvas/offscreen/pixel-manipulation/2d.imageData.get.basic.html
 http://web-platform.test:8000/html/canvas/offscreen/pixel-manipulation/2d.imageData.put.basic.html
+http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.get.halftransparent.html
+http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.get.semitransparent.html
+http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.get.transparent.html
 http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-1.html
 http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-3.html
 http://web-platform.test:8000/html/canvas/offscreen/fill-and-stroke-styles/2d.fillStyle.parse.hsl-clamp-4.html

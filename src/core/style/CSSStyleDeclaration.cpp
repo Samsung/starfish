@@ -1370,8 +1370,11 @@ static bool parseTransitionShorthand(const CSSTokenVector& tokens,
 
         // TODO: This coide is for ValueUnitTransitionProperty of 'var'.
 
+        // delay can be negative
+        int timeParsingOption =
+            foundDuration ? CSSPropertyParser::AllowNegative : 0;
         if ((!foundDuration || !foundDelay) &&
-            temp.updateValueUnitTimeOrCalc(tok, 0)) {
+            temp.updateValueUnitTimeOrCalc(tok, timeParsingOption)) {
             if (!foundDuration) {
                 foundDuration = true;
                 *duration = temp;

@@ -104,7 +104,7 @@ http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-source-va
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-width-computed.html
 http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-width-invalid.html
 http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-width-valid.html
-# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-backgrounds/parsing/border-radius-computed.html
+http://web-platform.test:8000/css/css-backgrounds/parsing/border-radius-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-backgrounds/parsing/border-radius-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-backgrounds/parsing/border-radius-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-backgrounds/parsing/border-shorthand.html

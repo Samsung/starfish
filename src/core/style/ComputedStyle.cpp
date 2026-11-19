@@ -991,6 +991,11 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
         setStroke(s);
     }
 
+    // css-color-4 #currentcolor-color: the element's color, as for fill
+    if (Optional<StylePaintData*> stop = m_rareComputedStyleData.stopColor()) {
+        stop->updateCurrentColorToFixedColorIfNeeds(color());
+    }
+
     StyleBackgroundData* background = this->background();
     if (background) {
     }
@@ -1051,11 +1056,21 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
         case DisplayValue::TableColumnGroupDisplayValue:
         case DisplayValue::TableColumnDisplayValue:
         case DisplayValue::TableCellDisplayValue:
-            setTextAlign(TextAlignValue::StartTextAlignValue, false);
+            setTextAlign(TextAlignValue::StartTextAlignValue);
             break;
         default:
             break;
         }
+    }
+
+    // HTML §15.3.8: th (-internal-center) is centered only when its parent's
+    // computed text-align is the initial value; otherwise it inherits. The
+    // parent is the one resolved with it, stored or not (display:none).
+    if (m_inheritedStyles.m_textAlign ==
+            TextAlignValue::InternalCenterTextAlignValue &&
+        parentStyle->orignalTextAlign() !=
+            TextAlignValue::StartTextAlignValue) {
+        setTextAlign(parentStyle->orignalTextAlign());
     }
 }
 
@@ -1102,6 +1117,16 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
                                 windowSize.width(), windowSize.height(), this);
         return v;
     };
+
+    // A percentage line-height computes to a length against the element's
+    // own font size, which descendants inherit (CSS2 §10.8.1).
+    // shortcut: like em lengths, it keeps the cascaded font size under a
+    // font-size keyframe animation (applied after this), upgrade when animated
+    // font sizes must reflow font-relative lengths.
+    if (lineHeight().isPercent() && !hasNormalLineHeight()) {
+        setLineHeight(Length(Length::Fixed,
+                             curFontSize.fixed() * lineHeight().percent()));
+    }
 
     if (!lineHeight().isComputed()) {
         // A line-height calc() percentage refers to the element's own font

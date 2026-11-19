@@ -1,0 +1,36 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A percentage line-height computes to a length that descendants inherit</title>
+<style>
+  body { margin: 0; }
+  #parent { font: 10px monospace; line-height: 200%; }
+  #child { font-size: 30px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[line-height-percent-inherit] " + document.title);
+  };
+}
+</script>
+<div id="parent">x<div id="child">x</div></div>
+<script>
+// CSS2 §10.8.1: a <percentage> line-height is the element's own font size
+// times the percentage, and that length is what descendants inherit.
+var outer = document.getElementById("parent");
+var inner = document.getElementById("child");
+var h = inner.getBoundingClientRect().height;
+console.assert(h == 20, "child height: " + h);
+var lh = getComputedStyle(outer).lineHeight;
+console.assert(lh == "20px", "parent line-height: " + lh);
+lh = getComputedStyle(inner).lineHeight;
+console.assert(lh == "20px", "child line-height: " + lh);
+testEnd();
+</script>

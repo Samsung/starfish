@@ -37,7 +37,7 @@ http://web-platform.test:8000/css/css-values/calc-in-calc.html
 # [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-values/calc-in-max.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-values/calc-in-media-queries-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-values/calc-in-media-queries-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-values/calc-invalid-range-clamping.html
+http://web-platform.test:8000/css/css-values/calc-invalid-range-clamping.html
 http://web-platform.test:8000/css/css-values/calc-margin-block-1.html
 http://web-platform.test:8000/css/css-values/calc-max-height-block-1.html
 http://web-platform.test:8000/css/css-values/calc-max-width-block-1.html

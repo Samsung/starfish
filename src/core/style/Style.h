@@ -2976,6 +2976,11 @@ public:
     // <color> for a slot that is consumed before the element style exists
     // (gradient stops, shadows, stop-color), so light-dark() is rejected.
     bool updateValueUnitResolvedColor(const CSSTokenValue& token);
+    // A <color> outside CSS properties, as the color it is used as (HTML
+    // "parse a CSS <color> value"); |currentColor| gives `currentcolor` and
+    // is called only for that keyword.
+    static Optional<Unit::Color> parseUsedColor(
+        String* str, const std::function<Unit::Color()>& currentColor);
     bool updateValueUnitUrlOrNone(const CSSTokenValue& token);
     bool updateValueUnitGradient(const CSSTokenValue& value);
     bool updateValueUnitMargin(const CSSTokenValue& token);

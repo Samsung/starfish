@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Negative values are valid only where the property's range allows them</title>
+<link rel="help" href="https://drafts.csswg.org/css-values-4/#calc-range">
+<style>
+  body { margin: 0; }
+  #grid { display: grid; grid-template-columns: 50px 50px; grid-auto-rows: 20px;
+          row-gap: calc(10px - 20px); column-gap: calc(10px - 20px); width: 200px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[negative-value-ranges] " + document.title);
+  };
+}
+</script>
+<div id="grid"><div id="a"></div><div id="b"></div><div id="c"></div></div>
+<div id="t"></div>
+<script>
+var t = document.getElementById("t");
+// css-transitions-1: the delay accepts negative times, in the shorthand too;
+// the duration does not, so a math function there clamps to zero.
+[["transition", "opacity 1s -1s", "transition-delay", "-1s"],
+ ["transition", "opacity 1s calc(1s - 2s)", "transition-delay", "-1s"],
+ ["transition", "opacity calc(1s - 2s)", "transition-duration", "0s"]
+].forEach(function (c) {
+  t.setAttribute("style", "");
+  t.style.setProperty(c[0], c[1]);
+  var got = getComputedStyle(t).getPropertyValue(c[2]);
+  console.assert(got === c[3], c[0] + ": " + c[1] + " -> " + c[2] + " " + got);
+});
+
+// css-align-3 gaps and css-logical-1 padding take <length-percentage [0,∞]>:
+// a negative value (or auto) is invalid, and a math function clamps.
+["row-gap", "column-gap", "gap", "padding-block-start", "padding-block-end"].forEach(function (property) {
+  ["-10px", "-1%", "auto"].forEach(function (value) {
+    t.setAttribute("style", "");
+    t.style.setProperty(property, value);
+    console.assert(t.style.getPropertyValue(property) === "", property + ": " + value + " is invalid");
+  });
+});
+t.setAttribute("style", "padding-block-start: calc(10px - 20px)");
+console.assert(getComputedStyle(t).paddingTop === "0px",
+               "padding-block-start: calc(10px - 20px) -> " + getComputedStyle(t).paddingTop);
+function rect(id) { return document.getElementById(id).getBoundingClientRect(); }
+console.assert(rect("b").left === rect("a").right, "column gap clamps: " + (rect("b").left - rect("a").right));
+console.assert(rect("c").top === rect("a").bottom, "row gap clamps: " + (rect("c").top - rect("a").bottom));
+testEnd();
+</script>

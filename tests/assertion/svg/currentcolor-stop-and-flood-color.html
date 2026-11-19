@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>currentcolor in stop-color and flood-color uses the element's color</title>
+<link rel="help" href="https://drafts.csswg.org/css-color-4/#currentcolor-color">
+<link rel="help" href="https://drafts.fxtf.org/filter-effects-1/#FloodColorProperty">
+<style>
+  body { margin: 0; background: white; }
+  svg { position: absolute; left: 0; top: 0; }
+</style>
+</head>
+<body>
+<svg width="200" height="60" style="color: rgb(0, 255, 0)">
+  <defs>
+    <linearGradient id="g"><stop id="stop" offset="0" stop-color="currentcolor"/><stop id="stop2" offset="1" style="stop-color: currentColor"/></linearGradient>
+    <linearGradient id="g2" style="color: rgb(255, 0, 255)"><stop id="own" offset="0" stop-color="currentcolor"/><stop offset="1" stop-color="currentcolor"/></linearGradient>
+    <filter id="f" x="0" y="0" width="1" height="1"><feFlood id="flood" flood-color="currentcolor"/></filter>
+  </defs>
+  <rect x="10" y="10" width="40" height="40" fill="url(#g)"/>
+  <rect x="60" y="10" width="40" height="40" fill="url(#g2)"/>
+  <rect x="110" y="10" width="40" height="40" fill="black" filter="url(#f)"/>
+</svg>
+<script>
+  // css-color-4 #currentcolor-color: currentcolor is the value of the color
+  // property on the same element, here inherited from the <svg> or set on
+  // the gradient; its resolved value is that color (cssom-1
+  // #resolved-values). The gradient and the flood are painted in it.
+  function check(what, actual, expected) { console.assert(actual === expected, what + ": " + actual + " != " + expected); }
+  check("stop-color attribute", getComputedStyle(document.getElementById("stop")).stopColor, "rgb(0, 255, 0)");
+  check("stop-color property", getComputedStyle(document.getElementById("stop2")).stopColor, "rgb(0, 255, 0)");
+  check("stop-color with the gradient's color", getComputedStyle(document.getElementById("own")).stopColor, "rgb(255, 0, 255)");
+  document.querySelector("svg").style.color = "rgb(0, 0, 255)";
+  document.body.offsetHeight;
+  check("stop-color follows a color change", getComputedStyle(document.getElementById("stop")).stopColor, "rgb(0, 0, 255)");
+  document.querySelector("svg").style.color = "rgb(0, 255, 0)";
+
+  var shot = "currentcolor-stop-and-flood-color.html.png";
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      if (typeof testEnd === "function") testEnd();
+      return;
+    }
+    setTimeout(function () {
+      screenShot(shot, function () {
+        // Colors symmetric in red and blue, which a screenshot may swap.
+        console.assert(checkPixelColors(shot, [
+          { x: 30, y: 30, r: 0, g: 255, b: 0, a: 255 },
+          { x: 80, y: 30, r: 255, g: 0, b: 255, a: 255 },
+          { x: 130, y: 30, r: 0, g: 255, b: 0, a: 255 },
+        ], 3), "currentcolor stops and flood painted in the element's color");
+        testEnd();
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

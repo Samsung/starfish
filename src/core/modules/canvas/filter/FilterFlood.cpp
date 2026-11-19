@@ -41,18 +41,21 @@ FilterFlood::FilterFlood(Filter* filter,
     String* floodColor = element->getAttributeOrEmpty(ss->m_floodColor);
     String* floodOpacity = element->getAttributeOrEmpty(ss->m_floodOpacity);
 
-    CSSTokenValue token(floodColor->toUTF8NonGCString());
-    CSSStyleValuePair pair;
-    if (pair.updateValueUnitResolvedColor(token)) {
-        if (pair.valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
-            m_floodColor = pair.colorValue();
-        } else if (pair.valueKind() ==
-                   CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-            m_floodColor =
-                NamedColor::namedColorToColor(pair.namedColorValue());
-        }
+    // SVG flood-color: currentcolor is the element's computed 'color'.
+    // shortcut: a display: none subtree keeps no computed style, so a filter
+    // there takes black; resolve one if pages need it.
+    Optional<Unit::Color> color =
+        CSSStyleValuePair::parseUsedColor(floodColor, [&]() -> Unit::Color {
+            if (element->style()) {
+                return element->style()->color();
+            }
+            return Unit::Color(0, 0, 0, 255);
+        });
+    if (color) {
+        m_floodColor = color.value();
     }
 
+    CSSStyleValuePair pair;
     if (pair.updateValueUnitNumber(
             CSSTokenValue(floodOpacity->toUTF8NonGCString()),
             CSSPropertyParser::AllowNone)) {

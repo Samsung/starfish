@@ -46,6 +46,7 @@
 #include "core/dom/canvas/CanvasPattern.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/dom/Document.h"
+#include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSTokenValue.h"
@@ -242,21 +243,36 @@ static inline bool stringToImageSmoothingQuality(String* quality,
     return false;
 }
 
-static inline bool stringToColor(String* color, Unit::Color& out)
+// https://html.spec.whatwg.org/multipage/canvas.html#serialisation-of-a-color
+static String* serializeColor(Unit::Color color)
+{
+    return color.hasAlpha() ? color.toString() : color.toHTMLColorCodeString();
+}
+
+// HTML canvas: fillStyle, strokeStyle and shadowColor parse colors with the
+// canvas element, so currentcolor is its computed 'color', or opaque black
+// without a connected element (as for OffscreenCanvas).
+static inline bool stringToColor(String* color,
+                                 Optional<HTMLCanvasElement*> canvas,
+                                 Unit::Color& out)
 {
     STARFISH_ASSERT(color != nullptr);
 
-    CSSTokenValue token(color->toUTF8NonGCString());
-    CSSStyleValuePair pair;
-    if (pair.updateValueUnitResolvedColor(token) == true) {
-        if (pair.valueKind() == CSSStyleValuePair::ValueKind::ColorValueKind) {
-            out = pair.colorValue();
-            return true;
-        } else if (pair.valueKind() ==
-                   CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-            out = NamedColor::namedColorToColor(pair.namedColorValue());
-            return true;
-        }
+    Optional<Unit::Color> used =
+        CSSStyleValuePair::parseUsedColor(color, [&]() -> Unit::Color {
+            if (canvas && canvas->isConnected()) {
+                canvas->document()->browsingContext()->resolveStyleIfNeeds();
+                // shortcut: a display: none subtree keeps no computed style,
+                // so its canvas takes black; resolve one if pages need it.
+                if (canvas->style()) {
+                    return canvas->style()->color();
+                }
+            }
+            return Unit::Color(0, 0, 0, 255);
+        });
+    if (used) {
+        out = used.value();
+        return true;
     }
 
     return false;
@@ -696,7 +712,7 @@ CanvasStyle CanvasRenderingContext2DMixIn::fillStyle()
     auto source = m_canvas->fillSource();
     if (source->isColorType() == true) {
         return CanvasStyle::createDOMString(
-            source->getColorValue().toHTMLColorCodeString());
+            serializeColor(source->getColorValue()));
     } else {
         STARFISH_ASSERT(source->isCanvasStyleType() == true);
         return source->getCanvasStyleValue();
@@ -707,7 +723,8 @@ void CanvasRenderingContext2DMixIn::setFillStyle(CanvasStyle value)
 {
     if (value.isDOMStringValue() == true) {
         Unit::Color color;
-        if (stringToColor(value.getDOMStringValue(), color) == true) {
+        if (stringToColor(value.getDOMStringValue(), m_ownerHTMLCanvasElement,
+                          color) == true) {
             m_canvas->setFillColor(color);
         }
     } else if (value.isNoneValue() == false) {
@@ -726,7 +743,7 @@ CanvasStyle CanvasRenderingContext2DMixIn::strokeStyle()
     auto source = m_canvas->strokeSource();
     if (source->isColorType() == true) {
         return CanvasStyle::createDOMString(
-            source->getColorValue().toHTMLColorCodeString());
+            serializeColor(source->getColorValue()));
     } else {
         STARFISH_ASSERT(source->isCanvasStyleType() == true);
         return source->getCanvasStyleValue();
@@ -737,7 +754,8 @@ void CanvasRenderingContext2DMixIn::setStrokeStyle(CanvasStyle value)
 {
     if (value.isDOMStringValue() == true) {
         Unit::Color color;
-        if (stringToColor(value.getDOMStringValue(), color) == true) {
+        if (stringToColor(value.getDOMStringValue(), m_ownerHTMLCanvasElement,
+                          color) == true) {
             m_canvas->setStrokeColor(color);
         }
     } else if (value.isNoneValue() == false) {
@@ -879,18 +897,13 @@ void CanvasRenderingContext2DMixIn::setShadowBlur(double blur)
 
 String* CanvasRenderingContext2DMixIn::shadowColor()
 {
-    // https://html.spec.whatwg.org/multipage/canvas.html#serialisation-of-a-color
-    Unit::Color sColor = m_canvas->shadowColor();
-    if (sColor.hasAlpha()) {
-        return sColor.toString();
-    }
-    return sColor.toHTMLColorCodeString();
+    return serializeColor(m_canvas->shadowColor());
 }
 
 void CanvasRenderingContext2DMixIn::setShadowColor(String* colorStr)
 {
     Unit::Color color;
-    if (stringToColor(colorStr, color) == true) {
+    if (stringToColor(colorStr, m_ownerHTMLCanvasElement, color) == true) {
         m_canvas->setShadowColor(color);
     }
 }

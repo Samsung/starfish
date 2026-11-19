@@ -1,0 +1,47 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A percentage line-height follows the element's own computed font size</title>
+<link rel="help" href="https://www.w3.org/TR/CSS2/visudet.html#propdef-line-height">
+<style>
+  body { margin: 0; font: 10px/1 Ahem; }
+  .big { font-size: 30px; }
+</style>
+<div id="dynamic" style="line-height: 200%">x<div id="dynamicChild" class="big">x</div></div>
+<div id="shorthand" style="font: 12px/150% Ahem">x<div id="shorthandChild" class="big">x</div></div>
+<div id="ownEm" style="font-size: 2em; line-height: 150%">x</div>
+<div id="ownCalc" style="font-size: calc(1em + 10px); line-height: 150%">x</div>
+<div style="line-height: 150%"><div id="middle" style="font-size: 20px">x<div id="deep" style="font-size: 40px">x</div></div></div>
+<div style="line-height: 2">x<div id="number" class="big">x</div></div>
+<div style="line-height: 2em">x<div id="em" class="big">x</div></div>
+<div style="line-height: 200%"><div id="normal" class="big" style="line-height: normal">x</div></div>
+<script>
+// CSS2 §10.8.1: a <percentage> line-height is the element's own computed
+// font size times the percentage; that length is the computed value, which
+// descendants inherit, so it is recomputed when that font size changes. A
+// <number> is inherited as the number and an <length> as the length.
+function lineHeight(id) { return getComputedStyle(document.getElementById(id)).lineHeight; }
+function height(id) { return document.getElementById(id).getBoundingClientRect().height; }
+function check(what, actual, expected) { console.assert(actual === expected, what + ": " + actual + " != " + expected); }
+// Lay out after each change so every element has its style recomputed.
+function set(id, property, value) { document.getElementById(id).style[property] = value; document.body.offsetHeight; }
+
+check("inherited percentage", lineHeight("dynamicChild"), "20px");
+set("dynamic", "fontSize", "20px");
+check("after the font size changes", lineHeight("dynamic"), "40px");
+check("inherited after the font size changes", lineHeight("dynamicChild"), "40px");
+check("child box after the font size changes", height("dynamicChild"), 40);
+set("dynamic", "lineHeight", "300%");
+check("after the percentage changes", lineHeight("dynamicChild"), "60px");
+check("font shorthand", lineHeight("shorthand"), "18px");
+check("font shorthand inherited", lineHeight("shorthandChild"), "18px");
+check("own em font size", lineHeight("ownEm"), "30px");
+check("own calc font size", lineHeight("ownCalc"), "30px");
+check("inherited through a middle element", lineHeight("middle"), "15px");
+check("inherited twice", lineHeight("deep"), "15px");
+check("deep box", height("deep"), 15);
+check("number inherits as a number", lineHeight("number"), "60px");
+check("number box", height("number"), 60);
+check("em inherits as a length", lineHeight("em"), "20px");
+check("normal stays normal", lineHeight("normal"), "normal");
+if (typeof testEnd === "function") testEnd();
+</script>

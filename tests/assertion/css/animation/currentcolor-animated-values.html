@@ -1,0 +1,36 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>currentcolor in keyframes, animate() and SMIL color values</title>
+<link rel="help" href="https://drafts.csswg.org/css-color-4/#currentcolor-color">
+<style>
+@keyframes k { from { background-color: currentcolor } to { background-color: currentcolor } }
+#keyframed { color: rgb(0, 128, 0); animation: k 100s paused; width: 10px; height: 10px }
+@keyframes c { from { color: currentcolor } to { color: currentcolor } }
+#colorKeyframed { color: rgb(0, 128, 0); animation: c 100s paused }
+</style>
+<div id="keyframed"></div>
+<div style="color: rgb(0, 0, 255)"><div id="colorKeyframed">x</div></div>
+<div id="animated" style="color: rgb(0, 128, 0); width: 10px; height: 10px"></div>
+<svg width="10" height="10" style="color: rgb(0, 128, 0)">
+  <rect width="10" height="10" fill="red">
+    <animate attributeName="fill" from="currentColor" to="blue" dur="100s"/>
+  </rect>
+</svg>
+<script>
+// css-color-4 #currentcolor-color: an animated currentcolor is the animated
+// element's color; keyframes, Web Animations and SMIL all take it.
+// A step easing holds the first keyframe, away from interpolation rounding.
+animated.animate([{ backgroundColor: "currentcolor" }, { backgroundColor: "currentcolor" }],
+                 { duration: 100000, easing: "steps(1, end)" });
+
+requestAnimationFrame(() => requestAnimationFrame(() => {
+  const keyframed = getComputedStyle(document.getElementById("keyframed")).backgroundColor;
+  console.assert(keyframed === "rgb(0, 128, 0)", "keyframes " + keyframed);
+  const animatedColor = getComputedStyle(animated).backgroundColor;
+  console.assert(animatedColor === "rgb(0, 128, 0)", "animate() " + animatedColor);
+  // In color itself, currentcolor is the inherited color.
+  const color = getComputedStyle(document.getElementById("colorKeyframed")).color;
+  console.assert(color === "rgb(0, 0, 255)", "color keyframes " + color);
+  if (typeof testEnd === "function") testEnd();
+}));
+</script>

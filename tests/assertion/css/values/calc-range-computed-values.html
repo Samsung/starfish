@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>calc() results are clamped to each property's range, and only there</title>
+<link rel="help" href="https://drafts.csswg.org/css-values-4/#calc-range">
+<style>
+  body { margin: 0; }
+  #cb { width: 100px; }
+  #t { border-left-style: solid; outline-style: solid; }
+</style>
+<div id="cb"><div id="t">x</div></div>
+<script>
+// css-values-4 #calc-range: a math function may produce a value outside the
+// property's range; it is clamped to the range at computed-value time when
+// it can be, otherwise at used-value time. Properties that accept negative
+// values keep them. Ranges: padding, border and outline widths, font-size,
+// line-height and stroke-width are non-negative; opacity, fill-opacity and
+// stroke-opacity are <alpha-value>s, clamped to [0, 1] (css-color-4).
+var t = document.getElementById("t");
+function computed(property, value) {
+  t.setAttribute("style", "");
+  t.style.setProperty(property, value);
+  return getComputedStyle(t).getPropertyValue(property);
+}
+[["padding-left", "calc(10px - 20px)", "0px"],
+ ["border-left-width", "calc(1px - 5px)", "0px"],
+ ["outline-width", "calc(1px - 5px)", "0px"],
+ ["font-size", "calc(10px - 20px)", "0px"],
+ ["font-size", "calc(50% - 20px)", "0px"],
+ ["line-height", "calc(10px - 20px)", "0px"],
+ ["line-height", "calc(1 - 2)", "0px"],
+ ["line-height", "calc(50% - 20px)", "0px"],
+ // A clamped percentage is zero, not the keyword normal.
+ ["line-height", "calc(0% - 100%)", "0px"],
+ ["opacity", "calc(2 - 5)", "0"],
+ ["opacity", "calc(3)", "1"],
+ ["fill-opacity", "calc(0.5 * 3)", "1"],
+ ["stroke-opacity", "calc(-1)", "0"],
+ ["stroke-width", "calc(-1px)", "0px"],
+ // Negative values are valid here.
+ ["outline-offset", "calc(1px - 6px)", "-5px"],
+ ["margin-left", "calc(10px - 20px)", "-10px"],
+ ["text-indent", "calc(-10px)", "-10px"],
+ ["letter-spacing", "calc(1px - 3px)", "-2px"]
+].forEach(function (c) {
+  var got = computed(c[0], c[1]);
+  console.assert(got === c[2], c[0] + ": " + c[1] + " computed " + got + " != " + c[2]);
+});
+// Percentages resolve at layout: padding is clamped then, margins are not.
+t.setAttribute("style", "padding-left: calc(10px - 50%)");
+console.assert(t.offsetWidth === 100, "used padding: " + t.offsetWidth);
+t.setAttribute("style", "margin-left: calc(10px - 50%)");
+console.assert(t.getBoundingClientRect().left === -40, "used margin: " + t.getBoundingClientRect().left);
+if (typeof testEnd === "function") testEnd();
+</script>

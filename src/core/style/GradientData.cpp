@@ -578,7 +578,7 @@ CSSGradientValue* LinearGradientData::convertToCSSGradientValue()
             gradient->setTopOrBottom(topOrBottom);
         }
     } else {
-        gradient->setAngle(CSSAngle(m_angleDeg));
+        gradient->setAngle(CSSAngle(CSSAngle::DEG, m_angleDeg));
     }
 
     convertColorStopsToCSSColorStops(gradient->cssColorStopList());

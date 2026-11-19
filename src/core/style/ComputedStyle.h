@@ -980,7 +980,6 @@ class ComputedStyle : public gc {
         m_inheritedStyles.m_captionSide = CaptionSideValue::TopCaptionSideValue;
         m_inheritedStyles.m_emptyCells = EmptyCellsValue::ShowEmptyCellsValue;
         m_inheritedStyles.m_rareData = nullptr;
-        m_inheritedStyles.m_textAlignSpecifiedByUser = false;
         m_inheritedStyles.m_isRareDataAllocated = false;
         m_inheritedStyles.m_fontFamilyDatas = nullptr;
         // -100 is used to represent 'normal' value.
@@ -1491,20 +1490,9 @@ public:
         return m_inheritedStyles.m_textAlign;
     }
 
-    void setTextAlign(TextAlignValue t, bool byUser = true)
+    void setTextAlign(TextAlignValue t)
     {
         m_inheritedStyles.m_textAlign = t;
-        m_inheritedStyles.m_textAlignSpecifiedByUser |= byUser;
-    }
-
-    bool isSpecifiedTextAlign()
-    {
-        return m_inheritedStyles.m_textAlignSpecifiedByUser;
-    }
-
-    void setIsSpecifiedTextAlign(bool f)
-    {
-        m_inheritedStyles.m_textAlignSpecifiedByUser = f;
     }
 
     Length textIndent()
@@ -5687,7 +5675,6 @@ protected:
         BorderCollapseValue m_borderCollapse : 1; // table
         CaptionSideValue m_captionSide : 1;       // table
         EmptyCellsValue m_emptyCells : 1;         // table
-        bool m_textAlignSpecifiedByUser : 1;
         bool m_isRareDataAllocated : 1;
 
         FontFamilyData* m_fontFamilyDatas; // [size_t, String, String...]

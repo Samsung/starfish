@@ -1232,7 +1232,7 @@ http://web-platform.test:8000/css/CSS2/css1/c533-bgimage-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/css1/c548-ln-ht-000.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/css1/c548-ln-ht-001.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/css1/c548-ln-ht-002.xht
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/css1/c548-ln-ht-003.xht
+http://web-platform.test:8000/css/CSS2/css1/c548-ln-ht-003.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/css1/c548-ln-ht-004.xht
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/CSS2/css1/c5501-imrgn-t-000.xht
 http://web-platform.test:8000/css/CSS2/css1/c5501-mrgn-t-000.xht

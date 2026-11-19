@@ -1,0 +1,78 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>getComputedStyle() serializes text-align, gradients and line-height</title>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[computed-value-serialization] " + document.title);
+  };
+}
+</script>
+<body>
+<table><tr><th id="th">x</th></tr></table>
+<script>
+function computed(css, property) {
+  var element = document.createElement("div");
+  element.style.cssText = css;
+  document.body.appendChild(element);
+  var value = getComputedStyle(element).getPropertyValue(property);
+  element.remove();
+  return value;
+}
+function check(css, property, expected) {
+  var value = computed(css, property);
+  console.assert(value === expected, css + " -> " + value);
+}
+
+// css-text-3: text-align computes to the specified keyword.
+["start", "end", "left", "right", "center"].forEach(function (keyword) {
+  check("text-align: " + keyword, "text-align", keyword);
+});
+// HTML 15.3.8: th is centered.
+var th = getComputedStyle(document.getElementById("th")).textAlign;
+console.assert(th === "center", "th text-align -> " + th);
+
+// css-images-3: a gradient angle keeps its unit; the prelude of a radial
+// gradient omits the defaults and ends with a comma.
+check("background-image: linear-gradient(45deg, red, blue)", "background-image",
+      "linear-gradient(45deg, rgb(255, 0, 0), rgb(0, 0, 255))");
+check("background-image: linear-gradient(0.25turn, red, blue)", "background-image",
+      "linear-gradient(90deg, rgb(255, 0, 0), rgb(0, 0, 255))");
+check("background-image: radial-gradient(red, blue)", "background-image",
+      "radial-gradient(rgb(255, 0, 0), rgb(0, 0, 255))");
+check("background-image: radial-gradient(circle, red, blue)", "background-image",
+      "radial-gradient(circle, rgb(255, 0, 0), rgb(0, 0, 255))");
+check("background-image: radial-gradient(closest-side, red, blue)", "background-image",
+      "radial-gradient(closest-side, rgb(255, 0, 0), rgb(0, 0, 255))");
+["at center", "at 50%", "at 50% 50%", "farthest-corner", "ellipse farthest-corner at center"].forEach(function (prelude) {
+  check("background-image: radial-gradient(" + prelude + ", red, blue)", "background-image",
+        "radial-gradient(rgb(255, 0, 0), rgb(0, 0, 255))");
+});
+check("background-image: radial-gradient(circle farthest-corner at 50%, red, blue)", "background-image",
+      "radial-gradient(circle, rgb(255, 0, 0), rgb(0, 0, 255))");
+check("background-image: radial-gradient(farthest-corner at 10px 10px, red, blue)", "background-image",
+      "radial-gradient(at 10px 10px, rgb(255, 0, 0), rgb(0, 0, 255))");
+
+// cssom-1 #resolved-values: line-height resolves to its used value even
+// before layout and without a box; a number scales the font size.
+check("font-size: 10px; line-height: 2", "line-height", "20px");
+check("font-size: 10px; line-height: 200%", "line-height", "20px");
+check("font-size: 10px; line-height: 13px", "line-height", "13px");
+check("display: none; font-size: 10px; line-height: 2", "line-height", "20px");
+check("display: none; font-size: 10px; line-height: calc(1em + 2px)", "line-height", "12px");
+check("line-height: normal", "line-height", "normal");
+// Viewport units resolve against the viewport, with or without a box.
+["", "display: none; ", "display: contents; "].forEach(function (display) {
+  var value = computed(display + "line-height: 10vh", "line-height");
+  console.assert(Math.abs(parseFloat(value) - innerHeight / 10) < 0.5,
+                 display + "line-height: 10vh -> " + value);
+});
+testEnd();
+</script>

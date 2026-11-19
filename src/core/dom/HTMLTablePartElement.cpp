@@ -64,9 +64,12 @@ void HTMLTablePartElement::styleForPresentationAttribute(
         cssValues.push_back(pair);
     }
 
+    // A table in a display:none subtree has no stored style (getComputedStyle
+    // resolves it unstored); its never-painted cells keep their own borders.
     auto table = findParentTable();
-    if (table && table->style()->borderCollapse() ==
-                     BorderCollapseValue::CollapseBorderCollapseValue) {
+    if (table && table->style() &&
+        table->style()->borderCollapse() ==
+            BorderCollapseValue::CollapseBorderCollapseValue) {
         if (isHTMLTHElement() || isHTMLTableCellElement()) {
             if (parentElement()->isHTMLTableRowElement()) {
                 CSSStyleValuePair pair;
@@ -140,24 +143,6 @@ void HTMLTablePartElement::styleForPresentationAttribute(
 #undef APPEND_BORDER_RULES
                 }
             }
-        }
-    }
-}
-
-void HTMLTablePartElement::didComputedStyleChanged(
-    ComputedStyle* oldStyle, ComputedStyle* newStyle,
-    Optional<StyleResolveContext*> ctx)
-{
-    HTMLElement::didComputedStyleChanged(oldStyle, newStyle, ctx);
-
-    // NOTE: We can arrange text align on ComputedStyle::arrangeStyleValues
-    // but it needs additional check "isHTMLTablePartElement"
-    // so I implement this part on here
-    if (newStyle && newStyle->orignalTextAlign() ==
-                        TextAlignValue::InternalCenterTextAlignValue) {
-        auto parent = parentElement();
-        if (parent->style()->isSpecifiedTextAlign()) {
-            newStyle->setTextAlign(parent->style()->textAlign(), false);
         }
     }
 }

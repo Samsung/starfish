@@ -8,6 +8,7 @@ tests/assertion/css/box-shadow/box-shadow-added-after-forced-rebuild.html
 tests/assertion/css/box-shadow/box-shadow-added-during-rebuild.html
 tests/assertion/css/box-shadow/box-shadow-geometry-change.html
 tests/assertion/css/box-shadow/box-shadow-grown-in-layer.html
+tests/assertion/css/box-shadow/shadow-currentcolor-inherited.html
 tests/assertion/css/border-image/border-image-outset-in-layer.html
 tests/assertion/css/border-image/border-image-outset-no-scroll.html
 tests/pixel/css/all/all_repeated_use.html
@@ -379,12 +380,20 @@ tests/assertion/css/values/calc-viewport-unit-resize.html
 tests/assertion/css/values/calc-inherited-font-relative.html
 tests/assertion/css/values/calc-infinity-clamped.html
 tests/assertion/css/values/background-position-layers-serialize.html
+tests/assertion/css/values/calc-negative-size-clamped.html
+tests/assertion/css/values/negative-value-ranges.html
+tests/assertion/css/values/line-height-percent-inherit.html
+tests/assertion/css/values/calc-range-computed-values.html
+tests/assertion/css/values/line-height-percent-recomputed.html
 tests/crash/calc-empty-comparison-function.html
+tests/crash/style-currentcolor-and-calc.html
+tests/crash/currentcolor-outside-css-properties.html
 tests/assertion/css/cssom/cssfontfacerule-style.html
 tests/assertion/css/text/font-face-set-load.html
 tests/assertion/css/cssom/rule-csstext-custom-properties.html
 tests/assertion/css/cssom/stylerule-keyframerule-csstext.html
 tests/assertion/css/cssom/computed-inset-fixed-length.html
+tests/assertion/css/cssom/computed-value-serialization.html
 tests/pixel/css/border/starting_unprocessed_mbp.html
 tests/pixel/css/position2/replaced-left-margin-auto-right-margin-fixed-width-fixed.html
 tests/pixel/css/table/table_auto_08.html
@@ -403,8 +412,11 @@ tests/pixel/css/position2/left-margin-auto-right-margin-auto-width-auto.html
 tests/pixel/css/position2/left-margin-fixed-right-margin-fixed-width-auto.html
 tests/pixel/css/position2/left-margin-auto-right-margin-fixed-width-auto.html
 tests/pixel/css/table/table_fixed_20.html
+tests/assertion/css/table/th-without-parent-element.html
+tests/crash/table-cell-computed-style-display-none.html
 tests/assertion/css/table/table_border-spacing_computed_value.html
 tests/assertion/css/table/table-min-max-width.html
+tests/assertion/css/table/th-text-align-initial-parent.html
 tests/crash/table-intrinsic-min-max-width.html
 tests/pixel/css/border/next-line-dont-show-end-mbp.html
 tests/assertion/event/click.html
@@ -658,7 +670,10 @@ tests/pixel/css/animation/animation_forwards_remove.html
 tests/assertion/css/animation/animation_svg_rx_ry.html
 tests/assertion/css/animation/animation_svg_cx_cy.html
 tests/assertion/css/animation/animation_transform-origin.html
+tests/assertion/css/animation/currentcolor-animated-values.html
 tests/assertion/svg/animation/check-frame-exist.html
+tests/assertion/svg/geometry-property-negative.html
+tests/assertion/svg/currentcolor-stop-and-flood-color.html
 tests/assertion/window/raf-idle-frame-rate.html
 tests/assertion/web-animations/element_animate_fill_mode.html
 tests/assertion/web-animations/element_animate_replace_cancel.html
@@ -918,6 +933,7 @@ tests/pixel/canvas/stroke-shadow.html
 # [known-fail:PRE_FIX_BASELINE] tests/assertion/canvas/toDataURL-with-fbo-bound.html
 # [known-fail:PRE_FIX_BASELINE] tests/assertion/canvas/toDataURL-with-pack-params.html
 tests/assertion/canvas/font-weight-values.html
+tests/assertion/canvas/currentcolor-styles.html
 # [known-fail:PRE_FIX_BASELINE] tests/assertion/canvas/webgl-teximage-svg.html
 # [known-fail:PRE_FIX_BASELINE] tests/assertion/canvas/webgl-imagedata-texture.html
 # [known-fail:PRE_FIX_BASELINE] tests/assertion/canvas/webgl2-cube-face-tex-image-overloads.html

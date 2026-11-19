@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>SVG geometry properties take negative lengths and calc() results</title>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[geometry-property-negative] " + document.title);
+  };
+}
+</script>
+<svg width="100" height="100">
+  <rect id="rect" width="10" height="10"/>
+  <circle id="circle" r="10"/>
+</svg>
+<script>
+// SVG 2 geometry properties: x, y, cx and cy take any <length-percentage>,
+// negative ones included, so a negative calc() result is not clamped either
+// (css-values-4 #calc-range).
+function computed(id, property, value) {
+  var element = document.getElementById(id);
+  element.style.setProperty(property, value);
+  return getComputedStyle(element).getPropertyValue(property);
+}
+[["rect", "x"], ["rect", "y"], ["circle", "cx"], ["circle", "cy"]].forEach(function (c) {
+  var literal = computed(c[0], c[1], "-10px");
+  console.assert(literal === "-10px", c[1] + ": -10px gives " + literal);
+  var math = computed(c[0], c[1], "calc(10px - 20px)");
+  console.assert(math === "-10px", c[1] + ": calc(10px - 20px) gives " + math);
+});
+testEnd();
+</script>

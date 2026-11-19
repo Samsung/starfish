@@ -1,0 +1,45 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A negative calc() size with percentages is clamped at used time</title>
+<style>
+  body { margin: 0; }
+  .cb { width: 400px; height: 300px; }
+  .cb > div { height: 5px; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[calc-negative-size-clamped] " + document.title);
+  };
+}
+</script>
+<div class="cb">
+  <div id="width" style="width: calc(10px - 50%)"></div>
+  <div id="maxWidth" style="max-width: calc(10px - 50%)"></div>
+  <div id="maxFn" style="width: max(-50%, -10px)"></div>
+  <div id="negLeaf" style="width: calc(-10px + 50%)"></div>
+  <div id="height" style="height: calc(10px - 50%)"></div>
+</div>
+<script>
+// css-values-4 #calc-range: range checking applies to the top-level result
+// only, so values inside may be negative; a result the computed value cannot
+// clamp (it keeps percentages) is clamped at used time, here to zero.
+function box(id) {
+  return document.getElementById(id).getBoundingClientRect();
+}
+console.assert(box("width").width == 0, "width: " + box("width").width);
+console.assert(document.getElementById("width").offsetWidth == 0,
+               "offsetWidth: " + document.getElementById("width").offsetWidth);
+console.assert(box("maxWidth").width == 0, "max-width: " + box("maxWidth").width);
+console.assert(box("maxFn").width == 0, "max(): " + box("maxFn").width);
+console.assert(box("negLeaf").width == 190, "negative leaf: " + box("negLeaf").width);
+console.assert(box("height").height == 0, "height: " + box("height").height);
+testEnd();
+</script>

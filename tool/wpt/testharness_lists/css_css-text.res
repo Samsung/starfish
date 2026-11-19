@@ -307,7 +307,7 @@ http://web-platform.test:8000/css/css-text/parsing/word-wrap-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/tab-size/tab-size.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/text-align/text-align-last-empty-inline.html
 # [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/css-text/text-align/text-align-last-interpolation.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/text-align/text-align-match-parent-002.html
+# [vacuous-pass:TEXT_ALIGN_MATCH_PARENT_UNIMPLEMENTED] http://web-platform.test:8000/css/css-text/text-align/text-align-match-parent-002.html
 http://web-platform.test:8000/css/css-text/text-align/text-align-webkit-match-parent.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/text-fit/hittest.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/text-fit/line-height.html

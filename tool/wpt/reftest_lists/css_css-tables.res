@@ -152,7 +152,7 @@ http://web-platform.test:8000/css/css-tables/table-row-group-color-inheritance-0
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/tentative/paint/overflow-hidden-table.html
 http://web-platform.test:8000/css/css-tables/tentative/section-no-tbody-fixed-distribution.html
 http://web-platform.test:8000/css/css-tables/tentative/section-no-tbody-percent-distribution.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/th-text-align.html
+http://web-platform.test:8000/css/css-tables/th-text-align.html
 http://web-platform.test:8000/css/css-tables/toggle-row-display-property-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/visibility-collapse-border-spacing-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-tables/visibility-collapse-border-spacing-002.html

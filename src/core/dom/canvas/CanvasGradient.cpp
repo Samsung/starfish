@@ -73,30 +73,20 @@ void CanvasGradient::addColorStop(double offset, NULLABLE String* color)
                                "The offset is less than 0 or greater than 1.");
     }
 
-    Unit::Color clr;
-    bool failed = true;
+    Optional<Unit::Color> clr;
     if (color && !color->isEmpty()) {
-        CSSTokenValue token(color->toUTF8NonGCString());
-        CSSStyleValuePair pair;
-        if (pair.updateValueUnitResolvedColor(token)) {
-            if (pair.valueKind() ==
-                CSSStyleValuePair::ValueKind::ColorValueKind) {
-                clr = pair.colorValue();
-                failed = false;
-            } else if (pair.valueKind() ==
-                       CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                clr = NamedColor::namedColorToColor(pair.namedColorValue());
-                failed = false;
-            }
-        }
+        // HTML addColorStop parses the color without an element, so
+        // currentcolor is opaque black.
+        clr = CSSStyleValuePair::parseUsedColor(
+            color, []() { return Unit::Color(0, 0, 0, 255); });
     }
 
-    if (failed) {
+    if (!clr) {
         throw new DOMException(m_executionContext,
                                DOMException::Code::SYNTAX_ERR,
                                "The color is invalid.");
     }
-    m_nativeGardient->addColorStop(offset, clr);
+    m_nativeGardient->addColorStop(offset, clr.value());
 }
 
 void CanvasGradient::addColorStop(double offset, const Unit::Color& color)

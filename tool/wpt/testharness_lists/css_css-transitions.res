@@ -32,7 +32,7 @@
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/changing-while-transition-002.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/changing-while-transition-003.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/changing-while-transition-004.html
-# [vacuous-pass:TRANSITION_SHORTHAND_NEGATIVE_DELAY_UNIMPLEMENTED] http://web-platform.test:8000/css/css-transitions/currentcolor-animation-001.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/currentcolor-animation-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/custom-property-and-allow-discrete.html
 # [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/css/css-transitions/disconnected-element-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/display-none-no-animations.html
@@ -40,7 +40,7 @@ http://web-platform.test:8000/css/css-transitions/dynamic-root-element.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/event-dispatch.tentative.html
 http://web-platform.test:8000/css/css-transitions/events-001.html
 http://web-platform.test:8000/css/css-transitions/events-002.html
-# [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/css/css-transitions/events-003.html
+http://web-platform.test:8000/css/css-transitions/events-003.html
 http://web-platform.test:8000/css/css-transitions/events-004.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/events-005.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/events-006.html
@@ -100,7 +100,7 @@ http://web-platform.test:8000/css/css-transitions/parsing/transition-duration-va
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/transition-base-response-003.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/transition-behavior-events.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/transition-behavior.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/transition-delay-001.html
+http://web-platform.test:8000/css/css-transitions/transition-delay-001.html
 http://web-platform.test:8000/css/css-transitions/transition-duration-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/transition-duration-shorthand.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/transition-events-with-document-change.html
@@ -109,7 +109,7 @@ http://web-platform.test:8000/css/css-transitions/transition-in-iframe-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/transition-property-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/transition-property-002.html
 # [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/css/css-transitions/transition-remove-and-change-immediate.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/transition-reparented.html
+http://web-platform.test:8000/css/css-transitions/transition-reparented.html
 # [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/css/css-transitions/transition-zero-duration-with-delay.html
 http://web-platform.test:8000/css/css-transitions/transitioncancel-001.html
 http://web-platform.test:8000/css/css-transitions/transitioncancel-002.html

@@ -51,7 +51,7 @@ http://web-platform.test:8000/css/css-values/calc-mix-invalid.tentative.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/calc-rgb-percent-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/calc-rounds-to-integer.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/calc-serialization-002.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/calc-serialization.html
+http://web-platform.test:8000/css/css-values/calc-serialization.html
 # [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/css-values/calc-size/animation/calc-size-height-interpolation.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/calc-size/animation/calc-size-interpolation-expansion.html
 # [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/css-values/calc-size/animation/calc-size-width-interpolation.html

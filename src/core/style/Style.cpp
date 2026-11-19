@@ -4363,14 +4363,8 @@ void StyleResolver::applyProperty(Element* element,
         if ((newCssValue.valueKind() ==
              CSSStyleValuePair::ValueKind::Inherit) ||
             (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Unset)) {
-            style->setTextAlign(parentStyle->textAlign());
-            if ((newCssValue.valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
-                style->setIsSpecifiedTextAlign(false);
-            } else {
-                style->setIsSpecifiedTextAlign(
-                    parentStyle->isSpecifiedTextAlign());
-            }
+            // The parent's computed value, -webkit-center included.
+            style->setTextAlign(parentStyle->orignalTextAlign());
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Initial) {
             style->setTextAlign(TextAlignValue::StartTextAlignValue);
@@ -5466,7 +5460,12 @@ void StyleResolver::applyProperty(Element* element,
                     CSSStyleValuePair::ValueKind::Unset)) {
             style->setStrokeOpacity(1);
         } else {
-            float beforeClip = newCssValue.numberValue();
+            // A number calc() from the opacity parser it shares.
+            float beforeClip =
+                newCssValue.valueKind() ==
+                        CSSStyleValuePair::ValueKind::CalcValueKind
+                    ? newCssValue.calcValue()->numberValue()
+                    : newCssValue.numberValue();
             style->setStrokeOpacity(
                 beforeClip < 0 ? 0 : (beforeClip > 1.0 ? 1.0 : beforeClip));
         }
@@ -7442,6 +7441,13 @@ void StyleResolver::applyProperty(Element* element,
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Number) {
             style->setFillOpacity(newCssValue.numberValue());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::CalcValueKind) {
+            // The opacity parser it shares takes a number calc(), which
+            // clamps to [0, 1] like opacity.
+            float number = newCssValue.calcValue()->numberValue();
+            style->setFillOpacity(number < 0 ? 0
+                                             : (number > 1.0 ? 1.0 : number));
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -7458,8 +7464,14 @@ void StyleResolver::applyProperty(Element* element,
             style->setStopColor(new StylePaintData(newCssValue.colorValue()));
             break;
         case CSSStyleValuePair::ValueKind::NamedColorValueKind:
-            style->setStopColor(new StylePaintData(
-                NamedColor::namedColorToColor(newCssValue.namedColorValue())));
+            if (newCssValue.namedColorValue() == NamedColor::currentColor) {
+                style->setStopColor(
+                    new StylePaintData(NamedColor::currentColor));
+            } else {
+                style->setStopColor(
+                    new StylePaintData(NamedColor::namedColorToColor(
+                        newCssValue.namedColorValue())));
+            }
             break;
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -11954,6 +11966,27 @@ bool CSSStyleValuePair::updateValueUnitResolvedColor(const CSSTokenValue& token)
     return true;
 }
 
+Optional<Unit::Color> CSSStyleValuePair::parseUsedColor(
+    String* str, const std::function<Unit::Color()>& currentColor)
+{
+    CSSTokenValue token(str->toUTF8NonGCString());
+    // Its keywords, currentColor among them, are ASCII case-insensitive.
+    std::transform(token.begin(), token.end(), token.begin(),
+                   toASCIILower<char>);
+    CSSStyleValuePair pair;
+    if (!pair.updateValueUnitResolvedColor(token)) {
+        return Optional<Unit::Color>();
+    }
+    if (pair.valueKind() == ValueKind::ColorValueKind) {
+        return pair.colorValue();
+    }
+    STARFISH_ASSERT(pair.valueKind() == ValueKind::NamedColorValueKind);
+    if (pair.namedColorValue() == NamedColor::currentColor) {
+        return currentColor();
+    }
+    return NamedColor::namedColorToColor(pair.namedColorValue());
+}
+
 bool CSSStyleValuePair::updateValueUnitBorderColor(const CSSTokenValue& token)
 {
     return updateValueUnitColor(token);
@@ -13877,6 +13910,9 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
 {
     STARFISH_ASSERT(data != nullptr);
 
+    // Range checking applies to the top-level result only, so the values
+    // inside may be negative (css-values-4 #calc-range).
+    parserOption |= CSSPropertyParser::AllowNegative;
     bool isPlus = true;
     size_t currentArgc = 1;
     // start default arguments start position
@@ -14166,6 +14202,9 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
             parseCalc(parser, data, isLenParser, isAngleParser, isTimeParser,
                       isLineheightParser, isNumberParser, parserOption);
         if (result && parser.isEnd()) {
+            if (!(parserOption & CSSPropertyParser::AllowNegative)) {
+                data->setNonNegative();
+            }
             m_valueKind = CSSStyleValuePair::ValueKind::CalcValueKind;
             m_value = data;
             return true;
@@ -14798,17 +14837,13 @@ GEN_FOURSIDE(UPDATE_VALUE_PADDING)
 bool CSSStyleValuePair::updateValuePaddingBlockStart(
     Document* document, const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowNegative |
-                                         CSSPropertyParser::AllowPercent |
-                                         CSSPropertyParser::AllowAuto);
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
 }
 
 bool CSSStyleValuePair::updateValuePaddingBlockEnd(Document* document,
                                                    const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowNegative |
-                                         CSSPropertyParser::AllowPercent |
-                                         CSSPropertyParser::AllowAuto);
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
 }
 
 bool CSSStyleValuePair::updateValuePaddingInlineEnd(
@@ -18025,38 +18060,44 @@ bool CSSStyleValuePair::updateValueX(Document* document,
                                      const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowWithoutUnit |
-                                         CSSPropertyParser::AllowPercent);
+                                         CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueY(Document* document,
                                      const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowWithoutUnit |
-                                         CSSPropertyParser::AllowPercent);
+                                         CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueX1(Document* document,
                                       const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueY1(Document* document,
                                       const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueX2(Document* document,
                                       const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueY2(Document* document,
                                       const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueR(Document* document,
@@ -18083,26 +18124,30 @@ bool CSSStyleValuePair::updateValueCX(Document* document,
                                       const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowWithoutUnit |
-                                         CSSPropertyParser::AllowPercent);
+                                         CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueCY(Document* document,
                                       const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowWithoutUnit |
-                                         CSSPropertyParser::AllowPercent);
+                                         CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueFX(Document* document,
                                       const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueFY(Document* document,
                                       const CSSTokenVector& tokens)
 {
-    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent |
+                                         CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueFR(Document* document,

@@ -30,7 +30,7 @@ http://web-platform.test:8000/css/css-backgrounds/animations/background-color-an
 # [auto-fail:TIMEOUT] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-animation.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-scroll-into-viewport.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-transition-currentcolor.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/background-color-transition.html
+http://web-platform.test:8000/css/css-backgrounds/animations/background-color-transition.html
 http://web-platform.test:8000/css/css-backgrounds/animations/background-color-transparent-animation-in-body.html
 http://web-platform.test:8000/css/css-backgrounds/animations/invalidation/background-color-animation-with-zero-alpha.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/animations/invalidation/background-color-transition-obscured.html

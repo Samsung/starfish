@@ -1,0 +1,67 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>th centers when its parent's computed text-align is the initial value</title>
+<!--
+  HTML rendering 15.3.8: th is centered when its parent's computed
+  text-align is the initial value (start), even if an author rule set it;
+  any other value is inherited.
+-->
+<style>
+  body { margin: 0; font: 20px/30px sans-serif; }
+  table { border-spacing: 0; }
+  th { width: 300px; padding: 0; }
+</style>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[th-text-align-initial-parent] " + document.title);
+  };
+}
+</script>
+<table><tr><th id="unset"><span>x</span></th></tr></table>
+<table style="text-align: start"><tr><th id="start"><span>x</span></th></tr></table>
+<div style="text-align: start"><table><tr><th id="startAbove"><span>x</span></th></tr></table></div>
+<table style="text-align: left"><tr><th id="left"><span>x</span></th></tr></table>
+<table style="text-align: right"><tr><th id="right"><span>x</span></th></tr></table>
+<div style="text-align: -webkit-center"><p id="inherit" style="text-align: inherit">x</p></div>
+<div style="display: none; text-align: right"><table><tr><th id="hiddenRight">x</th></tr></table></div>
+<div style="display: none"><table><tr><th id="hiddenUnset">x</th></tr></table></div>
+<script>
+function offset(id) {
+  var cell = document.getElementById(id).getBoundingClientRect();
+  var text = document.getElementById(id).firstChild.getBoundingClientRect();
+  return { left: text.left - cell.left, right: cell.right - text.right };
+}
+["unset", "start", "startAbove"].forEach(function (id) {
+  var o = offset(id);
+  console.assert(Math.abs(o.left - o.right) < 1, id + " is centered: " + o.left + " / " + o.right);
+});
+console.assert(offset("left").left < 1, "left is inherited: " + offset("left").left);
+console.assert(offset("right").right < 1, "right is inherited: " + offset("right").right);
+// The parent's value at the time counts, not whether it was ever set.
+var table = document.getElementById("right").closest("table");
+table.style.textAlign = "start";
+var o = offset("right");
+console.assert(Math.abs(o.left - o.right) < 1, "centered once start: " + o.left + " / " + o.right);
+table.style.textAlign = "end";
+o = offset("right");
+console.assert(o.right < 1, "end is inherited: " + o.right);
+console.assert(getComputedStyle(document.getElementById("right")).textAlign === "end",
+               "end is inherited: " + getComputedStyle(document.getElementById("right")).textAlign);
+// An explicit inherit takes the parent's computed value as is.
+console.assert(getComputedStyle(document.getElementById("inherit")).textAlign === "-webkit-center",
+               "inherit: " + getComputedStyle(document.getElementById("inherit")).textAlign);
+// Without a box as well (cssom-1 #resolved-values).
+console.assert(getComputedStyle(document.getElementById("hiddenRight")).textAlign === "right",
+               "hidden right: " + getComputedStyle(document.getElementById("hiddenRight")).textAlign);
+console.assert(getComputedStyle(document.getElementById("hiddenUnset")).textAlign === "center",
+               "hidden unset: " + getComputedStyle(document.getElementById("hiddenUnset")).textAlign);
+testEnd();
+</script>

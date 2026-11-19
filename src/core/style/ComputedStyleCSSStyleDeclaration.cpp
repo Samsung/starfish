@@ -1014,10 +1014,19 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair lh;
         lh.setKeyKind(CSSStyleValuePair::KeyKind::LineHeight);
 
-        if (style->hasNormalLineHeight() || !frame) {
+        if (style->hasNormalLineHeight()) {
             lh.setValueKind(CSSStyleValuePair::ValueKind::Normal);
-        } else {
+        } else if (frame) {
             lh.setLengthValue(CSSLength(CSSLength::PX, frame->lineHeight()));
+        } else {
+            // cssom-1 #resolved-values: the used value, which without a box
+            // follows from the computed length or number, as for a box.
+            Length lineHeight = style->lineHeight();
+            float px =
+                lineHeight.isInheritableNumber()
+                    ? style->fixedFontSize() * lineHeight.inheritableNumber()
+                    : lineHeight.specifiedValue(style->fixedFontSize(), m_node);
+            lh.setLengthValue(CSSLength(CSSLength::PX, px));
         }
         addValuePair(lh);
     } break;
@@ -2205,10 +2214,33 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::VerticalAlign: {
+        CSSStyleValuePair p;
+        if (style->isNumericVerticalAlign()) {
+            p = lengthToCSSStyleValue(style->verticalAlignLength());
+        } else {
+            p.setValueKind(
+                CSSStyleValuePair::ValueKind::VerticalAlignValueKind);
+            p.setValue(style->verticalAlign());
+        }
+        p.setKeyKind(CSSStyleValuePair::KeyKind::VerticalAlign);
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::TextAlign: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::TextAlign);
+        p.setValueKind(CSSStyleValuePair::ValueKind::TextAlignValueKind);
+        // th's -internal-center is its UA way to compute to center.
+        TextAlignValue value = style->orignalTextAlign();
+        p.setValue(value == TextAlignValue::InternalCenterTextAlignValue
+                       ? TextAlignValue::CenterTextAlignValue
+                       : value);
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::BoxShadow: {
         CSSStyleValuePair shadows;
         shadows.setKeyKind(CSSStyleValuePair::KeyKind::BoxShadow);
-        if (!style->boxShadow()) {
+        if (!style->boxShadow() || style->boxShadow()->empty()) {
             shadows.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             shadows.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
@@ -3216,8 +3248,6 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         ADD_VALUE_PAIR(CaptionSide, CaptionSideValueKind, captionSide)
         ADD_VALUE_PAIR(Clear, ClearValueKind, clear)
         ADD_VALUE_PAIR(EmptyCells, EmptyCellsValueKind, emptyCells)
-        ADD_VALUE_PAIR(VerticalAlign, VerticalAlignValueKind, verticalAlign)
-        ADD_VALUE_PAIR(TextAlign, SideValueKind, textAlign)
         ADD_VALUE_PAIR(TextDecorationStyle, TextDecorationStyleValueKind,
                        textDecorationStyle)
         ADD_VALUE_PAIR(TextUnderlinePosition, TextUnderlinePositionValueKind,

@@ -508,6 +508,7 @@ CalcData* CalcData::resolvedCopy(Leaf& leaf) const
     CalcData* copy = new CalcData();
     copy->m_type = m_type;
     copy->m_isPositive = m_isPositive;
+    copy->m_isNonNegative = m_isNonNegative;
     copy->m_argumentsStartPostion = m_argumentsStartPostion;
     for (CalcTerm* term : m_terms) {
         copy->m_terms.push_back(term->resolvedCopy(leaf));
@@ -534,7 +535,7 @@ static float censorLength(float value)
 float CalcData::numberValue() const
 {
     auto leaf = [](const CalcValue& value) { return value.numberValue(); };
-    return censor(evaluate(leaf));
+    return clampToRange(censor(evaluate(leaf)));
 }
 
 static Length leafLength(const CalcValue& value)
@@ -551,7 +552,7 @@ LayoutUnit CalcData::specifiedValue(const LayoutUnit& parentContentLength,
     auto leaf = [&](const CalcValue& value) {
         return leafLength(value).specifiedValue(parentContentLength, n);
     };
-    return LayoutUnit(censorLength(evaluate(leaf)));
+    return LayoutUnit(clampToRange(censorLength(evaluate(leaf))));
 }
 
 LayoutUnit CalcData::specifiedFontValue(Node* n) const
@@ -559,7 +560,7 @@ LayoutUnit CalcData::specifiedFontValue(Node* n) const
     auto leaf = [&](const CalcValue& value) {
         return leafLength(value).specifiedFontValue(n);
     };
-    return LayoutUnit(censorLength(evaluate(leaf)));
+    return LayoutUnit(clampToRange(censorLength(evaluate(leaf))));
 }
 
 CSSAngle CalcData::angleValue() const
@@ -567,7 +568,7 @@ CSSAngle CalcData::angleValue() const
     auto leaf = [](const CalcValue& value) {
         return value.angleValue().toDegreeValue();
     };
-    return CSSAngle(CSSAngle::DEG, censor(evaluate(leaf)));
+    return CSSAngle(CSSAngle::DEG, clampToRange(censor(evaluate(leaf))));
 }
 
 CSSTime CalcData::timeValue() const
@@ -575,7 +576,7 @@ CSSTime CalcData::timeValue() const
     auto leaf = [](const CalcValue& value) {
         return value.timeValue().toTimeValue();
     };
-    return CSSTime(CSSTime::MS, censor(evaluate(leaf)));
+    return CSSTime(CSSTime::MS, clampToRange(censor(evaluate(leaf))));
 }
 
 namespace {
@@ -647,7 +648,7 @@ Length CalcData::computedLength(const Length& curFontSize,
 {
     ComputedLeaf leaf(curFontSize, rootFontSize, font, viewportWidth,
                       viewportHeight, cs, percentBasis);
-    float value = censorLength(evaluate(leaf));
+    float value = clampToRange(censorLength(evaluate(leaf)));
     if (!leaf.unresolved && !leaf.hasPercent) {
         return Length(Length::Fixed, value);
     }

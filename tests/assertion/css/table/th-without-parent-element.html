@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A th without a parent element takes text-align from its flat-tree parent</title>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    console.log("[th-without-parent-element] " + (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)");
+  };
+}
+</script>
+<div id="host" style="text-align: right"></div>
+<script>
+// HTML rendering 15.3.8: a th takes the text-align it inherits unless that
+// is the initial value. A shadow root's child inherits from the host; a
+// root th inherits nothing, so it is centered.
+var shadowTh = document.createElement("th");
+shadowTh.textContent = "x";
+document.getElementById("host").attachShadow({ mode: "open" }).appendChild(shadowTh);
+var textAlign = getComputedStyle(shadowTh).textAlign;
+console.assert(textAlign === "right", "shadow root th text-align: " + textAlign);
+
+var rootTh = document.createElement("th");
+rootTh.textContent = "x";
+document.removeChild(document.documentElement);
+document.appendChild(rootTh);
+textAlign = getComputedStyle(rootTh).textAlign;
+console.assert(textAlign === "center", "root th text-align: " + textAlign);
+testEnd();
+</script>

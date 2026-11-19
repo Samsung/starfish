@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>currentcolor in shadows resolves against the color of the element that uses it</title>
+<link rel="help" href="https://drafts.csswg.org/css-color-4/#resolving-other-colors">
+<link rel="help" href="https://drafts.csswg.org/css-backgrounds/#box-shadow">
+<style>
+  body { margin: 0; background: white; }
+  #box { position: absolute; left: 20px; top: 20px; width: 40px; height: 40px; background: white;
+         color: rgb(0, 255, 0); box-shadow: 10px 0 0 currentcolor; }
+  #texts { color: rgb(255, 0, 0); text-shadow: 1px 1px currentcolor; }
+  #texts span { color: rgb(0, 0, 255); }
+  #parent { color: rgb(255, 0, 0); box-shadow: 0 0 0 1px currentcolor; }
+  #parent div { color: rgb(0, 0, 255); box-shadow: inherit; }
+</style>
+</head>
+<body>
+<div id="box"></div>
+<div id="texts" style="margin-top: 100px">a<span id="span">b</span></div>
+<div id="parent"><div id="child">c</div></div>
+<script>
+  // css-color-4 #resolving-other-colors: currentcolor computes to itself and
+  // is inherited as the keyword, so each element resolves it against its own
+  // color; the resolved value of a shadow is its used color (cssom-1).
+  function style(id) { return getComputedStyle(document.getElementById(id)); }
+  function check(what, actual, expected) { console.assert(actual === expected, what + ": " + actual + " != " + expected); }
+  check("box-shadow", style("box").boxShadow, "rgb(0, 255, 0) 10px 0px 0px 0px");
+  check("inherited text-shadow", style("span").textShadow, "rgb(0, 0, 255) 1px 1px 0px");
+  check("explicitly inherited box-shadow", style("child").boxShadow, "rgb(0, 0, 255) 0px 0px 0px 1px");
+  document.getElementById("texts").style.color = "rgb(0, 128, 0)";
+  check("text-shadow after a color change", style("texts").textShadow, "rgb(0, 128, 0) 1px 1px 0px");
+  check("inherited text-shadow keeps its own color", style("span").textShadow, "rgb(0, 0, 255) 1px 1px 0px");
+
+  var shot = "shadow-currentcolor-inherited.html.png";
+  window.onload = function () {
+    if (typeof screenShot !== "function") {
+      if (typeof testEnd === "function") testEnd();
+      return;
+    }
+    setTimeout(function () {
+      screenShot(shot, function () {
+        // #box spans 20..60 x 20..60, its shadow 30..70.
+        console.assert(checkPixelColors(shot, [{ x: 65, y: 40, r: 0, g: 255, b: 0, a: 255 }], 3),
+                       "shadow in the current color");
+        document.getElementById("box").style.color = "rgb(255, 0, 255)";
+        screenShot(shot, function () {
+          console.assert(checkPixelColors(shot, [{ x: 65, y: 40, r: 255, g: 0, b: 255, a: 255 }], 3),
+                         "shadow repainted with the new color");
+          testEnd();
+        });
+      });
+    }, 300);
+  };
+</script>
+</body>
+</html>

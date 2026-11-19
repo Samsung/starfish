@@ -372,13 +372,26 @@ public:
         return m_type;
     }
 
+    // The property takes no negative value, so a result clamps to 0
+    // (css-values-4 #calc-range).
+    void setNonNegative()
+    {
+        m_isNonNegative = true;
+    }
+
 private:
+    float clampToRange(float value) const
+    {
+        return m_isNonNegative ? std::max(value, 0.f) : value;
+    }
+
     GCVector<CalcTerm*> m_terms;
     GCAtomicVector<size_t> m_argumentsStartPostion;
     Type m_type = Type::kCalc;
 
     // Only supports numeric types
     bool m_isPositive = true;
+    bool m_isNonNegative = false;
 };
 } // namespace Starfish
 
