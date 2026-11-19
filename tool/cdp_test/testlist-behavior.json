@@ -3557,8 +3557,7 @@
       "category": "output-differs"
     },
     "target/target-creteTarget-for-tab.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "target/target-expose-devtools-protocol-errors.js": {
       "expected": "fail",
@@ -3585,23 +3584,20 @@
       "category": "timeout"
     },
     "target/target-setAutoAttach-about-blank.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "target/target-setAutoAttach-click-new-window.js": {
       "expected": "fail",
       "category": "timeout"
     },
     "target/target-setAutoAttach-destroy-UAF.js": {
-      "expected": "fail",
-      "category": "timeout"
+      "expected": "pass"
     },
     "target/target-setAutoAttach-flatten-only.js": {
       "expected": "pass"
     },
     "target/target-setAutoAttach-new-page.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "target/target-setAutoAttach-oopif-multisession-existing.js": {
       "expected": "fail",

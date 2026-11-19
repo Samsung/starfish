@@ -118,6 +118,14 @@ public:
     // These resolve to the currently-routed target's state. dispatchOnMain
     // selects the target from the command's sessionId before routing, so
     // domain handlers transparently operate on the right WebView/session.
+    TargetContext* currentContext()
+    {
+        return m_current;
+    }
+    TargetDomain* target()
+    {
+        return m_target;
+    }
     CDPSession* session()
     {
         return m_current->session;

@@ -133,6 +133,9 @@ public:
     bool accessibilityEnabled = false;
     bool targetDiscoverEnabled = false;
     bool targetAutoAttach = false;
+    bool targetWaitForDebuggerOnStart = false;
+    bool waitingForDebugger = false;
+    std::string pendingNavigationUrl;
     bool lifecycleEventsEnabled = false;
     bool interceptFileChooserDialog =
         false;                 // Page.setInterceptFileChooserDialog
@@ -189,6 +192,8 @@ public:
     // fixed identifiers (single-target MVP)
     std::string sessionId;        // "SID-..." issued on attach
     std::string targetId;         // == frameId
+    std::string targetType = "page"; // "page", "tab", "iframe", etc.
+    std::string targetUrl;
     std::string browserContextId; // "BID-..."
     std::string frameId;          // == targetId
     std::string loaderId;         // "LID-0000000001"

@@ -26,6 +26,7 @@ namespace Starfish {
 
 class CDPDispatcher;
 class CDPCommand;
+class TargetContext;
 
 class TargetDomain {
 public:
@@ -34,6 +35,7 @@ public:
     {
     }
     void processMessage(CDPCommand& cmd, const std::string& method);
+    void notifyTargetInfoChanged(TargetContext* ctx);
 
 private:
     CDPDispatcher* m_dispatcher;

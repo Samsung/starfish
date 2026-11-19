@@ -105,13 +105,21 @@ static void buildTargetInfo(CDPSession* s, WebView* wv, bool attached,
                             rapidjson::Document::AllocatorType& alloc)
 {
     std::string url = targetUrl(wv);
-    std::string title = targetTitle(wv);
+    if ((url == "about:blank" || url.empty()) && !s->targetUrl.empty()) {
+        url = s->targetUrl;
+    }
+    std::string title = (s->targetType == "tab") ? "" : targetTitle(wv);
+    if (title.empty() && !s->targetUrl.empty() && s->targetType != "tab") {
+        title = s->targetUrl;
+    }
     out.SetObject();
     out.AddMember(
         "targetId",
         rapidjson::Value(s->targetId.c_str(), s->targetId.size(), alloc),
         alloc);
-    out.AddMember("type", "page", alloc);
+    out.AddMember("type",
+                  rapidjson::Value(s->targetType.c_str(), s->targetType.size(), alloc),
+                  alloc);
     out.AddMember("title", rapidjson::Value(title.c_str(), title.size(), alloc), alloc);
     out.AddMember("url", rapidjson::Value(url.c_str(), url.size(), alloc),
                   alloc);
@@ -121,6 +129,25 @@ static void buildTargetInfo(CDPSession* s, WebView* wv, bool attached,
                   rapidjson::Value(s->browserContextId.c_str(),
                                    s->browserContextId.size(), alloc),
                   alloc);
+}
+
+void TargetDomain::notifyTargetInfoChanged(TargetContext* ctx)
+{
+    if (!ctx) {
+        return;
+    }
+    CDPSession* init = m_dispatcher->initialContext()->session;
+    if (!init->targetDiscoverEnabled && !init->targetAutoAttach) {
+        return;
+    }
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value params(rapidjson::kObjectType);
+    rapidjson::Value ti(rapidjson::kObjectType);
+    buildTargetInfo(ctx->session, ctx->webView, ctx->session->attached, ti, alloc);
+    params.AddMember("targetInfo", ti, alloc);
+    CDPCommand evt(m_dispatcher, Optional<int64_t>(), std::string(), nullptr);
+    evt.sendEvent("Target.targetInfoChanged", params, doc);
 }
 
 void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
@@ -200,6 +227,13 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
             autoAttach = (*cmd.params())["autoAttach"].GetBool();
         }
         s->targetAutoAttach = autoAttach;
+
+        bool waitForDebugger = false;
+        if (cmd.params() && cmd.params()->HasMember("waitForDebuggerOnStart") &&
+            (*cmd.params())["waitForDebuggerOnStart"].IsBool()) {
+            waitForDebugger = (*cmd.params())["waitForDebuggerOnStart"].GetBool();
+        }
+        s->targetWaitForDebuggerOnStart = waitForDebugger;
 
         // Only the connection-level (sessionId-less) setAutoAttach should
         // produce the page target attachment. Puppeteer also issues
@@ -378,40 +412,27 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
     }
 
     if (method == "attachToTarget") {
-        // Chrome attaches the session to the target named by params.targetId.
-        // The old handler ignored targetId and always attached the current
-        // (initial) context's session, so a flattened session opened for a
-        // created tab executed every later command on the first WebView.
-        TargetContext* target = m_dispatcher->initialContext();
-        for (TargetContext* c : m_dispatcher->contexts()) {
-            if (c->session == s) {
-                target = c;
-                break;
-            }
-        }
-        std::string wantTid;
+        TargetContext* targetCtx = nullptr;
         if (cmd.params() && cmd.params()->HasMember("targetId") &&
             (*cmd.params())["targetId"].IsString()) {
-            wantTid = (*cmd.params())["targetId"].GetString();
-        }
-        if (!wantTid.empty()) {
-            for (TargetContext* c : m_dispatcher->contexts()) {
-                if (c->session->targetId == wantTid) {
-                    target = c;
+            std::string tid = (*cmd.params())["targetId"].GetString();
+            for (TargetContext* ctx : m_dispatcher->contexts()) {
+                if (ctx->session->targetId == tid) {
+                    targetCtx = ctx;
                     break;
                 }
             }
         }
-        CDPSession* ts = target->session;
-        if (ts->sessionId.empty()) {
-            // Mint off the initial session's monotonic counter so ids stay
-            // distinct from createTarget's session ids.
+
+        CDPSession* targetSession = targetCtx ? targetCtx->session : s;
+        WebView* targetWebView = targetCtx ? targetCtx->webView : wv;
+
+        if (targetSession->sessionId.empty()) {
             CDPSession* init = m_dispatcher->initialContext()->session;
-            ts->sessionId =
+            targetSession->sessionId =
                 "SID-" + std::to_string(++init->sessionCounter) + "0000000";
         }
-        ts->attached = true;
-        WebView* twv = target->webView;
+        targetSession->attached = true;
 
         // Emit attachedToTarget event first.
         {
@@ -419,11 +440,11 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
             rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
             rapidjson::Value params(rapidjson::kObjectType);
             params.AddMember("sessionId",
-                             rapidjson::Value(ts->sessionId.c_str(),
-                                              ts->sessionId.size(), alloc),
+                             rapidjson::Value(targetSession->sessionId.c_str(),
+                                              targetSession->sessionId.size(), alloc),
                              alloc);
             rapidjson::Value ti(rapidjson::kObjectType);
-            buildTargetInfo(ts, twv, true, ti, alloc);
+            buildTargetInfo(targetSession, targetWebView, true, ti, alloc);
             params.AddMember("targetInfo", ti, alloc);
             params.AddMember("waitingForDebugger", false, alloc);
             CDPCommand evt(m_dispatcher, Optional<int64_t>(), cmd.sessionId(),
@@ -434,10 +455,11 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("sessionId",
-                         rapidjson::Value(ts->sessionId.c_str(),
-                                          ts->sessionId.size(), alloc),
-                         alloc);
+        result.AddMember(
+            "sessionId",
+            rapidjson::Value(targetSession->sessionId.c_str(),
+                             targetSession->sessionId.size(), alloc),
+            alloc);
         cmd.sendResult(result, doc);
         return;
     }
@@ -511,8 +533,6 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
                 url = u;
             }
         }
-        nwv->loadHTMLDocument(String::fromUTF8(url.c_str(), url.size()));
-
         TargetContext* nctx =
             m_dispatcher->createContext(nwv, /*ownsWebView=*/true);
 
@@ -539,6 +559,28 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
         nctx->session->attachEmitted = true;
 
         CDPSession* ns = nctx->session;
+        ns->targetUrl = url;
+        if (cmd.params() && cmd.params()->HasMember("forTab") &&
+            (*cmd.params())["forTab"].IsBool() &&
+            (*cmd.params())["forTab"].GetBool()) {
+            ns->targetType = "tab";
+        }
+
+        bool waitDebugger = init->targetWaitForDebuggerOnStart;
+        if (cmd.params() && cmd.params()->HasMember("waitForDebuggerOnStart") &&
+            (*cmd.params())["waitForDebuggerOnStart"].IsBool()) {
+            waitDebugger = (*cmd.params())["waitForDebuggerOnStart"].GetBool();
+        }
+        if (ns->targetType == "tab") {
+            waitDebugger = false;
+        }
+
+        if (waitDebugger) {
+            ns->waitingForDebugger = true;
+            ns->pendingNavigationUrl = url;
+        } else {
+            nwv->loadHTMLDocument(String::fromUTF8(url.c_str(), url.size()));
+        }
 
         // Target.targetCreated (only if discovery is enabled on the
         // connection).
@@ -566,9 +608,27 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
                                               ns->sessionId.size(), alloc),
                              alloc);
             rapidjson::Value ti(rapidjson::kObjectType);
-            buildTargetInfo(ns, nwv, true, ti, alloc);
+            if (waitDebugger) {
+                ti.SetObject();
+                ti.AddMember("targetId",
+                             rapidjson::Value(ns->targetId.c_str(), ns->targetId.size(), alloc),
+                             alloc);
+                ti.AddMember("type",
+                             rapidjson::Value(ns->targetType.c_str(), ns->targetType.size(), alloc),
+                             alloc);
+                ti.AddMember("title", "", alloc);
+                ti.AddMember("url", "", alloc);
+                ti.AddMember("attached", true, alloc);
+                ti.AddMember("canAccessOpener", false, alloc);
+                ti.AddMember("browserContextId",
+                             rapidjson::Value(ns->browserContextId.c_str(),
+                                              ns->browserContextId.size(), alloc),
+                             alloc);
+            } else {
+                buildTargetInfo(ns, nwv, true, ti, alloc);
+            }
             params.AddMember("targetInfo", ti, alloc);
-            params.AddMember("waitingForDebugger", false, alloc);
+            params.AddMember("waitingForDebugger", waitDebugger, alloc);
             CDPCommand evt(m_dispatcher, Optional<int64_t>(), std::string(),
                            nullptr);
             evt.sendEvent("Target.attachedToTarget", params, doc);

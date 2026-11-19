@@ -23,6 +23,7 @@
 #include "Starfish.h"
 #include "RuntimeDomain.h"
 #include "PageDomain.h"
+#include "TargetDomain.h"
 #include "../CDPDispatcher.h"
 #include "../CDPCommand.h"
 #include "../CDPSession.h"
@@ -119,6 +120,16 @@ void RuntimeDomain::processMessage(CDPCommand& cmd, const std::string& method)
     }
 
     if (method == "runIfWaitingForDebugger") {
+        if (s->waitingForDebugger) {
+            s->waitingForDebugger = false;
+            if (!s->pendingNavigationUrl.empty()) {
+                std::string u = s->pendingNavigationUrl;
+                s->pendingNavigationUrl.clear();
+                wv->loadHTMLDocument(String::fromUTF8(u.c_str(), u.size()));
+            }
+            m_dispatcher->target()->notifyTargetInfoChanged(
+                m_dispatcher->currentContext());
+        }
         cmd.sendResultEmpty();
         return;
     }
