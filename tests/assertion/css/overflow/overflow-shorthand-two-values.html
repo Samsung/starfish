@@ -1,0 +1,49 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>The overflow shorthand takes one or two keywords</title>
+<div id="target" style="width: 100px; height: 100px"><div style="width: 300px; height: 300px"></div></div>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[overflow-shorthand-two-values] " + document.title);
+  };
+}
+
+function equal(actual, expected, what) {
+  console.assert(actual === expected, what + " should be " + expected + ", got " + actual);
+}
+
+// css-overflow-3 #propdef-overflow: the first keyword is overflow-x, the
+// second overflow-y; with one keyword both take it.
+var target = document.getElementById("target");
+var computed = getComputedStyle(target);
+
+target.style.overflow = "hidden scroll";
+equal(target.style.overflowX, "hidden", "overflow-x of 'hidden scroll'");
+equal(target.style.overflowY, "scroll", "overflow-y of 'hidden scroll'");
+equal(target.style.overflow, "hidden scroll", "shorthand of 'hidden scroll'");
+equal(computed.overflowX, "hidden", "computed overflow-x of 'hidden scroll'");
+equal(computed.overflowY, "scroll", "computed overflow-y of 'hidden scroll'");
+
+target.style.overflow = "auto";
+equal(target.style.overflowX, "auto", "overflow-x of 'auto'");
+equal(target.style.overflowY, "auto", "overflow-y of 'auto'");
+equal(target.style.overflow, "auto", "shorthand of 'auto'");
+
+target.style.overflow = "scroll scroll";
+equal(target.style.overflow, "scroll", "shorthand of 'scroll scroll'");
+
+// A third keyword makes the declaration invalid, so the previous value stays.
+target.style.overflow = "hidden";
+target.style.overflow = "visible hidden scroll";
+equal(target.style.overflow, "hidden", "shorthand after an invalid value");
+
+testEnd();
+</script>

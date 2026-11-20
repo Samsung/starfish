@@ -1318,15 +1318,22 @@ static bool parseOverflowShorthand(const CSSTokenVector& tokens,
     overflowX->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     overflowY->setValueKind(CSSStyleValuePair::ValueKind::Initial);
 
-    CSSStyleValuePair temp;
-
-    const CSSTokenValue& tok = tokens[0];
-
-    if (temp.updateValueUnitOverflowX(tokens[0])) {
-        *overflowX = temp;
-        *overflowY = temp;
-    } else {
+    // css-overflow-3 #propdef-overflow: one or two overflow keywords; the
+    // second is overflow-y and defaults to the first.
+    if (len > 2) {
         return false;
+    }
+    CSSStyleValuePair temp;
+    if (!temp.updateValueUnitOverflowX(tokens[0])) {
+        return false;
+    }
+    *overflowX = temp;
+    *overflowY = temp;
+    if (len == 2) {
+        if (!temp.updateValueUnitOverflowX(tokens[1])) {
+            return false;
+        }
+        *overflowY = temp;
     }
     return true;
 }
@@ -4624,9 +4631,9 @@ String* CSSStyleDeclaration::Overflow()
 
     if (overflowX->equals(overflowY)) {
         return overflowX;
-    } else {
-        return String::createASCIIString("auto");
     }
+    // cssom #serialize-a-css-value: both keywords when they differ.
+    return overflowX->concat(String::spaceString)->concat(overflowY);
 }
 
 void CSSStyleDeclaration::setOverflow(const char* value, size_t length,

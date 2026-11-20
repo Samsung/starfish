@@ -38,7 +38,7 @@ http://web-platform.test:8000/css/css-overflow/overflow-replaced-element-001.htm
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/overflow-clip-margin-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/overflow-clip-margin.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/overflow-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/overflow-invalid.html
+http://web-platform.test:8000/css/css-overflow/parsing/overflow-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/overflow-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/scroll-axis-lock-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-overflow/parsing/scroll-axis-lock-invalid.html

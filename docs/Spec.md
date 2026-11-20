@@ -1735,7 +1735,7 @@ section are supported.
 | [Box Model](https://www.w3.org/TR/css-ui-3/#box-model) | box-sizing | content-box &#124; border-box | Tells the padding and border is included to actual width&#124;height of an element's box. | |
 | [Line height](https://www.w3.org/TR/2011/REC-CSS2-20110607/visudet.html#line-height) | line-height | normal &#124; &lt;number&gt; &#124; &lt;length&gt; &#124; &lt;percentage&gt; | Sets the line height. | |
 | | vertical-align | baseline &#124; sub &#124; super &#124; top &#124; text-top &#124; middle &#124; bottom &#124; text-bottom &#124; &lt;length&gt; &#124; &lt;percentage&gt; | Sets the vertical alignment of an element. | |
-| [Overflow](https://www.w3.org/TR/2011/REC-CSS2-20110607/visufx.html#overflow) | overflow | visible &#124; hidden &#124; auto &#124; scroll | Specifies what happens if content overflows an element's box. | |
+| [Overflow](https://www.w3.org/TR/2011/REC-CSS2-20110607/visufx.html#overflow) | overflow | [ visible &#124; hidden &#124; auto &#124; scroll ]{1,2} | Specifies what happens if content overflows an element's box. With two keywords the first is `overflow-x` and the second `overflow-y`. | |
 | [Scroll markers](https://drafts.csswg.org/css-overflow-5/#scroll-marker-group-property) | scroll-marker-group | none &#124; before &#124; after | Names the element's scroll-marker group position. Parsing and `getComputedStyle` round-trip only; `::scroll-marker-group`/`::scroll-marker` boxes, the implicit `tablist`/`tab`/`tabpanel` roles, and scroll tracking are not implemented yet. The newer `after tabs` syntax (tentative tests) is not accepted. | |
 | [Visibility](https://www.w3.org/TR/2011/REC-CSS2-20110607/visufx.html#visibility) | visibility | visible &#124; hidden &#124; collapse | Specifies whether or not an element should be visible | |
 | [Content visibility](https://drafts.csswg.org/css-contain-2/#content-visibility) | content-visibility | visible &#124; auto &#124; hidden | Controls whether the contents of an element are rendered. | See the containment runtime caveats below. |
@@ -1875,7 +1875,7 @@ Verified against `src/core/style/CSSStyleLookupTrie.cpp`, `src/core/style/Style.
 
 **`overflow: clip` is unsupported.** A single-value `overflow: clip` declaration is silently rewritten to `hidden` at the parser; the inline style stores the empty string and `getComputedStyle` returns `"hidden"`. No warning is logged for this rewrite (unlike the other unsupported scroll properties below). `overflow-clip-margin` is fully unsupported — the declaration is dropped and `Unsupported css property: overflow-clip-margin` is logged.
 
-**Two-value `overflow` shorthand is unsupported.** `overflow: hidden auto` (separate `overflow-x` / `overflow-y`) parses but only the first keyword is consumed; both axes end up with the first value. Author code that needs different per-axis behaviour must use the longhand `overflow-x` / `overflow-y` properties explicitly.
+**Two-value `overflow` shorthand.** `overflow: hidden auto` sets `overflow-x` to the first keyword and `overflow-y` to the second; the shorthand serializes both keywords when they differ. More than two keywords make the declaration invalid.
 
 **Scroll module CSS properties are entirely unsupported.** Each of the following parses-fail at `CSSStyleDeclaration::operator()(129)` with `Unsupported css property: <name>`; the inline-style string is empty after assignment and `getComputedStyle` returns the empty string:
 
