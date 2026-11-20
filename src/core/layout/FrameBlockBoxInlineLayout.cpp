@@ -2244,7 +2244,13 @@ void LineFormattingContext::removeAllInlineBoxes()
     }
 
     if (m_block->style()->direction() == RtlDirectionValue) {
-        sortInlineBoxes(m_pendingInlineBoxes);
+        // Bidi reordering may have left the removed boxes in visual order.
+        // They are laid out again from the front, so they go back to the
+        // order they were first inserted in.
+        std::sort(m_pendingInlineBoxes.begin(), m_pendingInlineBoxes.end(),
+                  [&](FrameBox* a, FrameBox* b) {
+                      return inlineBoxIndex(a) < inlineBoxIndex(b);
+                  });
         sortInlineBoxes(lineBox->boxes());
     }
 

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<title>Inline boxes keep their order when a float makes an rtl line lay out again</title>
+<link rel="help" href="https://www.w3.org/TR/CSS2/visuren.html#floats">
+<style>
+body { margin: 0; }
+#container {
+  direction: rtl;
+  width: 300px;
+  font-size: 10px;
+  line-height: 10px;
+}
+#container span {
+  display: inline-block;
+  vertical-align: top;
+  width: 50px;
+  height: 10px;
+  background: green;
+}
+#first { float: right; width: 100px; height: 25px; background: yellow; }
+#second { float: left; width: 100px; height: 10px; background: orange; }
+</style>
+<!-- The third line starts beside #first and ends below it, and #second does
+     not fit in it. The line is laid out again once #second is placed. -->
+<div id="container"><span></span><span></span><span></span><div id="first"></div><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><div id="second"></div><span></span><span></span><span></span></div>
+<script>
+var boxes = document.querySelectorAll("#container span");
+for (var i = 1; i < boxes.length; i++) {
+  var prev = boxes[i - 1].getBoundingClientRect();
+  var cur = boxes[i].getBoundingClientRect();
+  var after = cur.top > prev.top || (cur.top === prev.top && cur.left < prev.left);
+  console.assert(after, "box " + i + " at (" + cur.left + ", " + cur.top +
+                 ") is not after box " + (i - 1) + " at (" + prev.left + ", " + prev.top + ")");
+}
+if (window.testEnd) {
+  testEnd();
+}
+</script>

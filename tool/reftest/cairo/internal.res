@@ -1,3 +1,4 @@
+tests/assertion/css/float/float-rtl-line-reflow-order.html
 tests/assertion/css/flex/align-self-column-auto-width.html
 tests/assertion/css/box-shadow/calc-shadow-lengths.html
 tests/assertion/css/box-shadow/box-shadow-rounded-partial-repaint.html
