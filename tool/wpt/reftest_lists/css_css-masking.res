@@ -1,12 +1,12 @@
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/animations/clip-path-interpolation-shape-arc-direction-agnostic-radius.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-absolute-positioned-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-absolute-positioned-002.html
+http://web-platform.test:8000/css/css-masking/clip/clip-absolute-positioned-001.html
+http://web-platform.test:8000/css/css-masking/clip/clip-absolute-positioned-002.html
 http://web-platform.test:8000/css/css-masking/clip/clip-filter-order.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-fixed-pos-transform-descendant-001.html
 http://web-platform.test:8000/css/css-masking/clip/clip-negative-values-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-negative-values-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-negative-values-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-negative-values-004.html
+http://web-platform.test:8000/css/css-masking/clip/clip-negative-values-002.html
+http://web-platform.test:8000/css/css-masking/clip/clip-negative-values-003.html
+http://web-platform.test:8000/css/css-masking/clip/clip-negative-values-004.html
 http://web-platform.test:8000/css/css-masking/clip/clip-no-clipping-001.html
 http://web-platform.test:8000/css/css-masking/clip/clip-no-clipping-002.html
 http://web-platform.test:8000/css/css-masking/clip/clip-no-stacking-context.html
@@ -20,10 +20,10 @@ http://web-platform.test:8000/css/css-masking/clip/clip-not-absolute-positioned-
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-rect-auto-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-rect-auto-005.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-rect-auto-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-rect-comma-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-rect-comma-002.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-rect-comma-003.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-rect-comma-004.html
+http://web-platform.test:8000/css/css-masking/clip/clip-rect-comma-001.html
+http://web-platform.test:8000/css/css-masking/clip/clip-rect-comma-002.html
+http://web-platform.test:8000/css/css-masking/clip/clip-rect-comma-003.html
+http://web-platform.test:8000/css/css-masking/clip/clip-rect-comma-004.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-masking/clip/clip-rect-scroll.html
 http://web-platform.test:8000/css/css-masking/clip/clip-transform-order-2.html
 http://web-platform.test:8000/css/css-masking/clip/clip-transform-order.html

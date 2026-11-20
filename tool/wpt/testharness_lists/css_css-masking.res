@@ -37,7 +37,7 @@ http://web-platform.test:8000/css/css-masking/parsing/mask-composite-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/hit-test/clip-path-svg-geometry-box.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/idlharness.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/clip-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/clip-invalid.html
+http://web-platform.test:8000/css/css-masking/parsing/clip-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/clip-path-computed.html
 http://web-platform.test:8000/css/css-masking/parsing/clip-path-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/clip-path-shape-parsing.html

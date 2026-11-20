@@ -15006,7 +15006,7 @@ bool CSSStyleValuePair::updateValueVerticalAlign(Document* document,
     return true;
 }
 
-static bool parseRectFunctionPart(const CSSTokenValue& s, size_t* ret,
+static bool parseRectFunctionPart(const CSSTokenValue& s, float* ret,
                                   GCVector<String*>& units)
 {
     STARFISH_ASSERT(ret != nullptr);
@@ -15070,16 +15070,18 @@ bool CSSStyleValuePair::updateValueClip(Document* document,
 
         size_t size = v.size();
 
-        if (size != 4) {
+        // The edges are separated either by commas or, in the legacy
+        // syntax, by spaces; the two are not mixed.
+        if (size == 1) {
             v.clear();
             sub.split(' ', v);
             size = v.size();
-            if (size != 4) {
-                return false;
-            }
+        }
+        if (size != 4) {
+            return false;
         }
 
-        size_t value[4];
+        float value[4];
         GCVector<String*> units;
         for (size_t i = 0; i < size; i++) {
             if (!parseRectFunctionPart(v[i], &value[i], units)) {

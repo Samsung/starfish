@@ -60,21 +60,13 @@ public:
     {
         StringBuilder builder;
         builder.appendString("rect(");
-        String* top = m_top.dumpString();
-        builder.appendString(top);
-        builder.appendString("px");
+        builder.appendString(edgeToString(m_top));
         builder.appendString(", ");
-        String* right = m_right.dumpString();
-        builder.appendString(right);
-        builder.appendString("px");
+        builder.appendString(edgeToString(m_right));
         builder.appendString(", ");
-        String* bottom = m_bottom.dumpString();
-        builder.appendString(bottom);
-        builder.appendString("px");
+        builder.appendString(edgeToString(m_bottom));
         builder.appendString(", ");
-        String* left = m_left.dumpString();
-        builder.appendString(left);
-        builder.appendString("px");
+        builder.appendString(edgeToString(m_left));
         builder.appendString(")");
 
         return builder.finalize();
@@ -88,6 +80,15 @@ public:
         float top = m_top.numberData();
         return Unit::Rect(left, top, std::max(0.f, m_right.numberData() - left),
                           std::max(0.f, m_bottom.numberData() - top));
+    }
+
+    static String* edgeToString(const Length& edge)
+    {
+        if (edge.isFixed()) {
+            return String::fromFloat(edge.fixed())
+                ->concat(String::fromUTF8("px"));
+        }
+        return edge.toString();
     }
 
     bool operator==(const RectData& src)
