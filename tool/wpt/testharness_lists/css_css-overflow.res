@@ -55,9 +55,9 @@ http://web-platform.test:8000/css/css-overflow/parsing/scroll-markers-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/scroll-target-group-valid.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-overflow/parsing/scrollbar-gutter-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/scrollbar-gutter-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/text-overflow-computed.html
+http://web-platform.test:8000/css/css-overflow/parsing/text-overflow-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-overflow/parsing/text-overflow-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/text-overflow-valid.html
+http://web-platform.test:8000/css/css-overflow/parsing/text-overflow-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/webkit-box-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/webkit-line-clamp-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-overflow/parsing/webkit-line-clamp-valid.html

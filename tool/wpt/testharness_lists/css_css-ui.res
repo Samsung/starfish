@@ -75,9 +75,9 @@ http://web-platform.test:8000/css/css-ui/parsing/outline-style-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/parsing/resize-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-ui/parsing/resize-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/parsing/resize-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/parsing/text-overflow-computed.html
+http://web-platform.test:8000/css/css-ui/parsing/text-overflow-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-ui/parsing/text-overflow-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/parsing/text-overflow-valid.html
+http://web-platform.test:8000/css/css-ui/parsing/text-overflow-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/parsing/user-select-computed-contain.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/parsing/user-select-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-ui/parsing/user-select-invalid.html
