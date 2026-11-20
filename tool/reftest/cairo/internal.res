@@ -735,6 +735,7 @@ tests/pixel/css/transform/transform01.html
 tests/pixel/css/transform/transform02.html
 tests/pixel/css/transform/transform03.html
 tests/assertion/css/transform/var-resolve.html
+tests/assertion/css/transform/transform-origin-keyword-then-length.html
 tests/pixel/css/transform/transform-inherit-no-parent.html
 tests/pixel/css/style/cssinherit.html
 tests/assertion/css/style/cursor-parsing.html

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<title>transform-origin: a keyword followed by a length</title>
+<style>
+body { margin: 0; }
+#box {
+  position: absolute;
+  left: 100px;
+  top: 100px;
+  width: 100px;
+  height: 100px;
+  background: green;
+  transform: scale(2);
+}
+</style>
+<div id="box"></div>
+<script>
+// Each entry is [value, expected left, expected top] of the scaled box.
+var cases = [
+  ["right 10px", 0, 90],
+  ["10px bottom", 90, 0],
+  ["left 30px", 100, 70],
+  ["top right", 0, 100],
+  ["20px 30px", 80, 70]
+];
+var box = document.getElementById("box");
+cases.forEach(function (c) {
+  box.style.transformOrigin = c[0];
+  var rect = box.getBoundingClientRect();
+  console.assert(rect.left === c[1], c[0] + ": left " + rect.left);
+  console.assert(rect.top === c[2], c[0] + ": top " + rect.top);
+});
+if (window.testEnd) {
+  testEnd();
+}
+</script>

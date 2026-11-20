@@ -17775,13 +17775,9 @@ bool CSSStyleValuePair::updateValueTransformOrigin(const CSSTokenVector& tokens,
         } else if (value.equals("bottom")) {
             yPair.setValue(SideValue::BottomSideValue);
         } else {
-            if (i == 0) {
-                xPair.setValueKind(CSSStyleValuePair::ValueKind::None);
-            } else {
-                yPair.setValueKind(CSSStyleValuePair::ValueKind::None);
-            }
-
-            if (tokens.size() == 2) {
+            // A <length-percentage> takes its axis from its position, so the
+            // other component cannot be a keyword of that same axis.
+            if (tokens.size() >= 2) {
                 if (i == 0) {
                     if (tokens[1].equals("left") || tokens[1].equals("right")) {
                         return false;
@@ -17797,7 +17793,7 @@ bool CSSStyleValuePair::updateValueTransformOrigin(const CSSTokenVector& tokens,
             if (!ret.updateValueUnitLengthOrCalc(value, option)) {
                 return false;
             }
-            values->push_back(ret);
+            (i == 0 ? xPair : yPair) = ret;
         }
     }
 
@@ -17811,13 +17807,9 @@ bool CSSStyleValuePair::updateValueTransformOrigin(const CSSTokenVector& tokens,
         }
     }
 
-    if (xPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-        values->push_back(xPair);
-    }
-    if (yPair.valueKind() == CSSStyleValuePair::ValueKind::SideValueKind) {
-        values->push_back(yPair);
-    }
-
+    // Always stored as x, y, z, which is the order they are applied in.
+    values->push_back(xPair);
+    values->push_back(yPair);
     values->push_back(zPair);
 
     m_value.m_multiValue = values;

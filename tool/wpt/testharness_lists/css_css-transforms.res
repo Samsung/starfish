@@ -69,8 +69,8 @@ http://web-platform.test:8000/css/css-transforms/3d-point-mapping-overlapping.ht
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transforms/parsing/transform-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transforms/parsing/transform-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transforms/parsing/transform-origin-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-transforms/parsing/transform-origin-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transforms/parsing/transform-origin-valid.html
+http://web-platform.test:8000/css/css-transforms/parsing/transform-origin-invalid.html
+http://web-platform.test:8000/css/css-transforms/parsing/transform-origin-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transforms/parsing/transform-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transforms/parsing/translate-parsing-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-transforms/parsing/translate-parsing-invalid.html
