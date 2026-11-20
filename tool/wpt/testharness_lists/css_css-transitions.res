@@ -58,9 +58,9 @@ http://web-platform.test:8000/css/css-transitions/inherit-height-transition.html
 # [auto-fail:HARNESS_STATUS_1] http://web-platform.test:8000/css/css-transitions/parsing/starting-style-parsing.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/parsing/transition-behavior.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/parsing/transition-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/parsing/transition-delay-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/parsing/transition-delay-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-transitions/parsing/transition-delay-valid.html
+http://web-platform.test:8000/css/css-transitions/parsing/transition-delay-computed.html
+http://web-platform.test:8000/css/css-transitions/parsing/transition-delay-invalid.html
+http://web-platform.test:8000/css/css-transitions/parsing/transition-delay-valid.html
 http://web-platform.test:8000/css/css-transitions/parsing/transition-duration-computed.html
 http://web-platform.test:8000/css/css-transitions/parsing/transition-duration-invalid.html
 http://web-platform.test:8000/css/css-transitions/parsing/transition-duration-valid.html
