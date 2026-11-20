@@ -2249,9 +2249,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
                 if (sd.inset()) {
                     CSSStyleValuePair inset;
-                    inset.setValueKind(
-                        CSSStyleValuePair::ValueKind::StringValueKind);
-                    inset.setStringValue(String::createASCIIString("inset"));
+                    inset.setKeywordValue(String::createASCIIString("inset"));
                     s.multiValue()->emplace_back(inset.valueKind(),
                                                  inset.value());
                 }
