@@ -16,7 +16,7 @@ jobs:
   # Emulator profile: i586 + x86_64. Sequential inside one runner because
   # both gbs builds share ~/GBS-ROOT.
   build_tizen_60_emulator:
-    runs-on: [ code-linux, code-2xlarge ]
+    runs-on: [ code-extra, code-extra-xlarge, code-extra-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:gbs
       credentials:
@@ -96,7 +96,7 @@ jobs:
   # Standard profile: armv7l + aarch64. Runs in parallel with the emulator
   # job on its own runner.
   build_tizen_60_standard:
-    runs-on: [ code-linux, code-2xlarge ]
+    runs-on: [ code-extra, code-extra-xlarge, code-extra-2xlarge ]
     container:
       image: lws-docker-local.bart.sec.samsung.net/starfish-build:gbs
       credentials:
