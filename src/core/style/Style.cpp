@@ -14740,6 +14740,10 @@ bool CSSStyleValuePair::updateValueUnitLineHeight(const CSSTokenValue& value)
 
 bool CSSStyleValuePair::updateValueUnitGap(const CSSTokenValue& value)
 {
+    if (value.equals("normal")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Normal;
+        return true;
+    }
     return updateValueUnitLengthOrCalc(CSSTokenValue(value),
                                        CSSPropertyParser::AllowPercent);
 }
@@ -15750,6 +15754,10 @@ bool CSSStyleValuePair::updateValueGridGap(Document* document,
         }
 
         float number = parser.parsedNumber();
+        // css-align-3 #column-row-gap: <length-percentage [0,∞]>
+        if (number < 0) {
+            return false;
+        }
         parser.consumeString(CSSPropertyParser::AllowWithoutUnit);
 
         const auto& str = parser.parsedString();
@@ -18810,10 +18818,7 @@ bool CSSStyleValuePair::updateValueRowGap(Document* document,
         return true;
     }
 
-    return updateValueUnitLengthOrCalc(value,
-                                       CSSPropertyParser::AllowNegative |
-                                           CSSPropertyParser::AllowPercent |
-                                           CSSPropertyParser::AllowAuto);
+    return updateValueUnitLengthOrCalc(value, CSSPropertyParser::AllowPercent);
 }
 
 bool CSSStyleValuePair::updateValueColumnGap(Document* document,
@@ -18830,10 +18835,7 @@ bool CSSStyleValuePair::updateValueColumnGap(Document* document,
         return true;
     }
 
-    return updateValueUnitLengthOrCalc(value,
-                                       CSSPropertyParser::AllowNegative |
-                                           CSSPropertyParser::AllowPercent |
-                                           CSSPropertyParser::AllowAuto);
+    return updateValueUnitLengthOrCalc(value, CSSPropertyParser::AllowPercent);
 }
 
 static bool parseCubicBezierFunction(const CSSTokenValue& value,

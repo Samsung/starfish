@@ -174,21 +174,21 @@ http://web-platform.test:8000/css/css-align/default-alignment/place-items-shorth
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-align/parsing/align-self-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/align-self-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/column-gap-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/column-gap-invalid.html
+http://web-platform.test:8000/css/css-align/parsing/column-gap-invalid.html
 http://web-platform.test:8000/css/css-align/parsing/column-gap-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/gap-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/gap-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/gap-shorthand.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/gap-valid.html
+http://web-platform.test:8000/css/css-align/parsing/gap-invalid.html
+http://web-platform.test:8000/css/css-align/parsing/gap-shorthand.html
+http://web-platform.test:8000/css/css-align/parsing/gap-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/grid-column-gap-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/grid-column-gap-invalid.html
+http://web-platform.test:8000/css/css-align/parsing/grid-column-gap-invalid.html
 http://web-platform.test:8000/css/css-align/parsing/grid-column-gap-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/grid-gap-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/grid-gap-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/grid-gap-shorthand.html
+http://web-platform.test:8000/css/css-align/parsing/grid-gap-invalid.html
+http://web-platform.test:8000/css/css-align/parsing/grid-gap-shorthand.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/grid-gap-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/grid-row-gap-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/grid-row-gap-invalid.html
+http://web-platform.test:8000/css/css-align/parsing/grid-row-gap-invalid.html
 http://web-platform.test:8000/css/css-align/parsing/grid-row-gap-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/justify-content-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-align/parsing/justify-content-invalid.html
@@ -212,7 +212,7 @@ http://web-platform.test:8000/css/css-align/parsing/grid-row-gap-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/place-self-shorthand.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/place-self-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/row-gap-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/parsing/row-gap-invalid.html
+http://web-platform.test:8000/css/css-align/parsing/row-gap-invalid.html
 http://web-platform.test:8000/css/css-align/parsing/row-gap-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/self-alignment/parse-align-self-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-align/self-alignment/parse-align-self-002.html
