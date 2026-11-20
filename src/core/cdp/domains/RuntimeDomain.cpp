@@ -123,12 +123,20 @@ void RuntimeDomain::processMessage(CDPCommand& cmd, const std::string& method)
         if (s->waitingForDebugger) {
             s->waitingForDebugger = false;
             if (!s->pendingNavigationUrl.empty()) {
-                std::string u = s->pendingNavigationUrl;
-                s->pendingNavigationUrl.clear();
-                wv->loadHTMLDocument(String::fromUTF8(u.c_str(), u.size()));
+                std::string url;
+                url.swap(s->pendingNavigationUrl);
+                bool started = s->pendingNavigationStarted;
+                s->pendingNavigationStarted = false;
+                if (started) {
+                    // Resume reveals the existing blank document before the
+                    // queued navigation replaces it.
+                    m_dispatcher->target()->notifyTargetInfoChanged(
+                        m_dispatcher->currentContext());
+                }
+                CDPCommand navigation(m_dispatcher, Optional<int64_t>(),
+                                      cmd.sessionId(), nullptr);
+                m_dispatcher->page()->navigate(navigation, url, started);
             }
-            m_dispatcher->target()->notifyTargetInfoChanged(
-                m_dispatcher->currentContext());
         }
         cmd.sendResultEmpty();
         return;

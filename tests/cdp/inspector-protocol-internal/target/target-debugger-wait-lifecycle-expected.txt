@@ -1,0 +1,14 @@
+Tests Target debugger waiting, ordered filters, and live metadata.
+new attached target waits: true
+viewport configured while waiting: true
+first script sees initialization and binding: true
+queued navigation replaces initial URL: true
+discovery receives navigation info: true
+discovery receives title info: true
+getTargets preserves actual about:blank: true
+disabled autoAttach does not pause scripting: true
+ordered exclusion filter accepted: true
+first matching exclusion prevents attachment: true
+excluded target does not wait: true
+auto-attach owner receives title info without discovery: true
+auto-attach owner receives navigation info without discovery: true

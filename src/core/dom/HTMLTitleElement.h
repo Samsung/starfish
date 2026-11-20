@@ -37,6 +37,14 @@ public:
 
     String* text();
     void setText(String* title);
+
+#if defined(STARFISH_ENABLE_CDP)
+    void didCharacterDataModified(String* before, String* after) override;
+    void didNodeInserted(Node* parent, Node* newChild) override;
+    void didNodeRemoved(Node* parent, Node* oldChild) override;
+    void didNodeInsertedToDocumentTree() override;
+    void didNodeRemovedFromDocumentTree() override;
+#endif
 };
 } // namespace Starfish
 

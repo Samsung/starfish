@@ -87,6 +87,7 @@
 #include "core/inspector/Inspector.h"
 #if defined(STARFISH_ENABLE_CDP)
 #include "core/cdp/CDPServer.h"
+#include "core/cdp/domains/TargetDomain.h"
 #endif
 #include "core/style/ComputedStyle.h"
 #include "platform/file/PlatformFile.h"
@@ -1179,6 +1180,9 @@ void WebView::navigateCrossDocument(ResourceURL* url, HistoryManagerAction type,
     Param* p = new Param;
     p->url = url->urlString();
     callPublicWebViewHandler(OnPageStarted, p);
+#if defined(STARFISH_ENABLE_CDP)
+    notifyTargetInfoChanged(mainBrowsingContext()->document());
+#endif
 }
 
 void WebView::navigateSameDocument(ResourceURL* url, HistoryManagerAction type,

@@ -318,6 +318,7 @@ void CDPDispatcher::resetConnectionState()
 {
     // The client is gone, so pending deferred replies have no receiver.
     m_runtime->cancelAllPendingEvaluations();
+    m_target->reset();
 
     // Tabs spawned by the now-departed client (Target.createTarget) belong to
     // that connection; tear them down so a reconnecting client does not see

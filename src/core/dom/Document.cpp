@@ -118,6 +118,7 @@
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 #if defined(STARFISH_ENABLE_CDP)
 #include "core/cdp/AXChangeNotifier.h"
+#include "core/cdp/domains/TargetDomain.h"
 #endif
 
 namespace Starfish {
@@ -2661,6 +2662,9 @@ void Document::setReferrer(ResourceURL* referrer)
 void Document::setDocumentURI(ResourceURL* newURL)
 {
     executionContext()->setDocumentURI(newURL);
+#if defined(STARFISH_ENABLE_CDP)
+    notifyTargetInfoChanged(this);
+#endif
 }
 
 String* Document::urlString()

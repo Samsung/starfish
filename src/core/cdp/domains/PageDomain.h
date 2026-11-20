@@ -37,6 +37,11 @@ public:
     {
     }
     void processMessage(CDPCommand& cmd, const std::string& method);
+    // Shared document navigation for Page.navigate and a debugger-waiting
+    // target's initial load. A queued Page.navigate has already reserved its
+    // loader and emitted beginNavigation, so resume must not start it twice.
+    void navigate(CDPCommand& cmd, const std::string& url,
+                  bool navigationStarted = false);
 
     // Resume a navigation that Fetch.enable parked. Called from FetchDomain
     // when continueRequest/fulfillRequest/disable arrives: runs the real

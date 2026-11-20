@@ -1342,8 +1342,8 @@ void PageDomain::completeDeferredNavigation(const std::string& sessionId,
         CDPCommand navCmd(m_dispatcher, s->pendingFetchNav.navigateCmdId,
                           sessionId, nullptr);
         navCmd.sendResult(result, doc);
-        s->pendingFetchNav = PendingFetchNavigation();
     }
+    s->pendingFetchNav = PendingFetchNavigation();
 }
 
 void PageDomain::failDeferredNavigation(const std::string& sessionId,
@@ -1408,8 +1408,8 @@ void PageDomain::failDeferredNavigation(const std::string& sessionId,
         CDPCommand navCmd(m_dispatcher, s->pendingFetchNav.navigateCmdId,
                           sessionId, nullptr);
         navCmd.sendResult(result, doc);
-        s->pendingFetchNav = PendingFetchNavigation();
     }
+    s->pendingFetchNav = PendingFetchNavigation();
 }
 
 void PageDomain::setDocumentContentFromHtml(const std::string& sessionId,
@@ -1464,6 +1464,99 @@ void PageDomain::notifyDocumentRewritten(const std::string& sessionId)
     emitLifecycle(sessionId, "init");
 
     finishNavigation(sessionId);
+}
+
+void PageDomain::navigate(CDPCommand& cmd, const std::string& urlString,
+                          bool navigationStarted)
+{
+    CDPSession* s = m_dispatcher->session();
+    WebView* wv = m_dispatcher->webView();
+    const char* url = urlString.c_str();
+    const std::string& sid = cmd.sessionId();
+    const std::string& fid = s->frameId;
+
+    if (!navigationStarted) {
+        beginNavigation(sid, urlString);
+    }
+
+    // Keep a usable blank document while the debugger installs instrumentation.
+    // A later Page.navigate replaces, rather than races, the initial load.
+    if (s->waitingForDebugger) {
+        s->pendingNavigationUrl = urlString;
+        s->pendingNavigationStarted = true;
+    } else {
+        std::string navBlockError;
+        if (m_dispatcher->network()->shouldBlockUrl(s, urlString,
+                                                    navBlockError)) {
+            m_dispatcher->network()->emitNavigationRequest(sid, urlString);
+            m_dispatcher->network()->emitLoadingFailed(wv, s->loaderId,
+                                                       navBlockError);
+            if (s->pageEnabled) {
+                rapidjson::Document doc;
+                auto& alloc = doc.GetAllocator();
+                rapidjson::Value params(rapidjson::kObjectType);
+                params.AddMember(
+                    "frameId", rapidjson::Value(fid.c_str(), fid.size(), alloc),
+                    alloc);
+                CDPCommand event(m_dispatcher, Optional<int64_t>(), sid,
+                                 nullptr);
+                event.sendEvent("Page.frameStoppedLoading", params, doc);
+            }
+            if (cmd.hasId()) {
+                rapidjson::Document doc;
+                auto& alloc = doc.GetAllocator();
+                rapidjson::Value result(rapidjson::kObjectType);
+                result.AddMember(
+                    "frameId", rapidjson::Value(fid.c_str(), fid.size(), alloc),
+                    alloc);
+                result.AddMember("loaderId",
+                                 rapidjson::Value(s->loaderId.c_str(),
+                                                  s->loaderId.size(), alloc),
+                                 alloc);
+                result.AddMember("errorText",
+                                 rapidjson::Value(navBlockError.c_str(),
+                                                  navBlockError.size(), alloc),
+                                 alloc);
+                cmd.sendResult(result, doc);
+            }
+            return;
+        }
+
+        // Fetch owns the load and command reply until the intercepted request
+        // continues. data: URLs are not interceptable network requests.
+        if (s->fetchEnabled && urlString.compare(0, 5, "data:") != 0) {
+            s->pendingFetchNav.active = true;
+            s->pendingFetchNav.requestId =
+                m_dispatcher->fetch()->emitNavigationPaused(sid, urlString);
+            s->pendingFetchNav.url = urlString;
+            s->pendingFetchNav.sessionId = sid;
+            s->pendingFetchNav.navigateCmdId =
+                cmd.hasId() ? Optional<int64_t>(cmd.id()) : Optional<int64_t>();
+            return;
+        }
+    }
+
+    if (cmd.hasId()) {
+        rapidjson::Document doc;
+        auto& alloc = doc.GetAllocator();
+        rapidjson::Value result(rapidjson::kObjectType);
+        result.AddMember(
+            "frameId", rapidjson::Value(fid.c_str(), fid.size(), alloc), alloc);
+        result.AddMember(
+            "loaderId",
+            rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
+            alloc);
+        cmd.sendResult(result, doc);
+    }
+    if (s->waitingForDebugger) {
+        return;
+    }
+
+    wv->loadHTMLDocument(String::fromUTF8(url, urlString.size()));
+    if (s->fetchEnabled) {
+        m_dispatcher->network()->emitNavigationResponse(sid, urlString);
+    }
+    finishNavigation(sid);
 }
 
 void PageDomain::processMessage(CDPCommand& cmd, const std::string& method)
@@ -1617,121 +1710,7 @@ void PageDomain::processMessage(CDPCommand& cmd, const std::string& method)
             return;
         }
         const char* url = (*cmd.params())["url"].GetString();
-        const std::string& sid = cmd.sessionId();
-        const std::string& fid = s->frameId;
-
-        beginNavigation(sid, std::string(url));
-
-        // Network.emulateNetworkConditions(offline) / setBlockedURLs: a blocked
-        // top-level document fails the navigation. Emit the document request +
-        // loadingFailed (with the proper net:: error) for Network-aware
-        // clients, settle the frame loading state, and return errorText in the
-        // navigate result -- puppeteer's navigate() turns a non-empty errorText
-        // into a rejected page.goto(). Skip the real load and the success
-        // lifecycle.
-        std::string navBlockError;
-        if (m_dispatcher->network()->shouldBlockUrl(s, std::string(url),
-                                                    navBlockError)) {
-            m_dispatcher->network()->emitNavigationRequest(sid,
-                                                           std::string(url));
-            m_dispatcher->network()->emitLoadingFailed(wv, s->loaderId,
-                                                       navBlockError);
-            if (s->pageEnabled) {
-                rapidjson::Document sdoc;
-                rapidjson::Document::AllocatorType& salloc =
-                    sdoc.GetAllocator();
-                rapidjson::Value sparams(rapidjson::kObjectType);
-                sparams.AddMember(
-                    "frameId",
-                    rapidjson::Value(fid.c_str(), fid.size(), salloc), salloc);
-                CDPCommand sevt(m_dispatcher, Optional<int64_t>(), sid,
-                                nullptr);
-                sevt.sendEvent("Page.frameStoppedLoading", sparams, sdoc);
-            }
-            rapidjson::Document doc;
-            rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-            rapidjson::Value result(rapidjson::kObjectType);
-            result.AddMember("frameId",
-                             rapidjson::Value(fid.c_str(), fid.size(), alloc),
-                             alloc);
-            result.AddMember("loaderId",
-                             rapidjson::Value(s->loaderId.c_str(),
-                                              s->loaderId.size(), alloc),
-                             alloc);
-            result.AddMember("errorText",
-                             rapidjson::Value(navBlockError.c_str(),
-                                              navBlockError.size(), alloc),
-                             alloc);
-            cmd.sendResult(result, doc);
-            return;
-        }
-
-        // ensureNewDocumentNavigation keys on a non-empty loaderId in the
-        // navigate result. When Fetch interception is active, defer sending
-        // the result until the navigation commits or fails (Chromium does the
-        // same: Page.navigate waits for the navigation to finish). For the
-        // non-Fetch path, send the result immediately before the synthesized
-        // lifecycle.
-        bool isDataUrl = std::string(url).compare(0, 5, "data:") == 0;
-        bool willPark = s->fetchEnabled && !isDataUrl;
-
-        if (!willPark) {
-            rapidjson::Document doc;
-            rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-            rapidjson::Value result(rapidjson::kObjectType);
-            result.AddMember("frameId",
-                             rapidjson::Value(fid.c_str(), fid.size(), alloc),
-                             alloc);
-            result.AddMember("loaderId",
-                             rapidjson::Value(s->loaderId.c_str(),
-                                              s->loaderId.size(), alloc),
-                             alloc);
-            cmd.sendResult(result, doc);
-        }
-
-        // Request interception: emit Fetch.requestPaused and park the load. The
-        // actual loadHTMLDocument + finishNavigation run later, from the
-        // matching Fetch.continueRequest/fulfillRequest/failRequest (each its
-        // own message-loop turn -- no blocking, no deadlock).
-        //
-        // data: URLs are excluded: they are not network requests, so neither
-        // Chrome nor puppeteer treats them as interceptable -- puppeteer's
-        // request.continue()/respond() are silent no-ops for data: URLs
-        // (canBeIntercepted() returns false). Pausing one would hang goto()
-        // forever (the client never sends continueRequest). For data: URLs the
-        // inline path below still emits Network.requestWillBeSent, so the
-        // page.on('request') listener fires; the request just cannot be
-        // continued/fulfilled (a puppeteer-side limitation, not ours).
-        if (willPark) {
-            std::string reqId = m_dispatcher->fetch()->emitNavigationPaused(
-                sid, std::string(url));
-            s->pendingFetchNav.active = true;
-            s->pendingFetchNav.requestId = reqId;
-            s->pendingFetchNav.url = std::string(url);
-            s->pendingFetchNav.sessionId = sid;
-            s->pendingFetchNav.navigateCmdId =
-                cmd.hasId() ? Optional<int64_t>(cmd.id()) : Optional<int64_t>();
-            return;
-        }
-
-        // Perform the real navigation on the main thread (dispatchOnMain runs
-        // here). loadHTMLDocument() is the same entry point the public
-        // LoadURL() path uses (WebContainerImpl::LoadURL -> loadHTMLDocument).
-        // It pushes a HistoryManager entry (HistoryManagerAction::Add).
-        wv->loadHTMLDocument(String::fromUTF8(url, strlen(url)));
-
-        // If Fetch is enabled (the inline fall-through reached only for data:
-        // URLs), beginNavigation emitted just the request phase; emit the
-        // deferred response phase now so the Network event triple is complete.
-        if (s->fetchEnabled) {
-            m_dispatcher->network()->emitNavigationResponse(sid,
-                                                            std::string(url));
-        }
-
-        // MVP lifecycle: there is no WebView page-load completion hook to bind
-        // to, so we synthesize a complete (reduced) lifecycle right after
-        // issuing the navigation.
-        finishNavigation(sid);
+        navigate(cmd, url);
         return;
     }
 

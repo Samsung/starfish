@@ -20,6 +20,9 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/HTMLTitleElement.h"
+#if defined(STARFISH_ENABLE_CDP)
+#include "core/cdp/domains/TargetDomain.h"
+#endif
 
 namespace Starfish {
 
@@ -36,4 +39,42 @@ void HTMLTitleElement::setText(String* title)
 {
     setTextContent(title);
 }
+
+#if defined(STARFISH_ENABLE_CDP)
+void HTMLTitleElement::didCharacterDataModified(String* before, String* after)
+{
+    HTMLElement::didCharacterDataModified(before, after);
+    if (isInDocumentScope()) {
+        notifyTargetInfoChanged(document());
+    }
+}
+
+void HTMLTitleElement::didNodeInserted(Node* parent, Node* newChild)
+{
+    HTMLElement::didNodeInserted(parent, newChild);
+    if (isInDocumentScope()) {
+        notifyTargetInfoChanged(document());
+    }
+}
+
+void HTMLTitleElement::didNodeRemoved(Node* parent, Node* oldChild)
+{
+    HTMLElement::didNodeRemoved(parent, oldChild);
+    if (isInDocumentScope()) {
+        notifyTargetInfoChanged(document());
+    }
+}
+
+void HTMLTitleElement::didNodeInsertedToDocumentTree()
+{
+    HTMLElement::didNodeInsertedToDocumentTree();
+    notifyTargetInfoChanged(document());
+}
+
+void HTMLTitleElement::didNodeRemovedFromDocumentTree()
+{
+    HTMLElement::didNodeRemovedFromDocumentTree();
+    notifyTargetInfoChanged(document());
+}
+#endif
 } // namespace Starfish

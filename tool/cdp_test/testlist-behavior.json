@@ -3559,6 +3559,10 @@
     "target/target-creteTarget-for-tab.js": {
       "expected": "pass"
     },
+    "target/target-debugger-wait-lifecycle.js": {
+      "expected": "pass",
+      "suite": "internal"
+    },
     "target/target-expose-devtools-protocol-errors.js": {
       "expected": "fail",
       "category": "timeout"
