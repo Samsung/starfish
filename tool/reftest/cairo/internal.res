@@ -475,6 +475,7 @@ tests/pixel/css/grid/grid_justify-content-06.html
 tests/pixel/css/grid/grid_justify-content-07.html
 tests/assertion/css/grid/grid_justify-items_justify-self.html
 tests/assertion/css/grid/grid-template-areas.html
+tests/assertion/css/grid/grid-template-areas-adjacent-cells.html
 tests/pixel/css/grid/grid-template_01.html
 tests/pixel/css/grid/grid-template_02.html
 tests/pixel/css/grid/grid-template_03.html

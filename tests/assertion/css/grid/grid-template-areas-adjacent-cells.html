@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<title>grid-template-areas tokenizes adjacent names and dots</title>
+<div id="grid" style="display: grid"></div>
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0;
+  var failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) {
+      passed++;
+    } else {
+      failed++;
+      nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") +
+      " (" + passed + " passed, " + failed + " failed)";
+    console.log("[grid-template-areas-adjacent-cells] " + document.title);
+  };
+}
+
+var grid = document.getElementById("grid");
+var input = '"a...b"';
+var expected = '"a . b"';
+grid.style.gridTemplateAreas = input;
+var specified = grid.style.gridTemplateAreas;
+var computed = getComputedStyle(grid).gridTemplateAreas;
+console.assert(specified === expected, input + ": specified " + JSON.stringify(specified));
+console.assert(computed === expected, input + ": computed " + JSON.stringify(computed));
+testEnd();
+</script>

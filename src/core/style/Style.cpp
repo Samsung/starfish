@@ -15979,42 +15979,54 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
         auto ss = tokens[row];
         ss.trim();
         CSSPropertyParser parser((char*)ss.data(), ss.length());
-        parser.consumeContentString();
-        const auto& separator = parser.parsedString();
-        if (separator.length() == 0) {
+        if (!parser.consumeContentString()) {
             return false;
         }
-        auto s = separator;
-        CSSTokenVector areas;
-        CSSStyleDeclaration::tokenizeCSSValue(areas, s.data(), s.length());
-        // css-grid-2 #grid-template-areas-property: every string yields at
-        // least one cell and all strings define the same number of columns.
-        if (!areas.size() || (row > 0 && areas.size() != columnCount)) {
-            return false;
-        }
-        columnCount = areas.size();
-        for (size_t col = 0; col < areas.size(); col++) {
-            std::string str = areas[col];
+        const auto& cells = parser.parsedString();
+        auto isNameCodePoint = [](unsigned char c) {
+            return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                   (c >= '0' && c <= '9') || c == '-' || c == '_' || c >= 0x80;
+        };
+        // CSS Grid tokenizes runs of names and dots independently, even
+        // without whitespace between them.
+        size_t col = 0;
+        for (size_t i = 0; i < cells.length();) {
+            const auto c = cells[i];
+            if (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f') {
+                i++;
+                continue;
+            }
+            const size_t start = i;
+            const bool isNullCell = c == '.';
+            if (isNullCell) {
+                do {
+                    i++;
+                } while (i < cells.length() && cells[i] == '.');
+            } else if (isNameCodePoint(c)) {
+                do {
+                    i++;
+                } while (i < cells.length() && isNameCodePoint(cells[i]));
+            } else {
+                return false;
+            }
+
             GridAreaData area;
-            area.columnStart = col + 1;
+            area.columnStart = ++col;
             area.columnEnd = area.columnStart + 1;
             area.rowStart = row + 1;
             area.rowEnd = area.rowStart + 1;
-            if (str.find_first_not_of('.') == std::string::npos) {
-                // A run of dots is one null cell token. Null cells need not
-                // form a rectangle, and serialize as a single dot.
+            if (isNullCell) {
                 namedGridAreaMap->insertNamedGridAreaData(nullCellName, area);
-                continue;
+            } else {
+                std::string name(cells.data() + start, i - start);
+                collector.insert(std::make_pair(name, area));
+                areaSet.insert(std::move(name));
             }
-            for (unsigned char c : str) {
-                // Anything that is not a name code point is a trash token.
-                if (!isalnum(c) && c != '-' && c != '_' && c < 0x80) {
-                    return false;
-                }
-            }
-            collector.insert(std::make_pair(str, area));
-            areaSet.insert(str);
         }
+        if (col == 0 || (row > 0 && col != columnCount)) {
+            return false;
+        }
+        columnCount = col;
     }
 
     // Check the validation of 'grid-template-areas'.
