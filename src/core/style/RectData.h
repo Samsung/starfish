@@ -80,6 +80,16 @@ public:
         return builder.finalize();
     }
 
+    // The edges are offsets from the top left corner of the border box. A
+    // rectangle whose end edge is before its start edge clips everything.
+    Unit::Rect toRect()
+    {
+        float left = m_left.numberData();
+        float top = m_top.numberData();
+        return Unit::Rect(left, top, std::max(0.f, m_right.numberData() - left),
+                          std::max(0.f, m_bottom.numberData() - top));
+    }
+
     bool operator==(const RectData& src)
     {
         return m_top == src.m_top && m_right == src.m_right &&

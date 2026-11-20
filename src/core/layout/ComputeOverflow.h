@@ -251,9 +251,7 @@ private:
     {
         RectData* rect = style->clip();
         if (rect) {
-            m_canvasOrCompositor->clip(Unit::Rect(
-                rect->left().numberData(), rect->top().numberData(),
-                rect->right().numberData(), rect->bottom().numberData()));
+            m_canvasOrCompositor->clip(rect->toRect());
         }
     }
 

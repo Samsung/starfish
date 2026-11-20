@@ -1964,9 +1964,7 @@ void StackingContext::fillGraphicsBufferContents(
     if (owner()->isAbsolutePositioned()) {
         RectData* rect = owner()->style()->clip();
         if (rect) {
-            canvas->clip(Unit::Rect(
-                rect->left().numberData(), rect->top().numberData(),
-                rect->right().numberData(), rect->bottom().numberData()));
+            canvas->clip(rect->toRect());
         }
     }
 
@@ -3169,9 +3167,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     if (owner()->isAbsolutePositioned()) {
         RectData* rect = owner()->style()->clip();
         if (rect) {
-            canvas->clip(Unit::Rect(
-                rect->left().numberData(), rect->top().numberData(),
-                rect->right().numberData(), rect->bottom().numberData()));
+            canvas->clip(rect->toRect());
         }
     }
 
