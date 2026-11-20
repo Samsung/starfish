@@ -1162,6 +1162,8 @@ public:
 
     void handleTextToken(TextToken& token);
 
+    LayoutUnit minContentWidth(const TextToken& token, LayoutUnit wordWidth);
+
     void handleFloatingBox(Frame* f, LayoutUnit w);
 
     void updateCurrentLineWidthByWordWidth()

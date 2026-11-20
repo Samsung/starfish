@@ -5678,7 +5678,7 @@ protected:
     struct InheritedStyles {
         FontStyleValue m_fontStyle : 2;
         FontWeightValue m_fontWeight : 4;
-        WordWrapValue m_wordWrap : 1;
+        WordWrapValue m_wordWrap : 2;
         TextAlignValue m_textAlign : 3;
         DirectionValue m_direction : 1;
         WhiteSpaceValue m_whiteSpace : 3;

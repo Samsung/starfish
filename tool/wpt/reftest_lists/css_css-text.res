@@ -496,7 +496,7 @@ http://web-platform.test:8000/css/css-text/line-breaking/segment-break-transform
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-002.html
 http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-001.html
+http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-003.html
 http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-004.html
@@ -508,9 +508,9 @@ http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-010.html
 http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-011.html
 http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-fit-content-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-inline-001.html
+http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-inline-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-inline-002.tentative.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-inline-003.tentative.html
+http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-inline-003.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-inline-004.tentative.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-span-001.html
 http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-break-word-001.html
@@ -531,9 +531,9 @@ http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-break-wor
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-003.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-004.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-005.html
+http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-005.html
 http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-006.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-007.html
+http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-007.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-008.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-009.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-normal-keep-all-001.html

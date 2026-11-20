@@ -500,7 +500,7 @@ enum FontWeightValue ENSURE_ENUM_UNSIGNED {
 enum WordWrapValue ENSURE_ENUM_UNSIGNED {
     NormalWordWrapValue,
     BreakWordWordWrapValue,
-    //    BreakSpaceWordWrapValue,
+    AnywhereWordWrapValue,
 };
 
 enum VisibilityValue ENSURE_ENUM_UNSIGNED {

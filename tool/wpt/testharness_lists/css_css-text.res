@@ -212,7 +212,7 @@ http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-020.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-028.html
 http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-029.html
 http://web-platform.test:8000/css/css-text/line-breaking/line-breaking-atomic-nowrap-001.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-span-002.html
+http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-anywhere-span-002.html
 http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-break-word-keep-all-001.html
 http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-break-word-span-002.html
 http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-break-word-white-space-crash-002.html
@@ -235,9 +235,9 @@ http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-break-wor
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/line-break-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text/parsing/line-break-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/line-break-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/overflow-wrap-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text/parsing/overflow-wrap-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/overflow-wrap-valid.html
+http://web-platform.test:8000/css/css-text/parsing/overflow-wrap-computed.html
+http://web-platform.test:8000/css/css-text/parsing/overflow-wrap-invalid.html
+http://web-platform.test:8000/css/css-text/parsing/overflow-wrap-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/tab-size-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text/parsing/tab-size-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/tab-size-valid.html
@@ -300,9 +300,9 @@ http://web-platform.test:8000/css/css-text/parsing/white-space-shorthand-text-wr
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-text/parsing/word-spacing-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text/parsing/word-spacing-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/word-spacing-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/word-wrap-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text/parsing/word-wrap-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/parsing/word-wrap-valid.html
+http://web-platform.test:8000/css/css-text/parsing/word-wrap-computed.html
+http://web-platform.test:8000/css/css-text/parsing/word-wrap-invalid.html
+http://web-platform.test:8000/css/css-text/parsing/word-wrap-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/tab-size/tab-size-computed-value-001.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/tab-size/tab-size.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text/text-align/text-align-last-empty-inline.html

@@ -2317,11 +2317,10 @@ void LineFormattingContext::updateCurrentLayoutParent(Frame* parent)
     // NOTE When word-wrap value is break-word, we do not concat word
     // TODO Support word concat for break-word word-wrap value
     if (m_currentLayoutParent->isLineBox()) {
-        m_canConcatWord =
-            m_block->style()->wordWrap() != BreakWordWordWrapValue;
+        m_canConcatWord = m_block->style()->wordWrap() == NormalWordWrapValue;
     } else {
-        m_canConcatWord = m_currentLayoutParent->style()->wordWrap() !=
-                          BreakWordWordWrapValue;
+        m_canConcatWord =
+            m_currentLayoutParent->style()->wordWrap() == NormalWordWrapValue;
     }
 }
 
@@ -3541,7 +3540,7 @@ void FrameInline::layoutInline(LineFormattingContext& ctx)
     // isn't visible when FrameInline comes next, not in fire-fox, though.
     // Here we follow the policy of chrome.
     ctx.handleSoftHyphenate(false);
-    if (style()->wordWrap() == BreakWordWordWrapValue) {
+    if (style()->wordWrap() != NormalWordWrapValue) {
         ctx.insertWord(this);
     }
 
@@ -4303,6 +4302,29 @@ void PreferredWidthContext::computePreferredWidth()
     m_layoutContext.registerPreferredWidthInfo(key, value);
 }
 
+// https://drafts.csswg.org/css-text-4/#valdef-overflow-wrap-anywhere
+// Unlike `break-word`, the wrap opportunities `anywhere` adds inside a word
+// count toward the min-content size, so a word is as narrow as its widest
+// character.
+LayoutUnit PreferredWidthContext::minContentWidth(const TextToken& token,
+                                                  LayoutUnit wordWidth)
+{
+    if (token.m_frameText->style()->wordWrap() != AnywhereWordWrapValue ||
+        token.m_end - token.m_start < 2) {
+        return wordWidth;
+    }
+
+    LayoutUnit widest;
+    for (size_t i = token.m_start; i < token.m_end; i++) {
+        TextToken character(token.m_frameText, i, i + 1, token.m_type,
+                            token.m_isFirstLine);
+        widest = std::max(widest, character.width());
+    }
+    // Keep what the whole word carries besides its glyphs (word spacing,
+    // text-indent) so that the result never exceeds the unbroken width.
+    return std::min(wordWidth, widest + (wordWidth - token.width()));
+}
+
 void PreferredWidthContext::handleTextToken(TextToken& token)
 {
     if (m_isPendingWrapLine) {
@@ -4322,7 +4344,7 @@ void PreferredWidthContext::handleTextToken(TextToken& token)
     if (token.m_type != WordType::CollapsibleWhiteSpace) {
         if (token.m_type == WordType::General) {
             w = widthAppliedByTextIndent(w);
-            updatePreferredMinWidth(w);
+            updatePreferredMinWidth(minContentWidth(token, w));
         }
         w += m_unprocessedStartingMBPWidth;
     }

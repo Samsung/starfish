@@ -2114,6 +2114,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("normal");
         case WordWrapValue::BreakWordWordWrapValue:
             return String::fromUTF8("break-word");
+        case WordWrapValue::AnywhereWordWrapValue:
+            return String::fromUTF8("anywhere");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -16360,6 +16362,9 @@ bool CSSStyleValuePair::updateValueUnitWordWrap(const CSSTokenValue& value)
         m_value.m_wordWrap = WordWrapValue::NormalWordWrapValue;
     } else if (value.equals("break-word")) {
         m_value.m_wordWrap = WordWrapValue::BreakWordWordWrapValue;
+    } else if (value.equals("anywhere")) {
+        // https://drafts.csswg.org/css-text-4/#valdef-overflow-wrap-anywhere
+        m_value.m_wordWrap = WordWrapValue::AnywhereWordWrapValue;
     } else {
         return false;
     }
