@@ -15967,6 +15967,8 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
     }
 
     size_t count = 0;
+    size_t columnCount = 0;
+    String* nullCellName = String::createASCIIString(".");
     std::unordered_multimap<std::string, GridAreaData> collector;
     std::unordered_set<std::string> areaSet;
     NamedGridAreaDataMap* namedGridAreaMap = new NamedGridAreaDataMap();
@@ -15983,6 +15985,12 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
         auto s = separator;
         CSSTokenVector areas;
         CSSStyleDeclaration::tokenizeCSSValue(areas, s.data(), s.length());
+        // css-grid-2 #grid-template-areas-property: every string yields at
+        // least one cell and all strings define the same number of columns.
+        if (!areas.size() || (row > 0 && areas.size() != columnCount)) {
+            return false;
+        }
+        columnCount = areas.size();
         for (size_t col = 0; col < areas.size(); col++) {
             std::string str = areas[col];
             GridAreaData area;
@@ -15990,6 +15998,18 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
             area.columnEnd = area.columnStart + 1;
             area.rowStart = row + 1;
             area.rowEnd = area.rowStart + 1;
+            if (str.find_first_not_of('.') == std::string::npos) {
+                // A run of dots is one null cell token. Null cells need not
+                // form a rectangle, and serialize as a single dot.
+                namedGridAreaMap->insertNamedGridAreaData(nullCellName, area);
+                continue;
+            }
+            for (unsigned char c : str) {
+                // Anything that is not a name code point is a trash token.
+                if (!isalnum(c) && c != '-' && c != '_' && c < 0x80) {
+                    return false;
+                }
+            }
             collector.insert(std::make_pair(str, area));
             areaSet.insert(str);
         }

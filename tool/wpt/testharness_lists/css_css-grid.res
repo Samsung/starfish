@@ -567,10 +567,10 @@ http://web-platform.test:8000/css/css-grid/layout-algorithm/grid-item-margin-aut
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/parsing/grid-shorthand-serialization.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/parsing/grid-shorthand-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/parsing/grid-shorthand.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/parsing/grid-template-areas-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/parsing/grid-template-areas-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/parsing/grid-template-areas-one-cell.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/parsing/grid-template-areas-valid.html
+http://web-platform.test:8000/css/css-grid/parsing/grid-template-areas-computed.html
+http://web-platform.test:8000/css/css-grid/parsing/grid-template-areas-invalid.html
+http://web-platform.test:8000/css/css-grid/parsing/grid-template-areas-one-cell.html
+http://web-platform.test:8000/css/css-grid/parsing/grid-template-areas-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/parsing/grid-template-columns-computed-implicit-track.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/parsing/grid-template-columns-computed-nogrid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-grid/parsing/grid-template-columns-computed-withcontent.html
