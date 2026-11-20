@@ -69,13 +69,13 @@ http://web-platform.test:8000/css/css-animations/parsing/animation-composition-i
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-animations/parsing/animation-composition-valid.tentative.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-animations/parsing/animation-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-animations/parsing/animation-delay-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-animations/parsing/animation-delay-invalid.html
+http://web-platform.test:8000/css/css-animations/parsing/animation-delay-invalid.html
 http://web-platform.test:8000/css/css-animations/parsing/animation-delay-valid.html
 http://web-platform.test:8000/css/css-animations/parsing/animation-direction-computed.html
 http://web-platform.test:8000/css/css-animations/parsing/animation-direction-invalid.html
 http://web-platform.test:8000/css/css-animations/parsing/animation-direction-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-animations/parsing/animation-duration-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-animations/parsing/animation-duration-invalid.html
+http://web-platform.test:8000/css/css-animations/parsing/animation-duration-invalid.html
 http://web-platform.test:8000/css/css-animations/parsing/animation-duration-valid.html
 http://web-platform.test:8000/css/css-animations/parsing/animation-fill-mode-computed.html
 http://web-platform.test:8000/css/css-animations/parsing/animation-fill-mode-invalid.html

@@ -831,7 +831,9 @@ public:
         if (allowWithoutUnit && str.length() == 0) {
             pair->setTimeValue(CSSTime(num));
             return parser.isEnd();
-        } else if ((str.length() == 0 && num == 0) || isTimeUnit(str)) {
+        } else if (isTimeUnit(str)) {
+            // css-values-4 #time: unlike <length>, a unitless zero is not
+            // a <time>.
             pair->setTimeValue(CSSTime(str, num));
             return parser.isEnd();
         }
