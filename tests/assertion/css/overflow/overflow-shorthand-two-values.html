@@ -45,5 +45,24 @@ target.style.overflow = "hidden";
 target.style.overflow = "visible hidden scroll";
 equal(target.style.overflow, "hidden", "shorthand after an invalid value");
 
+var style = document.createElement("div").style;
+style.overflowX = "hidden";
+equal(style.overflow, "", "shorthand with only overflow-x declared");
+style.overflowY = "scroll";
+style.removeProperty("overflow-x");
+equal(style.overflow, "", "shorthand with only overflow-y declared");
+
+style.overflowX = "inherit";
+equal(style.overflow, "", "shorthand with a CSS-wide keyword on one axis");
+style.overflowY = "inherit";
+equal(style.overflow, "inherit", "shorthand with the same CSS-wide keyword on both axes");
+
+style.setProperty("overflow-x", "hidden", "important");
+style.overflowY = "scroll";
+equal(style.overflow, "", "shorthand with different longhand priorities");
+style.removeProperty("overflow-y");
+style.setProperty("overflow-y", "scroll", "important");
+equal(style.overflow, "hidden scroll", "shorthand with matching important priorities");
+
 testEnd();
 </script>

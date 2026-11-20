@@ -4621,21 +4621,6 @@ void CSSStyleDeclaration::removeOutline()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::Outline);
 }
 
-String* CSSStyleDeclaration::Overflow()
-{
-    // TODO: Should find the specific rule for composing overflow
-    String* overflowX = getPropertyValueInternalFor<PropertyType::kLonghand>(
-        CSSStyleValuePair::KeyKind::OverflowX);
-    String* overflowY = getPropertyValueInternalFor<PropertyType::kLonghand>(
-        CSSStyleValuePair::KeyKind::OverflowY);
-
-    if (overflowX->equals(overflowY)) {
-        return overflowX;
-    }
-    // cssom #serialize-a-css-value: both keywords when they differ.
-    return overflowX->concat(String::spaceString)->concat(overflowY);
-}
-
 void CSSStyleDeclaration::setOverflow(const char* value, size_t length,
                                       bool isImportant)
 {
@@ -4687,6 +4672,33 @@ static Optional<String*> cssWideShorthandValue(String* first, String* second)
         return first->equals(second) ? first : String::emptyString;
     }
     return nullptr;
+}
+
+String* CSSStyleDeclaration::Overflow()
+{
+    using KeyKind = CSSStyleValuePair::KeyKind;
+    updateValue(KeyKind::OverflowX);
+    updateValue(KeyKind::OverflowY);
+    if (!hasCSSValuePair(KeyKind::OverflowX) ||
+        !hasCSSValuePair(KeyKind::OverflowY)) {
+        return String::emptyString;
+    }
+
+    auto x = getCSSValuePair(KeyKind::OverflowX);
+    auto y = getCSSValuePair(KeyKind::OverflowY);
+    if (x.flagImportant() != y.flagImportant()) {
+        return String::emptyString;
+    }
+
+    String* overflowX = x.toString();
+    String* overflowY = y.toString();
+    if (Optional<String*> wide = cssWideShorthandValue(overflowX, overflowY)) {
+        return wide.value();
+    }
+    if (overflowX->equals(overflowY)) {
+        return overflowX;
+    }
+    return overflowX->concat(String::spaceString)->concat(overflowY);
 }
 
 // https://drafts.csswg.org/css-text-4/#text-wrap
