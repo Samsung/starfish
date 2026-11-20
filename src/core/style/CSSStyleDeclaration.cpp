@@ -726,7 +726,8 @@ static void mergeBordeRadiusString(StringBuilder& sb, String* tl, String* tr,
 static bool parseBorderShorthand(const CSSTokenVector& tokens,
                                  CSSStyleValuePair* width,
                                  CSSStyleValuePair* style,
-                                 CSSStyleValuePair* color)
+                                 CSSStyleValuePair* color,
+                                 bool isOutline = false)
 {
     size_t len = tokens.size();
     if (len < 1 || len > 3) {
@@ -744,7 +745,9 @@ static bool parseBorderShorthand(const CSSTokenVector& tokens,
         if (!hasWidth && temp.updateValueUnitBorderWidth(tok)) {
             *width = temp;
             hasWidth = true;
-        } else if (!hasStyle && temp.updateValueUnitBorderStyle(tok)) {
+        } else if (!hasStyle &&
+                   (isOutline ? temp.updateValueUnitOutlineStyle(tok)
+                              : temp.updateValueUnitBorderStyle(tok))) {
             *style = temp;
             hasStyle = true;
         } else if (!hasColor && temp.updateValueUnitColor(tok)) {
@@ -4593,7 +4596,7 @@ void CSSStyleDeclaration::setOutline(const char* value, size_t length,
         addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineWidth, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineStyle, v);
         addCSSValuePair(CSSStyleValuePair::KeyKind::OutlineColor, v);
-    } else if (parseBorderShorthand(tokens, &width, &style, &color)) {
+    } else if (parseBorderShorthand(tokens, &width, &style, &color, true)) {
         width.setFlagImportant(isImportant);
         style.setFlagImportant(isImportant);
         color.setFlagImportant(isImportant);

@@ -68,9 +68,9 @@ http://web-platform.test:8000/css/css-ui/parsing/box-sizing-valid.html
 http://web-platform.test:8000/css/css-ui/parsing/outline-offset-invalid.html
 http://web-platform.test:8000/css/css-ui/parsing/outline-offset-valid.html
 http://web-platform.test:8000/css/css-ui/parsing/outline-shorthand.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/parsing/outline-style-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/parsing/outline-style-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/parsing/outline-style-valid.html
+http://web-platform.test:8000/css/css-ui/parsing/outline-style-computed.html
+http://web-platform.test:8000/css/css-ui/parsing/outline-style-invalid.html
+http://web-platform.test:8000/css/css-ui/parsing/outline-style-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/parsing/outline-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-ui/parsing/resize-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-ui/parsing/resize-invalid.html

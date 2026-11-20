@@ -1,4 +1,4 @@
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-backgrounds/parsing/border-invalid.html
+http://web-platform.test:8000/css/css-backgrounds/parsing/border-invalid.html
 http://web-platform.test:8000/css/css-backgrounds/parsing/border-valid.html
 http://web-platform.test:8000/css/css-backgrounds/parsing/border-width-computed.html
 http://web-platform.test:8000/css/css-backgrounds/parsing/border-width-invalid.html
@@ -109,7 +109,7 @@ http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-width-val
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-backgrounds/parsing/border-radius-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-backgrounds/parsing/border-shorthand.html
 http://web-platform.test:8000/css/css-backgrounds/parsing/border-style-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-backgrounds/parsing/border-style-invalid.html
+http://web-platform.test:8000/css/css-backgrounds/parsing/border-style-invalid.html
 http://web-platform.test:8000/css/css-backgrounds/parsing/border-style-shorthand.html
 http://web-platform.test:8000/css/css-backgrounds/parsing/border-style-valid.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-backgrounds/parsing/box-shadow-computed.html

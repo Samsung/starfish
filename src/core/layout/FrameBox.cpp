@@ -618,7 +618,8 @@ void FrameBox::paintOutline(Canvas* canvas)
         rect.setWidth(rect.width() + offset * 2);
         rect.setHeight(rect.height() + offset * 2);
 
-        if (s != BorderStyleValue::SolidBorderStyleValue) {
+        if (s != BorderStyleValue::SolidBorderStyleValue &&
+            s != BorderStyleValue::AutoBorderStyleValue) {
             STARFISH_UNSUPPORTED("css property: border (solid only)");
         }
 

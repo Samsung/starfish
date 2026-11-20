@@ -408,6 +408,8 @@ enum BorderStyleValue ENSURE_ENUM_UNSIGNED {
     OutsetBorderStyleValue,
     GrooveBorderStyleValue,
     RidgeBorderStyleValue,
+    // Only for outline-style (css-ui-4 #outline-style); painted as solid.
+    AutoBorderStyleValue,
 };
 
 enum BorderWidthValue ENSURE_ENUM_UNSIGNED {
@@ -2954,6 +2956,7 @@ public:
     bool updateValueUnitPositionY(const CSSTokenValue& token);
     bool updateValueUnitBackgroundAttachment(const CSSTokenValue& token);
     bool updateValueUnitBorderStyle(const CSSTokenValue& token);
+    bool updateValueUnitOutlineStyle(const CSSTokenValue& token);
     bool updateValueUnitBorderWidth(const CSSTokenValue& token);
     bool updateValueUnitBorderColor(const CSSTokenValue& token);
     bool updateValueUnitBorderImageSource(const CSSTokenValue& token);

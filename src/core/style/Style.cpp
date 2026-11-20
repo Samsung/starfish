@@ -2132,6 +2132,8 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("groove");
         case BorderStyleValue::RidgeBorderStyleValue:
             return String::fromUTF8("ridge");
+        case BorderStyleValue::AutoBorderStyleValue:
+            return String::fromUTF8("auto");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -12053,7 +12055,7 @@ bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
         m_value.m_borderStyle = BorderStyleValue::NoneBorderStyleValue;
     } else if (value.equals("hidden")) {
         m_value.m_borderStyle = BorderStyleValue::HiddenBorderStyleValue;
-    } else if (value.equals("solid") || value.equals("auto")) {
+    } else if (value.equals("solid")) {
         m_value.m_borderStyle = BorderStyleValue::SolidBorderStyleValue;
     } else if (value.equals("dashed")) {
         m_value.m_borderStyle = BorderStyleValue::DashedBorderStyleValue;
@@ -12073,6 +12075,18 @@ bool CSSStyleValuePair::updateValueUnitBorderStyle(const CSSTokenValue& value)
         return false;
     }
     return true;
+}
+
+bool CSSStyleValuePair::updateValueUnitOutlineStyle(const CSSTokenValue& value)
+{
+    // css-ui-4 #outline-style: auto | <outline-line-style>, where the line
+    // styles are those of border-style without `hidden`.
+    if (value.equals("auto")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::BorderStyleValueKind;
+        m_value.m_borderStyle = BorderStyleValue::AutoBorderStyleValue;
+        return true;
+    }
+    return !value.equals("hidden") && updateValueUnitBorderStyle(value);
 }
 
 #define UPDATE_VALUE_BORDER_STYLE(POS, ...)                \
@@ -18050,7 +18064,7 @@ bool CSSStyleValuePair::updateValueOutlineStyle(Document* document,
     if (tokens.size() != 1) {
         return false;
     }
-    return updateValueUnitBorderStyle(tokens[0]);
+    return updateValueUnitOutlineStyle(tokens[0]);
 }
 
 bool CSSStyleValuePair::updateValueOutlineOffset(Document* document,

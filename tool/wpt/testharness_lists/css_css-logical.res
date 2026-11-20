@@ -37,7 +37,7 @@
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-logical/parsing/border-block-color-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/parsing/border-block-color-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/parsing/border-block-style-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/parsing/border-block-style-invalid.html
+http://web-platform.test:8000/css/css-logical/parsing/border-block-style-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/parsing/border-block-style-valid.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-logical/parsing/border-block-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/parsing/border-block-width-computed.html
@@ -47,7 +47,7 @@
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-logical/parsing/border-inline-color-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/parsing/border-inline-color-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/parsing/border-inline-style-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/parsing/border-inline-style-invalid.html
+http://web-platform.test:8000/css/css-logical/parsing/border-inline-style-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/parsing/border-inline-style-valid.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-logical/parsing/border-inline-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/parsing/border-inline-width-computed.html
