@@ -48,7 +48,7 @@ http://web-platform.test:8000/css/css-masking/parsing/clip-path-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/clip-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/mask-image-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-masking/parsing/mask-position-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/mask-position-valid.html
+http://web-platform.test:8000/css/css-masking/parsing/mask-position-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/mask-repeat-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-masking/parsing/mask-repeat-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-masking/parsing/mask-repeat-valid.html

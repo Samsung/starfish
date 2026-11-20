@@ -18,22 +18,22 @@
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/overlay/overlay-transition.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/overlay/overlay-user-agent-rules.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/overlay/overlay-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/parsing/bottom-computed.html
+http://web-platform.test:8000/css/css-position/parsing/bottom-computed.html
 http://web-platform.test:8000/css/css-position/parsing/bottom-invalid.html
 http://web-platform.test:8000/css/css-position/parsing/bottom-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/parsing/inset-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-position/parsing/inset-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/parsing/inset-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/parsing/left-computed.html
+http://web-platform.test:8000/css/css-position/parsing/left-computed.html
 http://web-platform.test:8000/css/css-position/parsing/left-invalid.html
 http://web-platform.test:8000/css/css-position/parsing/left-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/parsing/position-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-position/parsing/position-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/parsing/position-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/parsing/right-computed.html
+http://web-platform.test:8000/css/css-position/parsing/right-computed.html
 http://web-platform.test:8000/css/css-position/parsing/right-invalid.html
 http://web-platform.test:8000/css/css-position/parsing/right-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/parsing/top-computed.html
+http://web-platform.test:8000/css/css-position/parsing/top-computed.html
 http://web-platform.test:8000/css/css-position/parsing/top-invalid.html
 http://web-platform.test:8000/css/css-position/parsing/top-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-position/parsing/z-index-computed.html

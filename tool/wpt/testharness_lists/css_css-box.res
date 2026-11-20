@@ -60,7 +60,7 @@ http://web-platform.test:8000/css/css-box/margin-trim/computed-margin-values/gri
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/float-valid.html
 http://web-platform.test:8000/css/css-box/parsing/height-invalid.html
 http://web-platform.test:8000/css/css-box/parsing/height-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/margin-computed.html
+http://web-platform.test:8000/css/css-box/parsing/margin-computed.html
 http://web-platform.test:8000/css/css-box/parsing/margin-invalid.html
 http://web-platform.test:8000/css/css-box/parsing/margin-shorthand.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/margin-trim-computed.html
@@ -79,5 +79,5 @@ http://web-platform.test:8000/css/css-box/parsing/padding-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/visibility-computed.html
 http://web-platform.test:8000/css/css-box/parsing/visibility-invalid.html
 http://web-platform.test:8000/css/css-box/parsing/visibility-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/width-invalid.html
+http://web-platform.test:8000/css/css-box/parsing/width-invalid.html
 http://web-platform.test:8000/css/css-box/parsing/width-valid.html

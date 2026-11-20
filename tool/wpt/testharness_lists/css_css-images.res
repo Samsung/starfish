@@ -14,7 +14,7 @@
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/inheritance.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/object-view-box-parsing.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/object-view-box-transition-mutation.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/conic-gradient-calc-angle-percentage-invalid.html
+# [vacuous-pass:ANGLE_PERCENTAGE_CALC_UNIMPLEMENTED] http://web-platform.test:8000/css/css-images/parsing/conic-gradient-calc-angle-percentage-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/conic-gradient-calc-angle-percentage-valid.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-images/parsing/gradient-interpolation-method-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-images/parsing/gradient-interpolation-method-invalid.html

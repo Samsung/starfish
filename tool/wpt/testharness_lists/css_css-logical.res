@@ -60,7 +60,7 @@
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-logical/parsing/inset-block-inline-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/parsing/inset-block-inline-shorthand.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/parsing/inset-block-inline-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/parsing/inset-computed.html
+http://web-platform.test:8000/css/css-logical/parsing/inset-computed.html
 http://web-platform.test:8000/css/css-logical/parsing/inset-invalid.html
 http://web-platform.test:8000/css/css-logical/parsing/inset-shorthand.html
 http://web-platform.test:8000/css/css-logical/parsing/inset-valid.html
