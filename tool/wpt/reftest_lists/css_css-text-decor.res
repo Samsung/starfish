@@ -257,7 +257,7 @@ http://web-platform.test:8000/css/css-text-decor/text-shadow/basic.html
 http://web-platform.test:8000/css/css-text-decor/text-shadow/blur.html
 http://web-platform.test:8000/css/css-text-decor/text-shadow/color-inherit.html
 http://web-platform.test:8000/css/css-text-decor/text-shadow/color-parserorder.html
-# [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-text-decor/text-shadow/currentcolor.html
+http://web-platform.test:8000/css/css-text-decor/text-shadow/currentcolor.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text-decor/text-shadow/decorations-multiple-zorder.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text-decor/text-shadow/dynamic-blur.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text-decor/text-shadow/lineoverflow.html

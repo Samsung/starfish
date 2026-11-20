@@ -641,7 +641,7 @@ http://web-platform.test:8000/css/css-backgrounds/box-shadow-042.html
 http://web-platform.test:8000/css/css-backgrounds/box-shadow-body.html
 http://web-platform.test:8000/css/css-backgrounds/box-shadow-border-radius-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/box-shadow-calc.html
-# [auto-fail:TC_CRASH] http://web-platform.test:8000/css/css-backgrounds/box-shadow-currentcolor.html
+http://web-platform.test:8000/css/css-backgrounds/box-shadow-currentcolor.html
 http://web-platform.test:8000/css/css-backgrounds/box-shadow-inset-without-border-radius.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-backgrounds/box-shadow-invalid-001.html
 http://web-platform.test:8000/css/css-backgrounds/box-shadow-multiple-001.html
