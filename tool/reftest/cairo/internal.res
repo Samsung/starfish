@@ -425,6 +425,7 @@ tests/assertion/css/width/replaced_percent_width_resolves_against_content_width.
 tests/assertion/css/width/width-intrinsic-keywords.html
 tests/pixel/css/text/word-concatenating.html
 tests/assertion/css/text/text-wrap-mode.html
+tests/assertion/css/text/overflow-wrap-anywhere-graphemes.html
 tests/assertion/css/text/text-shadow-change.html
 tests/assertion/css/text/text-shadow-grown-in-layer.html
 tests/pixel/css/border/starting_unprocessed_mbp_with_pre.html

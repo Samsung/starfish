@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>overflow-wrap: anywhere preserves grapheme clusters</title>
+<link rel="help" href="https://drafts.csswg.org/css-text-4/#valdef-overflow-wrap-anywhere">
+<style>
+  div { font: 32px/40px sans-serif; overflow-wrap: anywhere; }
+  #wrap, #single { width: 0; }
+  #intrinsic { width: min-content; }
+  #reference { display: inline-block; white-space: nowrap; }
+</style>
+<div id="wrap" lang="hi">&#x0937;&#x093F;&#x0937;&#x093F;</div>
+<div id="single" lang="hi">&#x0937;&#x093F;</div>
+<div id="intrinsic">&#x1F469;&#x200D;&#x1F4BB;&#x1F469;&#x200D;&#x1F4BB;</div>
+<div id="reference">&#x1F469;&#x200D;&#x1F4BB;</div>
+<script>
+if (typeof testEnd !== 'function') {
+  var pass = 0;
+  var fail = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function(condition, message) {
+    if (condition) {
+      pass++;
+    } else {
+      fail++;
+      nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function() {
+    var verdict = (fail ? 'FAIL' : 'PASS') +
+        ' (' + pass + ' passed, ' + fail + ' failed)';
+    console.log('[overflow-wrap-anywhere-graphemes] ' + verdict);
+    document.title = verdict;
+  };
+}
+
+function rect(id) {
+  return document.getElementById(id).getBoundingClientRect();
+}
+
+var height = rect('wrap').height;
+console.assert(height === 80, 'Two clusters should take two lines; height: ' + height);
+
+var singleHeight = rect('single').height;
+console.assert(singleHeight === 40, 'One cluster should take one line; height: ' + singleHeight);
+
+var intrinsicWidth = rect('intrinsic').width;
+var referenceWidth = rect('reference').width;
+console.assert(referenceWidth > 0 && Math.abs(intrinsicWidth - referenceWidth) < 1,
+    'Min-content should fit one whole emoji cluster; actual: ' +
+    intrinsicWidth + ', expected: ' + referenceWidth);
+
+testEnd();
+</script>

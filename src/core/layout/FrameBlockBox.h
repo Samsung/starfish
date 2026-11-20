@@ -1321,7 +1321,7 @@ private:
 
     void generateInlineTextBox(TextToken& token);
     void insertFloatingBoxAndReLayoutLineBoxIfNeeds(FrameBox* box);
-    InlineTextBox* splitInlineTextBox(InlineTextBox* textBox);
+    Optional<InlineTextBox*> splitInlineTextBox(InlineTextBox* textBox);
     void insertInlineBox(FrameBox* box);
     void insertAbsolutePositionedBoxes();
 

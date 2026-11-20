@@ -2276,6 +2276,78 @@ void LineFormattingContext::removeAllInlineBoxes()
 #endif
 }
 
+// CSS Text's emergency wrap opportunities occur between typographic
+// character units. ICU supplies extended grapheme boundaries in UTF-16;
+// layout indexes the original String by code point.
+class GraphemeBoundaries {
+public:
+    explicit GraphemeBoundaries(const StringView& text)
+        : m_start(text.start())
+        , m_length(text.length())
+        , m_isASCII(text.bufferAccessData().hasASCIIData())
+    {
+        // ASCII word tokens have a break between each pair of characters.
+        if (m_isASCII) {
+            return;
+        }
+
+        const auto data = text.bufferAccessData();
+        UTF16StringDataNonGCStd utf16;
+        const char16_t* buffer;
+        size_t length;
+        if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+            buffer = data.utf16Data();
+            length = data.length;
+        } else {
+            utf16 = text.toUTF16NonGCString();
+            buffer = utf16.data();
+            length = utf16.size();
+        }
+
+        if (length <= INT32_MAX) {
+            UErrorCode status = U_ZERO_ERROR;
+            auto closeIterator = [](UBreakIterator* iterator) {
+                ubrk_close(iterator);
+            };
+            std::unique_ptr<UBreakIterator, decltype(closeIterator)> iterator(
+                ubrk_open(UBRK_CHARACTER, "", buffer,
+                          static_cast<int32_t>(length), &status),
+                closeIterator);
+            if (U_SUCCESS(status)) {
+                size_t index = 0;
+                int32_t offset = 0;
+                int32_t boundary;
+                while ((boundary = ubrk_next(iterator.get())) != UBRK_DONE) {
+                    while (offset < boundary) {
+                        offset += data.charAt(index++) > 0xFFFF ? 2 : 1;
+                    }
+                    m_ends.push_back(m_start + index);
+                }
+                return;
+            }
+        }
+
+        // Keep the range intact if ICU cannot segment it.
+        m_ends.push_back(text.end());
+    }
+
+    size_t count() const
+    {
+        return m_isASCII ? m_length : m_ends.size();
+    }
+
+    size_t endAt(size_t index) const
+    {
+        return m_isASCII ? m_start + index + 1 : m_ends[index];
+    }
+
+private:
+    size_t m_start;
+    size_t m_length;
+    bool m_isASCII;
+    std::vector<size_t> m_ends;
+};
+
 void LineFormattingContext::insertPendingInlineBoxes()
 {
     auto iter = m_pendingInlineBoxes.begin();
@@ -2291,12 +2363,18 @@ void LineFormattingContext::insertPendingInlineBoxes()
                 handleAbsoluteBox(box, true, false);
             } else {
                 if (!canAppendToCurrentLine(box, box->outerWidth())) {
-                    if (breakableWord(box)) {
-                        InlineTextBox* box2 =
-                            splitInlineTextBox(box->asInlineTextBox());
-                        insertInlineBox(box2);
+                    if (!breakableWord(box)) {
+                        break;
                     }
-                    break;
+                    if (auto prefix =
+                            splitInlineTextBox(box->asInlineTextBox())) {
+                        insertInlineBox(prefix.value());
+                        break;
+                    }
+                    if (m_currentLineWidth != 0 ||
+                        hasFloatingBoxAlreadyInLineBox(box)) {
+                        break;
+                    }
                 }
 
                 insertInlineBox(box);
@@ -2789,41 +2867,42 @@ void LineFormattingContext::insertInlineBox(FrameBox* box)
     setIsWhiteSpaceAtLast(isCollapsibleWhiteSpace(box));
 }
 
-InlineTextBox* LineFormattingContext::splitInlineTextBox(InlineTextBox* textBox)
+Optional<InlineTextBox*> LineFormattingContext::splitInlineTextBox(
+    InlineTextBox* textBox)
 {
-    STARFISH_ASSERT(textBox->text().length() > 1);
-    TextRun run = textBox->textRun();
-    size_t start = run.m_stringView.start();
-    size_t end = run.m_stringView.end();
-    StringView* sv = new StringView(run.m_stringView);
-    InlineTextBox* ret = new InlineTextBox(textBox);
-    ret->setLayoutParent(m_currentLayoutParent);
-    ret->setHeight(ret->style()->font()->metrics().m_fontHeight);
-    bool splitted = false;
-    size_t splittedIndex = end;
+    StringView text = textBox->text();
+    GraphemeBoundaries boundaries(text);
+    if (boundaries.count() < 2) {
+        return NullOption;
+    }
+
     LayoutUnit remainingWidth =
         (m_lineBoxWidth - m_currentLineWidth - m_unprocessedStartingMBPWidth -
          m_textIndentWidth);
-    for (; splittedIndex > start; splittedIndex--) {
-        sv->setEnd(splittedIndex);
-        ret->setText(sv);
-        ret->setWidth(ret->style()->font()->measureText(sv));
-        if (ret->width() < remainingWidth) {
-            splitted = true;
+    auto font = textBox->style()->font();
+    StringView prefix(text);
+    LayoutUnit prefixWidth;
+    // The whole word already overflowed. If no prefix fits, keep the first
+    // cluster intact and let it overflow so that layout makes progress.
+    for (size_t i = boundaries.count() - 1; i > 0; --i) {
+        prefix.setEnd(boundaries.endAt(i - 1));
+        prefixWidth = font->measureText(prefix);
+        if (prefixWidth <= remainingWidth) {
             break;
         }
     }
 
-    StringView* sv2 = new StringView(run.m_stringView);
-    if (splitted) {
-        sv2->setStart(splittedIndex);
-    } else {
-        sv2->setStart(start + 1);
-    }
-    textBox->setText(sv2);
-    textBox->setWidth(textBox->style()->font()->measureText(sv2));
+    auto prefixBox = new InlineTextBox(textBox);
+    prefixBox->setLayoutParent(m_currentLayoutParent);
+    prefixBox->setText(prefix);
+    prefixBox->setWidth(prefixWidth);
+    prefixBox->setHeight(font->metrics().m_fontHeight);
 
-    return ret;
+    StringView suffix(text);
+    suffix.setStart(prefix.end());
+    textBox->setText(suffix);
+    textBox->setWidth(font->measureText(suffix));
+    return prefixBox;
 }
 
 void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
@@ -2855,23 +2934,40 @@ void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
         if (!canAppendToCurrentLine(box, box->outerWidth())) {
             if (isCollapsibleWhiteSpace(box)) {
                 m_isPendingBreakLine = true;
-            } else if (breakableWord(box)) {
-                if (m_currentLineWidth == 0) {
-                    InlineTextBox* box2 =
-                        splitInlineTextBox(box->asInlineTextBox());
-                    insertInlineBox(box2);
+                return;
+            }
+
+            if (breakableWord(box)) {
+                if (m_currentLineWidth != 0) {
+                    breakLine(nullptr);
+                    tryInsertInlineBox(box);
+                    return;
                 }
-                breakLine(nullptr);
-                tryInsertInlineBox(box);
-            } else {
-                breakLine(nullptr);
-                if (!canAppendToCurrentLineBox(box, box->outerWidth()) &&
-                    m_lastLineHasFloatValue == HasFloat::HasNone) {
+
+                if (auto prefix = splitInlineTextBox(box->asInlineTextBox())) {
+                    insertInlineBox(prefix.value());
+                    markInlineBoxIndex(prefix.value());
+                    breakLine(nullptr);
+                    tryInsertInlineBox(box);
+                    return;
+                }
+
+                // Like a single code point, a single cluster can overflow an
+                // empty line if no float is narrowing it.
+                if (!hasFloatingBoxAlreadyInLineBox(box)) {
                     insertInlineBox(box);
                     markInlineBoxIndex(box);
-                } else {
-                    tryInsertInlineBox(box);
+                    return;
                 }
+            }
+
+            breakLine(nullptr);
+            if (!canAppendToCurrentLineBox(box, box->outerWidth()) &&
+                m_lastLineHasFloatValue == HasFloat::HasNone) {
+                insertInlineBox(box);
+                markInlineBoxIndex(box);
+            } else {
+                tryInsertInlineBox(box);
             }
             return;
         }
@@ -4310,21 +4406,29 @@ void PreferredWidthContext::computePreferredWidth()
 
 // https://drafts.csswg.org/css-text-4/#valdef-overflow-wrap-anywhere
 // Unlike `break-word`, the wrap opportunities `anywhere` adds inside a word
-// count toward the min-content size, so a word is as narrow as its widest
-// character.
+// count toward the min-content size. Use the same boundaries as line layout.
 LayoutUnit PreferredWidthContext::minContentWidth(const TextToken& token,
                                                   LayoutUnit wordWidth)
 {
     if (token.m_frameText->style()->wordWrap() != AnywhereWordWrapValue ||
+        !token.m_frameText->shouldWrapLines() ||
         token.m_end - token.m_start < 2) {
         return wordWidth;
     }
 
+    GraphemeBoundaries boundaries(
+        StringView(token.m_frameText->text(), token.m_start, token.m_end));
+    if (boundaries.count() < 2) {
+        return wordWidth;
+    }
     LayoutUnit widest;
-    for (size_t i = token.m_start; i < token.m_end; i++) {
-        TextToken character(token.m_frameText, i, i + 1, token.m_type,
-                            token.m_isFirstLine);
-        widest = std::max(widest, character.width());
+    size_t start = token.m_start;
+    for (size_t i = 0; i < boundaries.count(); ++i) {
+        size_t end = boundaries.endAt(i);
+        TextToken cluster(token.m_frameText, start, end, token.m_type,
+                          token.m_isFirstLine);
+        widest = std::max(widest, cluster.width());
+        start = end;
     }
     // Keep what the whole word carries besides its glyphs (word spacing,
     // text-indent) so that the result never exceeds the unbroken width.

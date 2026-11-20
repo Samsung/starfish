@@ -525,8 +525,8 @@ http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-break-wor
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-break-word-010.html
 http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-break-word-fit-content-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-break-word-span-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-cluster-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-cluster-002.html
+http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-cluster-001.html
+http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-cluster-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-002.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-text/overflow-wrap/overflow-wrap-min-content-size-003.html
