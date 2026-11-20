@@ -997,6 +997,7 @@ tests/pixel/css/pseudo/pseudo-class-host_07.html
 tests/assertion/css/pseudo/pseudo-class-scope_01.html
 tests/assertion/css/css-ui/pointer-events_01.html
 tests/assertion/css/css-ui/outline-grown-in-layer.html
+tests/assertion/css/css-ui/outline-offset-calc.html
 tests/pixel/css/inset/inset.html
 tests/pixel/compatibility/quirks-height-percent.html
 tests/pixel/compatibility/quirks-empty-body.html

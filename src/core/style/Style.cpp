@@ -8007,6 +8007,12 @@ void StyleResolver::applyProperty(Element* element,
         } else if (newCssValue.valueKind() ==
                    CSSStyleValuePair::ValueKind::Length) {
             style->setOutlineOffset(newCssValue.lengthValue());
+        } else if (newCssValue.valueKind() ==
+                   CSSStyleValuePair::ValueKind::CalcValueKind) {
+            Optional<Length> length =
+                LengthUtil::convertValueToLength(newCssValue);
+            style->setOutlineOffset(length ? length.value()
+                                           : Length(Length::Fixed, 0));
         } else {
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
