@@ -1,0 +1,41 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>currentcolor as a shadow color</title>
+<link rel="help" href="https://www.w3.org/TR/css-backgrounds-3/#the-box-shadow">
+<link rel="help" href="https://www.w3.org/TR/css-text-decor-3/#text-shadow-property">
+<style>
+#target { color: blue; width: 100px; height: 20px; }
+</style>
+<div id="target">text</div>
+<script>
+if (typeof testEnd !== 'function') {
+  window.testEnd = function () { console.log('Test complete'); };
+}
+var target = document.getElementById('target');
+var reference = document.createElement('div');
+document.body.appendChild(reference);
+function check(property, value, expected, message) {
+  target.style[property] = value;
+  reference.style[property] = expected;
+  console.assert(target.style[property] !== '', 'Accepted: ' + value);
+  console.assert(getComputedStyle(target)[property] ===
+    getComputedStyle(reference)[property], message + ': ' + value);
+}
+['boxShadow', 'textShadow'].forEach(function (property) {
+  check(property, 'currentcolor 1px 2px', 'blue 1px 2px',
+    'currentcolor is the element color');
+  check(property, '1px 2px 3px currentColor', 'blue 1px 2px 3px',
+    'A trailing currentcolor is the element color');
+  check(property, 'red 1px 2px, currentcolor 3px 4px',
+    'red 1px 2px, blue 3px 4px', 'currentcolor in a later shadow');
+  target.style[property] = 'currentcolor 1px 2px';
+  target.style.color = 'green';
+  reference.style[property] = 'green 1px 2px';
+  console.assert(getComputedStyle(target)[property] ===
+    getComputedStyle(reference)[property], 'currentcolor follows a color change');
+  target.style.color = '';
+});
+check('boxShadow', 'inset currentcolor 1px 2px 3px 4px',
+  'inset blue 1px 2px 3px 4px', 'currentcolor in an inset shadow');
+testEnd();
+</script>
