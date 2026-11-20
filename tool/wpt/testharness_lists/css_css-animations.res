@@ -82,8 +82,8 @@ http://web-platform.test:8000/css/css-animations/parsing/animation-fill-mode-inv
 http://web-platform.test:8000/css/css-animations/parsing/animation-fill-mode-valid.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-animations/parsing/animation-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-animations/parsing/animation-iteration-count-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-animations/parsing/animation-iteration-count-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-animations/parsing/animation-iteration-count-valid.html
+http://web-platform.test:8000/css/css-animations/parsing/animation-iteration-count-invalid.html
+http://web-platform.test:8000/css/css-animations/parsing/animation-iteration-count-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-animations/parsing/animation-name-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-animations/parsing/animation-name-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-animations/parsing/animation-name-valid.html

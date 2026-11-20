@@ -2718,7 +2718,6 @@ The existing canvas mixin tables are incomplete. Adding the missing pieces:
 | `addEventListener('animationiteration')` | **Never fires.** The `KeyFramesAnimationEventType` enum has no `AnimationIteration` value, and `m_animationiteration` static string does not exist. The dispatch site (`AnimationExecutor.cpp:589`) is gated on `isSVGAnimation`, so non-SVG keyframe animations cannot fire iteration events. |
 | Multi-name `animation-name: a, b` with `animation-duration: 100ms, 100ms` | **Broken** — start events do not fire. |
 | `getComputedStyle(el).animationName` | Includes literal quotes around the name. Non-standard. |
-| `getComputedStyle(el).animationIterationCount: inf` | Should be `infinite` per spec. |
 
 **Timing-function value parsing** (`Style.cpp::updateValueUnitTransitionTimingFunction` / `updateValueUnitAnimationTimingFunction`):
 
@@ -2736,7 +2735,7 @@ The existing canvas mixin tables are incomplete. Adding the missing pieces:
 
 **`animation-play-state`**: `running`, `paused`. Both work.
 
-**`animation-iteration-count`**: any positive `<number>` or `infinite`. **`getComputedStyle(...).animationIterationCount` returns `inf` instead of the spec-required `infinite`** (already noted above).
+**`animation-iteration-count`**: any positive `<number>` or `infinite`.
 
 > 🔥 **Critical crashes:**
 > - **`@keyframes empty {}`** (empty body) → SIGSEGV when an animation referencing it starts.

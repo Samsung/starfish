@@ -3341,6 +3341,11 @@ static void applyAnimationIterationCount(Element* element, ComputedStyle* style,
     case CSSStyleValuePair::Number:
         style->setAnimationIterationCount(item.numberValue(), index);
         break;
+    case CSSStyleValuePair::KeywordValueKind:
+        // `infinite` is the only keyword of this property.
+        style->setAnimationIterationCount(
+            std::numeric_limits<float>::infinity(), index);
+        break;
     default:
         STARFISH_UNSUPPORTED("css property: animation-iteration-count with %d",
                              item.valueKind());
@@ -19107,8 +19112,8 @@ bool CSSStyleValuePair::updateValueUnitAnimationIterationCount(
     const CSSTokenValue& value)
 {
     if (value.equals("infinite")) {
-        m_valueKind = CSSStyleValuePair::ValueKind::Number;
-        m_value.m_floatValue = std::numeric_limits<float>::infinity();
+        // Kept as a keyword so that it serializes as written.
+        setKeywordValue(String::fromUTF8("infinite"));
     } else {
         float f;
         if (CSSPropertyParser::parseNumber(value.data(), value.length(), 0,

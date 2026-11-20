@@ -2135,8 +2135,15 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.multiValue()->emplace_back(CSSStyleValuePair::Number, 1.0f);
         } else {
             for (size_t i = 0; i < size; i++) {
-                p.multiValue()->emplace_back(CSSStyleValuePair::Number,
-                                             style->animationIterationCount(i));
+                float count = style->animationIterationCount(i);
+                if (std::isinf(count)) {
+                    CSSStyleValuePair infinite;
+                    infinite.setKeywordValue(String::fromUTF8("infinite"));
+                    p.multiValue()->push_back(infinite);
+                } else {
+                    p.multiValue()->emplace_back(CSSStyleValuePair::Number,
+                                                 count);
+                }
             }
         }
         addValuePair(p);
