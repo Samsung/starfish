@@ -115,7 +115,7 @@ FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx)
     , m_canLayoutParentCollapseWithMarginTop(false)
 {
     STARFISH_ASSERT(box->isFloating());
-    m_isLeft = box->style()->floating() == LeftFloatValue;
+    m_isLeft = box->usedFloating() == LeftFloatValue;
     for (Frame* parent = box->layoutParent(); parent;
          parent = parent->layoutParent()) {
         if (!parent->isAnonymous() && parent->isBlockLevel()) {
@@ -1672,6 +1672,40 @@ bool Frame::isFloating()
     }
 
     return style->floating() != FloatValue::NoneFloatValue;
+}
+
+// https://drafts.csswg.org/css-logical-1/#float-clear
+// The flow-relative values map through the writing mode of the box's
+// containing block, so they cannot be resolved before the frame is in the
+// tree.
+static bool isContainingBlockLtr(Frame* frame)
+{
+    return blockContainer(frame)->style()->direction() ==
+           DirectionValue::LtrDirectionValue;
+}
+
+FloatValue Frame::usedFloating()
+{
+    FloatValue value = style()->floating();
+    if (value != FloatValue::InlineStartFloatValue &&
+        value != FloatValue::InlineEndFloatValue) {
+        return value;
+    }
+    bool isStart = value == FloatValue::InlineStartFloatValue;
+    return isStart == isContainingBlockLtr(this) ? FloatValue::LeftFloatValue
+                                                 : FloatValue::RightFloatValue;
+}
+
+ClearValue Frame::usedClear()
+{
+    ClearValue value = style()->clear();
+    if (value != ClearValue::InlineStartClearValue &&
+        value != ClearValue::InlineEndClearValue) {
+        return value;
+    }
+    bool isStart = value == ClearValue::InlineStartClearValue;
+    return isStart == isContainingBlockLtr(this) ? ClearValue::LeftClearValue
+                                                 : ClearValue::RightClearValue;
 }
 
 void Frame::computeStyleFlags()

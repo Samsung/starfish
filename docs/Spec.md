@@ -1689,8 +1689,8 @@ section are supported.
 | | right | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the right edge of an element to a unit above/below the right edge of its nearest positioned ancestor. | |
 | | bottom | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the bottom edge of an element to a unit above/below the bottom edge of its nearest positioned ancestor. | |
 | | left | &lt;length&gt; &#124; &lt;percentage&gt; &#124; auto | Sets the left edge of an element to a unit above/below the left edge of its nearest positioned ancestor. | |
-| [Floats](https://www.w3.org/TR/2011/REC-CSS2-20110607/visuren.html#floats) | float | left &#124; right &#124; none | Specifies whether a box should float to the left, right, or not at all. | |
-| | clear | none &#124; left &#124; right &#124; both | Indicates which sides of an element's box(es) may not be adjacent to an earlier floating box. | |
+| [Floats](https://www.w3.org/TR/2011/REC-CSS2-20110607/visuren.html#floats) | float | left &#124; right &#124; inline-start &#124; inline-end &#124; none | Specifies whether a box should float to the left, right, or not at all. | |
+| | clear | none &#124; left &#124; right &#124; both &#124; inline-start &#124; inline-end | Indicates which sides of an element's box(es) may not be adjacent to an earlier floating box. | |
 | [Flex](https://www.w3.org/TR/css-flexbox-1/) | flex-direction | row &#124; row-reverse &#124; column &#124; column-reverse | Specifies how flex items are placed in the flex container, by setting the direction of the flex container’s main axis. | All four values implemented. |
 | | flex-wrap | nowrap &#124; wrap &#124; wrap-reverse | Controls whether the flex container is single-line or multi-line, and the direction of the cross-axis. | All three values implemented. |
 | | flex-flow | &lt;flex-direction&gt; &#124;&#124; &lt;flex-wrap&gt; | Shorthand for `flex-direction` and `flex-wrap`. | Single-component (e.g. `flex-flow: wrap`) and two-component forms accepted. |
@@ -2677,8 +2677,8 @@ The existing canvas mixin tables are incomplete. Adding the missing pieces:
 | `top` / `right` / `bottom` / `left` | `<length>`, `<percentage>`, `auto` | — |
 | `inset` (shorthand) | 1–4 values (CSS-standard) | — |
 | `inset-block-start/end`, `inset-inline-start/end` | — | **NOT supported** (`Unsupported css property` warning). |
-| `float` | `none`, `left`, `right` | **`inline-start` / `inline-end` silently fall back to `none`** (no warning). |
-| `clear` | `none`, `left`, `right`, `both` | **`inline-start` / `inline-end` silently fall back to `none`** (no warning). |
+| `float` | `none`, `left`, `right`, `inline-start`, `inline-end` | The flow-relative values resolve against the `direction` of the containing block. |
+| `clear` | `none`, `left`, `right`, `both`, `inline-start`, `inline-end` | The flow-relative values resolve against the `direction` of the containing block. |
 | `z-index` | `auto`, `<integer>` (incl. negative) | — |
 
 > **Containing block & stacking context rules (audit-confirmed):** only an ancestor with `position != static` **OR** with `transform != none` establishes a containing block for absolutely-positioned descendants. **`will-change`, `filter`, `contain`, `perspective` do NOT establish a containing block in LWE.** Stacking contexts are created only by `position` + `z-index` (other than `auto`); `opacity < 1`, `transform`, `will-change`, `filter`, `mix-blend-mode`, and `isolation` do NOT create stacking contexts.

@@ -163,6 +163,10 @@ enum FloatValue ENSURE_ENUM_UNSIGNED {
     NoneFloatValue,
     LeftFloatValue,
     RightFloatValue,
+    // Flow-relative; layout reads the physical side through
+    // Frame::usedFloating().
+    InlineStartFloatValue,
+    InlineEndFloatValue,
 };
 
 enum ClearValue ENSURE_ENUM_UNSIGNED {
@@ -170,6 +174,10 @@ enum ClearValue ENSURE_ENUM_UNSIGNED {
     LeftClearValue = 1,
     RightClearValue = 1 << 1,
     BothClearValue = 1 | (1 << 1),
+    // Flow-relative; layout reads the physical side through
+    // Frame::usedClear().
+    InlineStartClearValue = 1 << 2,
+    InlineEndClearValue = (1 << 2) | 1,
 };
 
 // Only for -webkit-box

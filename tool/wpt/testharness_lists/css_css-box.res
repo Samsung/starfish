@@ -52,12 +52,12 @@ http://web-platform.test:8000/css/css-box/margin-trim/computed-margin-values/gri
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/margin-trim/computed-margin-values/grid-inline-end-items-in-last-column-trimmed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/margin-trim/computed-margin-values/grid-inline-start-item-negative-span.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/margin-trim/computed-margin-values/grid-inline-start.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/clear-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-box/parsing/clear-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/clear-valid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/float-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-box/parsing/float-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-box/parsing/float-valid.html
+http://web-platform.test:8000/css/css-box/parsing/clear-computed.html
+http://web-platform.test:8000/css/css-box/parsing/clear-invalid.html
+http://web-platform.test:8000/css/css-box/parsing/clear-valid.html
+http://web-platform.test:8000/css/css-box/parsing/float-computed.html
+http://web-platform.test:8000/css/css-box/parsing/float-invalid.html
+http://web-platform.test:8000/css/css-box/parsing/float-valid.html
 http://web-platform.test:8000/css/css-box/parsing/height-invalid.html
 http://web-platform.test:8000/css/css-box/parsing/height-valid.html
 http://web-platform.test:8000/css/css-box/parsing/margin-computed.html

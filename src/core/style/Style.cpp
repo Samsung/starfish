@@ -1749,6 +1749,10 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("right");
         case FloatValue::NoneFloatValue:
             return String::fromUTF8("none");
+        case FloatValue::InlineStartFloatValue:
+            return String::fromUTF8("inline-start");
+        case FloatValue::InlineEndFloatValue:
+            return String::fromUTF8("inline-end");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -1763,6 +1767,10 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("both");
         case ClearValue::NoneClearValue:
             return String::fromUTF8("none");
+        case ClearValue::InlineStartClearValue:
+            return String::fromUTF8("inline-start");
+        case ClearValue::InlineEndClearValue:
+            return String::fromUTF8("inline-end");
         default:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
@@ -12893,6 +12901,11 @@ bool CSSStyleValuePair::updateValueFloat(Document* document,
         m_value.m_float = FloatValue::LeftFloatValue;
     } else if (value.equals("right")) {
         m_value.m_float = FloatValue::RightFloatValue;
+    } else if (value.equals("inline-start")) {
+        // https://drafts.csswg.org/css-logical-1/#float-clear
+        m_value.m_float = FloatValue::InlineStartFloatValue;
+    } else if (value.equals("inline-end")) {
+        m_value.m_float = FloatValue::InlineEndFloatValue;
     } else {
         return false;
     }
@@ -12918,6 +12931,11 @@ bool CSSStyleValuePair::updateValueClear(Document* document,
         m_value.m_clear = ClearValue::RightClearValue;
     } else if (value.equals("both")) {
         m_value.m_clear = ClearValue::BothClearValue;
+    } else if (value.equals("inline-start")) {
+        // https://drafts.csswg.org/css-logical-1/#float-clear
+        m_value.m_clear = ClearValue::InlineStartClearValue;
+    } else if (value.equals("inline-end")) {
+        m_value.m_clear = ClearValue::InlineEndClearValue;
     } else {
         return false;
     }

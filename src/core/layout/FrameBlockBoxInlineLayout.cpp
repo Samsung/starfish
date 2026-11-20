@@ -1823,11 +1823,10 @@ void LineFormattingContext::markInlineBoxIndex(FrameBox* box)
 
 static bool dontClear(int hasFloat, Frame* f)
 {
-    return (f->style()->clear() == LeftClearValue &&
-            (hasFloat & HasLeft) == 0) ||
-           (f->style()->clear() == RightClearValue &&
-            (hasFloat & HasRight) == 0) ||
-           (f->style()->clear() == BothClearValue && hasFloat == HasNone);
+    ClearValue clear = f->usedClear();
+    return (clear == LeftClearValue && (hasFloat & HasLeft) == 0) ||
+           (clear == RightClearValue && (hasFloat & HasRight) == 0) ||
+           (clear == BothClearValue && hasFloat == HasNone);
 }
 
 bool LineFormattingContext::canInsertFloatingBox(FrameBox* f,
@@ -1842,8 +1841,7 @@ bool LineFormattingContext::canInsertFloatingBox(FrameBox* f,
     FloatingBoxLayoutContext* fbCtx =
         &m_floatingBoxLayoutContexts[m_floatingBoxLayoutContexts.size() - 1];
 
-    if (f->style()->clear() == NoneClearValue ||
-        dontClear(fbCtx->m_hasFloat, f)) {
+    if (f->usedClear() == NoneClearValue || dontClear(fbCtx->m_hasFloat, f)) {
     } else {
         makeFloatingBoxLayoutContextDueToClearIfNeeds(f);
     }
@@ -1872,7 +1870,7 @@ void LineFormattingContext::makeFloatingBoxLayoutContextDueToClearIfNeeds(
 {
     LayoutUnit clearedDistanceToFloatBottom =
         m_layoutContext.clearedDistanceToFloatBottom(
-            m_absPosition.y() + m_lineBoxY, box->style()->clear());
+            m_absPosition.y() + m_lineBoxY, box->usedClear());
 
     if (clearedDistanceToFloatBottom == 0) {
         return;
@@ -2006,7 +2004,7 @@ void LineFormattingContext::insertFloatingBoxAndReLayoutLineBoxIfNeeds(
     }
 
     FloatingBoxLayoutContext& fbCtx = *m_floatingBoxLayoutContexts.rbegin();
-    if (box->style()->floating() == LeftFloatValue) {
+    if (box->usedFloating() == LeftFloatValue) {
         fbCtx.m_hasFloat |= HasLeft;
         LayoutUnit lastAccumulatedLeftFloatingBoxWidth =
             fbCtx.m_accumulatedLeftFloatingBoxWidth;
@@ -2176,10 +2174,9 @@ LayoutUnit LineFormattingContext::distanceToNextLineBox(FrameLineBreak* br,
 
     if (fbCtx.m_hasFloat != HasNone) {
         if (br != nullptr) {
-            distance =
-                std::max(distance, m_layoutContext.clearedDistanceToFloatBottom(
-                                       m_absPosition.y() + m_lineBoxY,
-                                       br->style()->clear()));
+            distance = std::max(
+                distance, m_layoutContext.clearedDistanceToFloatBottom(
+                              m_absPosition.y() + m_lineBoxY, br->usedClear()));
             lineBox->setHeight(distance);
         } else {
             if (m_currentLineWidth == 0) {
@@ -2506,7 +2503,7 @@ void LineFormattingContext::breakLineForLineBox(FrameLineBreak* br,
 
 bool PreferredWidthContext::canInsertFloatingBox(Frame* f)
 {
-    return (f->style()->clear() == NoneClearValue || dontClear(m_hasFloat, f));
+    return (f->usedClear() == NoneClearValue || dontClear(m_hasFloat, f));
 }
 
 bool PreferredWidthContext::canAppendToCurrentLineBox(LayoutUnit width)
@@ -4390,7 +4387,7 @@ void PreferredWidthContext::handleFloatingBox(Frame* f, LayoutUnit w)
 {
     updateCurrentLineWidth(f, w);
 
-    if (f->style()->floating() == LeftFloatValue) {
+    if (f->usedFloating() == LeftFloatValue) {
         m_hasFloat |= HasLeft;
     } else {
         m_hasFloat |= HasRight;
@@ -4498,16 +4495,16 @@ PreferredWidthContext::preferredWidthsWithNewContext(Frame* f)
         width.isMaxContent() ? preferredWidth : newCtx.preferredMinWidth();
 
     auto& floatContext = nearestFloatContext();
-    if (f->style()->clear() & ClearValue::LeftClearValue) {
+    if (f->usedClear() & ClearValue::LeftClearValue) {
         floatContext.m_floatLeftWidth = 0;
     }
-    if (f->style()->clear() & ClearValue::RightClearValue) {
+    if (f->usedClear() & ClearValue::RightClearValue) {
         floatContext.m_floatRightWidth = 0;
     }
 
-    if (f->style()->floating() & FloatValue::LeftFloatValue) {
+    if (f->usedFloating() & FloatValue::LeftFloatValue) {
         floatContext.m_floatLeftWidth += (preferredWidth + mbpWidth);
-    } else if (f->style()->floating() & FloatValue::RightFloatValue) {
+    } else if (f->usedFloating() & FloatValue::RightFloatValue) {
         floatContext.m_floatRightWidth += (preferredWidth + mbpWidth);
     }
 
@@ -4729,10 +4726,10 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
 
                 if (f->needToEstablishBlockFormattingContext()) {
                     if (f->isNormalFlow()) {
-                        if (f->style()->clear() & ClearValue::LeftClearValue) {
+                        if (f->usedClear() & ClearValue::LeftClearValue) {
                             ctx.floatLeftWidth() = 0;
                         }
-                        if (f->style()->clear() & ClearValue::RightClearValue) {
+                        if (f->usedClear() & ClearValue::RightClearValue) {
                             ctx.floatRightWidth() = 0;
                         }
 

@@ -2333,6 +2333,11 @@ public:
 
     bool isFloating();
 
+    // `float` and `clear` with the flow-relative values resolved to a
+    // physical side.
+    FloatValue usedFloating();
+    ClearValue usedClear();
+
     void markFlexItem();
 
     void markGridItem();

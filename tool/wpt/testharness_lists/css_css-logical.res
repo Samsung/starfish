@@ -20,7 +20,7 @@
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/logical-box-margin.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/logical-box-padding.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/logical-box-size.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/logical-values-float-clear.html
+http://web-platform.test:8000/css/css-logical/logical-values-float-clear.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/logical-values-resize.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/logicalprops-block-size-vlr.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-logical/logicalprops-block-size.html

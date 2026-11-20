@@ -5712,8 +5712,8 @@ protected:
     // element, i.e. our owner's boxes attach to a further ancestor's frame.
     // Cached so that layout hot paths need not walk the ancestor chain.
     bool m_parentIsBoxless : 1;
-    FloatValue m_float : 2;
-    ClearValue m_clear : 2;
+    FloatValue m_float : 3;
+    ClearValue m_clear : 3;
     DisplayValue m_display : 5;
     DisplayValue m_originalDisplay : 5;
     PositionValue m_position : 2;

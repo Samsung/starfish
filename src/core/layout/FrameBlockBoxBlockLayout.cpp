@@ -175,8 +175,8 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     reLayoutFrameBox:
         size_t floatIdx;
         LayoutUnit clearedDistanceToFloatBottom =
-            ctx.clearedDistanceToFloatBottom(
-                yAbsPosition, child->style()->clear(), &floatIdx);
+            ctx.clearedDistanceToFloatBottom(yAbsPosition, child->usedClear(),
+                                             &floatIdx);
 
         if (clearedDistanceToFloatBottom > 0) {
             // TODO : Study more cases which can set clearAffected to true.
