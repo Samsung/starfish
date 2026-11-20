@@ -92,7 +92,7 @@ http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-outset-in
 http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-outset-valid.html
 http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-repeat-computed.html
 http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-repeat-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-repeat-valid.html
+http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-repeat-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-shorthand.sub.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-slice-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-backgrounds/parsing/border-image-slice-invalid.html

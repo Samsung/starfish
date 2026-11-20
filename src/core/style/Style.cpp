@@ -13731,6 +13731,13 @@ bool CSSStyleValuePair::updateValueUnitBorderImageRepeat(
         values->push_back(pair);
     }
 
+    // The second keyword defaults to the first, so an equal pair serializes
+    // as one keyword.
+    if (values->size() == 2 && (*values)[0].borderImageRepeatValue() ==
+                                   (*values)[1].borderImageRepeatValue()) {
+        values->pop_back();
+    }
+
     setValueList(values);
 
     return true;
