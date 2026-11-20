@@ -3231,7 +3231,9 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                        scrollMarkerGroup)
         ADD_VALUE_PAIR(TextTransform, TextTransformValueKind, textTransform)
         ADD_VALUE_PAIR(Direction, DirectionValueKind, direction)
-        ADD_VALUE_PAIR(Visibility, VisibilityValueKind, visibility)
+        // `collapse` is the computed value on every element; only
+        // layout treats it as `hidden` outside tables.
+        ADD_VALUE_PAIR(Visibility, VisibilityValueKind, originalVisibility)
         ADD_VALUE_PAIR(FontStyle, FontStyleValueKind, fontStyle)
         ADD_VALUE_PAIR(FontWeight, FontWeightValueKind, fontWeight)
         ADD_VALUE_PAIR(FontKerning, FontKerningValueKind, fontKerning)

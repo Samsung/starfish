@@ -2701,7 +2701,7 @@ The existing canvas mixin tables are incomplete. Adding the missing pieces:
 | `visibility` value | Status |
 |--------------------|--------|
 | `visible`, `hidden` | Supported. |
-| `collapse` | Parses; on non-table elements **computes to `hidden`** (per spec). On `<tr>`/`<tbody>` it parses but **does NOT actually collapse the row** — the row is hidden in place, height unchanged. Use `display: none` to actually remove rows. |
+| `collapse` | Parses and computes to `collapse`; on non-table elements it is **used as `hidden`** (per spec). On `<tr>`/`<tbody>` it parses but **does NOT actually collapse the row** — the row is hidden in place, height unchanged. Use `display: none` to actually remove rows. |
 
 ### CSS @keyframes / animations — runtime caveats
 
