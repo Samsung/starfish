@@ -16444,8 +16444,7 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
         m_valueKind = CSSStyleValuePair::ValueKind::ValueListKind;
 
         setValueList(new ValueList(Separator::CommaSeparator));
-        uint8_t option = CSSPropertyParser::AllowNegative |
-                         CSSPropertyParser::AllowWithoutUnit;
+        uint8_t option = CSSPropertyParser::AllowNegative;
 
         // Value : none | <shadow>#
         // <shadow> = <color>? && <length>{2,4} && inset?
@@ -16560,6 +16559,25 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
             if (!didParseLength) {
                 return false;
             }
+
+            // Serialize in the canonical order whatever order was written:
+            // color, lengths, then `inset`.
+            ValueList* parts = shadow.multiValue();
+            std::stable_sort(
+                parts->begin(), parts->end(),
+                [](const CSSStyleValuePair& a, const CSSStyleValuePair& b) {
+                    auto rank = [](const CSSStyleValuePair& v) {
+                        switch (v.valueKind()) {
+                        case ValueKind::ValueListKind:
+                            return 1;
+                        case ValueKind::KeywordValueKind:
+                            return 2;
+                        default:
+                            return 0;
+                        }
+                    };
+                    return rank(a) < rank(b);
+                });
 
             multiValue()->push_back(shadow);
             isValid = true;

@@ -39,9 +39,9 @@ http://web-platform.test:8000/css/css-text-decor/parsing/text-decoration-color-v
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text-decor/text-decoration-thickness-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text-decor/text-decoration-thickness-valid.html
 http://web-platform.test:8000/css/css-text-decor/text-emphasis-unrepresentable-characters.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text-decor/text-shadow/parsing/text-shadow-computed.html
-# [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text-decor/text-shadow/parsing/text-shadow-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text-decor/text-shadow/parsing/text-shadow-valid.html
+http://web-platform.test:8000/css/css-text-decor/text-shadow/parsing/text-shadow-computed.html
+http://web-platform.test:8000/css/css-text-decor/text-shadow/parsing/text-shadow-invalid.html
+http://web-platform.test:8000/css/css-text-decor/text-shadow/parsing/text-shadow-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text-decor/text-underline-offset-computed.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-text-decor/text-underline-offset-initial.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-text-decor/text-underline-offset-invalid.html

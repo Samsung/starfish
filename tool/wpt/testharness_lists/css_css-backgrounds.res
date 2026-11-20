@@ -113,6 +113,6 @@ http://web-platform.test:8000/css/css-backgrounds/parsing/border-style-invalid.h
 http://web-platform.test:8000/css/css-backgrounds/parsing/border-style-shorthand.html
 http://web-platform.test:8000/css/css-backgrounds/parsing/border-style-valid.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-backgrounds/parsing/box-shadow-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-backgrounds/parsing/box-shadow-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-backgrounds/parsing/box-shadow-valid.html
+http://web-platform.test:8000/css/css-backgrounds/parsing/box-shadow-invalid.html
+http://web-platform.test:8000/css/css-backgrounds/parsing/box-shadow-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-backgrounds/parsing/webkit-border-radius-valid.html

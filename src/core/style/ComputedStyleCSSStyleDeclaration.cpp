@@ -1870,7 +1870,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::TextShadow: {
         CSSStyleValuePair shadows;
         shadows.setKeyKind(CSSStyleValuePair::KeyKind::TextShadow);
-        if (!style->textShadow()) {
+        if (!style->textShadow() || style->textShadow()->empty()) {
             shadows.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             shadows.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
