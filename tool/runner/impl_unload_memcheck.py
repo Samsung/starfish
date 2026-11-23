@@ -11,12 +11,14 @@ import xml.etree.ElementTree as ET
 
 # Bytes include all indirect allocations attached to each definite loss root.
 # Bound each known stack family separately per complete IMPL unload.
+# Fontconfig and libgomp use the maxima measured on both the Docker
+# reproduction host and the x64 CI runners.
 KNOWN_BYTES_PER_UNLOAD = {
     "Pixman initialization": 12384,
-    "Fontconfig parser and defaults": 325,
+    "Fontconfig parser and defaults": 339,
     "Cairo drawing caches": 1976,
     "Starfish FreeType library": 2464,
-    "libgomp initialization": 104,
+    "libgomp initialization": 112,
     "libssh-gcrypt initialization": 192,
 }
 
