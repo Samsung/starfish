@@ -1010,6 +1010,7 @@ tests/assertion/window/structured-clone-errors.html
 tests/assertion/window/performance-basic.html
 tests/assertion/window/location-fragment-navigation.html
 tests/assertion/url/URLsearchParams.html
+tests/assertion/url/root-relative-url-with-query.html
 tests/assertion/blob/blob_arraybuffer_text_test.html
 tests/assertion/blob/blob-buffer-source-view.html
 tests/assertion/canvas/offscreen-bitmap-view.html

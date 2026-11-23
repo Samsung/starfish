@@ -1,0 +1,32 @@
+<!doctype html>
+<meta charset="utf-8">
+<script>
+if (typeof testEnd !== "function") {
+    var passed = 0;
+    var failed = 0;
+    var nativeAssert = console.assert.bind(console);
+    console.assert = function (condition, message) {
+        if (condition) {
+            passed++;
+        } else {
+            failed++;
+            nativeAssert(false, message);
+        }
+    };
+    window.testEnd = function () {
+        var verdict = (failed === 0 ? "PASS" : "FAIL") +
+            " (" + passed + " passed, " + failed + " failed)";
+        console.log("[root-relative-url-with-query] " + verdict);
+        document.title = verdict;
+    };
+}
+
+const origin = "https://example.test:8443";
+const modulePath = "/assets/probe.js";
+for (const suffix of ["?case=overlay", "?value=a/b", "#a/b", "/?case=overlay", "/page?value=a/b"]) {
+    const base = origin + suffix;
+    const resolved = new URL(modulePath, base).href;
+    console.assert(resolved === origin + modulePath, base + " resolved to " + resolved);
+}
+testEnd();
+</script>

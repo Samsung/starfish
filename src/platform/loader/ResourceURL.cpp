@@ -680,13 +680,16 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         } else if (isBaseUrlValid) {
             size_t pos = baseURL->find("://");
             STARFISH_ASSERT(pos != SIZE_MAX);
-            size_t pos2 = baseURL->find("/", 1, pos + 3);
-            if (pos2 != SIZE_MAX) {
-                baseURL = baseURL->substring(0, pos2);
-                url = baseURL->concat(url);
-            } else {
-                url = baseURL->concat(url);
+            size_t authorityStart = pos + 3;
+            // A root-relative URL keeps only the base authority (URL spec).
+            size_t authorityEnd =
+                std::min({ baseURL->find("/", 1, authorityStart),
+                           baseURL->find("?", 1, authorityStart),
+                           baseURL->find("#", 1, authorityStart) });
+            if (authorityEnd != SIZE_MAX) {
+                baseURL = baseURL->substring(0, authorityEnd);
             }
+            url = baseURL->concat(url);
         }
     }
 
