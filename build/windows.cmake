@@ -208,6 +208,9 @@ ADD_SUBDIRECTORY (third_party/escargot)
 SET_TARGET_PROPERTIES (escargot gc-lib PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 IF (TARGET walrus)
+    # Walrus JIT sources include GCUtil.h even with its GC disabled.
+    # Reuse the headers already provided by Escargot's GCutil submodule.
+    TARGET_INCLUDE_DIRECTORIES (walrus PRIVATE ${GCUTIL_ROOT}/include)
     SET_TARGET_PROPERTIES (walrus PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 ENDIF()
