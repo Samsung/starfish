@@ -298,6 +298,40 @@ public:
     Node* m_node;
 };
 
+void ComputedStyle::resolveFontSize(ComputedStyle* parent, Element* element)
+{
+    Length size = m_inheritedStyles.m_fontSize;
+    if (size.isFixed()) {
+        return;
+    }
+    // A percentage and em refer to the parent's size, and rem to the root
+    // element's (css-fonts-4 font-size, css-values-4).
+    Length parentSize = parent->fontSize();
+    Length rootSize = Length(Length::Fixed,
+                             element->document()->webView()->defaultFontSize());
+    HTMLHtmlElement* root = element->document()->rootElement();
+    if (root && root->style()) {
+        rootSize = root->style()->fontSize();
+    }
+    Window* w = element->window();
+    if (size.isPercent()) {
+        size = Length(Length::Fixed, size.percentValue(parentSize.fixed()));
+    } else if (size.isCalc()) {
+        // Resolved whole, percentages included: the element has no style of
+        // its own for a font-relative term to be evaluated against later.
+        size = size.calcData()->computedLength(
+            parentSize, rootSize, Optional<Font*>(), w->innerWidth(),
+            w->innerHeight(), this, true, parentSize.fixed());
+    } else {
+        size.changeToFixedIfNeeded(parentSize, rootSize, Optional<Font*>(),
+                                   w->innerWidth(), w->innerHeight(), this);
+    }
+    if (size.isFixed()) {
+        m_inheritedStyles.m_fontSize =
+            Length(Length::Fixed, std::max(0.f, size.fixed()));
+    }
+}
+
 void ComputedStyle::loadFont(Node* consumer, bool respectLetterSpacing)
 {
     // font-size does not allow negative values (css-fonts-4): a calc()

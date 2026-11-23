@@ -3068,6 +3068,10 @@ ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
 
     if (loadResources) {
         style->loadResources(element, element->style());
+    } else {
+        // Its lengths and its children's still resolve against the size
+        // loadFont would give.
+        style->resolveFontSize(parent, element);
     }
     style->arrangeStyleValues(parent, element);
     return style;

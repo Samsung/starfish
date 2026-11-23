@@ -3886,6 +3886,9 @@ public:
     }
 
     void loadFont(Node* consumer, bool respectLetterSpacing = false);
+    // The font size loadFont would compute, for a style resolved without its
+    // font against |parent|, which its element's parent no longer holds.
+    void resolveFontSize(ComputedStyle* parent, Element* element);
     bool hasBorderRadius()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {

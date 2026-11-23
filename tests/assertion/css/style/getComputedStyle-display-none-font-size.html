@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>getComputedStyle on display:none elements with a relative font-size</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts-4/#font-size-prop">
+<link rel="help" href="https://drafts.csswg.org/cssom/#resolved-values">
+<style>
+  .p { font-size: 150%; }
+  .em { font-size: 2em; }
+  .rem { font-size: 1.5rem; }
+  .calc { font-size: calc(50% + 4px); }
+  .calcem { font-size: calc(50% + 1em); }
+  .calcrem { font-size: calc(150% - 0.5rem); }
+  .lh { font-size: 150%; line-height: 120%; }
+  .lhcalc { font-size: 2em; line-height: calc(100% + 2px); }
+  .outer { font-size: 150%; }
+  .outer > span { font-size: 50%; }
+</style>
+</head>
+<body>
+  <div style="font-size: 20px">
+    <div id="hidden" style="display: none">
+      <span class="p">x</span><span class="em">x</span><span class="rem">x</span>
+      <span class="calc">x</span><span class="calcem">x</span><span class="calcrem">x</span>
+      <span class="lh">x</span><span class="lhcalc">x</span>
+      <span class="outer"><span>x</span></span>
+    </div>
+    <div id="visible">
+      <span class="p">x</span><span class="em">x</span><span class="rem">x</span>
+      <span class="calc">x</span><span class="calcem">x</span><span class="calcrem">x</span>
+      <span class="lh">x</span><span class="lhcalc">x</span>
+      <span class="outer"><span>x</span></span>
+    </div>
+  </div>
+  <script>
+    // Starfish's test build supplies testEnd(); elsewhere, tally the asserts.
+    if (typeof testEnd !== 'function') {
+      var __pass = 0, __fail = 0;
+      var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+      console.assert = function (cond, msg) {
+        if (cond) { __pass++; } else { __fail++; __nativeAssert(false, msg); }
+      };
+      window.testEnd = function () {
+        var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+          ' (' + __pass + ' passed, ' + __fail + ' failed)';
+        console.log('[getComputedStyle-display-none-font-size] ' + verdict);
+        document.title = verdict;
+      };
+    }
+
+    // A hidden element computes its font-size and line-height as a rendered
+    // one does, from its parent's size.
+    var selectors = ['.p', '.em', '.rem', '.calc', '.calcem', '.calcrem', '.lh',
+                     '.lhcalc', '.outer > span'];
+    selectors.forEach(function (sel) {
+      var hidden = getComputedStyle(document.querySelector('#hidden ' + sel));
+      var shown = getComputedStyle(document.querySelector('#visible ' + sel));
+      console.assert(hidden.fontSize === shown.fontSize,
+        sel + ' font-size: ' + hidden.fontSize + ' vs ' + shown.fontSize);
+      console.assert(hidden.lineHeight === shown.lineHeight,
+        sel + ' line-height: ' + hidden.lineHeight + ' vs ' + shown.lineHeight);
+    });
+    console.assert(getComputedStyle(document.querySelector('#hidden .p')).fontSize === '30px',
+      '150% of 20px');
+    console.assert(getComputedStyle(document.querySelector('#hidden .calcem')).fontSize === '30px',
+      '50% + 1em of 20px');
+    console.assert(getComputedStyle(document.querySelector('#hidden .outer > span')).fontSize === '15px',
+      '50% of 150% of 20px');
+    testEnd();
+  </script>
+</body>
+</html>

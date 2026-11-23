@@ -624,6 +624,7 @@ tests/pixel/css/dialog/dialog_modal_03.html
 tests/crash/lookup-computed-style.html
 tests/assertion/css/style/getComputedStyle-display-none-subtree.html
 tests/assertion/css/style/getComputedStyle-display-none-font-relative.html
+tests/assertion/css/style/getComputedStyle-display-none-font-size.html
 tests/pixel/css/text/text-decoration-color-001a.html
 tests/pixel/css/text/text-decoration-line-001.html
 tests/pixel/css/text/text-decoration-001.html
