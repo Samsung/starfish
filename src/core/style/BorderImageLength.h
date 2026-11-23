@@ -150,14 +150,7 @@ public:
     }
 
     void checkComputed(Length curFontSize, Length rootFontSize, Font* font,
-                       LayoutSize windowSize, ComputedStyle* cs)
-    {
-        if (m_type == LengthType) {
-            m_length.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
-                                           windowSize.width(),
-                                           windowSize.height(), cs);
-        }
-    }
+                       LayoutSize windowSize, ComputedStyle* cs);
 
     bool operator==(const BorderImageLength& o)
     {
@@ -215,6 +208,18 @@ public:
         m_right.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
         m_top.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
         m_bottom.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
+    }
+
+    static void markLengths(GC_word* bitmap, size_t offset)
+    {
+        GC_set_bit(bitmap, offset + GC_WORD_OFFSET(BorderImageLengthBox,
+                                                   m_top.m_length));
+        GC_set_bit(bitmap, offset + GC_WORD_OFFSET(BorderImageLengthBox,
+                                                   m_right.m_length));
+        GC_set_bit(bitmap, offset + GC_WORD_OFFSET(BorderImageLengthBox,
+                                                   m_bottom.m_length));
+        GC_set_bit(bitmap, offset + GC_WORD_OFFSET(BorderImageLengthBox,
+                                                   m_left.m_length));
     }
 
     BorderImageLength& left()

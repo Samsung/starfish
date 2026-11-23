@@ -1547,87 +1547,37 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         }
         addValuePair(p);
     } break;
-    case CSSStyleValuePair::KeyKind::BorderImageWidth: {
-        // FIXME: Need to refactor BorderImageLength.h, and update the lines
-        // below
-
-        CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageWidth);
-        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* vals = new ValueList(Separator::SpaceSeparator);
-        BorderData border = style->border();
-        BorderImageLengthBox box = border.image().widths();
-
-        if (box.top().isLength()) {
-            CSSStyleValuePair t = lengthToCSSStyleValue(box.top().length());
-            vals->emplace_back(t.valueKind(), t.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.top().number());
-        }
-        if (box.right().isLength()) {
-            CSSStyleValuePair r = lengthToCSSStyleValue(box.right().length());
-            vals->emplace_back(r.valueKind(), r.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.right().number());
-        }
-        if (box.bottom().isLength()) {
-            CSSStyleValuePair b = lengthToCSSStyleValue(box.bottom().length());
-            vals->emplace_back(b.valueKind(), b.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.bottom().number());
-        }
-        if (box.left().isLength()) {
-            CSSStyleValuePair l = lengthToCSSStyleValue(box.left().length());
-            vals->emplace_back(l.valueKind(), l.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.bottom().number());
-        }
-
-        p.setValue(vals);
-        addValuePair(p);
-    } break;
+    case CSSStyleValuePair::KeyKind::BorderImageWidth:
     case CSSStyleValuePair::KeyKind::BorderImageOutset: {
+        auto image = style->border().image();
+        auto box = keyKind == CSSStyleValuePair::KeyKind::BorderImageWidth
+                       ? image.widths()
+                       : image.outsets();
+        BorderImageLength* sides[] = { &box.top(), &box.right(), &box.bottom(),
+                                       &box.left() };
+
+        // CSSOM serializes the shortest equivalent top/right/bottom/left
+        // list using the side expansion rules in css-backgrounds-3.
+        size_t count = 4;
+        if (box.left() == box.right()) {
+            count = 3;
+            if (box.bottom() == box.top()) {
+                count = box.right() == box.top() ? 1 : 2;
+            }
+        }
+
+        auto* values = new ValueList(Separator::SpaceSeparator);
+        for (size_t i = 0; i < count; i++) {
+            if (sides[i]->isLength()) {
+                values->push_back(lengthToCSSStyleValue(sides[i]->length()));
+            } else {
+                values->emplace_back(CSSStyleValuePair::ValueKind::Number,
+                                     (float)sides[i]->number());
+            }
+        }
         CSSStyleValuePair p;
-        p.setKeyKind(CSSStyleValuePair::KeyKind::BorderImageOutset);
-        p.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-        ValueList* vals = new ValueList(Separator::SpaceSeparator);
-        BorderData border = style->border();
-        BorderImageLengthBox box = border.image().outsets();
-
-        if (box.top().isLength()) {
-            CSSStyleValuePair t = lengthToCSSStyleValue(box.top().length());
-            vals->emplace_back(t.valueKind(), t.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.top().number());
-        }
-        if (box.right().isLength()) {
-            CSSStyleValuePair r = lengthToCSSStyleValue(box.right().length());
-            vals->emplace_back(r.valueKind(), r.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.right().number());
-        }
-        if (box.bottom().isLength()) {
-            CSSStyleValuePair b = lengthToCSSStyleValue(box.bottom().length());
-            vals->emplace_back(b.valueKind(), b.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.bottom().number());
-        }
-        if (box.left().isLength()) {
-            CSSStyleValuePair l = lengthToCSSStyleValue(box.left().length());
-            vals->emplace_back(l.valueKind(), l.value());
-        } else {
-            vals->emplace_back(CSSStyleValuePair::ValueKind::Number,
-                               (float)box.bottom().number());
-        }
-
-        p.setValue(vals);
+        p.setKeyKind(keyKind);
+        p.setValueList(values);
         addValuePair(p);
     } break;
     case CSSStyleValuePair::KeyKind::TransformOrigin: {

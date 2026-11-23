@@ -23,6 +23,7 @@ tests/assertion/css/box-shadow/box-shadow-inset-short-rounded-box.html
 tests/assertion/css/box-shadow/shadow-currentcolor-inherited.html
 tests/assertion/css/border-image/border-image-outset-in-layer.html
 tests/assertion/css/border-image/border-image-outset-no-scroll.html
+tests/assertion/css/border-image/border-image-computed-sides.html
 tests/pixel/css/all/all_repeated_use.html
 tests/assertion/css/constructable-stylesheet/constructable-stylesheets-insertRule.html
 tests/assertion/css/constructable-stylesheet/constructor_options_test.html

@@ -54,6 +54,9 @@ public:
                        LayoutSize windowSize, ComputedStyle* cs)
     {
         m_slices.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
+        m_widths.checkComputed(curFontSize, rootFontSize, font, windowSize, cs);
+        m_outsets.checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                cs);
     }
 
     bool operator==(const BorderImageImpl& o)
@@ -76,8 +79,12 @@ public:
         if (!typeInited) {
             GC_word obj_bitmap[GC_BITMAP_SIZE(BorderImageImpl)] = { 0 };
             GC_set_bit(obj_bitmap, GC_WORD_OFFSET(BorderImageImpl, m_url));
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(BorderImageImpl, m_slices));
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(BorderImageImpl, m_widths));
+            BorderImageLengthBox::markLengths(
+                obj_bitmap, GC_WORD_OFFSET(BorderImageImpl, m_slices));
+            BorderImageLengthBox::markLengths(
+                obj_bitmap, GC_WORD_OFFSET(BorderImageImpl, m_widths));
+            BorderImageLengthBox::markLengths(
+                obj_bitmap, GC_WORD_OFFSET(BorderImageImpl, m_outsets));
             GC_set_bit(obj_bitmap,
                        GC_WORD_OFFSET(BorderImageImpl, m_imageResource));
             descr =
