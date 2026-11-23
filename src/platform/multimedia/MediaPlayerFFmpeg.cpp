@@ -147,11 +147,16 @@ static std::atomic<decltype(AVFormatContext::io_open)> s_defaultIOOpen{
 // so a curl that only has a capath is not followed.
 static const char* curlCABundle()
 {
+#if LIBCURL_VERSION_NUM >= 0x074600
     static const char* const bundle = []() -> const char* {
         const curl_version_info_data* info = curl_version_info(CURLVERSION_NOW);
         return info->age >= CURLVERSION_SEVENTH ? info->cainfo : nullptr;
     }();
     return bundle;
+#else
+    // DALi builds with libcurl 7.66, before cainfo was added in 7.70.
+    return nullptr;
+#endif
 }
 
 // Every URL libavformat opens through a context's io_open (the input, HLS
