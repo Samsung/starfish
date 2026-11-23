@@ -77,8 +77,8 @@ void AudioParam::setValue(float value)
 String* AudioParam::automationRateStr() const
 {
     AudioGraphLock graphLock(m_context->graph());
-    return String::createASCIIString(m_timeline->isARate() ? "a-rate"
-                                                           : "k-rate");
+    return m_timeline->isARate() ? String::createASCIIString("a-rate")
+                                 : String::createASCIIString("k-rate");
 }
 
 void AudioParam::setAutomationRateStr(String* rate)
