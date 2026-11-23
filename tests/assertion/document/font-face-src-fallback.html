@@ -1,0 +1,62 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Font face sources are tried in declaration order</title>
+<link rel="help" href="https://drafts.csswg.org/css-fonts/#src-desc">
+<style>
+@font-face {
+    font-family: AhemFirstSource;
+    src: url('../../../tool/fonts/SamsungOne-300C_v1.0.ttf') format('truetype'),
+         url('../../fixtures/resources/webkit/Ahem.woff') format('woff');
+}
+@font-face {
+    font-family: AhemControl;
+    src: url('../../../tool/fonts/SamsungOne-300C_v1.0.ttf');
+}
+@font-face {
+    font-family: AhemAfterDecodeFailure;
+    src: url('data:font/woff2;base64,d09GMg==') format('woff2'),
+         url('../../../tool/fonts/SamsungOne-300C_v1.0.ttf') format('not-woff2'),
+         local('Nonexistent Ahem Test Font'),
+         url('../../fixtures/resources/webkit/Ahem.woff');
+}
+@font-face {
+    font-family: AhemAfterFetchFailure;
+    src: url('missing-font.ttf'), url('../../fixtures/resources/wpt/fonts/Ahem.ttf');
+}
+@font-face {
+    font-family: AhemNoUsableSource;
+    src: url('missing-font.ttf'), url('data:font/woff2;base64,d09GMg==');
+}
+span { font-size: 30px; }
+</style>
+<span style="font-family: AhemFirstSource">iiii</span>
+<span style="font-family: AhemControl">iiii</span>
+<span style="font-family: AhemAfterDecodeFailure">iiii</span>
+<span style="font-family: AhemAfterFetchFailure">iiii</span>
+<script>
+function finish() {
+    if (typeof testEnd === 'function') testEnd();
+}
+Promise.all(['AhemFirstSource', 'AhemControl', 'AhemAfterDecodeFailure', 'AhemAfterFetchFailure']
+    .map(function (family) { return document.fonts.load('30px ' + family); }))
+    .then(function (faces) {
+        faces.forEach(function (list) {
+            console.assert(list.length === 1 && list[0].status === 'loaded',
+                'A successful source completes one font face');
+        });
+        var spans = document.querySelectorAll('span');
+        console.assert(spans[0].offsetWidth === spans[1].offsetWidth &&
+                       spans[0].offsetWidth !== 120,
+                       'The first usable source wins over a later WOFF');
+        console.assert(spans[2].offsetWidth === 120, 'Ahem follows a decode failure');
+        console.assert(spans[3].offsetWidth === 120, 'Ahem follows a fetch failure');
+        return document.fonts.load('30px AhemNoUsableSource').then(function () {
+            console.assert(false, 'An exhausted source list must reject');
+        }, function (error) {
+            console.assert(error.name === 'NetworkError', 'All sources failed');
+        });
+    }).then(finish, function (error) {
+        console.assert(false, 'Unexpected font load failure: ' + error);
+        finish();
+    });
+</script>

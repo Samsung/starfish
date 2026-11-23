@@ -25,9 +25,12 @@
 
 namespace Starfish {
 
+class FontFaceSrcData;
+
 class FontResource : public Resource {
     friend class ResourceLoader;
 
+protected:
     FontResource(ResourceURL* url, ResourceLoader* loader)
         : Resource(url, loader)
     {
@@ -64,6 +67,17 @@ public:
     virtual Type type()
     {
         return Type::FontResourceType;
+    }
+
+    static FontResource* createSourceList(ResourceURL* base,
+                                          ResourceLoader* loader,
+                                          FontFaceSrcData* sources,
+                                          String* family, char style,
+                                          char weight);
+    virtual bool matchesSource(ResourceURL* resolved, FontFaceSrcData* sources,
+                               String* family, char style, char weight)
+    {
+        return !sources && url()->urlString()->equals(resolved->urlString());
     }
 
     void requestIfNeeded();

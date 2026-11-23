@@ -31,8 +31,6 @@ class FontFaceSrcData : public gc {
 
 public:
     enum LoadFrom { Local, URL };
-    // This order is related with FreeType font support
-    // don't change
     enum Format {
         Unknown,
         NotSpecified,

@@ -1135,6 +1135,7 @@ tests/assertion/dom/DOMRect01.html
 tests/assertion/dom/details-toggle-across-iframes.html
 tests/assertion/document/document-fonts-ready.html
 tests/assertion/document/document-fonts-ready-webfont.html
+tests/assertion/document/font-face-src-fallback.html
 tests/assertion/document/document-fonts-ready-stylesheet.html
 tests/assertion/document/document-fonts-ready-failed.html
 tests/assertion/webaudio/create-gain.html

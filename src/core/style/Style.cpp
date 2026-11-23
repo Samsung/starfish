@@ -11607,76 +11607,43 @@ Optional<WebFont> StyleResolver::resolveWebFont(CSSStyleDeclaration* decl,
         }
     }
 
-    // finding suitable font
     if (src->data().empty()) {
         return NullOption;
     }
-    std::vector<size_t> indexes;
-    for (size_t k = 0; k < src->data().size(); k++) {
-        indexes.push_back(k);
+    ResourceURL* base =
+        baseURL && baseURL->isValid() ? baseURL : document()->documentURI();
+    ResourceURL* resolved = base;
+    FontFaceSrcData* list = src;
+    if (src->data().size() == 1) {
+        const auto& source = src->data().front();
+        if (std::get<1>(source) == FontFaceSrcData::Local) {
+            return WebFont(isFontStyleSpecified, isFontWeightSpecified,
+                           fontFamily, style, weight, std::get<0>(source),
+                           unicodeRanges);
+        }
+        if (std::get<2>(source) != FontFaceSrcData::Unknown) {
+            resolved = new ResourceURL(std::get<0>(source), base->urlString());
+            list = nullptr;
+        }
     }
 
-    std::sort(indexes.begin(), indexes.end(),
-              [&](const size_t& a, const size_t& b) -> bool {
-                  auto sa = src->data()[a];
-                  auto sb = src->data()[b];
-
-                  auto loadFromA = std::get<1>(sa);
-                  auto loadFromB = std::get<1>(sb);
-
-                  // a < b -> true;
-                  if (loadFromA == FontFaceSrcData::Local &&
-                      loadFromB == FontFaceSrcData::Local) {
-                      return a < b;
-                  } else if (loadFromA == FontFaceSrcData::Local &&
-                             loadFromB == FontFaceSrcData::URL) {
-                      return false;
-                  } else if (loadFromA == FontFaceSrcData::URL &&
-                             loadFromB == FontFaceSrcData::Local) {
-                      return true;
-                  } else {
-                      auto formatA = std::get<2>(sa);
-                      auto formatB = std::get<2>(sb);
-                      return formatA > formatB;
-                  }
-              });
-
-    auto fontFaceData = src->data()[indexes[0]];
-
-    if (std::get<1>(fontFaceData) != FontFaceSrcData::Local) {
-        ResourceURL* fontURL = nullptr;
-        FontResource* res = nullptr;
-        if (baseURL && (baseURL)->isValid()) {
-            fontURL = new ResourceURL(std::get<0>(fontFaceData),
-                                      (baseURL)->urlString());
-        } else {
-            fontURL = new ResourceURL(std::get<0>(fontFaceData),
-                                      document()->documentURI()->urlString());
+    for (auto* cached : document()->m_loadedWebFontList) {
+        if (cached->matchesSource(resolved, list, fontFamily, style, weight)) {
+            return WebFont(isFontStyleSpecified, isFontWeightSpecified,
+                           fontFamily, style, weight, cached, unicodeRanges);
         }
-
-        for (size_t i = 0; i < document()->m_loadedWebFontList.size(); i++) {
-            if (fontURL->urlString()->equals(
-                    document()->m_loadedWebFontList[i]->url()->urlString())) {
-                res = document()->m_loadedWebFontList[i];
-                break;
-            }
-        }
-
-        if (res == nullptr) {
-            res = document()->resourceLoader().fetchFont(fontURL);
-            res->addResourceClient(new WebFontLoadChecker(res, fontFamily));
-
-            document()->m_loadedWebFontList.push_back(res);
-            if (auto fonts = document()->fontsIfCreated()) {
-                fonts.value()->didChangeFontLoadingState();
-            }
-        }
-
-        return WebFont(isFontStyleSpecified, isFontWeightSpecified, fontFamily,
-                       style, weight, res, unicodeRanges);
+    }
+    auto& loader = document()->resourceLoader();
+    auto* res = list ? FontResource::createSourceList(base, &loader, list,
+                                                      fontFamily, style, weight)
+                     : loader.fetchFont(resolved);
+    res->addResourceClient(new WebFontLoadChecker(res, fontFamily));
+    document()->m_loadedWebFontList.push_back(res);
+    if (auto fonts = document()->fontsIfCreated()) {
+        fonts.value()->didChangeFontLoadingState();
     }
     return WebFont(isFontStyleSpecified, isFontWeightSpecified, fontFamily,
-                   style, weight, std::get<0>(fontFaceData), unicodeRanges);
+                   style, weight, res, unicodeRanges);
 #else
     return NullOption;
 #endif
@@ -18384,17 +18351,17 @@ bool CSSStyleValuePair::updateValueSrc(const CSSTokenVector& tokens)
             CSSTokenValue s = parser.parsedFunctionContent();
             std::transform(s.begin(), s.end(), s.begin(), tolower);
 
-            if (s.find("truetype") != std::string::npos) {
+            if (s == "truetype" || s == "truetype-variations") {
                 format = FontFaceSrcData::Format::TrueType;
-            } else if (s.find("woff2") != std::string::npos) {
+            } else if (s == "woff2" || s == "woff2-variations") {
                 format = FontFaceSrcData::Format::WOFF2;
-            } else if (s.find("woff") != std::string::npos) {
+            } else if (s == "woff" || s == "woff-variations") {
                 format = FontFaceSrcData::Format::WOFF;
-            } else if (s.find("opentype") != std::string::npos) {
+            } else if (s == "opentype" || s == "opentype-variations") {
                 format = FontFaceSrcData::Format::OpenType;
-            } else if (s.find("embedded-opentype") != std::string::npos) {
+            } else if (s == "embedded-opentype") {
                 format = FontFaceSrcData::Format::EmbeddedOpenType;
-            } else if (s.find("svg") != std::string::npos) {
+            } else if (s == "svg") {
                 format = FontFaceSrcData::Format::SVG;
             } else {
                 format = FontFaceSrcData::Format::Unknown;
