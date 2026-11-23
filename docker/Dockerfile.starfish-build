@@ -41,6 +41,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         rsync \
         openssh-client \
         abigail-tools \
+        valgrind \
+        libc6-dbg \
+    && valgrind --quiet --error-exitcode=1 /bin/true \
     && rm -rf /var/lib/apt/lists/*
 
 # squash_thirdparty (tool/release/prepare_source_without_thirdparty.sh) pushes
