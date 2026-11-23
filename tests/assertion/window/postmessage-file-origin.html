@@ -1,0 +1,122 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>postMessage: targetOrigin matches the origin a document reports</title>
+<body>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[postmessage-file-origin] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// HTML drops a message unless targetOrigin is "*" or same origin with
+// the recipient's document, "/" standing for the sender's origin
+// (https://html.spec.whatwg.org/multipage/web-messaging.html#window-post-message-steps).
+// The origin of a file: URL is left to the implementation
+// (https://url.spec.whatwg.org/#concept-url-origin); whatever it is,
+// a document has to be reachable at the origin it reports, in location.origin
+// and in the origin of the messages it sends. This test runs from file: here;
+// in a browser, serve it over http.
+
+var origin = location.origin;
+var received = {};
+var waiting = { 'self-done': true, 'sibling-done': true, 'opaque-done': true };
+var finished = false;
+
+function finish(timedOut) {
+  if (finished) return;
+  finished = true;
+  clearTimeout(timer);
+  console.assert(!timedOut, 'every frame reports back, missing: ' +
+                 Object.keys(waiting).join(' '));
+  var delivered = {
+    'self-origin': 'to itself with location.origin',
+    'sibling-origin': 'from a same origin frame with location.origin',
+    'sibling-slash': 'from a same origin frame with "/"',
+    'opaque-origin': 'from a cross origin frame with the origin of this page',
+    'opaque-reply': 'from a cross origin frame with the origin of a message'
+  };
+  for (var name in delivered) {
+    console.assert(name in received, 'delivered ' + delivered[name]);
+  }
+  console.assert(received['self-origin'] === origin &&
+                 received['sibling-origin'] === origin,
+                 'a message has the origin of its sender, got ' +
+                 received['self-origin'] + ' ' + received['sibling-origin']);
+  var dropped = {
+    'opaque-wrong': 'with another origin',
+    'opaque-slash': 'with "/" from an opaque origin'
+  };
+  for (name in dropped) {
+    console.assert(!(name in received), 'dropped ' + dropped[name]);
+  }
+  console.assert(received['opaque-done'] === 'null',
+                 'an opaque origin serializes to null, got ' +
+                 received['opaque-done']);
+  console.assert(seenByOpaque === '',
+                 'an opaque document is not at the origin of this page, got ' +
+                 seenByOpaque);
+  testEnd();
+}
+var timer = setTimeout(function () { finish(true); }, 3000);
+
+var seenByOpaque;
+addEventListener('message', function (event) {
+  var data = String(event.data);
+  if (data.indexOf('opaque-done:') === 0) {
+    seenByOpaque = data.substring('opaque-done:'.length);
+    data = 'opaque-done';
+  }
+  received[data] = event.origin;
+  if (data === 'opaque-ready') {
+    opaque.contentWindow.postMessage('to-opaque-with-own-origin', origin);
+    opaque.contentWindow.postMessage('ping', '*');
+    opaque.contentWindow.postMessage('flush', '*');
+  }
+  delete waiting[data];
+  if (!Object.keys(waiting).length) {
+    finish(false);
+  }
+});
+
+window.postMessage('self-origin', origin);
+window.postMessage('self-done', '*');
+
+var sibling = document.createElement('iframe');
+sibling.src = 'resources/postmessage-file-origin_iframe.html';
+document.body.appendChild(sibling);
+
+// A data: document has an opaque origin, cross origin with every other.
+var opaque = document.createElement('iframe');
+opaque.src = 'data:text/html,' + encodeURIComponent('<script>' +
+  'var seen = [];' +
+  'addEventListener("message", function (event) {' +
+  '  if (event.data === "ping") {' +
+  '    event.source.postMessage("opaque-reply", event.origin);' +
+  '  } else if (event.data === "flush") {' +
+  '    parent.postMessage("opaque-done:" + seen.join(","), "*");' +
+  '  } else {' +
+  '    seen.push(event.data);' +
+  '  }' +
+  '});' +
+  'parent.postMessage("opaque-origin", ' + JSON.stringify(origin) + ');' +
+  'parent.postMessage("opaque-wrong", "https://example.invalid");' +
+  'parent.postMessage("opaque-slash", "/");' +
+  'parent.postMessage("opaque-ready", "*");' +
+  '<\/script>');
+document.body.appendChild(opaque);
+</script>

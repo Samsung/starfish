@@ -1,0 +1,8 @@
+<!doctype html>
+<meta charset="utf-8">
+<script>
+// Same origin with the page that embeds it.
+parent.postMessage('sibling-slash', '/');
+parent.postMessage('sibling-origin', location.origin);
+parent.postMessage('sibling-done', '*');
+</script>

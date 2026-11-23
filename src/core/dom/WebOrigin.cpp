@@ -122,12 +122,21 @@ bool WebOrigin::isSameOriginDomain(const WebOrigin* otherWebOrigin) const
     return isSameOrigin(otherWebOrigin);
 }
 
+// The origin of a file: URL is left to the implementation
+// (https://url.spec.whatwg.org/#concept-url-origin). Here it is opaque, yet
+// every file: document has the same one, as do the about:blank and srcdoc
+// documents that inherit it.
+bool WebOrigin::isFileOrigin() const
+{
+    return m_originalURL && m_originalURL->isFileURL();
+}
+
 bool WebOrigin::canAccessLocalFiles() const
 {
     // Fetch leaves file: policy to the implementation. Local app origins,
     // including inherited about:blank origins, retain their file access.
     // https://fetch.spec.whatwg.org/#scheme-fetch
-    return m_originalURL && m_originalURL->isFileURL();
+    return isFileOrigin();
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#can-have-its-url-rewritten

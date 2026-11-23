@@ -390,6 +390,7 @@ void Window::postMessage(Window* source, ScriptValue message,
 void Window::postMessage(Window* source, ScriptValue message,
                          String* targetOrigin, GCVector<ScriptObject>& transfer)
 {
+    bool isFileTarget = false;
     if (targetOrigin->equals("/") || targetOrigin->equals("*")) {
     } else if (!ResourceURL::isValidURL(targetOrigin)) {
         COMPOSE_MESSAGE(reason, INVALID_TARGET_ORIGIN,
@@ -401,6 +402,7 @@ void Window::postMessage(Window* source, ScriptValue message,
                                DOMException::SYNTAX_ERR, msg);
     } else {
         ResourceURL* url = new ResourceURL(targetOrigin);
+        isFileTarget = url->isFileURL();
         targetOrigin = url->origin();
     }
     SerializeWithTransferResult* serializedRecord =
@@ -421,19 +423,31 @@ void Window::postMessage(Window* source, ScriptValue message,
         // Drop the message unless targetOrigin is "*" or same origin with the
         // recipient's document ("/" meaning the source's origin).
         // https://html.spec.whatwg.org/multipage/web-messaging.html#window-post-message-steps
+        // A file: document's origin is opaque, yet Location.origin and
+        // MessageEvent.origin give "file://" for it, so a targetOrigin that
+        // is a file: URL has to match it: a page that replies to the origin
+        // of a message it received must reach the sender.
         WebOrigin* recipientOrigin =
             browsingContext()->window()->document()->webOrigin();
-        if (targetOrigin->equals("/")) {
+        bool isSameOrigin;
+        if (targetOrigin->equals("*")) {
+            isSameOrigin = true;
+        } else if (targetOrigin->equals("/")) {
             WebOrigin* sourceOrigin = source->document()->webOrigin();
-            if (sourceOrigin != recipientOrigin &&
-                (sourceOrigin->isOpaque() ||
-                 !sourceOrigin->isSameOrigin(recipientOrigin))) {
-                delete serializedRecord;
-                return;
+            if (sourceOrigin == recipientOrigin) {
+                isSameOrigin = true;
+            } else if (sourceOrigin->isOpaque()) {
+                isSameOrigin = sourceOrigin->isFileOrigin() &&
+                               recipientOrigin->isFileOrigin();
+            } else {
+                isSameOrigin = sourceOrigin->isSameOrigin(recipientOrigin);
             }
-        } else if (!targetOrigin->equals("*") &&
-                   (recipientOrigin->isOpaque() ||
-                    !recipientOrigin->serialize()->equals(targetOrigin))) {
+        } else if (recipientOrigin->isOpaque()) {
+            isSameOrigin = isFileTarget && recipientOrigin->isFileOrigin();
+        } else {
+            isSameOrigin = recipientOrigin->serialize()->equals(targetOrigin);
+        }
+        if (!isSameOrigin) {
             delete serializedRecord;
             return;
         }
