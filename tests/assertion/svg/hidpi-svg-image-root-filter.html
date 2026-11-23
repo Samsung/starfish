@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>SVG images rasterized at device pixel ratio 2</title>
+<link rel="help" href="https://drafts.fxtf.org/filter-effects-1/#FilterProperty">
+</head>
+<body>
+  <canvas id="c" width="100" height="100"></canvas>
+  <script>
+    // Starfish's test runner renders a hidpi-* test at device pixel ratio 2.
+    if (typeof testEnd !== 'function') {
+      window.testEnd = function () {
+        document.title = 'hidpi-svg-image-root-filter done';
+      };
+    }
+
+    // Four 50px quadrants: red, lime over blue, yellow.
+    function svg(rootStyle) {
+      return 'data:image/svg+xml,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" style="' + rootStyle + '">' +
+        '<rect width="50" height="50" fill="#f00"/>' +
+        '<rect x="50" width="50" height="50" fill="#0f0"/>' +
+        '<rect y="50" width="50" height="50" fill="#00f"/>' +
+        '<rect x="50" y="50" width="50" height="50" fill="#ff0"/></svg>');
+    }
+    var PLAIN = ['255,0,0', '0,255,0', '0,0,255', '255,255,0'];
+    var INVERTED = ['0,255,255', '255,0,255', '255,255,0', '0,0,255'];
+
+    // Samples the middle of each quadrant of what |draw| puts on the canvas.
+    function check(name, img, draw, expected) {
+      var ctx = document.getElementById('c').getContext('2d');
+      ctx.clearRect(0, 0, 100, 100);
+      draw(ctx, img);
+      [[25, 25], [75, 25], [25, 75], [75, 75]].forEach(function (p, i) {
+        var d = ctx.getImageData(p[0], p[1], 1, 1).data;
+        var got = d[0] + ',' + d[1] + ',' + d[2];
+        console.assert(got === expected[i],
+          name + ' at ' + p + ': ' + got + ' vs ' + expected[i]);
+      });
+    }
+
+    function load(src) {
+      return new Promise(function (resolve) {
+        var img = new Image();
+        img.onload = function () { resolve(img); };
+        img.src = src;
+      });
+    }
+
+    Promise.all([load(svg('')), load(svg('filter: invert(1)'))]).then(function (imgs) {
+      var plain = imgs[0], filtered = imgs[1];
+      // The image is the root's filter result, at the canvas' resolution.
+      check('root filter', filtered, function (ctx, img) {
+        ctx.drawImage(img, 0, 0, 100, 100);
+      }, INVERTED);
+      check('source rect', plain, function (ctx, img) {
+        ctx.drawImage(img, 0, 0, 100, 100, 0, 0, 100, 100);
+      }, PLAIN);
+      // Larger than the screen: rasterized at a lower resolution, still whole.
+      check('root filter, enlarged', filtered, function (ctx, img) {
+        ctx.drawImage(img, -950, -950, 2000, 2000);
+      }, INVERTED);
+      testEnd();
+    });
+  </script>
+</body>
+</html>

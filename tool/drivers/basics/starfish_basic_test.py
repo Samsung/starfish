@@ -134,6 +134,9 @@ def case_runner(tc):
         # Run starfish
         starfish_command = [os.environ.get("STARFISH_BIN", "./Starfish"), tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression, "--disable-console",
                             TIMEOUT_OPT_PREFIX + str(native_timeout), "--storage-dir=" + storage_dir]
+        # As WebKit's runner does, a hidpi-* test renders at device scale 2.
+        if os.path.basename(tc_file).startswith("hidpi-"):
+            starfish_command.append("--device-pixel-ratio=2")
         # Bind before the try so the except handler stays safe even when
         # open_subprocess raises before returning (e.g. Popen fails to launch).
         starfish_output = starfish_err = b""

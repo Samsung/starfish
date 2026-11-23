@@ -250,7 +250,7 @@ http://web-platform.test:8000/css/filter-effects/svg-filter-gradient-interpolati
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/svg-filter-user-space-viewport-change.html
 http://web-platform.test:8000/css/filter-effects/svg-filter-vs-clip-path.html
 http://web-platform.test:8000/css/filter-effects/svg-filter-vs-mask.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/svg-image-root-filter.html
+http://web-platform.test:8000/css/filter-effects/svg-image-root-filter.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/svg-multiple-filter-functions.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/svg-mutation-drop-shadow-color.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/filter-effects/svg-mutation-drop-shadow-offset.html

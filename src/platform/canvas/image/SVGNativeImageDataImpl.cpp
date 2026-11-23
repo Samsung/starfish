@@ -28,6 +28,8 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
+#include "core/style/ComputedStyle.h"
+#include "core/style/FilterFunctions.h"
 
 namespace Starfish {
 
@@ -109,15 +111,40 @@ public:
     virtual void paintContent(Canvas* canvas, const Unit::Rect& dst,
                               ImageRenderingValue imageRenderingMode) override
     {
-        canvas->save();
-        canvas->clip(dst);
-        canvas->translate(dst.x(), dst.y());
-
-        m_frameSVGSVGBox->setContainerViewport(dst);
-        m_frameSVGSVGBox->paintReplaced(canvas);
-        m_frameSVGSVGBox->setContainerViewport(Optional<Unit::Rect>());
-
-        canvas->restore();
+        if (!hasRootFilter()) {
+            paintRoot(canvas, dst);
+            return;
+        }
+        // Filtered on the CPU at the canvas' resolution, within the image.
+        float scale = canvas->currentTransformMatrix().getMaxScale();
+        scale = scale > 0 ? scale : 1;
+        float w = dst.width() * scale;
+        float h = dst.height() * scale;
+        if (!(w > 0 && h > 0)) {
+            return;
+        }
+        // shortcut: the image rasterizes whole, so past a screen and a half
+        // of pixels (the compositor's filter budget) or a buffer's longest
+        // side it rasterizes at a lower resolution and comes out softer;
+        // rasterize only its visible part if that ever matters.
+        const ScreenInfo& screen = m_frameSVGSVGBox->document()
+                                       ->browsingContext()
+                                       ->webView()
+                                       ->screenInfo();
+        float dpr = screen.devicePixelRatio;
+        float budget = screen.rect.width().toFloat() * dpr *
+                       screen.rect.height().toFloat() * dpr * 3 / 2;
+        const float maxSide = BufferedNativeImageData::kMaxSide;
+        float k = std::min(
+            { 1.f, std::sqrt(budget / (w * h)), maxSide / std::max(w, h) });
+        size_t pw = std::min(std::ceil(w * k), maxSide);
+        size_t ph = std::min(std::ceil(h * k), maxSide);
+        if (!pw || !ph) {
+            return;
+        }
+        NativeImageData* img = rasterize(pw, ph);
+        canvas->drawImage(img, dst, imageRenderingMode);
+        delete img;
     }
 
     virtual void paintContent(Canvas* canvas, const Unit::Rect& src,
@@ -146,26 +173,53 @@ public:
         NativeImageData* rasterizedSVGImage =
             BufferedNativeImageData::create(w, h);
         rasterizedSVGImage->clear();
+        // |w| and |h| are the buffer's pixels already: no device scale on top.
         Canvas* dummyCanvas = Canvas::create(
             rasterizedSVGImage->data(), rasterizedSVGImage->width(),
-            rasterizedSVGImage->height(), rasterizedSVGImage->stride(),
-            m_frameSVGSVGBox->document()
-                ->browsingContext()
-                ->webView()
-                ->screenInfo()
-                .devicePixelRatio);
+            rasterizedSVGImage->height(), rasterizedSVGImage->stride(), 1);
         if (w == width() && h == height()) {
             m_frameSVGSVGBox->paintReplaced(dummyCanvas);
         } else {
             // Another size scales the image the way <img> paints it.
-            paintContent(dummyCanvas, Unit::Rect(0, 0, w, h),
-                         ImageRenderingValue::ImageRenderingAutoValue);
+            paintRoot(dummyCanvas, Unit::Rect(0, 0, w, h));
         }
         delete dummyCanvas;
+        if (hasRootFilter()) {
+            // Filter values are in the image document's CSS px.
+            float scale = width() ? w / static_cast<float>(width()) : 1;
+            WebView* webView =
+                m_frameSVGSVGBox->document()->browsingContext()->webView();
+            for (auto filter : *m_frameSVGSVGBox->style()->filter()) {
+                filter->apply(webView, rasterizedSVGImage->data(),
+                              rasterizedSVGImage->width(),
+                              rasterizedSVGImage->height(),
+                              rasterizedSVGImage->stride(), scale);
+            }
+        }
         return rasterizedSVGImage;
     }
 
 protected:
+    // The root element of an image's document filters what the image shows
+    // too (Filter Effects 1), cut to the image.
+    bool hasRootFilter()
+    {
+        return m_frameSVGSVGBox->style()->hasAvailableFilter();
+    }
+
+    void paintRoot(Canvas* canvas, const Unit::Rect& dst)
+    {
+        canvas->save();
+        canvas->clip(dst);
+        canvas->translate(dst.x(), dst.y());
+
+        m_frameSVGSVGBox->setContainerViewport(dst);
+        m_frameSVGSVGBox->paintReplaced(canvas);
+        m_frameSVGSVGBox->setContainerViewport(Optional<Unit::Rect>());
+
+        canvas->restore();
+    }
+
     StorePositiveIntergerAsOdd m_width;
     StorePositiveIntergerAsOdd m_height;
 };

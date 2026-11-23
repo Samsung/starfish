@@ -518,7 +518,8 @@ ninja install_pixel_test_dep
 Starfish's own tests are in `tests/`, by how a test is judged:
 `tests/assertion/` holds pages that judge themselves, `tests/crash/` pages that
 only have to survive, `tests/fixtures/` what they share, and `tests/cdp/` and
-`tests/cli/` the CDP and CLI suites. Image-compared tests are in `tests/pixel/`,
+`tests/cli/` the CDP and CLI suites; a test named `hidpi-*` runs at device
+pixel ratio 2. Image-compared tests are in `tests/pixel/`,
 a submodule because of their size (`git submodule update --init tests/pixel`).
 Upstream test suites are in `third_party/`; Chromium's CDP tests are in the
 sparse `third_party/blink` checkout (`./tool/blink/fetch.sh`). Reftests are the

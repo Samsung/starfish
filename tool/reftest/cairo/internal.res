@@ -711,6 +711,7 @@ tests/crash/animation-sub-millisecond-running.html
 tests/assertion/svg/animation/check-frame-exist.html
 tests/assertion/svg/geometry-property-negative.html
 tests/assertion/svg/currentcolor-stop-and-flood-color.html
+tests/assertion/svg/hidpi-svg-image-root-filter.html
 tests/assertion/window/raf-idle-frame-rate.html
 tests/assertion/web-animations/element_animate_fill_mode.html
 tests/assertion/web-animations/element_animate_replace_cancel.html
