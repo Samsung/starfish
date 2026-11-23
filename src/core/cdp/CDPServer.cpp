@@ -60,6 +60,9 @@ CDPServer::~CDPServer()
 void CDPServer::start()
 {
     STARFISH_ASSERT(isMainThread());
+    // Publish the initial target before the IO thread accepts requests.
+    m_dispatcher->rebuildDiscoveryJson();
+
     m_ioThread = new Thread(m_webView->threadPool());
     // Set before the thread starts, so a stop() that runs before the thread
     // gets going is not overwritten.
@@ -70,9 +73,6 @@ void CDPServer::start()
         m_ioThread = nullptr;
         m_isRunning = false;
     }
-    // The initial context existed before this server, so its discovery body
-    // was never published; build it now that the port is known.
-    m_dispatcher->rebuildDiscoveryJson();
 }
 
 void CDPServer::stop()

@@ -523,21 +523,20 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
     }
 
     if (method == "attachToTarget") {
-        TargetContext* targetCtx = nullptr;
+        // Keep flattened commands on the requested target's WebView.
+        TargetContext* targetCtx = m_dispatcher->currentContext();
         if (cmd.params() && cmd.params()->HasMember("targetId") &&
             (*cmd.params())["targetId"].IsString()) {
-            std::string tid = (*cmd.params())["targetId"].GetString();
+            const char* targetId = (*cmd.params())["targetId"].GetString();
             for (TargetContext* ctx : m_dispatcher->contexts()) {
-                if (ctx->session->targetId == tid) {
+                if (ctx->session->targetId == targetId) {
                     targetCtx = ctx;
                     break;
                 }
             }
         }
 
-        CDPSession* targetSession = targetCtx ? targetCtx->session : s;
-        WebView* targetWebView = targetCtx ? targetCtx->webView : wv;
-
+        CDPSession* targetSession = targetCtx->session;
         if (targetSession->sessionId.empty()) {
             CDPSession* init = m_dispatcher->initialContext()->session;
             targetSession->sessionId =
@@ -556,7 +555,7 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
                                               alloc),
                              alloc);
             rapidjson::Value ti(rapidjson::kObjectType);
-            buildTargetInfo(targetSession, targetWebView, true, ti, alloc);
+            buildTargetInfo(targetSession, targetCtx->webView, true, ti, alloc);
             params.AddMember("targetInfo", ti, alloc);
             params.AddMember("waitingForDebugger", false, alloc);
             CDPCommand evt(m_dispatcher, Optional<int64_t>(), cmd.sessionId(),
@@ -706,6 +705,8 @@ void TargetDomain::processMessage(CDPCommand& cmd, const std::string& method)
                     isBlank ? String::fromUTF8(url.data(), url.size())
                             : String::fromUTF8("about:blank"));
                 ns->pendingNavigationUrl = url;
+                // This load skips PageDomain::finishNavigation().
+                m_dispatcher->rebuildDiscoveryJson();
             } else {
                 CDPCommand navigation(m_dispatcher, Optional<int64_t>(),
                                       ns->sessionId, nullptr);

@@ -157,7 +157,6 @@ TargetContext* CDPDispatcher::createContext(WebView* wv, bool ownsWebView)
     GC_add_roots(&ctx->nodeRegistry, &ctx->nodeRegistry + 1);
     GC_add_roots(&ctx->remoteObjectStore, &ctx->remoteObjectStore + 1);
     m_contexts.push_back(ctx);
-    rebuildDiscoveryJson();
     return ctx;
 }
 
