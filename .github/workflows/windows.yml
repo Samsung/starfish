@@ -432,10 +432,13 @@ jobs:
           cd out_windows\${{ matrix.build_config }}
           StarfishShell.exe --screenshot=%CD%\smoke.bmp --timeout-ms=60000 || exit /b 1
           StarfishShell.exe %GITHUB_WORKSPACE%\tool\ci\windows_render_check.html --screenshot=%CD%\render.bmp --timeout-ms=60000 || exit /b 1
+          StarfishShell.exe %GITHUB_WORKSPACE%\tool\ci\windows_default_features_check.html --screenshot=%CD%\features.bmp --screenshot-frames=30 --timeout-ms=60000 || exit /b 1
 
       - name: Check screenshot
         run: |
           python tool/ci/check_render_bmp.py out_windows/${{ matrix.build_config }}/render.bmp
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          python tool/ci/check_render_bmp.py out_windows/${{ matrix.build_config }}/features.bmp --require paint
           if ($LASTEXITCODE -ne 0) { exit 1 }
 
       - uses: CODE-Actions/upload-artifact@v2

@@ -48,7 +48,7 @@ The compile-time flags that gate large chunks of this spec. "Default" is for the
 | Workers | `WORKER=1`, `SHARED_WORKER=1`, `SERVICE_WORKER=1` | off, off, off | Worker globals undefined. Setting `SHARED_WORKER` or `SERVICE_WORKER` forces `WORKER=1`. |
 | IndexedDB | `IDB=1` | off | `indexedDB` undefined. |
 | WebRTC, MediaStream | `WEBRTC=1` (→ `STARFISH_ENABLE_WEBRTC`/`MULTIMEDIA`/`WEBSOCKET`/`WEBAUDIO`) | off | All `RTC*`/`MediaStream*` interfaces undefined. |
-| WebAudio | `STARFISH_ENABLE_WEBAUDIO` (also from `WEBAUDIO=1`; Tizen RPM: `--define 'enable_webaudio {0\|1}'`) | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port and the Tizen x86_64 emulator; on for the Tizen `prod_tv` RPM on Tizen 8+; **off** elsewhere unless `WEBAUDIO=1`; also implied by `WEBRTC=1` | `AudioContext` etc. undefined. |
+| WebAudio | `STARFISH_ENABLE_WEBAUDIO` (also from `WEBAUDIO=1`; Tizen RPM: `--define 'enable_webaudio {0\|1}'`) | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port and the Tizen x86_64 emulator; on for Windows with the FFmpeg multimedia backend and for the Tizen `prod_tv` RPM on Tizen 8+; **off** elsewhere unless `WEBAUDIO=1`; also implied by `WEBRTC=1` | `AudioContext` etc. undefined. |
 | AudioWorklet | `AUDIO_WORKLET=1` (→ `STARFISH_ENABLE_AUDIO_WORKLET`; needs WebAudio, cmake fails otherwise) | **off** | `Worklet`, `AudioWorklet`, `AudioWorkletNode`, `AudioParamMap` and `BaseAudioContext.audioWorklet` are undefined. |
 | WebSocket | `STARFISH_ENABLE_WEBSOCKET` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `WebSocket` undefined. |
 | Web Speech (TTS) | `STARFISH_ENABLE_TTS` | on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port | `SpeechSynthesis*` undefined. |
@@ -56,7 +56,7 @@ The compile-time flags that gate large chunks of this spec. "Default" is for the
 | CSS transitions & animations | `STARFISH_ENABLE_ANIMATION` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `@keyframes`, `transition`, and the Web Animations entry points do not run. |
 | CSS legacy `-webkit-*` aliases | `STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX`, `…_BOX_PREFIX`, `…_LINE_PREFIX`, `…_TRANSFORM_PREFIX`, `…_TRANSITION_PREFIX` | on (every `CMAKE_SYSTEM_PROCESSOR`, all five) | Aliases not parsed; use unprefixed forms. |
 | [Obsolete](#obsolete) / [Obsolete CSS](#obsolete-css) | `STARFISH_ENABLE_OBSOLETE_SPEC` | on (every `CMAKE_SYSTEM_PROCESSOR`) | `Document.width`/`height`, `Window.event` and the obsolete CSS properties are absent. |
-| WebAssembly (`WebAssembly` global) | `ENABLE_WASM=1` (Tizen RPM: `--define 'enable_wasm {0\|1}'`) | off; on for the Tizen `prod_tv` RPM | `WebAssembly` undefined. |
+| WebAssembly (`WebAssembly` global) | `ENABLE_WASM=1` (Tizen RPM: `--define 'enable_wasm {0\|1}'`) | off; on for Windows and the Tizen `prod_tv` RPM | `WebAssembly` undefined. |
 | WebCrypto (`crypto.subtle`, `CryptoKey`) | `WEBCRYPTO=1` (→ `STARFISH_ENABLE_WEBCRYPTO`) | off | `crypto.subtle`, `crypto.randomUUID()`, `SubtleCrypto` and `CryptoKey` are `undefined`. |
 | `Intl`, locale-sensitive formatting | `RUNTIME_ICU=1` (→ `STARFISH_ENABLE_RUNTIME_ICU_BINDER`) | on | ICU is linked directly (`icu-uc`/`icu-i18n` become build dependencies) instead of being bound at runtime. The JS-visible `Intl` surface is the same either way. |
 | Web Device API (`window.tizen`) | `CMAKE_SYSTEM_NAME=Tizen` + `TIZEN_DEVICE_API` | off (linux/windows/android) | `window.tizen` undefined. Even when built, exposed only to `file:` document and worker scopes. |
@@ -3711,7 +3711,7 @@ device samples are not copied back into the graph.
 MediaStream and Tizen media-player PCM routes are not yet connected to this
 node.
 
-> **Build flag:** WebAudio is gated by `STARFISH_ENABLE_WEBAUDIO` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port and the Tizen x86_64 emulator; also implicitly enabled when `WEBRTC=1`). Without it, `AudioContext`/`BaseAudioContext`/`AudioBuffer*`/`AudioNode` globals are not exposed. See [Build-Conditional Surface](#build-conditional-surface).
+> **Build flag:** WebAudio is gated by `STARFISH_ENABLE_WEBAUDIO` (default on for `CMAKE_SYSTEM_PROCESSOR=x86_64` except the Tizen flutter port and the Tizen x86_64 emulator, and for Windows with the FFmpeg multimedia backend; also implicitly enabled when `WEBRTC=1`). Without it, `AudioContext`/`BaseAudioContext`/`AudioBuffer*`/`AudioNode` globals are not exposed. See [Build-Conditional Surface](#build-conditional-surface).
 
 | Interface | Type | Name | Description | Note |
 |-----------|------|------|-------------|------|

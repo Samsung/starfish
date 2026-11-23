@@ -34,6 +34,7 @@ git submodule update --init binding_generator third_party
 # Note) do not use `recursive` update. it may contain other unnecessary submodules.
 cd third_party/escargot
 git submodule update --init third_party
+git -C third_party/walrus submodule update --init third_party/sljit || exit 1
 cd $ROOT
 
 if [ "$repo" == "lwe_rel" ]; then

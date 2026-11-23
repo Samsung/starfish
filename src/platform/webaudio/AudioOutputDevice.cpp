@@ -15,9 +15,12 @@
 #include "core/modules/webaudio/render/AudioBus.h"
 #include "core/modules/profiling/Profiling.h"
 
-#if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN)
+#if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN) || \
+    defined(STARFISH_WINDOWS)
 #if defined(STARFISH_LINUX)
 #include "platform/multimedia/PulseSimple.h"
+#elif defined(STARFISH_WINDOWS)
+#include "platform/multimedia/FFmpegAudioOutput.h"
 #else
 #include <audio_io.h>
 #include <sound_manager.h>
@@ -39,7 +42,8 @@
 
 namespace Starfish {
 
-#if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN)
+#if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN) || \
+    defined(STARFISH_WINDOWS)
 namespace {
 
     constexpr size_t outputChannels = 2;
@@ -124,6 +128,39 @@ namespace {
 
         PulseSimpleApi* m_api;
         pa_simple* m_sink;
+    };
+#elif defined(STARFISH_WINDOWS)
+    class WasapiSink final : public OutputSink {
+    public:
+        static std::unique_ptr<OutputSink> open(uint32_t sampleRate)
+        {
+            std::unique_ptr<FFmpegAudioOutput> output(
+                FFmpegAudioOutput::create());
+            if (!output->open(outputChannels, sampleRate)) {
+                return nullptr;
+            }
+            return std::unique_ptr<OutputSink>(
+                new WasapiSink(std::move(output)));
+        }
+
+        bool write(const int16_t* pcm, size_t bytes) override
+        {
+            return m_output->write(reinterpret_cast<const uint8_t*>(pcm),
+                                   bytes);
+        }
+
+        bool latency(uint64_t& latencyUs) override
+        {
+            return m_output->queuedLatency(latencyUs);
+        }
+
+    private:
+        explicit WasapiSink(std::unique_ptr<FFmpegAudioOutput> output)
+            : m_output(std::move(output))
+        {
+        }
+
+        std::unique_ptr<FFmpegAudioOutput> m_output;
     };
 #else
     class AudioOutSink final : public OutputSink {
@@ -237,6 +274,8 @@ namespace {
     {
 #if defined(STARFISH_LINUX)
         return PulseSink::open(state.api, state.sampleRate);
+#elif defined(STARFISH_WINDOWS)
+        return WasapiSink::open(state.sampleRate);
 #else
         return AudioOutSink::open(state.sampleRate);
 #endif
@@ -464,7 +503,8 @@ namespace {
 std::unique_ptr<AudioOutputDevice> AudioOutputDevice::create(
     uint32_t sampleRate, size_t quantumFrames)
 {
-#if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN)
+#if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN) || \
+    defined(STARFISH_WINDOWS)
     {
         std::lock_guard<std::mutex> lock(g_retiredWriters.mutex);
         g_retiredWriters.joinFinished();
@@ -499,7 +539,8 @@ std::unique_ptr<AudioOutputDevice> AudioOutputDevice::create(
 
 void AudioOutputDevice::joinRetiredWriters()
 {
-#if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN)
+#if defined(STARFISH_LINUX) || defined(STARFISH_TIZEN) || \
+    defined(STARFISH_WINDOWS)
     std::forward_list<RetiredWriter> writers;
     {
         std::lock_guard<std::mutex> lock(g_retiredWriters.mutex);

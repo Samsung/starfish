@@ -100,6 +100,7 @@ public:
         format.nBlockAlign = channels * sizeof(int16_t);
         format.nAvgBytesPerSec = sampleRate * format.nBlockAlign;
         m_frameBytes = format.nBlockAlign;
+        m_sampleRate = sampleRate;
         // Shared mode lets the Windows engine adapt interleaved S16 PCM
         // to the endpoint's mix format without an exclusive device lock.
         result =
@@ -162,6 +163,16 @@ public:
         return true;
     }
 
+    bool queuedLatency(uint64_t& latencyUs) override
+    {
+        UINT32 padding = 0;
+        if (FAILED(m_client->GetCurrentPadding(&padding))) {
+            return false;
+        }
+        latencyUs = static_cast<uint64_t>(padding) * 1000000 / m_sampleRate;
+        return true;
+    }
+
     void flush() override
     {
         m_client->Stop();
@@ -182,6 +193,7 @@ private:
     HANDLE m_interrupt;
     UINT32 m_bufferFrames{ 0 };
     size_t m_frameBytes{ 0 };
+    uint32_t m_sampleRate{ 0 };
     bool m_comInitialized{ false };
     bool m_started{ false };
 };

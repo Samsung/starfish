@@ -160,8 +160,9 @@ Default values are in **bold**.
 * -DCLI=[ **0** | 1 ]<br>
   Build the CLI on Linux. Requires a shell executable and
   -DSTARFISH_ENABLE_CDP=1.
-* -DWEBAUDIO=[ **0** | 1 ]<br>
-  Enable Web Audio on processors other than x86_64, where it is always on.
+* -DWEBAUDIO=[ 0 | 1 ]<br>
+  Enable Web Audio. It is on by default on Linux x86_64 and in Windows builds
+  with the FFmpeg multimedia backend. Windows supports opting out with 0.
   On Tizen it needs capi-media-audio-io, capi-media-sound-manager and the
   platform FFmpeg (libavcodec, libavutil, libswresample) for compressed
   `decodeAudioData()`. Audio containers are parsed internally; Web Audio
@@ -381,6 +382,8 @@ compile FFmpeg or run GNU build tools.
 
 ```bat
 git submodule update --init third_party/windows/ffmpeg
+git -C third_party/escargot submodule update --init third_party/walrus
+git -C third_party/escargot/third_party/walrus submodule update --init third_party/sljit
 ```
 
 ```bat
@@ -447,7 +450,10 @@ availability does not depend on upstream nightly release retention.
 `Starfish.dll`, with license and package provenance in `licenses/ffmpeg`;
 Windows audio uses shared-mode WASAPI with interleaved S16 PCM,
 while Linux uses PulseAudio. An unavailable audio endpoint leaves decoding and
-video playback usable. Windows Web Audio remains gated separately.
+video playback usable. Web Audio also uses WASAPI and is on by default with
+this backend. Set `-DWEBAUDIO=0` to omit it.
+Windows also enables WebAssembly by default and deploys the Walrus DLL
+beside `Starfish.dll`. Set `-DENABLE_WASM=0` to omit it.
 `-DUSE_FFMPEG_MEDIA_PLAYER=0` selects the mock Windows player;
 `-DSTARFISH_WINDOWS_ENABLE_MULTIMEDIA=OFF` removes the multimedia surface.
 The prebuilt dependency remains part of the vcpkg manifest in both cases.

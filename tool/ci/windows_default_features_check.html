@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Windows default feature smoke test</title>
+<style>
+  #result { width: 220px; height: 120px; background: #c04010; }
+  #result.passed { background: #1040c0; }
+</style>
+<div id="result">WebAssembly and Web Audio check is running</div>
+<script>
+(async () => {
+  const result = document.querySelector('#result');
+  try {
+    // A WebAssembly function returning 42.
+    const bytes = Uint8Array.of(
+      0, 97, 115, 109, 1, 0, 0, 0, 1, 5, 1, 96, 0, 1, 127,
+      3, 2, 1, 0, 7, 7, 1, 3, 114, 117, 110, 0, 0,
+      10, 6, 1, 4, 0, 65, 42, 11
+    );
+    const module = new WebAssembly.Module(bytes);
+    if (new WebAssembly.Instance(module).exports.run() !== 42)
+      throw new Error('WebAssembly returned the wrong value');
+
+    const context = new OfflineAudioContext(1, 128, 48000);
+    const source = context.createConstantSource();
+    source.offset.value = 0.5;
+    source.connect(context.destination);
+    source.start();
+    const samples = (await context.startRendering()).getChannelData(0);
+    if (samples.length !== 128 || !samples.every(value => value === 0.5))
+      throw new Error('Web Audio rendered the wrong samples');
+
+    result.className = 'passed';
+    result.textContent = 'WebAssembly and Web Audio passed';
+  } catch (error) {
+    result.textContent = String(error);
+  }
+})();
+</script>

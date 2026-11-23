@@ -23,6 +23,10 @@ public:
     static FFmpegAudioOutput* create();
     virtual bool open(int channels, int sampleRate) = 0;
     virtual bool write(const uint8_t* data, size_t bytes) = 0;
+    virtual bool queuedLatency(uint64_t&)
+    {
+        return false;
+    }
     virtual void flush() = 0;
     virtual void interrupt() = 0;
 };
