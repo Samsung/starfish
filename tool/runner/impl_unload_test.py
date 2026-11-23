@@ -63,7 +63,9 @@ def main():
     parser.add_argument("--impl", required=True, type=Path)
     parser.add_argument("--api", type=Path,
                         help="also test public Finalize and API SO unloading")
-    parser.add_argument("--cycles", type=int, default=5)
+    parser.add_argument("--cycles", type=int,
+                        help="default: 5 warm-up + 20 measured unloads; "
+                        "5 cycles in legacy mode")
     parser.add_argument("--compiler", default=os.environ.get("CXX", "c++"))
     parser.add_argument("--incremental", action="store_true")
     parser.add_argument("--wait-for-worker", action="store_true",
@@ -74,6 +76,8 @@ def main():
     parser.add_argument("--legacy", action="store_true",
                         help="with --api, retain an impl without shutdown")
     args = parser.parse_args()
+    if args.cycles is None:
+        args.cycles = 5 if args.legacy else 25
     if args.cycles < 1:
         parser.error("--cycles must be positive")
     if args.legacy and (not args.api or args.host_thread or

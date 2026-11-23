@@ -15,6 +15,8 @@
 #include <string>
 #include <thread>
 #include <chrono>
+#include <algorithm>
+#include <limits>
 
 static void require(bool condition, const char* message)
 {
@@ -26,6 +28,11 @@ static void require(bool condition, const char* message)
 
 class PostUnloadMemory {
 public:
+    explicit PostUnloadMemory(int cycles)
+        : m_cycles(cycles)
+    {
+    }
+
     void report(int cycle)
     {
         // Sample after dlclose, GLib cleanup and the resource checks.
@@ -41,20 +48,44 @@ public:
         std::fclose(smaps);
         require(rss >= 0 && privateDirty >= 0,
                 "post-unload memory counters are missing");
-        if (cycle == 1) {
-            m_initialRss = rss;
-            m_initialPrivateDirty = privateDirty;
+        if (cycle == 1 || cycle == warmupCycles) {
+            m_baselineCycle = cycle;
+            m_baselineRss = rss;
+            m_baselinePrivateDirty = privateDirty;
         }
         std::printf(
             "Post-unload memory cycle %d: RSS %lld KiB (%+lld), "
-            "Private_Dirty %lld KiB (%+lld) vs cycle 1\n",
-            cycle, rss, rss - m_initialRss, privateDirty,
-            privateDirty - m_initialPrivateDirty);
+            "Private_Dirty %lld KiB (%+lld) vs cycle %d%s\n",
+            cycle, rss, rss - m_baselineRss, privateDirty,
+            privateDirty - m_baselinePrivateDirty, m_baselineCycle,
+            cycle <= warmupCycles ? " (warm-up)" : "");
+
+        if (m_cycles >= warmupCycles + tailCycles &&
+            cycle > m_cycles - tailCycles) {
+            m_tailMinimum = std::min(m_tailMinimum, privateDirty);
+            if (cycle == m_cycles) {
+                const auto growth = m_tailMinimum - m_baselinePrivateDirty;
+                std::printf(
+                    "Post-unload Private_Dirty: minimum of final %d "
+                    "cycles changed by %+lld KiB (limit %lld KiB)\n",
+                    tailCycles, growth, maxGrowthKiB);
+                std::fflush(stdout);
+                require(growth <= maxGrowthKiB,
+                        "sustained private dirty memory growth after unload");
+            }
+        }
     }
 
 private:
-    long long m_initialRss = 0;
-    long long m_initialPrivateDirty = 0;
+    static constexpr int warmupCycles = 5;
+    static constexpr int tailCycles = 5;
+    // Allow small allocator and page-accounting variations after warm-up.
+    static constexpr long long maxGrowthKiB = 64;
+    const int m_cycles;
+    int m_baselineCycle = 0;
+    long long m_baselineRss = 0;
+    long long m_baselinePrivateDirty = 0;
+    long long m_tailMinimum = std::numeric_limits<long long>::max();
 };
 
 template <typename T>
@@ -149,7 +180,7 @@ static int runAPITest(const char* implPath, const char* apiPath,
     std::string pageURL =
         std::string("file://") + storage + "/unload-page.html";
     size_t previousThread = 0;
-    PostUnloadMemory memory;
+    PostUnloadMemory memory(cycles);
     for (int cycle = 0; cycle < cycles; ++cycle) {
         require(!mapped(apiPath), "API was mapped before dlopen");
         require(!mapped(implPath), "impl was mapped before API dlopen");
@@ -277,7 +308,7 @@ int main(int argc, char** argv)
     std::string pageURL =
         std::string("file://") + storage + "/unload-page.html";
     size_t previousThread = 0;
-    PostUnloadMemory memory;
+    PostUnloadMemory memory(cycles);
     for (int cycle = 0; cycle < cycles; ++cycle) {
         require(!mapped(path), "impl was already mapped before dlopen");
         void* handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
