@@ -40,6 +40,7 @@
 namespace Starfish {
 
 extern FT_Library g_freeTypeInstance;
+FcConfig* cairoFontConfig();
 #define CHECK_ERROR                                   \
     if (error) {                                      \
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE(); \
@@ -67,6 +68,8 @@ public:
     }
 
     void* operator new(size_t size);
+    static FontFaceImplCairo* createWithPath(
+        FT_Face face, hb_font_t* hbFace, const UTF8StringDataNonGCStd& path);
     void clearNativeResources();
     // Objects allocated via GC_finalized_atomic_malloc must not be freed with
     // GC_FREE or delete. The no-op operator delete below prevents this.
@@ -77,7 +80,7 @@ public:
 
     FontFaceImplCairo(FT_Face face, hb_font_t* hbFace,
                       uint8_t* dataBuffer = nullptr, size_t dataBufferSize = 0,
-                      Optional<UTF8StringDataNonGCStd> path = nullptr)
+                      const char* path = nullptr)
     {
         m_dataBuffer = dataBuffer;
         m_dataBufferSize = dataBufferSize;
@@ -225,7 +228,7 @@ public:
     }
 
     Optional<uint8_t*> m_dataBuffer;
-    Optional<UTF8StringDataNonGCStd> m_path;
+    const char* m_path;
     size_t m_dataBufferSize;
     int m_xHeight;
     int m_unitsPerEM;
@@ -248,8 +251,7 @@ private:
                     FT_New_Memory_Face(g_freeTypeInstance, m_dataBuffer.value(),
                                        m_dataBufferSize, 0, &m_face);
             } else {
-                error = FT_New_Face(g_freeTypeInstance,
-                                    (char*)m_path.value().data(), 0, &m_face);
+                error = FT_New_Face(g_freeTypeInstance, m_path, 0, &m_face);
             }
             CHECK_ERROR;
             FT_Set_Pixel_Sizes(m_face, 0, 16);
@@ -395,15 +397,18 @@ public:
         // substitute one
         // family name for another (i.e. if the fonts are aliased to each
         // other).
-        FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+        auto* config = cairoFontConfig();
+        if (!config || !FcConfigSubstitute(config, pattern, FcMatchPattern)) {
+            FcPatternDestroy(pattern);
+            return UTF8StringDataNonGCStd();
+        }
         FcDefaultSubstitute(pattern);
 
         FcResult fontConfigResult;
         FcPattern* resultPattern =
-            FcFontMatch(NULL, pattern, &fontConfigResult);
+            FcFontMatch(config, pattern, &fontConfigResult);
 
         if (!resultPattern) {
-            FcPatternDestroy(resultPattern);
             FcPatternDestroy(pattern);
             return UTF8StringDataNonGCStd();
         }
@@ -478,7 +483,7 @@ public:
         STARFISH_LOG_INFO("load system font %s %p %p", path.data(), face,
                           hbFace);
 
-        auto impl = new FontFaceImplCairo(face, hbFace, nullptr, 0, path);
+        auto impl = FontFaceImplCairo::createWithPath(face, hbFace, path);
         m_fontPathToFace.insert(std::make_pair(path, impl));
         return impl;
     }

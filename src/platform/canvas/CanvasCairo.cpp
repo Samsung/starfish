@@ -2563,8 +2563,8 @@ private:
         cairo_scaled_font_t* scaledFontFace = cairo_scaled_font_create(
             cairofontFace, &sizeMatrix, &identityMatrix, fontOptions);
         cairo_font_options_destroy(fontOptions);
-        auto oldScaledFont = cairo_get_scaled_font(canvas);
-        cairo_scaled_font_reference(oldScaledFont);
+        // Save the font state without instantiating Cairo's default toy font.
+        cairo_save(canvas);
         cairo_set_scaled_font(canvas, scaledFontFace);
 
         bool needsToDrawWithPath = false;
@@ -2610,8 +2610,7 @@ private:
             cairo_show_glyphs(canvas, glyphs, glyphCount);
         }
 
-        cairo_set_scaled_font(canvas, oldScaledFont);
-        cairo_scaled_font_destroy(oldScaledFont);
+        cairo_restore(canvas);
         cairo_scaled_font_destroy(scaledFontFace);
         cairo_font_face_destroy(cairofontFace);
     }
@@ -2641,14 +2640,12 @@ private:
         cairo_scaled_font_t* scaledFontFace = cairo_scaled_font_create(
             cairofontFace, &sizeMatrix, &identityMatrix, fontOptions);
         cairo_font_options_destroy(fontOptions);
-        auto oldScaledFont = cairo_get_scaled_font(canvas);
         cairo_set_line_width(canvas, strokeWidth);
-        cairo_scaled_font_reference(oldScaledFont);
+        cairo_save(canvas);
         cairo_set_scaled_font(canvas, scaledFontFace);
         cairo_glyph_path(canvas, glyphs, glyphCount);
         cairo_stroke(canvas);
-        cairo_set_scaled_font(canvas, oldScaledFont);
-        cairo_scaled_font_destroy(oldScaledFont);
+        cairo_restore(canvas);
         cairo_scaled_font_destroy(scaledFontFace);
         cairo_font_face_destroy(cairofontFace);
     }

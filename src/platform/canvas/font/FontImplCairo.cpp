@@ -28,6 +28,8 @@
 #include <fontconfig/fontconfig.h>
 #include <hb.h>
 #include <hb-ft.h>
+#include <cstring>
+#include <memory>
 #include "core/modules/canvas/font/Font.h"
 #include "FontImplCairo.h"
 #include "core/style/UnitHelper.h"
@@ -35,6 +37,20 @@
 namespace Starfish {
 
 FT_Library g_freeTypeInstance;
+
+FcConfig* cairoFontConfig()
+{
+#if defined(STARFISH_WINDOWS)
+    // Initialize installs the embedded Windows configuration when needed.
+    return FcConfigGetCurrent();
+#else
+    // Keep font matching independent of Fontconfig's process-global config.
+    // The config belongs to this module and is released when it is unloaded.
+    static const std::unique_ptr<FcConfig, decltype(&FcConfigDestroy)> config(
+        FcInitLoadConfigAndFonts(), FcConfigDestroy);
+    return config.get();
+#endif
+}
 
 static void fontFaceImplCairoClear(void* obj, void* cd)
 {
@@ -47,6 +63,18 @@ void* FontFaceImplCairo::operator new(size_t size)
     constexpr static GC_finalizer_closure data = { fontFaceImplCairoClear,
                                                    nullptr };
     return GC_finalized_atomic_malloc(size, &data);
+}
+
+FontFaceImplCairo* FontFaceImplCairo::createWithPath(
+    FT_Face face, hb_font_t* hbFace, const UTF8StringDataNonGCStd& path)
+{
+    // Store the path in the same GC allocation as the face. The collector
+    // can release both even if runtime teardown skips this face's finalizer.
+    void* storage = operator new(sizeof(FontFaceImplCairo) + path.size() + 1);
+    auto* ownedPath = static_cast<char*>(storage) + sizeof(FontFaceImplCairo);
+    std::memcpy(ownedPath, path.c_str(), path.size() + 1);
+    return ::new (storage)
+        FontFaceImplCairo(face, hbFace, nullptr, 0, ownedPath);
 }
 
 void FontFaceImplCairo::clearNativeResources()
@@ -243,17 +271,22 @@ FontImplCairo::loadGlyph(char32_t ch, char32_t variationSelector)
     // substitute one
     // family name for another (i.e. if the fonts are aliased to each
     // other).
-    FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+    auto* config = cairoFontConfig();
+    if (!config || !FcConfigSubstitute(config, pattern, FcMatchPattern)) {
+        FcPatternDestroy(pattern);
+        return result;
+    }
     FcDefaultSubstitute(pattern);
 
     FcResult fontConfigResult;
-    FcPattern* resultPattern = FcFontMatch(NULL, pattern, &fontConfigResult);
+    FcPattern* resultPattern = FcFontMatch(config, pattern, &fontConfigResult);
     if (!resultPattern) {
         // If a font with the default font name is not found,
         // try to find a font again without using the given default font name.
         FcPatternDel(pattern, FC_FAMILY);
-        resultPattern = FcFontMatch(NULL, pattern, &fontConfigResult);
+        resultPattern = FcFontMatch(config, pattern, &fontConfigResult);
         if (!resultPattern) {
+            FcPatternDestroy(pattern);
             return result;
         }
     }
@@ -261,6 +294,8 @@ FontImplCairo::loadGlyph(char32_t ch, char32_t variationSelector)
     FcChar8* filePath = NULL;
     if (!(FcPatternGetString(resultPattern, FC_FILE, 0, &filePath) ==
           FcResultMatch)) {
+        FcPatternDestroy(resultPattern);
+        FcPatternDestroy(pattern);
         return result;
     }
 
