@@ -2,7 +2,7 @@
 <meta charset="utf-8">
 <title>Windows default feature smoke test</title>
 <style>
-  #result { width: 220px; height: 120px; background: #c04010; }
+  #result { width: 220px; height: 120px; background: #c04010; border-right: 1px solid; }
   #result.passed { background: #1040c0; }
 </style>
 <div id="result">WebAssembly and Web Audio check is running</div>
@@ -34,5 +34,15 @@
   } catch (error) {
     result.textContent = String(error);
   }
+
+  // Keep producing frames after the asynchronous check settles so the shell
+  // can capture the result even when its window does not repaint on its own.
+  let light = false;
+  function repaint() {
+    result.style.borderRightColor = light ? 'white' : 'black';
+    light = !light;
+    requestAnimationFrame(repaint);
+  }
+  requestAnimationFrame(repaint);
 })();
 </script>
