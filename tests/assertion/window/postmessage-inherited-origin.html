@@ -1,0 +1,87 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>postMessage: a message has the origin its sender inherits</title>
+<body>
+<script>
+if (typeof testEnd !== 'function') {
+  var __pass = 0, __fail = 0, __firstError = '';
+  var __nativeAssert = console.assert ? console.assert.bind(console) : function () {};
+  console.assert = function (condition, message) {
+    if (condition) {
+      __pass++;
+    } else {
+      __fail++;
+      if (!__firstError) __firstError = message;
+      __nativeAssert(false, message);
+    }
+  };
+  window.testEnd = function () {
+    var verdict = (__fail === 0 ? 'PASS' : 'FAIL') +
+      ' (' + __pass + ' passed, ' + __fail + ' failed)';
+    console.log('[postmessage-inherited-origin] ' + verdict);
+    document.title = verdict + (__firstError ? ': ' + __firstError : '');
+  };
+}
+
+// The origin of a message is the serialization of its sender's origin
+// (https://html.spec.whatwg.org/multipage/web-messaging.html#window-post-message-steps).
+// An about:blank or srcdoc document inherits the origin of the document that
+// creates it (https://html.spec.whatwg.org/multipage/document-sequences.html#determining-the-origin),
+// so its messages carry that origin rather than the opaque one of its URL,
+// and a reply to that origin reaches it. In a browser, serve this test over
+// http.
+
+var origin = location.origin;
+var received = {};
+var waiting = { 'blank-reply': true, 'srcdoc-reply': true };
+var finished = false;
+
+function finish(timedOut) {
+  if (finished) return;
+  finished = true;
+  clearTimeout(timer);
+  console.assert(!timedOut, 'every frame gets a reply, missing: ' +
+                 Object.keys(waiting).join(' '));
+  console.assert(received['blank'] === origin,
+                 'an about:blank document sends with the origin of its ' +
+                 'parent, got ' + received['blank']);
+  console.assert(received['srcdoc'] === origin,
+                 'a srcdoc document sends with the origin of its parent, ' +
+                 'got ' + received['srcdoc']);
+  testEnd();
+}
+var timer = setTimeout(function () { finish(true); }, 3000);
+
+addEventListener('message', function (event) {
+  var data = String(event.data);
+  received[data] = event.origin;
+  if (data === 'blank' || data === 'srcdoc') {
+    try {
+      event.source.postMessage('reply', event.origin);
+    } catch (e) {
+      console.assert(false, 'reply to ' + data + ' at ' + event.origin +
+                     ': ' + e);
+    }
+  }
+  delete waiting[data];
+  if (!Object.keys(waiting).length) {
+    finish(false);
+  }
+});
+
+// Each frame reports a message it gets back to this page.
+var child = 'addEventListener("message", function (event) {' +
+  '  parent.postMessage(label + "-" + event.data, "*");' +
+  '});' +
+  'parent.postMessage(label, "*");';
+
+var blank = document.createElement('iframe');
+document.body.appendChild(blank);
+var script = blank.contentDocument.createElement('script');
+script.textContent = 'var label = "blank";' + child;
+blank.contentDocument.body.appendChild(script);
+
+var srcdoc = document.createElement('iframe');
+srcdoc.srcdoc = '<script>var label = "srcdoc";' + child + '<\/script>';
+document.body.appendChild(srcdoc);
+</script>

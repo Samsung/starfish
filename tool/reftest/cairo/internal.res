@@ -1012,6 +1012,7 @@ tests/assertion/window/structured-clone-errors.html
 tests/assertion/window/performance-basic.html
 tests/assertion/window/location-fragment-navigation.html
 tests/assertion/window/postmessage-file-origin.html
+tests/assertion/window/postmessage-inherited-origin.html
 tests/assertion/url/URLsearchParams.html
 tests/assertion/url/root-relative-url-with-query.html
 tests/assertion/blob/blob_arraybuffer_text_test.html

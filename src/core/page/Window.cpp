@@ -464,7 +464,13 @@ void Window::postMessage(Window* source, ScriptValue message,
                 Window* source = (Window*)data2;
 
                 event->setSource(MessageEventSource::createWindow(source));
-                event->setOrigin(source->location()->origin());
+                // The origin is the sender's, which an about:blank or srcdoc
+                // document inherits instead of taking it from its own URL.
+                // It reads as the Location.origin of the document it came
+                // from, so a reply to it reaches the sender.
+                // https://html.spec.whatwg.org/multipage/web-messaging.html#window-post-message-steps
+                event->setOrigin(
+                    source->document()->webOrigin()->url()->origin());
                 window->dispatchEventByUA(event);
                 delete serializedRecord;
             },
