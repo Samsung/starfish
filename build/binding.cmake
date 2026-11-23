@@ -81,17 +81,23 @@ IF (STARFISH_BINDING_NEED_GENERATE)
     FILE (GLOB STARFISH_BINDING_TEST_FILES ${OUTPUT_DIRECTORY}/starfish_generated/binding_test/generated/*)
     FOREACH (STARFISH_BINDING_TEST_FILE ${STARFISH_BINDING_TEST_FILES})
         GET_FILENAME_COMPONENT (STARFISH_BINDING_FILE ${STARFISH_BINDING_TEST_FILE} NAME)
-        EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E compare_files ${STARFISH_BINDING_TEST_FILE} ${STARFISH_BINDING_GENERATED_DIR}/${STARFISH_BINDING_FILE}
-                        RESULT_VARIABLE BINDING_COMPARE_RESULT
-        )
-
-        IF (${BINDING_COMPARE_RESULT} EQUAL 0)
-            # leave below line for debugging cmake file
-            # MESSAGE (STATUS ${STARFISH_BINDING_TEST_FILE} ${STARFISH_BINDING_GENERATED_DIR}/${STARFISH_BINDING_FILE} " are same")
-        ELSE()
-            # The files are different or error while comparing the files.
-            FILE (COPY ${STARFISH_BINDING_TEST_FILE} DESTINATION ${STARFISH_BINDING_GENERATED_DIR})
-        ENDIF()
+        # Modern CMake can copy changed files without spawning a process for
+        # each binding. Process startup is particularly slow on Windows.
+        IF (NOT CMAKE_VERSION VERSION_LESS "3.21")
+            FILE (COPY_FILE
+                ${STARFISH_BINDING_TEST_FILE}
+                ${STARFISH_BINDING_GENERATED_DIR}/${STARFISH_BINDING_FILE}
+                ONLY_IF_DIFFERENT)
+        ELSE ()
+            EXECUTE_PROCESS (
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    ${STARFISH_BINDING_TEST_FILE}
+                    ${STARFISH_BINDING_GENERATED_DIR}/${STARFISH_BINDING_FILE}
+                RESULT_VARIABLE BINDING_COPY_RESULT)
+            IF (NOT BINDING_COPY_RESULT EQUAL 0)
+                MESSAGE (FATAL_ERROR "Failed to copy generated binding ${STARFISH_BINDING_FILE}")
+            ENDIF ()
+        ENDIF ()
     ENDFOREACH()
 
     # Remove stale generated files whose source IDL was deleted.
