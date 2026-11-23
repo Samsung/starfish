@@ -20,6 +20,8 @@ import subprocess
 import tempfile
 import threading
 
+from impl_unload_memcheck import check_unloads
+
 
 def make_legacy_impl(temp, name, compiler):
     """A pre-shutdown contract: only lifecycle wrappers are ever called."""
@@ -76,6 +78,10 @@ def main():
     parser.add_argument("--legacy", action="store_true",
                         help="with --api, retain an impl without shutdown")
     args = parser.parse_args()
+    # The first existing CI invocation covers Memcheck once per build.
+    check_memory = (args.cycles is None and not args.api and
+                    not args.host_thread and not args.incremental and
+                    not args.wait_for_worker and not args.legacy)
     if args.cycles is None:
         args.cycles = 5 if args.legacy else 25
     if args.cycles < 1:
@@ -174,6 +180,8 @@ def main():
                         "no audio output connected before unload")
         else:
             subprocess.run(command, env=env, check=True, timeout=180)
+            if check_memory:
+                check_unloads(command, env, temp, fixtures)
 
 
 if __name__ == "__main__":
