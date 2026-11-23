@@ -113,10 +113,9 @@ public:
         if (m_compositorContext) {
             makeCurrent();
         }
-        if (m_glPaintingSurface) {
-            m_glPaintingSurface->detachNativeBuffer();
-            m_glPaintingSurface = nullptr;
-        }
+        CanvasSurfaceFactory::detachGLSurfaces(this);
+        m_glPaintingSurface = nullptr;
+
         Renderer::destroy();
     }
 

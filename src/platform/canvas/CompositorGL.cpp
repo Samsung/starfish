@@ -45,6 +45,7 @@
 
 #include <array>
 #include <cstdio>
+#include <list>
 #include <clipper2/clipper.h>
 #include <stdlib.h>
 
@@ -3198,10 +3199,18 @@ uint32_t CompositorFactory::maximumTextureSizeGl()
 
 static uint64_t g_canvasSurfaceContentVersion;
 
+class CanvasSurfaceGL;
+using CanvasSurfaceGLList = std::list<CanvasSurfaceGL*>;
+// The standard allocator keeps the surface pointers outside the GC heap.
+// Surface creation, reclaim and renderer teardown share the render thread.
+// Keep TLS trivially destructible so it does not pin the implementation DSO.
+static thread_local CanvasSurfaceGLList* g_canvasSurfaces;
+
 class CanvasSurfaceGL : public CanvasSurface {
 public:
     void* operator new(size_t size);
     void clearNativeResources();
+    static void detachSurfacesForRenderer(Renderer* renderer);
     // Objects allocated via GC_finalized_malloc must not be freed with
     // GC_FREE or delete. The no-op operator delete below prevents this.
     void operator delete(void*)
@@ -3212,8 +3221,8 @@ public:
     CanvasSurfaceGL(Renderer* renderer, size_t w, size_t h,
                     float additionalPixelRatio, CanvasSurfaceFlag flag)
         : CanvasSurface(additionalPixelRatio)
+        , m_renderer(renderer)
     {
-        m_renderer = (Renderer*)renderer;
         m_width = w;
         m_height = h;
         m_bufferWidth = m_width = -1;
@@ -3237,6 +3246,11 @@ public:
 
         attachNativeBuffer(w, h, flag);
         checkError(gl());
+        if (!g_canvasSurfaces) {
+            g_canvasSurfaces = new CanvasSurfaceGLList();
+        }
+        m_surfaceEntry =
+            g_canvasSurfaces->insert(g_canvasSurfaces->end(), this);
     }
 
     GL* gl()
@@ -4132,7 +4146,8 @@ public:
 
 protected:
     friend class CompositorImplGL;
-    Renderer* m_renderer;
+    Optional<Renderer*> m_renderer;
+    CanvasSurfaceGLList::iterator m_surfaceEntry;
     unsigned char* m_buffer;
     size_t m_width;
     size_t m_height;
@@ -4180,7 +4195,33 @@ void* CanvasSurfaceGL::operator new(size_t size)
 
 void CanvasSurfaceGL::clearNativeResources()
 {
+    // Renderer teardown already detached this surface and removed its entry.
+    if (!m_renderer) {
+        return;
+    }
     detachNativeBuffer();
+    m_renderer.reset();
+    g_canvasSurfaces->erase(m_surfaceEntry);
+    if (g_canvasSurfaces->empty()) {
+        delete g_canvasSurfaces;
+        g_canvasSurfaces = nullptr;
+    }
+}
+
+void CanvasSurfaceGL::detachSurfacesForRenderer(Renderer* renderer)
+{
+    if (!g_canvasSurfaces) {
+        return;
+    }
+    // Detach runs on the render thread and is also used under the GC allocator
+    // lock, so it cannot allocate GC objects that would reclaim another entry.
+    for (auto it = g_canvasSurfaces->begin();
+         g_canvasSurfaces && it != g_canvasSurfaces->end();) {
+        auto* surface = *it++;
+        if (surface->m_renderer.value() == renderer) {
+            surface->clearNativeResources();
+        }
+    }
 }
 
 CanvasSurface* CanvasSurfaceFactory::createGL(
@@ -4188,6 +4229,11 @@ CanvasSurface* CanvasSurfaceFactory::createGL(
     CanvasSurface::CanvasSurfaceFlag flag)
 {
     return new CanvasSurfaceGL(renderer, w, h, additionalPixelRatio, flag);
+}
+
+void CanvasSurfaceFactory::detachGLSurfaces(Renderer* renderer)
+{
+    CanvasSurfaceGL::detachSurfacesForRenderer(renderer);
 }
 
 class CompositorImplGL : public Compositor {

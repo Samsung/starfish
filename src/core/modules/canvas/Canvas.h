@@ -258,6 +258,7 @@ namespace CanvasSurfaceFactory {
     CanvasSurface* createGL(Renderer* renderer, size_t w, size_t h,
                             float additionalPixelRatio,
                             CanvasSurface::CanvasSurfaceFlag flag);
+    void detachGLSurfaces(Renderer* renderer);
 #endif
     CanvasSurface* createSimple(Renderer* renderer, size_t w, size_t h,
                                 float additionalPixelRatio,

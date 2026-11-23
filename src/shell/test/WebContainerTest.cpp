@@ -142,6 +142,55 @@ TEST_F(WebContainerCreationTest, CreateGL)
     EXPECT_TRUE(m_lwe != nullptr);
 }
 
+#if defined(STARFISH_ENABLE_WEBGL)
+TEST_F(WebContainerCreationTest, WebGLAfterRecreatingContainer)
+{
+    const char* draw = R"JS(
+        (() => {
+            const canvas = document.querySelector('canvas');
+            const gl = canvas.getContext('webgl', { antialias: false });
+            if (!gl)
+                return false;
+            for (let i = 0; i < 8; ++i)
+                canvas.width = 64 + i;
+            gl.clearColor(0, 1, 0, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            const pixel = new Uint8Array(4);
+            gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+            return pixel[0] === 0 && pixel[1] === 255 &&
+                   pixel[2] === 0 && pixel[3] === 255;
+        })()
+    )JS";
+
+    for (int i = 0; i < 2; ++i) {
+        SCOPED_TRACE(i);
+        m_lwe = LWE::WebContainer::CreateGL(getWebContainerArgs(),
+                                            getRendererConfig(m_window));
+        ASSERT_TRUE(m_lwe);
+        m_lwe->LoadData("<canvas></canvas>");
+        if (i == 1) {
+            // Collect the first view's old surfaces after its native GL
+            // context is gone, with the second view already alive.
+            auto settings = m_lwe->GetSettings();
+            settings.SetIdleModeJob(LWE::IdleModeJob::ForceGC);
+            settings.SetIdleModeCheckIntervalInMS(25);
+            m_lwe->SetSettings(settings);
+        }
+        m_window->appLoop()->start(1);
+        ASSERT_EQ("true", m_lwe->EvaluateJavaScript(draw));
+        if (i == 0) {
+            m_lwe->StopLoading();
+            m_lwe->Destroy();
+            m_lwe = nullptr;
+            delete m_window;
+            m_window = Window::create();
+            m_window->setInitHint(HINT_VISIBLE, 0);
+            m_window->init("Starfish", 800, 600);
+        }
+    }
+}
+#endif
+
 class WebContainerDestroyTest : public ::testing::Test {
 public:
     WebContainerDestroyTest() = default;
