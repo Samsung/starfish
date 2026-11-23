@@ -55,7 +55,7 @@ public:
     }
 };
 
-class FontFaceImplCairo : public FontFace {
+class FontFaceImplCairo : public PlatformFontFace {
 public:
     static int unitsPerEMFromFT(FT_Face f)
     {
@@ -459,7 +459,8 @@ public:
         return u8FilePath;
     }
 
-    virtual FontFace* loadFontFace(const UTF8StringDataNonGCStd& path) override
+    virtual PlatformFontFace* loadFontFace(
+        const UTF8StringDataNonGCStd& path) override
     {
         auto iter = m_fontPathToFace.find(path);
         if (iter != m_fontPathToFace.end()) {

@@ -120,7 +120,7 @@ static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
     return result;
 }
 
-FontFace* PlatformFontCache::lookupFaceCache(
+PlatformFontFace* PlatformFontCache::lookupFaceCache(
     const UTF8StringDataNonGCStd& mergredFamilyName, bool& exist)
 {
     auto iter = m_loadedPlatformFonts.find(mergredFamilyName);
@@ -134,7 +134,7 @@ FontFace* PlatformFontCache::lookupFaceCache(
 }
 
 void PlatformFontCache::insertFaceCache(
-    const UTF8StringDataNonGCStd& mergredFamilyName, FontFace* face)
+    const UTF8StringDataNonGCStd& mergredFamilyName, PlatformFontFace* face)
 {
     STARFISH_ASSERT(m_loadedPlatformFonts.find(mergredFamilyName) ==
                     m_loadedPlatformFonts.end());
@@ -161,9 +161,9 @@ static bool isGenericFontName(const UTF8StringDataNonGCStd& familyName)
     return isGenericName;
 }
 
-FontFace* FontSelector::loadFromPlatform(const UTF8StringDataNonGCStd& fm,
-                                         bool isGenericName, char style,
-                                         char weight)
+PlatformFontFace* FontSelector::loadFromPlatform(
+    const UTF8StringDataNonGCStd& fm, bool isGenericName, char style,
+    char weight)
 {
     if (m_platformFontCache->m_absencePlatformFontNames.find(fm) !=
         m_platformFontCache->m_absencePlatformFontNames.end()) {
@@ -181,8 +181,8 @@ FontFace* FontSelector::loadFromPlatform(const UTF8StringDataNonGCStd& fm,
     }
 }
 
-FontFace* FontSelector::loadLocalWebFont(String* localFontName, char style,
-                                         char weight)
+PlatformFontFace* FontSelector::loadLocalWebFont(String* localFontName,
+                                                 char style, char weight)
 {
     auto localFm = localFontName->toUTF8NonGCString();
     std::transform(localFm.begin(), localFm.end(), localFm.begin(), tolower);
@@ -193,7 +193,7 @@ FontFace* FontSelector::loadLocalWebFont(String* localFontName, char style,
     if (iter != m_webFontLocalSrcCache.end()) {
         return iter->second;
     }
-    FontFace* face =
+    PlatformFontFace* face =
         loadFromPlatform(localFm, isGenericFontName(localFm), style, weight);
     m_webFontLocalSrcCache.insert(std::make_pair(localCacheStr, face));
     return face;
@@ -208,12 +208,13 @@ bool FontFaceList::mayCover(size_t index, char32_t ch) const
     return !ranges || ranges->contains(ch);
 }
 
-void FontFaceList::pushRangedFace(FontFace* face, UnicodeRangeList* ranges)
+void FontFaceList::pushRangedFace(PlatformFontFace* face,
+                                  UnicodeRangeList* ranges)
 {
     insertRangedFace(size(), face, ranges);
 }
 
-void FontFaceList::insertRangedFace(size_t position, FontFace* face,
+void FontFaceList::insertRangedFace(size_t position, PlatformFontFace* face,
                                     UnicodeRangeList* ranges)
 {
     if (!m_unicodeRanges) {
@@ -299,23 +300,6 @@ static int webFontMatchScore(WebFont& webFont, char style, char weight)
     return score;
 }
 
-static void requestWebFont(Document* document, FontResource* resource)
-{
-    if (resource->isRequested()) {
-        return;
-    }
-    RequestData* reqData = new RequestData();
-    reqData->m_url = resource->url();
-    reqData->m_referrer = new ReferrerURL(document->documentURI());
-    reqData->m_destination = RequestDestination::Font;
-    reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
-
-    resource->request(reqData, true);
-    if (auto fonts = document->fontsIfCreated()) {
-        fonts.value()->didChangeFontLoadingState();
-    }
-}
-
 void FontSelector::loadPendingRangedFonts(FontFaceList* list, char32_t ch)
 {
     if (!list->pendingRangedFontsCover(ch)) {
@@ -331,8 +315,8 @@ void FontSelector::loadPendingRangedFonts(FontFaceList* list, char32_t ch)
         pending.erase(pending.begin() + i);
         // Once the download finishes the font lists are rebuilt; until then
         // the character falls back like any uncovered one.
-        requestWebFont(document(), entry.m_resource);
-        if (FontFace* face = entry.m_resource->fontFace()) {
+        entry.m_resource->requestIfNeeded();
+        if (PlatformFontFace* face = entry.m_resource->fontFace()) {
             list->insertRangedFace(entry.m_position, face, entry.m_ranges);
         }
     }
@@ -408,14 +392,14 @@ Font* FontSelector::loadFont(String* familyNameArray[],
                     continue;
                 }
                 UnicodeRangeList* ranges = webFont.unicodeRanges();
-                FontFace* face = nullptr;
+                PlatformFontFace* face = nullptr;
                 if (webFont.fromLocal()) {
                     face = loadLocalWebFont(webFont.localFontName(), style,
                                             weight);
                 } else {
                     FontResource* resource = webFont.fontResource();
                     if (!ranges) {
-                        requestWebFont(document(), resource);
+                        resource->requestIfNeeded();
                     }
                     face = resource->fontFace();
                     if (!face && !resource->isFaildToFetchResource()) {
@@ -444,10 +428,10 @@ Font* FontSelector::loadFont(String* familyNameArray[],
         } else if (selectedWebFont) {
             if (!selectedWebFont->fromLocal()) {
                 // download from web
-                requestWebFont(document(), selectedWebFont->fontResource());
+                selectedWebFont->fontResource()->requestIfNeeded();
                 if (selectedWebFont->fontResource()->fontFace()) {
                     // fontface loaded!
-                    FontFace* face =
+                    PlatformFontFace* face =
                         selectedWebFont->fontResource()->fontFace();
                     result->m_fontFaceList->push_back(face);
                     continue;
@@ -462,7 +446,7 @@ Font* FontSelector::loadFont(String* familyNameArray[],
                 }
             } else {
                 // local font
-                FontFace* face = loadLocalWebFont(
+                PlatformFontFace* face = loadLocalWebFont(
                     selectedWebFont->localFontName(), style, weight);
                 if (face) {
                     result->m_fontFaceList->push_back(face);
@@ -480,7 +464,7 @@ Font* FontSelector::loadFont(String* familyNameArray[],
         bool existInPlatformLayerCache = false;
         bool isGenericName = isGenericFontName(fm);
 
-        FontFace* face = m_platformFontCache->lookupFaceCache(
+        PlatformFontFace* face = m_platformFontCache->lookupFaceCache(
             cacheStr, existInPlatformLayerCache);
 
         if (existInPlatformLayerCache) {
@@ -513,7 +497,7 @@ Font* FontSelector::loadFont(String* familyNameArray[],
         mergeStyleWeightWithString(familyName, style, weight);
 
     bool existInPlatformLayerCache = false;
-    FontFace* face = m_platformFontCache->lookupFaceCache(
+    PlatformFontFace* face = m_platformFontCache->lookupFaceCache(
         cacheStr, existInPlatformLayerCache);
 
     if (!existInPlatformLayerCache) {

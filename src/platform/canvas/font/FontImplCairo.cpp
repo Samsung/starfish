@@ -77,7 +77,7 @@ PlatformFontCache* PlatformFontCache::create(WebView* webView)
     return new PlatformFontCacheImplCairo();
 }
 
-FontFace* FontFace::create(const uint8_t* data, size_t dataLen)
+PlatformFontFace* PlatformFontFace::create(const uint8_t* data, size_t dataLen)
 {
     uint8_t* newBuf = new uint8_t[dataLen];
     memcpy(newBuf, data, dataLen);

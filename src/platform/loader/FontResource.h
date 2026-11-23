@@ -51,7 +51,7 @@ public:
         return true;
     }
 
-    FontFace* fontFace()
+    PlatformFontFace* fontFace()
     {
         return m_fontFace;
     }
@@ -66,6 +66,7 @@ public:
         return Type::FontResourceType;
     }
 
+    void requestIfNeeded();
     virtual void didLoadFinished();
     virtual void didCacheHit(Resource* cache)
     {
@@ -75,7 +76,7 @@ public:
     }
 
 protected:
-    FontFace* m_fontFace;
+    PlatformFontFace* m_fontFace;
 };
 } // namespace Starfish
 

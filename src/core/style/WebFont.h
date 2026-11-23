@@ -57,6 +57,19 @@ public:
 
 class WebFont : public gc {
 public:
+    // Empty storage for an Optional<WebFont> with no resolved face.
+    WebFont()
+        : m_fromLocal(false)
+        , m_isFontStyleSpecified(false)
+        , m_isFontWeightSpecified(false)
+        , m_fontStyleValue(NormalFontStyleValue)
+        , m_fontWeightValue(4)
+        , m_familyName(nullptr)
+        , m_unicodeRanges(nullptr)
+        , m_fontResource(nullptr)
+    {
+    }
+
     WebFont(bool isFontStyleSpecified, bool isFontWeightSpecified,
             String* familyName, FontStyleValue fontStyleValue,
             char fontWeightValue, FontResource* fontResource,

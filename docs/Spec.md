@@ -442,7 +442,8 @@ section are supported.
 | | attribute | rules | Non-standard. Synonym for cssRules. |
 | | method | unsigned long insertRule(CSSOMString rule, optional unsigned long index = 0) | Inserts a new rule at the specified position in the style sheet, given the textual representation of the rule. |
 | | method | void deleteRule(unsigned long index) | Deletes a rule at the specified position from the style sheet. |
-| [FontFaceSet](https://drafts.csswg.org/css-font-loading/#fontfaceset-interface) | interface | FontFaceSet | An EventTarget representing the set of fonts available to a Document. Window only. Tracks the document's `@font-face` fonts; the setlike members, `add()`/`delete()`/`clear()`/`load()` and `FontFace` are not supported. |
+| [FontFace](https://drafts.csswg.org/css-font-loading/#fontface-interface) | interface | FontFace | CSS-connected faces returned by `FontFaceSet.load()` expose `status`. The constructor, descriptor attributes, and instance loading methods are not supported. |
+| [FontFaceSet](https://drafts.csswg.org/css-font-loading/#fontfaceset-interface) | interface | FontFaceSet | An EventTarget representing the set of fonts available to a Document. Window only. Tracks the document's `@font-face` fonts. `load()` requests matching CSS-connected faces and resolves with those faces. The setlike members and script-created faces are not supported. |
 | | attribute | status | Returns the loading status ("loading" or "loaded"). |
 | | attribute | ready | Returns a Promise that fulfills when font loading completes. |
 | | method | boolean check(DOMString font, optional DOMString text = " ") | Returns false if a web font of a listed family is still loading. Throws `SyntaxError` for an unparsable font. Style/weight matching and `text` (unicode-range) are ignored. |

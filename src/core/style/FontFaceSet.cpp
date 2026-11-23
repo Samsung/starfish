@@ -23,7 +23,9 @@
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Event.h"
-#include "binding/ScriptWrappable.h"
+#include "binding/ScriptBindingInstance.h"
+#include "core/style/FontFace.h"
+#include "EscargotPublic.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/page/BrowsingContext.h"
@@ -177,18 +179,33 @@ void FontFaceSet::didChangeFontLoadingState(bool fontLoadFailed)
     }
 }
 
-// https://drafts.csswg.org/css-font-loading/#dom-fontfaceset-check
-bool FontFaceSet::check(String* font, String* text)
+static GCVector<String*> parseFontQuery(ExecutionContext* context, String* font,
+                                        CSSStyleValuePair& style,
+                                        CSSStyleValuePair& weight,
+                                        bool rejectReservedFamily = false)
 {
     auto raw = font->toUTF8NonGCString();
     CSSTokenVector tokens;
     CSSStyleDeclaration::tokenizeCSSValue(tokens, raw.data(), raw.length(),
                                           "/,", 2, true);
 
-    CSSStyleValuePair style, weight, size, lineHeight, fontFamily;
+    // CSS-wide keywords cannot stand for a font or for an unquoted
+    // family name in a FontFaceSet load query.
+    if (rejectReservedFamily) {
+        for (auto token : tokens) {
+            std::transform(token.begin(), token.end(), token.begin(),
+                           [](unsigned char c) { return std::tolower(c); });
+            if (token == "inherit" || token == "initial" || token == "unset" ||
+                token == "revert" || token == "revert-layer" ||
+                token == "default") {
+                throw new DOMException(context, DOMException::SYNTAX_ERR);
+            }
+        }
+    }
+    CSSStyleValuePair size, lineHeight, fontFamily;
     if (!CSSStyleDeclaration::parseFontShorthand(tokens, &style, &weight, &size,
                                                  &lineHeight, &fontFamily)) {
-        throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
+        throw new DOMException(context, DOMException::SYNTAX_ERR,
                                "Could not parse the font specification");
     }
 
@@ -204,11 +221,262 @@ bool FontFaceSet::check(String* font, String* text)
         }
     }
 
+    return familyNames;
+}
+
+static char queryWeight(FontWeightValue weight)
+{
+    if (weight >= OneHundredFontWeightValue &&
+        weight <= NineHundredsFontWeightValue) {
+        return weight - OneHundredFontWeightValue + 1;
+    }
+    if (weight == BoldFontWeightValue || weight == BolderFontWeightValue) {
+        return 7;
+    }
+    return weight == LighterFontWeightValue ? 1 : 4;
+}
+
+static int faceMatchRank(WebFont& font, FontStyleValue style, char weight)
+{
+    FontStyleValue faceStyle = font.fontStyleValue();
+    int styleRank = 0;
+    if (style != faceStyle) {
+        styleRank = style == NormalFontStyleValue
+                        ? (faceStyle == ObliqueFontStyleValue ? 1 : 2)
+                        : (faceStyle == NormalFontStyleValue ? 2 : 1);
+    }
+    char faceWeight = font.fontWeightValue();
+    int weightRank;
+    if (weight < 4) {
+        weightRank = faceWeight <= weight ? weight - faceWeight : faceWeight;
+    } else if (weight > 5) {
+        weightRank =
+            faceWeight >= weight ? faceWeight - weight : 9 - faceWeight;
+    } else if (faceWeight >= weight && faceWeight <= 5) {
+        weightRank = faceWeight - weight;
+    } else {
+        weightRank = faceWeight < weight ? 5 - faceWeight : faceWeight - 1;
+    }
+    return styleRank * 10 + weightRank;
+}
+
+class FontFaceSetLoad;
+
+class FontFaceSetLoadClient : public ResourceClient {
+public:
+    FontFaceSetLoadClient(FontResource* resource, FontFaceSetLoad* load)
+        : ResourceClient(resource)
+        , m_load(load)
+    {
+    }
+
+    void didLoadFinished() override;
+    void didLoadFailed() override;
+    void didLoadCanceled() override
+    {
+        didLoadFailed();
+    }
+
+private:
+    FontFaceSetLoad* m_load;
+};
+
+class FontFaceSetLoad : public gc {
+public:
+    FontFaceSetLoad(Document* document, Promise* promise,
+                    GCVector<FontFace*>&& faces)
+        : m_document(document)
+        , m_promise(promise)
+        , m_faces(std::move(faces))
+    {
+    }
+
+    void start()
+    {
+        for (auto* face : m_faces) {
+            auto& font = face->font();
+            if (font.fromLocal()) {
+                m_failed |= !face->loadLocal();
+                continue;
+            }
+            auto* resource = font.fontResource();
+            switch (resource->state()) {
+            case Resource::Finished:
+                break;
+            case Resource::Failed:
+            case Resource::Canceled:
+                m_failed = true;
+                break;
+            default:
+                ++m_pending;
+                resource->addResourceClient(
+                    new FontFaceSetLoadClient(resource, this));
+                resource->requestIfNeeded();
+                break;
+            }
+        }
+        didComplete(false);
+    }
+
+    void didComplete(bool failed)
+    {
+        // Settle the promise outside Resource's client iteration. Promise
+        // reactions can run script and change styles or start new loads.
+        m_failed |= failed;
+        if (--m_pending && !m_failed) {
+            return;
+        }
+        if (m_scheduled) {
+            return;
+        }
+        m_scheduled = true;
+        m_document->webView()->messageLoop()->addIdler(
+            m_document->window(),
+            [](size_t, void* data) {
+                static_cast<FontFaceSetLoad*>(data)->settle();
+            },
+            this);
+    }
+
+private:
+    void settle()
+    {
+        auto* context = m_document->executionContext();
+        if (m_failed) {
+            auto* error = new DOMException(context, DOMException::NETWORK_ERR);
+            m_promise->reject(error->scriptValue());
+            return;
+        }
+
+        const auto result = Escargot::Evaluator::execute(
+            context->scriptBindingInstance()->scriptContext(),
+            [](Escargot::ExecutionStateRef* state,
+               FontFaceSetLoad* load) -> Escargot::ValueRef* {
+                auto* faces = Escargot::ValueVectorRef::create();
+                for (auto* face : load->m_faces) {
+                    faces->pushBack(face->scriptValue());
+                }
+                return Escargot::ArrayObjectRef::create(state, faces);
+            },
+            this);
+        STARFISH_ASSERT(result.isSuccessful());
+        m_promise->fulfill(result.result);
+    }
+
+    Document* m_document;
+    Promise* m_promise;
+    GCVector<FontFace*> m_faces;
+    // Holds completion while start() is registering clients.
+    size_t m_pending{ 1 };
+    bool m_failed{ false };
+    bool m_scheduled{ false };
+};
+
+void FontFaceSetLoadClient::didLoadFinished()
+{
+    m_load->didComplete(false);
+}
+
+void FontFaceSetLoadClient::didLoadFailed()
+{
+    m_load->didComplete(true);
+}
+
+// https://drafts.csswg.org/css-font-loading/#font-face-set-load
+Promise* FontFaceSet::load(String* font, String* text)
+{
+    CSSStyleValuePair style, weight;
+    auto families =
+        parseFontQuery(executionContext(), font, style, weight, true);
+    GCVector<FontFace*> matches;
+
+    // Match the active document rules. The renderer's font list also
+    // contains previously resolved rules and is not the document font set.
+    auto& resolver = m_document->styleResolver();
+    resolver.recalcRuleSetIfNeeds();
+    GCVector<std::pair<CSSStyleDeclaration*, WebFont>> candidates;
+    for (const auto& rule : resolver.m_webFonts) {
+        if (auto face = resolver.resolveWebFont(rule.first, rule.second)) {
+            candidates.emplace_back(rule.first, face.value());
+        }
+    }
+    for (auto it = m_faces.begin(); it != m_faces.end();) {
+        if (std::none_of(
+                candidates.begin(), candidates.end(),
+                [&](const std::pair<CSSStyleDeclaration*, WebFont>& item) {
+                    return item.first == it->first;
+                })) {
+            it = m_faces.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    if (text->length()) {
+        auto sample = text->toUTF32NonGCString();
+        auto queryStyle = style.fontStyleValue();
+        auto requestedWeight = queryWeight(weight.fontWeightValue());
+        for (auto* family : families) {
+            int bestRank = INT_MAX;
+            for (auto& candidate : candidates) {
+                auto& face = candidate.second;
+                if (face.familyName()->equalsIgnoreCase(family)) {
+                    bestRank =
+                        std::min(bestRank, faceMatchRank(face, queryStyle,
+                                                         requestedWeight));
+                }
+            }
+            for (auto& candidate : candidates) {
+                auto& face = candidate.second;
+                if (!face.familyName()->equalsIgnoreCase(family) ||
+                    faceMatchRank(face, queryStyle, requestedWeight) !=
+                        bestRank) {
+                    continue;
+                }
+                auto* ranges = face.unicodeRanges();
+                if (ranges && std::none_of(sample.begin(), sample.end(),
+                                           [ranges](char32_t ch) {
+                                               return ranges->contains(ch);
+                                           })) {
+                    continue;
+                }
+                auto& scriptFace = m_faces[candidate.first];
+                if (!scriptFace || !(scriptFace->font() == face)) {
+                    scriptFace = new FontFace(m_document, face);
+                }
+                if (std::find(matches.begin(), matches.end(), scriptFace) ==
+                    matches.end()) {
+                    matches.push_back(scriptFace);
+                }
+            }
+        }
+    }
+
+    auto* promise = new Promise(executionContext()->scriptBindingInstance());
+    auto* pending =
+        new FontFaceSetLoad(m_document, promise, std::move(matches));
+    m_document->webView()->messageLoop()->addIdler(
+        m_document->window(),
+        [](size_t, void* data) {
+            static_cast<FontFaceSetLoad*>(data)->start();
+        },
+        pending);
+    return promise;
+}
+
+// https://drafts.csswg.org/css-font-loading/#dom-fontfaceset-check
+bool FontFaceSet::check(String* font, String* text)
+{
+    CSSStyleValuePair style, weight;
+    auto familyNames = parseFontQuery(executionContext(), font, style, weight);
     // Style and weight matching and the text's unicode-range filtering are
     // not applied: every web font face of a listed family counts as matching.
     auto& webFonts = m_document->webFontList();
     for (size_t i = 0; i < webFonts.size(); i++) {
         auto& webFont = webFonts[i];
+        if (webFont.fromLocal()) {
+            continue;
+        }
         FontResource* resource = webFont.fontResource();
         if (!resource || !isLoadingState(resource)) {
             continue;

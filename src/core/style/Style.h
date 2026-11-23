@@ -3687,7 +3687,10 @@ enum PseudoElementType ENSURE_ENUM_UNSIGNED {
     PseudoElementMappedTypeEnd = PseudoElementAfter,
 };
 
+class WebFont;
+
 class StyleResolver : public DocumentHoldable, public gc {
+    friend class FontFaceSet;
     friend void computeCSSCombinatorSelectorCache(
         StyleResolver* resolver, Element* element,
         const GCVector<std::pair<StyleRule*, ResourceURL*>>::iterator& begin,
@@ -3905,6 +3908,8 @@ protected:
         const CSSTokenValue& text);
 
     void recalcWebFonts();
+    Optional<WebFont> resolveWebFont(CSSStyleDeclaration* decl,
+                                     ResourceURL* baseURL);
     bool addToRuleSet(CSSStyleSheet* sheet);
     void addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule);
     void registerAttrFilterFromSelectorArguments(

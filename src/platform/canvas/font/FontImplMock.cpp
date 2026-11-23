@@ -26,7 +26,7 @@
 
 namespace Starfish {
 
-class FontFaceImplMock : public FontFace {
+class FontFaceImplMock : public PlatformFontFace {
 public:
     FontFaceImplMock()
     {
@@ -43,7 +43,7 @@ public:
     }
 };
 
-FontFace* FontFace::create(const uint8_t* data, size_t dataLen)
+PlatformFontFace* PlatformFontFace::create(const uint8_t* data, size_t dataLen)
 {
     return new FontFaceImplMock();
 }
@@ -71,8 +71,8 @@ public:
     {
     }
 
-    FontFace* loadFontFaceImpl(String* familyName, float size, char style,
-                               char weight)
+    PlatformFontFace* loadFontFaceImpl(String* familyName, float size,
+                                       char style, char weight)
     {
         FontFaceImplMock* f = new FontFaceImplMock();
         return f;
@@ -98,7 +98,8 @@ public:
         return UTF8StringDataNonGCStd(" ");
     }
 
-    virtual FontFace* loadFontFace(const UTF8StringDataNonGCStd& path) override
+    virtual PlatformFontFace* loadFontFace(
+        const UTF8StringDataNonGCStd& path) override
     {
         return m_face;
     }

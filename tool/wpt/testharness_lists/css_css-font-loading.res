@@ -1,4 +1,4 @@
-# Blocked: FontFace and the FontFaceSet setlike members (size/add/delete/clear/load) are not implemented.
+# Script-created FontFace objects, FontFaceSet setlike members, and worker font sets are not implemented.
 # http://web-platform.test:8000/css/css-font-loading/fontface-fonts-loading.html
 # http://web-platform.test:8000/css/css-font-loading/fontfaceset-update-after-stylesheet-change.html
 # http://web-platform.test:8000/css/css-font-loading/fontfaceset-clear-css-connected.html
@@ -14,7 +14,7 @@
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-font-loading/fontface-loadingevent.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-font-loading/fontface-override-descriptor-getter-setter.sub.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-font-loading/fontfaceset-has.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-font-loading/fontfaceset-load-css-connected.html
+http://web-platform.test:8000/css/css-font-loading/fontfaceset-load-css-connected.html
 # [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/css/css-font-loading/fontfaceset-load-css-wide-keywords.html
 # [auto-fail:HARNESS_STATUS_2] http://web-platform.test:8000/css/css-font-loading/fontfaceset-load-var.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-font-loading/fontfacesetloadevent-constructor.html

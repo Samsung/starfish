@@ -1,0 +1,8 @@
+// https://drafts.csswg.org/css-font-loading/#fontface-interface
+
+[Exposed=Window]
+interface FontFace {
+    readonly attribute FontFaceLoadStatus status;
+};
+
+enum FontFaceLoadStatus { "unloaded", "loading", "loaded", "error" };

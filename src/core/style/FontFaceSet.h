@@ -24,7 +24,9 @@
 
 namespace Starfish {
 
+class CSSStyleDeclaration;
 class Document;
+class FontFace;
 class Promise;
 
 // https://drafts.csswg.org/css-font-loading/#fontfaceset-interface
@@ -42,6 +44,7 @@ public:
 
     String* status() const;
     Promise* ready();
+    Promise* load(String* font, String* text);
     bool check(String* font, String* text);
 
     // Called when a web font starts or stops loading, and when the document
@@ -69,6 +72,7 @@ private:
 
     Document* m_document;
     Promise* m_readyPromise{ nullptr };
+    GCUnorderedMap<CSSStyleDeclaration*, FontFace*> m_faces;
     bool m_isLoading : 1;
     bool m_isReadyPromiseFulfilled : 1;
     bool m_hasFailedFonts : 1;

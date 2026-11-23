@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/style/FontFaceSet.h"
 #include "platform/loader/FontResource.h"
 #include "platform/loader/ResourceLoader.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -29,11 +30,29 @@
 
 namespace Starfish {
 
+void FontResource::requestIfNeeded()
+{
+    if (isRequested()) {
+        return;
+    }
+    Document* document = loader()->document();
+    RequestData* requestData = new RequestData();
+    requestData->m_url = url();
+    requestData->m_referrer = new ReferrerURL(document->documentURI());
+    requestData->m_destination = RequestDestination::Font;
+    requestData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
+
+    request(requestData, true);
+    if (auto fonts = document->fontsIfCreated()) {
+        fonts.value()->didChangeFontLoadingState();
+    }
+}
+
 void FontResource::didLoadFinished()
 {
-    m_fontFace =
-        FontFace::create((const uint8_t*)m_resourceRequest->response().data(),
-                         m_resourceRequest->response().size());
+    m_fontFace = PlatformFontFace::create(
+        (const uint8_t*)m_resourceRequest->response().data(),
+        m_resourceRequest->response().size());
     if (!m_fontFace) {
         Resource::didLoadFailed();
         return;

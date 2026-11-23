@@ -24,7 +24,7 @@
 
 namespace Starfish {
 
-class FontFace;
+class PlatformFontFace;
 class Font;
 class FontSelector;
 class FontResource;
@@ -62,11 +62,11 @@ struct FontMetrics {
     fontSizeInPlxel)                                                   \
     ((fontSizeInPlxel / 16.f) * 1.5f)
 
-class FontFace : public gc {
+class PlatformFontFace : public gc {
     friend class Font;
 
 public:
-    virtual ~FontFace()
+    virtual ~PlatformFontFace()
     {
     }
     virtual FontMetrics metrics(float size) = 0;
@@ -83,12 +83,12 @@ public:
     {
     }
 
-    static FontFace* create(const uint8_t* data, size_t dataLen);
+    static PlatformFontFace* create(const uint8_t* data, size_t dataLen);
 
 protected:
 };
 
-class FontFaceList : public GCVector<FontFace*> {
+class FontFaceList : public GCVector<PlatformFontFace*> {
     friend class Font;
     friend class FontSelector;
 
@@ -122,8 +122,8 @@ public:
     };
 
 protected:
-    void pushRangedFace(FontFace* face, UnicodeRangeList* ranges);
-    void insertRangedFace(size_t position, FontFace* face,
+    void pushRangedFace(PlatformFontFace* face, UnicodeRangeList* ranges);
+    void insertRangedFace(size_t position, PlatformFontFace* face,
                           UnicodeRangeList* ranges);
     void addPendingRangedFont(UnicodeRangeList* ranges, FontResource* resource);
     void rebuildPendingCoverage();
@@ -278,7 +278,7 @@ public:
         return UTF8StringDataNonGCStd();
     }
 
-    virtual FontFace* loadFontFace(const UTF8StringDataNonGCStd& path)
+    virtual PlatformFontFace* loadFontFace(const UTF8StringDataNonGCStd& path)
     {
         return nullptr;
     }
@@ -305,10 +305,10 @@ public:
     {
     }
 
-    FontFace* lookupFaceCache(const UTF8StringDataNonGCStd& mergredFamilyName,
-                              bool& exist);
+    PlatformFontFace* lookupFaceCache(
+        const UTF8StringDataNonGCStd& mergredFamilyName, bool& exist);
     void insertFaceCache(const UTF8StringDataNonGCStd& mergredFamilyName,
-                         FontFace* face);
+                         PlatformFontFace* face);
     void clearFaceCache()
     {
         for (auto& e : m_loadedPlatformFonts) {
@@ -320,7 +320,8 @@ public:
 
 protected:
     std::unordered_set<UTF8StringDataNonGCStd> m_absencePlatformFontNames;
-    GCUnorderedMap<UTF8StringDataNonGCStd, FontFace*> m_loadedPlatformFonts;
+    GCUnorderedMap<UTF8StringDataNonGCStd, PlatformFontFace*>
+        m_loadedPlatformFonts;
 };
 
 class FontSelector : public DocumentHoldable, public gc {
@@ -343,7 +344,8 @@ public:
         return m_platformFontCache;
     }
 
-    FontFace* loadLocalWebFont(String* localFontName, char style, char weight);
+    PlatformFontFace* loadLocalWebFont(String* localFontName, char style,
+                                       char weight);
 
     // Fetches the pending ranged web fonts covering ch; those already
     // available join the face list at their place.
@@ -367,7 +369,8 @@ protected:
 
     GCUnorderedMap<UTF8StringDataNonGCStd, FontFaceList*> m_fontFaceListCache;
     GCUnorderedMap<UTF8StringDataNonGCStd, Font*> m_fontCache;
-    GCUnorderedMap<UTF8StringDataNonGCStd, FontFace*> m_webFontLocalSrcCache;
+    GCUnorderedMap<UTF8StringDataNonGCStd, PlatformFontFace*>
+        m_webFontLocalSrcCache;
 
     FontSelector(Document* document, PlatformFontSelector* platformFontSelector,
                  PlatformFontCache* platformFontCache)
@@ -380,9 +383,9 @@ protected:
     {
     }
 
-    virtual FontFace* loadFromPlatform(const UTF8StringDataNonGCStd& fm,
-                                       bool isGenericName, char style,
-                                       char weight);
+    virtual PlatformFontFace* loadFromPlatform(const UTF8StringDataNonGCStd& fm,
+                                               bool isGenericName, char style,
+                                               char weight);
 };
 }; // namespace Starfish
 #endif

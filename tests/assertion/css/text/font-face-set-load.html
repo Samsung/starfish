@@ -1,0 +1,68 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+@font-face {
+    font-family: "On Demand";
+    src: url("../../../fixtures/resources/webkit/Ahem.woff");
+    unicode-range: U+0041;
+}
+@font-face {
+    font-family: "On Demand";
+    src: url("data:font/woff,invalid-font");
+    unicode-range: U+0042;
+}
+</style>
+<script>
+if (typeof testEnd !== "function") {
+    let passed = 0;
+    let failed = 0;
+    const assert = console.assert.bind(console);
+    console.assert = (condition, message) => {
+        if (condition) {
+            ++passed;
+        } else {
+            ++failed;
+            assert(false, message);
+        }
+    };
+    window.testEnd = () => {
+        document.title = (failed ? "FAIL" : "PASS") +
+            " (" + passed + " passed, " + failed + " failed)";
+        console.log("[font-face-set-load] " + document.title);
+    };
+}
+
+(async () => {
+    const font = '16px "On Demand"';
+    const [first, second] = await Promise.all([
+        document.fonts.load(font, "A"),
+        document.fonts.load(font, "A")
+    ]);
+    console.assert(first.length === 1 && first[0] instanceof FontFace &&
+        first[0].status === "loaded", "Expected one loaded FontFace, got " + first.length);
+    console.assert(second[0] === first[0], "Concurrent calls must return the same FontFace");
+
+    const unmatched = await document.fonts.load(font, "C");
+    console.assert(unmatched.length === 0, "Unexpected match for C: " + unmatched.length);
+
+    for (const input of ["inherit", "medium revert-layer", "var(--size) serif"]) {
+        let invalid;
+        try {
+            const result = document.fonts.load(input);
+            console.assert(result instanceof Promise, "Invalid syntax must return a rejected Promise");
+            await result;
+        } catch (error) {
+            invalid = error.name;
+        }
+        console.assert(invalid === "SyntaxError", input + " should reject with SyntaxError, got " + invalid);
+    }
+
+    let failed;
+    try {
+        await document.fonts.load(font, "B");
+    } catch (error) {
+        failed = error.name;
+    }
+    console.assert(failed === "NetworkError", "Expected NetworkError, got " + failed);
+})().catch(error => console.assert(false, error.name + ": " + error.message)).then(() => testEnd());
+</script>

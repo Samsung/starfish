@@ -381,6 +381,7 @@ tests/assertion/css/values/calc-infinity-clamped.html
 tests/assertion/css/values/background-position-layers-serialize.html
 tests/crash/calc-empty-comparison-function.html
 tests/assertion/css/cssom/cssfontfacerule-style.html
+tests/assertion/css/text/font-face-set-load.html
 tests/assertion/css/cssom/rule-csstext-custom-properties.html
 tests/assertion/css/cssom/stylerule-keyframerule-csstext.html
 tests/assertion/css/cssom/computed-inset-fixed-length.html
