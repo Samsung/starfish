@@ -3200,8 +3200,16 @@ uint32_t CompositorFactory::maximumTextureSizeGl()
 static uint64_t g_canvasSurfaceContentVersion;
 
 class CanvasSurfaceGL;
-using CanvasSurfaceGLList = std::list<CanvasSurfaceGL*>;
-// The standard allocator keeps the surface pointers outside the GC heap.
+struct CanvasSurfaceGLListEntry;
+using CanvasSurfaceGLList = std::list<CanvasSurfaceGLListEntry>;
+
+// Debug iterators link to each other, so keep them in the non-GC list nodes.
+// The node's destructor also unlinks its iterator when the entry is erased.
+struct CanvasSurfaceGLListEntry {
+    CanvasSurfaceGL* surface;
+    CanvasSurfaceGLList::iterator position;
+};
+
 // Surface creation, reclaim and renderer teardown share the render thread.
 // Keep TLS trivially destructible so it does not pin the implementation DSO.
 static thread_local CanvasSurfaceGLList* g_canvasSurfaces;
@@ -3249,8 +3257,10 @@ public:
         if (!g_canvasSurfaces) {
             g_canvasSurfaces = new CanvasSurfaceGLList();
         }
-        m_surfaceEntry =
-            g_canvasSurfaces->insert(g_canvasSurfaces->end(), this);
+        auto entry =
+            g_canvasSurfaces->insert(g_canvasSurfaces->end(), { this, {} });
+        m_surfaceEntry = &*entry;
+        m_surfaceEntry->position = entry;
     }
 
     GL* gl()
@@ -4147,7 +4157,7 @@ public:
 protected:
     friend class CompositorImplGL;
     Optional<Renderer*> m_renderer;
-    CanvasSurfaceGLList::iterator m_surfaceEntry;
+    CanvasSurfaceGLListEntry* m_surfaceEntry;
     unsigned char* m_buffer;
     size_t m_width;
     size_t m_height;
@@ -4201,7 +4211,8 @@ void CanvasSurfaceGL::clearNativeResources()
     }
     detachNativeBuffer();
     m_renderer.reset();
-    g_canvasSurfaces->erase(m_surfaceEntry);
+    g_canvasSurfaces->erase(m_surfaceEntry->position);
+    m_surfaceEntry = nullptr;
     if (g_canvasSurfaces->empty()) {
         delete g_canvasSurfaces;
         g_canvasSurfaces = nullptr;
@@ -4217,7 +4228,7 @@ void CanvasSurfaceGL::detachSurfacesForRenderer(Renderer* renderer)
     // lock, so it cannot allocate GC objects that would reclaim another entry.
     for (auto it = g_canvasSurfaces->begin();
          g_canvasSurfaces && it != g_canvasSurfaces->end();) {
-        auto* surface = *it++;
+        auto* surface = (it++)->surface;
         if (surface->m_renderer.value() == renderer) {
             surface->clearNativeResources();
         }
