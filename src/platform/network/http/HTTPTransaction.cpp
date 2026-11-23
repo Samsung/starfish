@@ -119,6 +119,18 @@ void HTTPTransaction::preprocess()
         curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
         curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYHOST, 0L);
     }
+#if defined(STARFISH_WINDOWS)
+    // Some corporate HTTPS proxies issue certificates without revocation URLs.
+    // Allow those connections while preserving chain and hostname verification.
+#if defined(CURLSSLOPT_REVOKE_BEST_EFFORT)
+    constexpr long sslOptions = CURLSSLOPT_REVOKE_BEST_EFFORT;
+#else
+    // The DALi SDK ships curl 7.66, which can only disable revocation checks
+    // entirely.
+    constexpr long sslOptions = CURLSSLOPT_NO_REVOKE;
+#endif
+    curl_easy_setopt(m_curl, CURLOPT_SSL_OPTIONS, sslOptions);
+#endif
 #if defined(STARFISH_ANDROID)
     STARFISH_ASSERT(getenv("STARFISH_CURL_CA_BUNDLE"));
     curl_easy_setopt(m_curl, CURLOPT_CAINFO, getenv("STARFISH_CURL_CA_BUNDLE"));
