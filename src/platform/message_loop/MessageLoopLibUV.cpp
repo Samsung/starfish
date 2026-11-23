@@ -356,6 +356,9 @@ void MessageLoopLibUV::destroy()
     }
 
     uv_close((uv_handle_t*)m_idlerThreadAsyncHandle, on_close_handle);
+
+    // The collector reclaims the loop without running its C++ destructor.
+    std::unordered_set<size_t>().swap(m_idlers);
 }
 
 void MessageLoopLibUV::runOnMainThreadAsync(
