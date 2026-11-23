@@ -24,6 +24,39 @@ static void require(bool condition, const char* message)
     }
 }
 
+class PostUnloadMemory {
+public:
+    void report(int cycle)
+    {
+        // Sample after dlclose, GLib cleanup and the resource checks.
+        FILE* smaps = std::fopen("/proc/self/smaps_rollup", "r");
+        require(smaps, "cannot inspect post-unload memory");
+        char line[256];
+        long long rss = -1;
+        long long privateDirty = -1;
+        while (std::fgets(line, sizeof(line), smaps)) {
+            std::sscanf(line, "Rss: %lld kB", &rss);
+            std::sscanf(line, "Private_Dirty: %lld kB", &privateDirty);
+        }
+        std::fclose(smaps);
+        require(rss >= 0 && privateDirty >= 0,
+                "post-unload memory counters are missing");
+        if (cycle == 1) {
+            m_initialRss = rss;
+            m_initialPrivateDirty = privateDirty;
+        }
+        std::printf(
+            "Post-unload memory cycle %d: RSS %lld KiB (%+lld), "
+            "Private_Dirty %lld KiB (%+lld) vs cycle 1\n",
+            cycle, rss, rss - m_initialRss, privateDirty,
+            privateDirty - m_initialPrivateDirty);
+    }
+
+private:
+    long long m_initialRss = 0;
+    long long m_initialPrivateDirty = 0;
+};
+
 template <typename T>
 static T symbol(void* handle, const char* name)
 {
@@ -116,6 +149,7 @@ static int runAPITest(const char* implPath, const char* apiPath,
     std::string pageURL =
         std::string("file://") + storage + "/unload-page.html";
     size_t previousThread = 0;
+    PostUnloadMemory memory;
     for (int cycle = 0; cycle < cycles; ++cycle) {
         require(!mapped(apiPath), "API was mapped before dlopen");
         require(!mapped(implPath), "impl was mapped before API dlopen");
@@ -207,6 +241,9 @@ static int runAPITest(const char* implPath, const char* apiPath,
                 "API reload leaked a thread");
         require(entries("/proc/self/fd") == initialFDs,
                 "API reload leaked a file descriptor");
+        if (!legacy) {
+            memory.report(cycle + 1);
+        }
         std::printf("PASS API cycle %d: impl unmaps, API resets, %s TID %zu\n",
                     cycle + 1, hostThread ? "host" : "dedicated",
                     previousThread);
@@ -240,6 +277,7 @@ int main(int argc, char** argv)
     std::string pageURL =
         std::string("file://") + storage + "/unload-page.html";
     size_t previousThread = 0;
+    PostUnloadMemory memory;
     for (int cycle = 0; cycle < cycles; ++cycle) {
         require(!mapped(path), "impl was already mapped before dlopen");
         void* handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
@@ -353,6 +391,7 @@ int main(int argc, char** argv)
             }
             require(false, "file descriptor count grew across unload");
         }
+        memory.report(cycle + 1);
         std::printf(
             "PASS cycle %d: globals/TLS reset, unmapped impl, %s TID %zu\n",
             cycle + 1, hostThread ? "host" : "dedicated", previousThread);
