@@ -51,13 +51,19 @@
 
 namespace Starfish {
 
-String* const String::emptyString = String::createASCIIStringWithNoGC("");
-String* const String::spaceString = String::createASCIIStringWithNoGC(" ");
-String* const String::inheritString =
-    String::createASCIIStringWithNoGC("inherit");
-String* const String::initialString =
-    String::createASCIIStringWithNoGC("initial");
-String* const String::unsetString = String::createASCIIStringWithNoGC("unset");
+namespace {
+    StringDataNonGCASCII emptyLiteral("", 0);
+    StringDataNonGCASCII spaceLiteral(" ", 1);
+    StringDataNonGCASCII inheritLiteral("inherit", 7);
+    StringDataNonGCASCII initialLiteral("initial", 7);
+    StringDataNonGCASCII unsetLiteral("unset", 5);
+} // namespace
+
+String* const String::emptyString = &emptyLiteral;
+String* const String::spaceString = &spaceLiteral;
+String* const String::inheritString = &inheritLiteral;
+String* const String::initialString = &initialLiteral;
+String* const String::unsetString = &unsetLiteral;
 
 static size_t utf8ContentLength(const char* UTF8, size_t len)
 {

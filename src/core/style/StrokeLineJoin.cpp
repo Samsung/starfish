@@ -26,7 +26,7 @@ namespace Starfish {
 String* strokeLineJoinToString(StrokeLineJoin lineJoin)
 {
     if (lineJoin == StrokeLineJoin::Round) {
-        return String::createASCIIStringWithNoGC("round");
+        return String::createASCIIString("round");
     } else if (lineJoin == StrokeLineJoin::Bevel) {
         return String::createASCIIString("bevel");
     } else {

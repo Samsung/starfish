@@ -270,21 +270,15 @@ String* CounterStyle::generateLabel(int32_t pos) const
 String* CounterStyle::getDefaultNegative()
 {
     STARFISH_ASSERT(isMainThread());
-    static String* negative = String::emptyString;
-    if (!negative->length()) {
-        negative = String::createASCIIStringWithNoGC("-");
-    }
-    return negative;
+    static StringDataNonGCASCII negative("-", 1);
+    return &negative;
 }
 
 String* CounterStyle::getDefaultSuffix()
 {
     STARFISH_ASSERT(isMainThread());
-    static String* suffix = String::emptyString;
-    if (!suffix->length()) {
-        suffix = String::createASCIIStringWithNoGC(". ");
-    }
-    return suffix;
+    static StringDataNonGCASCII suffix(". ", 2);
+    return &suffix;
 }
 
 const CounterStyle* CounterStyle::getKnownCounter(String* name)
