@@ -1874,7 +1874,7 @@ Verified against `src/core/style/CSSStyleLookupTrie.cpp`, `src/core/style/Style.
 
 **Supported overflow keywords.** `overflow`, `overflow-x`, `overflow-y` accept `visible`, `hidden`, `auto`, `scroll`. Per-axis values round-trip through inline style and `getComputedStyle`. When one axis is set to `visible` while the other is non-`visible`, the non-`visible` axis correctly remaps the `visible` axis to `auto` at computed-style time (per CSS Overflow 3 §3).
 
-**`overflow: clip` is unsupported.** A single-value `overflow: clip` declaration is silently rewritten to `hidden` at the parser; the inline style stores the empty string and `getComputedStyle` returns `"hidden"`. No warning is logged for this rewrite (unlike the other unsupported scroll properties below). `overflow-clip-margin` is fully unsupported — the declaration is dropped and `Unsupported css property: overflow-clip-margin` is logged.
+**`overflow: clip` is unsupported.** The declaration is dropped, leaving the previous overflow value (initially `visible`) in effect. `overflow-clip-margin` is fully unsupported — the declaration is dropped and `Unsupported css property: overflow-clip-margin` is logged.
 
 **Two-value `overflow` shorthand.** `overflow: hidden auto` sets `overflow-x` to the first keyword and `overflow-y` to the second; the shorthand serializes both keywords when they differ. More than two keywords make the declaration invalid.
 

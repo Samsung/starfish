@@ -1,0 +1,43 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Percentage text-indent does not contribute to intrinsic widths</title>
+<link rel="help" href="https://drafts.csswg.org/css-text-3/#text-indent-property">
+<style>
+  .container { width: 200px; }
+  .box { display: inline-block; font: 16px/1 Ahem;
+         border: 2px solid; padding: 4px; margin: 3px; }
+</style>
+<div class="container" id="container"></div>
+<script>
+// CSS Text 3 ignores percentages in text-indent for intrinsic size
+// contributions, including when the available width is definite. The word
+// crosses inline boundaries, which do not introduce wrap opportunities.
+function box(width, indent) {
+  var element = document.createElement("div");
+  element.className = "box";
+  element.style.width = width;
+  element.style.textIndent = indent;
+  element.innerHTML = "a<span>bc</span>defgh ijk lmn opq";
+  document.getElementById("container").appendChild(element);
+  return element;
+}
+function check(width, indent, referenceIndent) {
+  var reference = box(width, referenceIndent);
+  var target = box(width, indent);
+  var expected = reference.getBoundingClientRect().width;
+  var actual = target.getBoundingClientRect().width;
+  console.assert(Math.abs(actual - expected) < 1,
+                 width + " / " + indent + ": " + actual + " != " + expected);
+  target.style.textIndent = referenceIndent;
+  console.assert(Math.abs(target.getBoundingClientRect().width - expected) < 1,
+                 "Changing text-indent preserves the intrinsic width");
+  reference.remove();
+  target.remove();
+}
+["auto", "min-content", "max-content"].forEach(function (width) {
+  check(width, "50%", "0px");
+  check(width, "-50%", "0px");
+  check(width, "calc(50% + 20px)", "20px");
+});
+if (typeof testEnd === "function") testEnd();
+</script>

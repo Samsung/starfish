@@ -456,6 +456,7 @@ tests/assertion/css/minmaxwidthheight/min-width-wins-over-max-width.html
 tests/assertion/css/minmaxwidthheight/intrinsic-width-keywords-items.html
 tests/assertion/css/minmaxwidthheight/intrinsic-height-keywords.html
 tests/pixel/css/text/text-indent-basic.html
+tests/assertion/css/text/text-indent-intrinsic-percent.html
 tests/pixel/css/text/text-align-001.html
 tests/pixel/css/width/dont-break-line.html
 tests/assertion/css/width/replaced_percent_width_resolves_against_content_width.html

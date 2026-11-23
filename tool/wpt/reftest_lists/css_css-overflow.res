@@ -336,7 +336,9 @@ http://web-platform.test:8000/css/css-overflow/overflow-clip-margin-mul-column-p
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/overflow-clip-margin-visual-box-and-value-with-border-radius.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/overflow-clip-margin-visual-box-and-value.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/overflow-clip-margin-visual-box.html
-http://web-platform.test:8000/css/css-overflow/overflow-clip-rounded-table.html
+# overflow: clip is unsupported; visible overflow used to be clipped by the
+# compositor, making this match the overflow: hidden reference by accident.
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/overflow-clip-rounded-table.html
 http://web-platform.test:8000/css/css-overflow/overflow-clip-transform-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/overflow-clip-x-visible-y-svg.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-overflow/overflow-clip-y-visible-x-svg.html

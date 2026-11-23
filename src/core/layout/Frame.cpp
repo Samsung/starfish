@@ -1604,7 +1604,10 @@ void Frame::computeShouldApplyOverflow()
         if (thisNode->isHTMLHtmlElement()) {
             m_flags.m_shouldApplyOverflow = false;
             return;
-        } else if (thisNode->isHTMLBodyElement()) {
+        } else if (thisNode->isHTMLBodyElement() &&
+                   thisNode == thisNode->document()->body()) {
+            // css-overflow-3 #overflow-propagation: only the first body
+            // propagates its overflow to the viewport.
             HTMLHtmlElement* html = thisNode->document()->rootElement();
             if (html->style()->overflowX() == OverflowValue::VisibleOverflow &&
                 html->style()->overflowY() == OverflowValue::VisibleOverflow) {
