@@ -42,6 +42,7 @@ class WebGLObject;
 class WebGLProgram;
 class WebGLShader;
 class WebGLTexture;
+struct TextureImageLevelInfo;
 class WebGLFramebuffer;
 class WebGLRenderbuffer;
 class WebGLUniformLocation;
@@ -696,6 +697,23 @@ protected:
     // drawing buffer's resolved image bound to READ_FRAMEBUFFER in place of
     // the multisampled one, when that is what READ_FRAMEBUFFER reads.
     void readFromReadFramebuffer(const std::function<void()>& read);
+    // The rectangle of a copyTexSubImage* call: xoffset and yoffset in
+    // the destination level, x, y, width and height in the read framebuffer.
+    struct CopyRect {
+        GLint xoffset;
+        GLint yoffset;
+        GLint x;
+        GLint y;
+        GLsizei width;
+        GLsizei height;
+    };
+    // Clips `rect` to the read framebuffer and moves the destination offset
+    // with it, as WebGL leaves texels of outside pixels untouched. Checks
+    // the whole rectangle against `destination` first, since the GL sees only
+    // the clipped one; INVALID_VALUE, and false, when it does not fit.
+    bool clipCopyToReadFramebuffer(const TextureImageLevelInfo* destination,
+                                   GLsizei destinationDepth, GLint zoffset,
+                                   CopyRect& rect);
     // Clears the image of `renderbuffer`'s storage to its initial values
     // (initializeImage()).
     void initializeRenderbuffer(WebGLRenderbuffer* renderbuffer);

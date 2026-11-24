@@ -5712,9 +5712,17 @@ void WebGL2RenderingContext::copyTexSubImage3D(GLenum target, GLint level,
         return;
     }
 
+    const TextureImageLevelInfo* destination =
+        texture->getImageLevelInfo(target, level);
+    CopyRect rect = { xoffset, yoffset, x, y, width, height };
+    if (!clipCopyToReadFramebuffer(
+            destination, destination ? destination->depth : 0, zoffset, rect)) {
+        return;
+    }
     readFromReadFramebuffer([&] {
-        gl()->copyTexSubImage3D(target, level, xoffset, yoffset, zoffset, x, y,
-                                width, height);
+        gl()->copyTexSubImage3D(target, level, rect.xoffset, rect.yoffset,
+                                zoffset, rect.x, rect.y, rect.width,
+                                rect.height);
     });
 }
 

@@ -3970,6 +3970,56 @@ bool WebGLRenderingContext::readFramebufferSize(GLsizei& width, GLsizei& height)
     return fb->getColorAttachmentSize(readAttachmentIndex, width, height);
 }
 
+bool WebGLRenderingContext::clipCopyToReadFramebuffer(
+    const TextureImageLevelInfo* destination, GLsizei destinationDepth,
+    GLint zoffset, CopyRect& rect)
+{
+    // WebGL 1.0 "Reading Pixels Outside the Framebuffer": the destination
+    // texels of pixels outside the read framebuffer are left untouched. Some
+    // GL drivers write the framebuffer's edge pixels there, so copy only
+    // the part inside it.
+    GLsizei fbWidth = 0;
+    GLsizei fbHeight = 0;
+    if (!readFramebufferSize(fbWidth, fbHeight)) {
+        return true;
+    }
+    const int64_t x0 = std::max<int64_t>(rect.x, 0);
+    const int64_t y0 = std::max<int64_t>(rect.y, 0);
+    const int64_t x1 = std::min<int64_t>(int64_t(rect.x) + rect.width, fbWidth);
+    const int64_t y1 =
+        std::min<int64_t>(int64_t(rect.y) + rect.height, fbHeight);
+    if (x0 == rect.x && y0 == rect.y && x1 == int64_t(rect.x) + rect.width &&
+        y1 == int64_t(rect.y) + rect.height) {
+        return true;
+    }
+    // The GL only sees the clipped rectangle, so check the whole one against
+    // the destination here. A level that is not defined needs no check:
+    // the caller's GL copy fails on it anyway.
+    if (destination && destination->isDefined) {
+        if (int64_t(rect.xoffset) + rect.width > destination->width ||
+            int64_t(rect.yoffset) + rect.height > destination->height ||
+            zoffset >= destinationDepth) {
+            setGLError(GL_INVALID_VALUE,
+                       "the rectangle does not fit in the texture level");
+            return false;
+        }
+    }
+    if (x1 <= x0 || y1 <= y0) {
+        // Nothing to copy. A 0x0 copy keeps the GL's other checks, such as
+        // format compatibility.
+        rect.width = 0;
+        rect.height = 0;
+        return true;
+    }
+    rect.xoffset += GLint(x0 - rect.x);
+    rect.yoffset += GLint(y0 - rect.y);
+    rect.x = GLint(x0);
+    rect.y = GLint(y0);
+    rect.width = GLsizei(x1 - x0);
+    rect.height = GLsizei(y1 - y0);
+    return true;
+}
+
 void WebGLRenderingContext::copyTexSubImage2D(GLenum target, GLint level,
                                               GLint xoffset, GLint yoffset,
                                               GLint x, GLint y, GLsizei width,
@@ -4046,10 +4096,15 @@ void WebGLRenderingContext::copyTexSubImage2D(GLenum target, GLint level,
         }
     }
 
+    CopyRect rect = { xoffset, yoffset, x, y, width, height };
+    if (!clipCopyToReadFramebuffer(destination, 1, 0, rect)) {
+        return;
+    }
     readFromReadFramebuffer([&] {
-        m_gl->copyTexSubImage2D(target, level, xoffset, yoffset,
-                                copyOriginForGL(x, width),
-                                copyOriginForGL(y, height), width, height);
+        m_gl->copyTexSubImage2D(target, level, rect.xoffset, rect.yoffset,
+                                copyOriginForGL(rect.x, rect.width),
+                                copyOriginForGL(rect.y, rect.height),
+                                rect.width, rect.height);
     });
 }
 
