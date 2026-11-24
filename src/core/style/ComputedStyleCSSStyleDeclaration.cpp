@@ -119,7 +119,9 @@ void ComputedStyleCSSStyleDeclaration::triggerResolveComputedStyleIfNeeds(
         }
         break;
     case RequiredStyleResolveStage::Layout:
-        if (m_node->frame() ? m_node->frame()->needsLayout() : true) {
+        // A used value can depend on pending layout outside this frame.
+        if (browsingContext->needsFrameTreeBuild() ||
+            browsingContext->needsLayout()) {
             browsingContext->layoutIfNeeded();
         }
         break;
