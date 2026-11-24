@@ -198,3 +198,7 @@ http://web-platform.test:8000/dom/nodes/Node-nodeName-xhtml.xhtml
 http://web-platform.test:8000/dom/nodes/ProcessingInstruction-in-doctype.xhtml
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/dom/nodes/ProcessingInstruction-literal-1.xhtml
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/dom/nodes/ProcessingInstruction-literal-2.xhtml
+http://web-platform.test:8000/dom/nodes/ParentNode-querySelector-case-insensitive.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/dom/nodes/Element-matches.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/dom/nodes/Element-closest.html
+# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/dom/nodes/ParentNode-querySelector-All.html

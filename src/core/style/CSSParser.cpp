@@ -1971,20 +1971,36 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
         if (nsURI.hasValue()) {
             // Preserve original identifier case so non-HTML (e.g. SVG camelCase
             // tags like feFlood) and XML type selectors match case-sensitively
-            // per Selectors 4 § 3.3 / HTML § 4.16.3.
+            // per Selectors 4 § 3.3 / HTML § 4.16.3. Keep the ASCII-lowercased
+            // form only when the parsed name contains uppercase letters.
             AtomicString localName = elementName.toAtomicString(starfish());
+            AtomicString lowercasedLocalName =
+                elementName.toAttrAtomicString(starfish());
             QualifiedName qname =
                 explicitNamespace
                     ? QualifiedName(prefix.toAttrAtomicString(starfish()),
                                     nsURI.getValue(), localName)
                     : QualifiedName(nsURI.getValue(), localName);
-            selector = new CSSNamespacedTagSelector(qname);
-        } else {
-            selector = getSelector({ isStar ? CSSSelector::Type::Universal
-                                            : CSSSelector::Type::Tag,
+            selector = new CSSNamespacedTagSelector(
+                qname, lowercasedLocalName != localName ? lowercasedLocalName
+                                                        : AtomicString());
+        } else if (isStar) {
+            selector = getSelector({ CSSSelector::Type::Universal,
                                      CSSSelector::PseudoNone,
                                      CSSSelector::CaseInsensitive,
                                      elementName.toAtomicString(starfish()) });
+        } else {
+            AtomicString tagText = elementName.toAtomicString(starfish());
+            AtomicString lowercasedText =
+                elementName.toAttrAtomicString(starfish());
+            if (lowercasedText != tagText) {
+                selector =
+                    new CSSCaseInsensitiveTagSelector(tagText, lowercasedText);
+            } else {
+                selector = getSelector(
+                    { CSSSelector::Type::Tag, CSSSelector::PseudoNone,
+                      CSSSelector::CaseInsensitive, tagText });
+            }
         }
 
         selectorList->insert(selectorList->begin(),

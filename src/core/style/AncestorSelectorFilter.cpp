@@ -39,27 +39,13 @@ namespace Starfish {
 
 enum { TagNameSalt = 13, IdSalt = 17, ClassNameSalt = 19 };
 
-static inline unsigned asciiLowerTagHash(String* str)
-{
-    auto data = str->bufferAccessData();
-    size_t hash = static_cast<size_t>(0xc70f6907UL);
-    for (size_t i = 0; i < data.length; i++) {
-        char32_t ch = data.charAt(i);
-        if (ch >= 'A' && ch <= 'Z') {
-            ch += ('a' - 'A');
-        }
-        hash = (hash * 131) + ch;
-    }
-    return static_cast<unsigned>(hash) * TagNameSalt;
-}
-
 template <typename V>
 static void collectElementIdentifierHashes(Element* element,
                                            V& identifierHashes,
                                            BloomFilter<12>& bloomFilter)
 {
     unsigned hash =
-        asciiLowerTagHash(element->name().localNameAtomic().string());
+        element->name().localNameAtomic().string()->hashValue() * TagNameSalt;
     bloomFilter.add(hash);
     identifierHashes.push_back(hash);
 
@@ -109,18 +95,27 @@ static inline void collectDescendantSelectorIdentifierHashes(
             selector->selectorText().string()->hashValue() * ClassNameSalt;
         break;
     case CSSSelector::Tag:
-        (*hash++) = asciiLowerTagHash(selector->selectorText().string());
+        if (selector->isCaseInsensitiveTagSelector()) {
+            // An uppercase type selector matches HTML elements by the
+            // lowercased name and SVG/XML elements by the exact name. Skip
+            // collecting so the bloom filter never falsely rejects either.
+            break;
+        }
+        (*hash++) =
+            selector->selectorText().string()->hashValue() * TagNameSalt;
         break;
     case CSSSelector::NamespacedTag: {
         // Same as Tag above (selectorText() is the bare local name), unless
-        // the local name is the wildcard ("svg|*") -- no concrete tag name
-        // to hash then, so contribute nothing (safe: an omitted hash can
-        // only make the filter more conservative, never cause a false
-        // reject of a rule that could actually match).
+        // the local name is the wildcard ("svg|*") or contains uppercase
+        // letters.
         const QualifiedName& name =
             selector->asCSSNamespacedTagSelector()->qualifiedName();
-        if (!name.localName()->equals("*")) {
-            (*hash++) = asciiLowerTagHash(selector->selectorText().string());
+        if (!name.localName()->equals("*") &&
+            selector->asCSSNamespacedTagSelector()
+                ->lowercasedLocalName()
+                .isEmptyAtomicString()) {
+            (*hash++) =
+                selector->selectorText().string()->hashValue() * TagNameSalt;
         }
         break;
     }

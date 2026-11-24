@@ -7,6 +7,7 @@
   <link rel="help" href="https://html.spec.whatwg.org/multipage/semantics-other.html#case-sensitivity-of-selectors">
   <style>
     DIV#htmlBox { color: rgb(0, 128, 0); }
+    DIV p { background-color: rgb(1, 2, 3); }
     feFlood { color: rgb(10, 20, 30); }
     feflood { color: rgb(255, 0, 0); }
     filter feFlood { opacity: 0.5; }
@@ -15,7 +16,7 @@
   </style>
 </head>
 <body>
-  <div id="htmlBox">hello</div>
+  <div id="htmlBox"><p id="htmlDesc">hello</p></div>
   <svg width="20" height="20">
     <defs>
       <filter id="flt">
@@ -30,9 +31,13 @@
     const svgNs = 'http://www.w3.org/2000/svg';
 
     // HTML elements match ASCII case-insensitively (both bare tag fast path and compound)
-    console.assert(document.querySelector('DIV') === document.getElementById('htmlBox'), 'bare DIV matches <div>');
-    console.assert(document.querySelector('DIV#htmlBox') === document.getElementById('htmlBox'), 'DIV#htmlBox matches <div>');
-    console.assert(getComputedStyle(document.getElementById('htmlBox')).color === 'rgb(0, 128, 0)', 'DIV style rule applies to <div>');
+    const htmlBox = document.getElementById('htmlBox');
+    console.assert(document.querySelector('DIV') === htmlBox, 'bare DIV matches <div>');
+    console.assert(document.querySelector('DIV#htmlBox') === htmlBox, 'DIV#htmlBox matches <div>');
+    console.assert(htmlBox.matches('DIV') && htmlBox.matches('div'), 'matches("DIV") and matches("div")');
+    console.assert(htmlBox.closest('DIV') === htmlBox, 'closest("DIV") finds <div>');
+    console.assert(getComputedStyle(htmlBox).color === 'rgb(0, 128, 0)', 'DIV style rule applies to <div>');
+    console.assert(getComputedStyle(document.getElementById('htmlDesc')).backgroundColor === 'rgb(1, 2, 3)', 'DIV p descendant rule applies');
 
     // Uppercase XHTML element created via createElementNS in HTML doc also matches ASCII case-insensitively
     const upperHtml = document.createElementNS('http://www.w3.org/1999/xhtml', 'CUSTOMHTML');
@@ -65,9 +70,11 @@
     console.assert(svg.querySelector('feflood') === null, 'detached SVG querySelector("feflood") returns null');
 
     // XML documents match all elements case-sensitively
-    const xmlDoc = new DOMParser().parseFromString('<Root><Child/></Root>', 'text/xml');
+    const xmlDoc = new DOMParser().parseFromString('<Root><Child/><div xmlns="http://www.w3.org/1999/xhtml"/></Root>', 'application/xml');
     console.assert(xmlDoc.querySelector('Child') !== null, 'XML querySelector("Child") matches <Child>');
     console.assert(xmlDoc.querySelector('child') === null, 'XML querySelector("child") must NOT match <Child>');
+    const xmlDiv = xmlDoc.querySelector('div');
+    console.assert(xmlDiv !== null && xmlDiv.matches('div') && !xmlDiv.matches('DIV'), 'XML XHTML element matches case-sensitively');
 
     if (typeof testEnd === 'function') {
       testEnd();
