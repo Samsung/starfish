@@ -133,10 +133,8 @@ bool AnimationUtil::backgroundSizeToAnimatedValue(
     ComputedStyle* oldStyle, ComputedStyle* newStyle, FrameBox* oldPaintingBox,
     Element* element, AnimatedValue& from, AnimatedValue& to, uint32_t layer)
 {
-    STARFISH_ASSERT(newStyle->background());
-    STARFISH_ASSERT(newStyle->backgroundImage(layer));
-
-    if (!newStyle->backgroundImage(layer)->type().isURL()) {
+    auto* image = newStyle->backgroundImage(layer);
+    if (!oldStyle->backgroundImage(layer) || !image || !image->type().isURL()) {
         // TODO support gradient
         return false;
     }
@@ -216,9 +214,13 @@ bool AnimationUtil::backgroundPosXToAnimatedValue(
     ComputedStyle* oldStyle, ComputedStyle* newStyle, FrameBox* oldPaintingBox,
     Element* element, AnimatedValue& from, AnimatedValue& to, uint32_t layer)
 {
-    STARFISH_ASSERT(newStyle->backgroundImage(layer));
-    ImageValueType newType = newStyle->backgroundImage(layer)->type();
-    if (oldStyle->backgroundImage(layer)->type() != newType ||
+    auto* oldImage = oldStyle->backgroundImage(layer);
+    auto* newImage = newStyle->backgroundImage(layer);
+    if (!oldImage || !newImage) {
+        return false;
+    }
+    ImageValueType newType = newImage->type();
+    if (oldImage->type() != newType ||
         !(newType.isURL() || newType.isGradient())) {
         return false;
     }
@@ -265,9 +267,13 @@ bool AnimationUtil::backgroundPosYToAnimatedValue(
     ComputedStyle* oldStyle, ComputedStyle* newStyle, FrameBox* oldPaintingBox,
     Element* element, AnimatedValue& from, AnimatedValue& to, uint32_t layer)
 {
-    STARFISH_ASSERT(newStyle->backgroundImage(layer));
-    ImageValueType newType = newStyle->backgroundImage(layer)->type();
-    if (oldStyle->backgroundImage(layer)->type() != newType ||
+    auto* oldImage = oldStyle->backgroundImage(layer);
+    auto* newImage = newStyle->backgroundImage(layer);
+    if (!oldImage || !newImage) {
+        return false;
+    }
+    ImageValueType newType = newImage->type();
+    if (oldImage->type() != newType ||
         !(newType.isURL() || newType.isGradient())) {
         return false;
     }

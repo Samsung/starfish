@@ -347,7 +347,11 @@ public:
         after = after ? after : &tempFiller;
         size_t maxLayer =
             std::max(before->m_maxLayerImage, after->m_maxLayerImage);
-        bool hasDamage = false;
+        // Even two image lists containing only none can have different
+        // computed values and different bottom layers for background-clip.
+        img = std::max<uint16_t>(1, before->m_maxLayerImage) !=
+              std::max<uint16_t>(1, after->m_maxLayerImage);
+        bool hasDamage = img;
         for (size_t i = 0; i < maxLayer; i++) {
             if (!attach && before->attachment(i) != after->attachment(i)) {
                 attach = hasDamage = true;
@@ -438,12 +442,14 @@ public:
         m_layers[assured].setSize(size);
     }
 
-    void setImage(ImageValue* image, uint32_t index)
+    void setImage(Optional<ImageValue*> image, uint32_t index)
     {
-        STARFISH_ASSERT(image);
-        STARFISH_ASSERT(!image->type().isNone());
         uint16_t assured = assureLayerIndexAndSize(index, m_maxLayerImage);
-        m_layers[assured].setImage(image);
+        if (image) {
+            m_layers[assured].setImage(image.value());
+        } else {
+            m_layers[assured].resetImage();
+        }
     }
 
     void setImageResource(ImageResource* data, uint32_t index)

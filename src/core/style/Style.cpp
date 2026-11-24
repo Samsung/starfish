@@ -4940,10 +4940,13 @@ void StyleResolver::applyProperty(Element* element,
                             item.gradientValue()->convertToGradientData()),
                         i);
                 } else {
-                    // NOTE Do nothing for Initial, None
                     STARFISH_RELEASE_ASSERT(
                         vKind == CSSStyleValuePair::ValueKind::Initial ||
                         vKind == CSSStyleValuePair::ValueKind::None);
+                    // CSS Backgrounds 3 counts each none as an image layer.
+                    if (list->size() > 1) {
+                        style->setBackgroundImage(nullptr, i);
+                    }
                 }
             }
         }

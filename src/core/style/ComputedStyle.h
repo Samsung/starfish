@@ -2037,7 +2037,7 @@ public:
                         UnresolvedColor::currentColor());
     }
 
-    void setBackgroundImage(ImageValue* image, uint32_t layer)
+    void setBackgroundImage(Optional<ImageValue*> image, uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setImage(image, layer);
     }

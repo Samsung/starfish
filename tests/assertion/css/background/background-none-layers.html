@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Explicit none background layers survive inheritance and serialization</title>
+<link rel="help" href="https://drafts.csswg.org/css-backgrounds-3/#layering">
+<div id="source"></div><div id="target"></div>
+<script>
+if (typeof testEnd !== 'function') {
+  let pass = 0, fail = 0;
+  const nativeAssert = console.assert.bind(console);
+  console.assert = (condition, message) => {
+    if (condition) {
+      ++pass;
+    } else {
+      ++fail;
+      nativeAssert(false, message);
+    }
+  };
+  window.testEnd = () => {
+    const verdict = (fail ? 'FAIL' : 'PASS') + ' (' + pass + ' passed, ' + fail + ' failed)';
+    document.title = verdict;
+  };
+}
+
+const source = document.getElementById('source');
+const target = document.getElementById('target');
+const child = source.appendChild(document.createElement('div'));
+child.style.backgroundImage = 'inherit';
+source.style.backgroundImage = 'linear-gradient(red, blue), none, none';
+source.style.backgroundPosition = '1px 2px, 3px 4px';
+const images = getComputedStyle(source).backgroundImage;
+console.assert(images.endsWith(', none, none'), 'Missing trailing layers: ' + images);
+target.style.background = getComputedStyle(source).background;
+const positions = getComputedStyle(target).backgroundPosition;
+console.assert(positions === '1px 2px, 3px 4px, 1px 2px', 'Positions: ' + positions);
+source.style.backgroundImage = 'none, none';
+const inherited = getComputedStyle(child).backgroundImage;
+console.assert(inherited === 'none, none', 'Inherited layers: ' + inherited);
+source.style.backgroundImage = 'none, none, none';
+const updated = getComputedStyle(child).backgroundImage;
+console.assert(updated === 'none, none, none', 'Updated inherited layers: ' + updated);
+source.style.transition = 'background-position 1s, background-size 1s';
+source.getBoundingClientRect();
+source.style.backgroundPosition = '10px 20px';
+source.style.backgroundSize = '20px 30px';
+const duringTransition = getComputedStyle(source).backgroundImage;
+console.assert(duringTransition === updated, 'Layers during transition: ' + duringTransition);
+testEnd();
+</script>
