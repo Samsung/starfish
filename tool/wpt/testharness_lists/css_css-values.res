@@ -137,15 +137,15 @@ http://web-platform.test:8000/css/css-values/line-break-ch-unit.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-values/minmax-length-computed.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-values/minmax-length-invalid.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-values/minmax-length-percent-computed.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/minmax-length-percent-invalid.html
+http://web-platform.test:8000/css/css-values/minmax-length-percent-invalid.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-values/minmax-length-percent-serialize.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/minmax-length-serialize.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/minmax-number-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-values/minmax-number-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/minmax-number-serialize.html
-# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-values/minmax-percentage-computed.html
-# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-values/minmax-percentage-invalid.html
-# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-values/minmax-percentage-serialize.html
+http://web-platform.test:8000/css/css-values/minmax-percentage-computed.html
+http://web-platform.test:8000/css/css-values/minmax-percentage-invalid.html
+http://web-platform.test:8000/css/css-values/minmax-percentage-serialize.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/minmax-time-computed.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-values/minmax-time-invalid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/minmax-time-serialize.html
