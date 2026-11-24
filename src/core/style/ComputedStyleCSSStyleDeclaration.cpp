@@ -99,10 +99,8 @@ void ComputedStyleCSSStyleDeclaration::triggerResolveComputedStyleIfNeeds(
         }
     }
 
-    if (m_node->needsStyleRecalc() || m_node->needsStyleRecalcForAnimation() ||
-        browsingContext->needsStyleRecalcForWholeDocument()) {
-        browsingContext->resolveStyleIfNeeds();
-    }
+    // An ancestor's pending style change can affect this resolved value.
+    browsingContext->resolveStyleIfNeeds();
 
     ComputedStyle* style = m_node->style();
     if (!style) {

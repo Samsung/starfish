@@ -28,8 +28,6 @@ const ancestor = document.getElementById('parent');
 const child = document.getElementById('child');
 
 function check(expected) {
-  // Flush style so this checks propagation from the updated parent.
-  void document.body.offsetWidth;
   const actual = getComputedStyle(child).backgroundPosition;
   console.assert(actual === expected, 'Expected ' + expected + ', got ' + actual);
 }
