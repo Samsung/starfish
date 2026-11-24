@@ -866,6 +866,21 @@ CalcTerm* canonicalizeTerm(CalcTerm* term)
     return canonical;
 }
 
+// CSS Values 4 simplifies sums of sums before combining same-unit terms.
+static void appendCanonicalTerms(CalcTerm* term, GCVector<CalcTerm*>& terms)
+{
+    if (isSingleValueTerm(term) && term->values()[0].type().isCalcData()) {
+        CalcData* nested = term->values()[0].calcDataValue();
+        if (nested->type() == CalcData::Type::kCalc && nested->isPositive()) {
+            for (CalcTerm* child : nested->terms()) {
+                appendCanonicalTerms(child, terms);
+            }
+            return;
+        }
+    }
+    terms.push_back(canonicalizeTerm(term));
+}
+
 void mergeConsecutiveSameUnit(GCVector<CalcTerm*>& terms,
                               GCVector<CalcTerm*>& merged)
 {
@@ -908,15 +923,8 @@ String* CalcData::toString()
         builder.appendString(String::createASCIIString("calc("));
     }
 
-    // Canonicalize each term: absolute lengths resolve to px so that all
-    // absolute units share the px group.
-    GCVector<CalcTerm*> canonical;
-    for (auto termIt = m_terms.begin(); termIt != m_terms.end(); ++termIt) {
-        canonical.push_back(canonicalizeTerm(*termIt));
-    }
-
-    // Argument start indices in term order: a calc() summation is a single
-    // argument, min()/max() take two and clamp() three.
+    // A calc() summation is a single argument; min() and max() take a
+    // variable number of arguments, and clamp() takes three.
     std::vector<size_t> starts;
     for (auto boundary = m_argumentsStartPostion.begin();
          boundary != m_argumentsStartPostion.end(); ++boundary) {
@@ -929,11 +937,11 @@ String* CalcData::toString()
     size_t termIndex = 0;
     for (size_t argIndex = 0; argIndex < starts.size(); ++argIndex) {
         size_t spanEnd = (argIndex + 1 < starts.size()) ? starts[argIndex + 1]
-                                                        : canonical.size();
+                                                        : m_terms.size();
         // A folded min()/max() keeps its argument boundaries while its
         // terms reduce to one; spans cannot exceed the remaining terms.
-        if (spanEnd > canonical.size()) {
-            spanEnd = canonical.size();
+        if (spanEnd > m_terms.size()) {
+            spanEnd = m_terms.size();
         }
         if (spanEnd <= termIndex) {
             continue;
@@ -948,7 +956,7 @@ String* CalcData::toString()
         // written order.
         GCVector<CalcTerm*> argument;
         while (termIndex < spanEnd) {
-            argument.push_back(canonical[termIndex]);
+            appendCanonicalTerms(m_terms[termIndex], argument);
             ++termIndex;
         }
         std::stable_sort(
