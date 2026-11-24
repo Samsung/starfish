@@ -14254,6 +14254,9 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                 return false;
             }
             break;
+        } else {
+            // CSS Values 4 requires an operator or an argument separator.
+            return false;
         }
 
         if (parser.isEnd()) {
