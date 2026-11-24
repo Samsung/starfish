@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <memory.h>
 #include <stdio.h>
+#include <algorithm>
 #include <cstdint>
 
 #include <sys/time.h>
@@ -104,7 +105,9 @@ int AppLoopSimple::start(double timeoutInSec)
     m_startTimeInMs = 0;
 
     if (timeoutInSec > 0) {
-        m_timeoutInMs = static_cast<uint64_t>(timeoutInSec) * 1000;
+        // At least 1ms: a zero timeout means running until stop().
+        m_timeoutInMs =
+            std::max<uint64_t>(1, static_cast<uint64_t>(timeoutInSec * 1000));
         m_startTimeInMs = timestamp();
     }
 
