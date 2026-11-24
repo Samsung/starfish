@@ -1182,6 +1182,7 @@ tests/assertion/selector/is_where.html
 tests/assertion/selector/not_host_complex.html
 tests/assertion/selector/namespace_selector.html
 tests/assertion/selector/pseudo_element_chaining.html
+tests/assertion/selector/svg_camelcase_type_selector.html
 tests/assertion/shadowdom/adopted_host_update.html
 tests/assertion/shadowdom/adopted_host_cross_tree.html
 tests/assertion/shadowdom/slotted_basic.html

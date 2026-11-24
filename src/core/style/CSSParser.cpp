@@ -1969,7 +1969,10 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
                                             : CSSSelectorListItem::SubSelector;
         CSSSelector* selector;
         if (nsURI.hasValue()) {
-            AtomicString localName = elementName.toAttrAtomicString(starfish());
+            // Preserve original identifier case so non-HTML (e.g. SVG camelCase
+            // tags like feFlood) and XML type selectors match case-sensitively
+            // per Selectors 4 § 3.3 / HTML § 4.16.3.
+            AtomicString localName = elementName.toAtomicString(starfish());
             QualifiedName qname =
                 explicitNamespace
                     ? QualifiedName(prefix.toAttrAtomicString(starfish()),
@@ -1977,11 +1980,11 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
                     : QualifiedName(nsURI.getValue(), localName);
             selector = new CSSNamespacedTagSelector(qname);
         } else {
-            selector = getSelector(
-                { isStar ? CSSSelector::Type::Universal
-                         : CSSSelector::Type::Tag,
-                  CSSSelector::PseudoNone, CSSSelector::CaseInsensitive,
-                  elementName.toAttrAtomicString(starfish()) });
+            selector = getSelector({ isStar ? CSSSelector::Type::Universal
+                                            : CSSSelector::Type::Tag,
+                                     CSSSelector::PseudoNone,
+                                     CSSSelector::CaseInsensitive,
+                                     elementName.toAtomicString(starfish()) });
         }
 
         selectorList->insert(selectorList->begin(),

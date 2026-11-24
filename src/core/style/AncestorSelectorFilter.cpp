@@ -39,13 +39,27 @@ namespace Starfish {
 
 enum { TagNameSalt = 13, IdSalt = 17, ClassNameSalt = 19 };
 
+static inline unsigned asciiLowerTagHash(String* str)
+{
+    auto data = str->bufferAccessData();
+    size_t hash = static_cast<size_t>(0xc70f6907UL);
+    for (size_t i = 0; i < data.length; i++) {
+        char32_t ch = data.charAt(i);
+        if (ch >= 'A' && ch <= 'Z') {
+            ch += ('a' - 'A');
+        }
+        hash = (hash * 131) + ch;
+    }
+    return static_cast<unsigned>(hash) * TagNameSalt;
+}
+
 template <typename V>
 static void collectElementIdentifierHashes(Element* element,
                                            V& identifierHashes,
                                            BloomFilter<12>& bloomFilter)
 {
     unsigned hash =
-        element->name().localNameAtomic().string()->hashValue() * TagNameSalt;
+        asciiLowerTagHash(element->name().localNameAtomic().string());
     bloomFilter.add(hash);
     identifierHashes.push_back(hash);
 
@@ -95,8 +109,7 @@ static inline void collectDescendantSelectorIdentifierHashes(
             selector->selectorText().string()->hashValue() * ClassNameSalt;
         break;
     case CSSSelector::Tag:
-        (*hash++) =
-            selector->selectorText().string()->hashValue() * TagNameSalt;
+        (*hash++) = asciiLowerTagHash(selector->selectorText().string());
         break;
     case CSSSelector::NamespacedTag: {
         // Same as Tag above (selectorText() is the bare local name), unless
@@ -107,8 +120,7 @@ static inline void collectDescendantSelectorIdentifierHashes(
         const QualifiedName& name =
             selector->asCSSNamespacedTagSelector()->qualifiedName();
         if (!name.localName()->equals("*")) {
-            (*hash++) =
-                selector->selectorText().string()->hashValue() * TagNameSalt;
+            (*hash++) = asciiLowerTagHash(selector->selectorText().string());
         }
         break;
     }

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CSS type selector case-sensitivity for SVG camelCase and HTML elements</title>
+  <link rel="help" href="https://drafts.csswg.org/selectors-4/#case-sensitive">
+  <link rel="help" href="https://html.spec.whatwg.org/multipage/semantics-other.html#case-sensitivity-of-selectors">
+  <style>
+    DIV#htmlBox { color: rgb(0, 128, 0); }
+    feFlood { color: rgb(10, 20, 30); }
+    feflood { color: rgb(255, 0, 0); }
+    filter feFlood { opacity: 0.5; }
+    linearGradient stop { stop-opacity: 0.25; }
+    lineargradient stop { stop-opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div id="htmlBox">hello</div>
+  <svg width="20" height="20">
+    <defs>
+      <filter id="flt">
+        <feFlood id="flood" />
+      </filter>
+      <linearGradient id="grad">
+        <stop id="stp" offset="0" />
+      </linearGradient>
+    </defs>
+  </svg>
+  <script>
+    const svgNs = 'http://www.w3.org/2000/svg';
+
+    // HTML elements match ASCII case-insensitively (both bare tag fast path and compound)
+    console.assert(document.querySelector('DIV') === document.getElementById('htmlBox'), 'bare DIV matches <div>');
+    console.assert(document.querySelector('DIV#htmlBox') === document.getElementById('htmlBox'), 'DIV#htmlBox matches <div>');
+    console.assert(getComputedStyle(document.getElementById('htmlBox')).color === 'rgb(0, 128, 0)', 'DIV style rule applies to <div>');
+
+    // Uppercase XHTML element created via createElementNS in HTML doc also matches ASCII case-insensitively
+    const upperHtml = document.createElementNS('http://www.w3.org/1999/xhtml', 'CUSTOMHTML');
+    document.body.appendChild(upperHtml);
+    console.assert(document.querySelector('customhtml') === upperHtml, 'lowercase type selector matches uppercase XHTML element in HTML doc');
+    console.assert(document.querySelector('CUSTOMHTML') === upperHtml, 'exact type selector matches uppercase XHTML element in HTML doc');
+    upperHtml.remove();
+
+    // SVG camelCase elements match case-sensitively
+    const flood = document.getElementById('flood');
+    const flt = document.getElementById('flt');
+    console.assert(flt.querySelector('feFlood') === flood, 'querySelector("feFlood") matches <feFlood>');
+    console.assert(flt.querySelector('feflood') === null, 'querySelector("feflood") must NOT match <feFlood>');
+    console.assert(flt.querySelector('FEFLOOD') === null, 'querySelector("FEFLOOD") must NOT match <feFlood>');
+    console.assert(document.querySelector('filter > feFlood') === flood, 'combinator selector matches <feFlood>');
+
+    // Style resolution & AncestorSelectorFilter with camelCase SVG tags
+    const floodStyle = getComputedStyle(flood);
+    console.assert(floodStyle.color === 'rgb(10, 20, 30)', 'feFlood rule applies and feflood rule does not override');
+    console.assert(floodStyle.opacity === '0.5', 'filter feFlood descendant rule applies');
+    console.assert(getComputedStyle(document.getElementById('stp')).stopOpacity === '0.25', 'linearGradient stop rule applies and lineargradient does not');
+
+    // Dynamically created SVG camelCase elements
+    const svg = document.createElementNS(svgNs, 'svg');
+    const dynFilter = document.createElementNS(svgNs, 'filter');
+    const dynFlood = document.createElementNS(svgNs, 'feFlood');
+    dynFilter.appendChild(dynFlood);
+    svg.appendChild(dynFilter);
+    console.assert(svg.querySelector('feFlood') === dynFlood, 'detached SVG querySelector("feFlood") matches');
+    console.assert(svg.querySelector('feflood') === null, 'detached SVG querySelector("feflood") returns null');
+
+    // XML documents match all elements case-sensitively
+    const xmlDoc = new DOMParser().parseFromString('<Root><Child/></Root>', 'text/xml');
+    console.assert(xmlDoc.querySelector('Child') !== null, 'XML querySelector("Child") matches <Child>');
+    console.assert(xmlDoc.querySelector('child') === null, 'XML querySelector("child") must NOT match <Child>');
+
+    if (typeof testEnd === 'function') {
+      testEnd();
+    }
+  </script>
+</body>
+</html>

@@ -8662,7 +8662,16 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
                 continue;
             }
             if (type == CSSSelector::Type::Tag && rule->isSimpleTagSelector()) {
-                authorRules.push_back(std::make_pair(rule, url));
+                // tagRules() is bucketed by ASCII-lowercased tag name; HTML
+                // elements in HTML documents match ASCII case-insensitively,
+                // while non-HTML (e.g. SVG) and XML elements require an exact
+                // case-sensitive local-name match.
+                if ((element->isHTMLElement() &&
+                     !element->document()->typeIsXML()) ||
+                    elementName ==
+                        rule->selectorList()[0].m_selector->selectorText()) {
+                    authorRules.push_back(std::make_pair(rule, url));
+                }
                 continue;
             }
         }
@@ -8807,7 +8816,13 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
 
     {
         auto& rules = m_ruleSet->tagRules();
-        auto iter = rules.find(elementName);
+        AtomicString tagLookupKey = elementName;
+        String* lowerStr = elementName.string()->toASCIILower();
+        if (UNLIKELY(lowerStr != elementName.string())) {
+            tagLookupKey =
+                AtomicString::createAtomicString(element->starfish(), lowerStr);
+        }
+        auto iter = rules.find(tagLookupKey);
         if (iter != rules.end()) {
             collectMatchingRulesFromAuthorSheet(
                 ctx, iter.value().begin(), iter.value().end(),
@@ -9306,6 +9321,29 @@ StyleResolver::Match StyleResolver::matchForRelation(
     }
 }
 
+static bool equalsASCIICaseInsensitive(String* a, String* b)
+{
+    auto da = a->bufferAccessData();
+    auto db = b->bufferAccessData();
+    if (da.length != db.length) {
+        return false;
+    }
+    for (size_t i = 0; i < da.length; i++) {
+        char32_t ca = da.charAt(i);
+        char32_t cb = db.charAt(i);
+        if (ca >= 'A' && ca <= 'Z') {
+            ca += ('a' - 'A');
+        }
+        if (cb >= 'A' && cb <= 'Z') {
+            cb += ('a' - 'A');
+        }
+        if (ca != cb) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool StyleResolver::checkOne(
     Element* element, AtomicString elementName, AtomicString elementId,
     const GCAtomicTightVector<AtomicString>& elementClasses,
@@ -9327,14 +9365,25 @@ bool StyleResolver::checkOne(
         }
         return false;
     } else if (selectorType == CSSSelector::Type::Tag) {
-        return (elementName == selector->selectorText());
+        if (elementName == selector->selectorText()) {
+            return true;
+        }
+        // HTML § 4.16.3 / Selectors 4 § 3.3: type selectors match HTML
+        // elements in HTML documents ASCII case-insensitively, and non-HTML
+        // or XML elements case-sensitively.
+        return element->isHTMLElement() && !element->document()->typeIsXML() &&
+               equalsASCIICaseInsensitive(elementName.string(),
+                                          selector->selectorText().string());
     } else if (selectorType == CSSSelector::Type::NamespacedTag) {
         const QualifiedName& want =
             selector->asCSSNamespacedTagSelector()->qualifiedName();
         // selectorText() (inherited) is the bare local name -- see
         // CSSNamespacedTagSelector's comment for why.
         if (!want.localName()->equals("*") &&
-            elementName != selector->selectorText()) {
+            elementName != selector->selectorText() &&
+            (!element->isHTMLElement() || element->document()->typeIsXML() ||
+             !equalsASCIICaseInsensitive(elementName.string(),
+                                         selector->selectorText().string()))) {
             return false;
         }
         AtomicString wantNsURI = want.namespaceURI().getValue();
@@ -12009,7 +12058,12 @@ void StyleResolver::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)
         return;
     }
     if (!tagName.isEmptyAtomicString()) {
-        m_ruleSet->tagRules().insert(std::make_pair(tagName, rule));
+        String* lowerStr = tagName.string()->toASCIILower();
+        AtomicString bucketKey = (lowerStr == tagName.string())
+                                     ? tagName
+                                     : AtomicString::createAtomicString(
+                                           m_document->starfish(), lowerStr);
+        m_ruleSet->tagRules().insert(std::make_pair(bucketKey, rule));
         return;
     }
     m_ruleSet->universalRules().push_back(rule);
