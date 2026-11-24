@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS nested sum serialization preserves the computed width</title>
+<link rel="help" href="https://drafts.csswg.org/css-values-4/#serialize-a-calculation-tree">
+<div id="source"></div><div id="target"></div>
+<script>
+if (typeof testEnd !== 'function') {
+  let pass = 0, fail = 0;
+  const nativeAssert = console.assert.bind(console);
+  console.assert = (condition, message) => {
+    if (condition) {
+      ++pass;
+    } else {
+      ++fail;
+      nativeAssert(false, message);
+    }
+  };
+  window.testEnd = () => {
+    const verdict = (fail ? 'FAIL' : 'PASS') + ' (' + pass + ' passed, ' + fail + ' failed)';
+    document.title = verdict;
+  };
+}
+
+const source = document.getElementById('source');
+const target = document.getElementById('target');
+source.style.width = 'calc(100px + (1e20px - 1e20px))';
+const expected = getComputedStyle(source).width;
+console.assert(expected === '100px', 'Original width: ' + expected);
+target.style.width = source.style.width;
+const actual = getComputedStyle(target).width;
+console.assert(actual === expected, source.style.width + ' produced ' + actual + ', expected ' + expected);
+testEnd();
+</script>

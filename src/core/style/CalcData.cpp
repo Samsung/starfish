@@ -867,21 +867,6 @@ CalcTerm* canonicalizeTerm(CalcTerm* term)
     return canonical;
 }
 
-// CSS Values 4 simplifies sums of sums before combining same-unit terms.
-static void appendCanonicalTerms(CalcTerm* term, GCVector<CalcTerm*>& terms)
-{
-    if (isSingleValueTerm(term) && term->values()[0].type().isCalcData()) {
-        CalcData* nested = term->values()[0].calcDataValue();
-        if (nested->type() == CalcData::Type::kCalc && nested->isPositive()) {
-            for (CalcTerm* child : nested->terms()) {
-                appendCanonicalTerms(child, terms);
-            }
-            return;
-        }
-    }
-    terms.push_back(canonicalizeTerm(term));
-}
-
 void mergeConsecutiveSameUnit(GCVector<CalcTerm*>& terms,
                               GCVector<CalcTerm*>& merged)
 {
@@ -908,6 +893,25 @@ void mergeConsecutiveSameUnit(GCVector<CalcTerm*>& terms,
         }
         it = run;
     }
+}
+
+// CSS Values 4 simplifies sums of sums before combining same-unit terms.
+static void appendCanonicalTerms(CalcTerm* term, GCVector<CalcTerm*>& terms)
+{
+    if (isSingleValueTerm(term) && term->values()[0].type().isCalcData()) {
+        CalcData* nested = term->values()[0].calcDataValue();
+        if (nested->type() == CalcData::Type::kCalc && nested->isPositive()) {
+            GCVector<CalcTerm*> children;
+            for (CalcTerm* child : nested->terms()) {
+                appendCanonicalTerms(child, children);
+            }
+            // Reduce the inner sum before combining it with outer terms.
+            // Flattening first can lose a small outer addend to rounding.
+            mergeConsecutiveSameUnit(children, terms);
+            return;
+        }
+    }
+    terms.push_back(canonicalizeTerm(term));
 }
 
 String* CalcData::toString()
