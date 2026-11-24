@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Range.createContextualFragment SVG script execution</title>
+</head>
+<body>
+<div id="host"></div>
+<script>
+window.__htmlScriptRan = 0;
+window.__svgScriptRan = 0;
+
+var range = document.createRange();
+range.selectNodeContents(document.body);
+
+var htmlFrag = range.createContextualFragment(
+    '<script>window.__htmlScriptRan++;<\/script>');
+console.assert(window.__htmlScriptRan === 0,
+    'HTML script must not run before insertion');
+document.getElementById('host').appendChild(htmlFrag);
+console.assert(window.__htmlScriptRan === 1,
+    'HTML script from createContextualFragment must run on insertion');
+
+var svgFrag = range.createContextualFragment(
+    '<svg><script>window.__svgScriptRan++;<\/script></svg>');
+console.assert(window.__svgScriptRan === 0,
+    'SVG script must not run before insertion');
+document.getElementById('host').appendChild(svgFrag);
+console.assert(window.__svgScriptRan === 1,
+    'SVG script from createContextualFragment must run on insertion');
+
+if (window.testEnd) {
+    testEnd();
+}
+</script>
+</body>
+</html>

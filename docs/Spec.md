@@ -1210,10 +1210,10 @@ section are supported.
 |  | attribute | collapsed | True iff start === end. |
 |  | attribute | commonAncestorContainer | Deepest node containing both endpoints. |
 |  | constant | START_TO_START / START_TO_END / END_TO_END / END_TO_START | Selectors for `compareBoundaryPoints` (0/1/2/3). |
-|  | method | setStart / setEnd / setStartBefore / setStartAfter / setEndBefore / setEndAfter / collapse / selectNode / selectNodeContents / compareBoundaryPoints / isPointInRange / comparePoint / intersectsNode / deleteContents / extractContents / insertNode / surroundContents / cloneRange / detach | Standard `Range` operations — all implemented. |
+|  | method | setStart / setEnd / setStartBefore / setStartAfter / setEndBefore / setEndAfter / collapse / selectNode / selectNodeContents / compareBoundaryPoints / isPointInRange / comparePoint / intersectsNode / deleteContents / extractContents / insertNode / surroundContents / cloneRange / detach / createContextualFragment | Standard `Range` operations — all implemented. |
 |  | method | DOMRectList getClientRects() / DOMRect getBoundingClientRect() | (CSSOM-View) Per-fragment client rects. |
 |  | stringifier |  | Returns the textual content of the range. |
-|  | misc | **Not implemented** | `cloneContents`, `createContextualFragment`, `expand` are `[Unimplemented]` and raise `TypeError` on call. |
+|  | misc | **Not implemented** | `cloneContents`, `expand` are `[Unimplemented]` and raise `TypeError` on call. |
 | [NodeIterator](https://dom.spec.whatwg.org/#interface-nodeiterator) | interface | NodeIterator | **Use `TreeWalker` instead.** The interface and `createNodeIterator` factory are exposed and configuration attributes (`root`, `referenceNode`, `pointerBeforeReferenceNode`, `whatToShow`, `filter`) report correct values, but `nextNode()` returns null immediately on the first call. Iteration is not actually wired up. |
 | [TreeWalker](https://dom.spec.whatwg.org/#interface-treewalker) | interface | TreeWalker | Created via `document.createTreeWalker(root, whatToShow=SHOW_ALL, filter=null)`. Fully functional — supports custom `acceptNode` filter callbacks (callable or `{acceptNode}` object). |
 |  | attribute | root / whatToShow / filter / currentNode | Configuration; `currentNode` is writable. |
@@ -2608,7 +2608,7 @@ The Range table above (rows around line 1137) is correct at the interface level,
 | `range.surroundContents(newParent)` on a **collapsed** range | Succeeds and produces an empty wrapper element at the collapse point (e.g. `<mark></mark>`). This matches the spec's "wrap nothing" semantics but is rarely useful. |
 | `range.collapse()` (no argument) | Collapses to **end** (`toStart` defaults to `false` per IDL). Matches the spec. `collapse(true)` collapses to start, `collapse(false)` to end. Both leave `collapsed === true` and equal start/end offsets. |
 | `range.cloneContents()` | **`[Unimplemented]`** — `undefined`; calling throws `TypeError`. Use `extractContents()` and re-insert the original content if you need a copy. |
-| `range.createContextualFragment(html)` | **`[Unimplemented]`** — `undefined`; calling throws `TypeError`. Use a temporary element with `innerHTML = …` and adopt its children instead. |
+| `range.createContextualFragment(html)` | Implemented — parses `html` in the context of the range's start container (falling back to `<body>` for document/fragment/HTML-`<html>` contexts) and unmarks `<script>` elements so they run when inserted. |
 | `range.expand(unit)` | **`[Unimplemented]`** (non-standard WebKit-ism). Not available. |
 | `range.getClientRects()` / `getBoundingClientRect()` | Implemented and return per-fragment rects. Verified across multi-line text. |
 

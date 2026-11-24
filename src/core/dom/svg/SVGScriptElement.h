@@ -116,6 +116,10 @@ public:
     {
         m_isParserInserted = false;
     }
+    void clearAlreadyStarted()
+    {
+        m_isAlreadyStarted = false;
+    }
     bool didScriptExecuted()
     {
         return m_didScriptExecuted;

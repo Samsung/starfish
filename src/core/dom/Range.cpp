@@ -36,6 +36,10 @@
 #include "core/layout/FrameBlockBox.h"
 #include "core/dom/Text.h"
 #include "core/dom/DocumentFragment.h"
+#include "core/dom/HTMLBodyElement.h"
+#include "core/dom/HTMLScriptElement.h"
+#include "core/dom/svg/SVGScriptElement.h"
+#include "core/dom/parser/HTMLParser.h"
 
 namespace Starfish {
 
@@ -1057,6 +1061,45 @@ DocumentFragment* Range::processContents(ProcessingType type)
         fragment->appendChild(rightContents);
     }
     return fragment;
+}
+
+DocumentFragment* Range::createContextualFragment(String* fragment)
+{
+    // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-range-createcontextualfragment
+    Node* node = m_start.m_node;
+    Document* doc = node->isDocument() ? node->asDocument() : node->document();
+
+    Element* element = nullptr;
+    if (node->isElement()) {
+        element = node->asElement();
+    } else if (node->isCharacterData()) {
+        element = node->parentElement();
+    }
+
+    if (!element || (!doc->typeIsXML() && element->isHTMLElement() &&
+                     element->localName()->equals("html"))) {
+        element = new HTMLBodyElement(
+            doc, doc->starfish()->staticStrings()->m_bodyTagName);
+    }
+
+    DocumentFragment* fragmentNode =
+        fragmentParsingAlgorithm(doc, fragment, element);
+
+    // Unmark all scripts in fragmentNode as "already started" and clear
+    // parser-inserted so they execute when inserted into a document.
+    Traverse::traverse(fragmentNode, [](Node* n) {
+        if (n->isHTMLScriptElement()) {
+            HTMLScriptElement* script = n->asHTMLScriptElement();
+            script->clearParserInserted();
+            script->clearAlreadyStarted();
+        } else if (n->isSVGScriptElement()) {
+            SVGScriptElement* script = n->asSVGScriptElement();
+            script->clearParserInserted();
+            script->clearAlreadyStarted();
+        }
+    });
+
+    return fragmentNode;
 }
 
 } // namespace Starfish

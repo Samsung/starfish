@@ -123,6 +123,8 @@ public:
 
     String* toString();
 
+    DocumentFragment* createContextualFragment(String* fragment);
+
     Node* firstNode();
     Node* pastLastNode();
 

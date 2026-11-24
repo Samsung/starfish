@@ -656,6 +656,7 @@ tests/assertion/dom/Range09.html
 tests/assertion/dom/Range10.html
 tests/assertion/dom/Range11.html
 tests/assertion/dom/Range12.html
+tests/assertion/dom/range_create_contextual_fragment_svg_script.html
 tests/assertion/dom/Range13.html
 tests/pixel/dom/Range14.html
 tests/assertion/dom/HTMLScriptElement01.html
