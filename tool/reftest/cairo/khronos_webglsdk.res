@@ -18,3 +18,4 @@ http://localhost:11010/sdk/tests/conformance/glsl/preprocessor/macro-expansion-t
 http://localhost:11010/sdk/tests/conformance/glsl/preprocessor/macro-expansion-tricky.html?webglVersion=2
 http://localhost:11010/sdk/tests/conformance/glsl/misc/extension-enable-and-disable.html
 http://localhost:11010/sdk/tests/conformance/extensions/oes-standard-derivatives.html
+http://localhost:11010/sdk/tests/conformance2/textures/misc/copy-texture-image-same-texture.html

@@ -149,6 +149,7 @@ public:
     void setMaxLevel(GLint level)
     {
         m_maxLevel = level;
+        invalidateFramebufferStatus();
     }
 
     void setImageLevelInfo(GLenum imageTarget, GLint level,
@@ -212,6 +213,22 @@ public:
         }
         return true;
     }
+
+    // The effective maximum level q of a texture of mutable format, OpenGL
+    // ES 3.0.6 §3.8.10 (Mipmapping): min(p, levelmax), where p is levelbase
+    // + floor(log2(maxsize)) of the levelbase image. None while that image
+    // has no size.
+    Optional<GLint> effectiveMaxLevel() const;
+
+    // OpenGL ES 3.0.6 §3.8.13: levelbase <= levelmax, and the arrays from
+    // levelbase through q are defined, each half the one before (§3.8.10),
+    // with one effective internal format; in a cube map, each face on its
+    // own. texStorage*() defines such levels.
+    // TODO: the formats differ only where the record can tell: two sized ones,
+    // or two of different components. A sized one next to an unsized one of its
+    // components is left to the driver; compare them once the record maps every
+    // level to its effective format (see isCubeComplete()).
+    bool isMipmapComplete() const;
 
     // The levels a successful generateMipmap defines (OpenGL ES 3.0.6
     // §3.8.11): each like the base level at half the size of the one before,

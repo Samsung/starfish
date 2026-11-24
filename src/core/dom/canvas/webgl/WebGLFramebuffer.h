@@ -734,6 +734,20 @@ public:
                 !tex->isCubeComplete()) {
                 return 0x8CD6; /* GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT */
             }
+            // OpenGL ES 3.0.6 §4.4.4.1, of a texture of mutable format:
+            // the level is in [levelbase, q], and one other than levelbase asks
+            // for a mipmap complete texture. OpenGL ES 2.0 has neither rule
+            // (its level is 0, the base). The driver is not relied on.
+            if (isWebGL2 && !tex->isImmutable()) {
+                const GLint base = tex->baseLevel();
+                // No q: the levelbase image has no size, so the texture is
+                // not mipmap complete, and as the image it fails below.
+                Optional<GLint> q = tex->effectiveMaxLevel();
+                if ((q && (level < base || level > q.value())) ||
+                    (level != base && !tex->isMipmapComplete())) {
+                    return 0x8CD6; /* GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT */
+                }
+            }
             return checkImage(w, h, fmt, isColorAttachment, required);
         };
 
