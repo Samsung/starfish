@@ -956,6 +956,7 @@ tests/pixel/svg/additional-pixel-ratio.html
 tests/assertion/svg/svg_overflow.html
 tests/assertion/svg/svg_zero_size_gradient.html
 tests/assertion/svg/svg_image_href.html
+tests/assertion/svg/svg_use_href.html
 tests/assertion/css/transition/transition_event_borderWidth.html
 # [known-fail:PRE_FIX_BASELINE] tests/assertion/css/transition/transition_transform.html
 tests/pixel/canvas/basicFillRect.html

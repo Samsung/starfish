@@ -25,6 +25,7 @@
 namespace Starfish {
 
 class ResourceURL;
+class SVGAnimatedString;
 
 class SVGUseElement : public SVGElement {
 public:
@@ -40,6 +41,9 @@ public:
     virtual void didAttributeChanged(QualifiedName name, Optional<String*> old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
+    virtual void updateSVGAttributeNeeded(QualifiedName name) override;
+
+    SVGAnimatedString* href();
 
     virtual bool needsGeometryAttributes() override
     {
@@ -59,7 +63,10 @@ public:
     }
 
 private:
+    String* effectiveHrefAttributeValue();
+
     String* m_href;
+    Optional<SVGAnimatedString*> m_hrefObject;
     Optional<SVGElement*> m_target;
 };
 } // namespace Starfish

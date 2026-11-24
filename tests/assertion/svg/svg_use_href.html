@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SVGUseElement.href (SVGURIReference) and xlink:href compatibility</title>
+  <link rel="help" href="https://svgwg.org/svg2-draft/types.html#InterfaceSVGURIReference">
+  <link rel="help" href="https://svgwg.org/svg2-draft/linking.html#XLinkRefAttrs">
+</head>
+<body>
+  <svg width="100" height="100">
+    <defs>
+      <rect id="r1" width="20" height="20" fill="red"/>
+      <rect id="r2" width="40" height="40" fill="blue"/>
+    </defs>
+    <use id="u" href="#r1"/>
+  </svg>
+  <script>
+    const svgNs = 'http://www.w3.org/2000/svg';
+    const xlinkNs = 'http://www.w3.org/1999/xlink';
+
+    // Default empty state and [SameObject] identity
+    const use0 = document.createElementNS(svgNs, 'use');
+    console.assert(use0.href !== undefined, 'SVGUseElement.href must exist');
+    console.assert(use0.href === use0.href, 'SVGUseElement.href must be [SameObject]');
+    console.assert(use0.href.baseVal === '', 'default baseVal must be empty string');
+    console.assert(use0.href.animVal === '', 'default animVal must be empty string');
+
+    // Setting baseVal sets null-namespace href attribute
+    use0.href.baseVal = '#a';
+    console.assert(use0.hasAttributeNS(null, 'href'), 'baseVal setter must create href attribute');
+    console.assert(!use0.hasAttributeNS(xlinkNs, 'href'), 'baseVal setter must not create xlink:href');
+    console.assert(use0.getAttributeNS(null, 'href') === '#a', 'href attribute matches baseVal');
+    console.assert(use0.href.baseVal === '#a', 'baseVal reflects set value');
+    console.assert(use0.href.animVal === '#a', 'animVal reflects set value');
+
+    // Plain href takes precedence over xlink:href
+    use0.setAttributeNS(xlinkNs, 'xlink:href', '#fallback');
+    console.assert(use0.href.baseVal === '#a', 'href takes precedence over xlink:href');
+
+    // Removing plain href falls back to xlink:href
+    use0.removeAttributeNS(null, 'href');
+    console.assert(use0.href.baseVal === '#fallback', 'removing href falls back to xlink:href');
+    console.assert(use0.href.animVal === '#fallback', 'animVal falls back to xlink:href');
+
+    // When only xlink:href is present, setting baseVal updates xlink:href in place
+    use0.href.baseVal = '#updated';
+    console.assert(!use0.hasAttributeNS(null, 'href'), 'must not create plain href when backed by xlink:href');
+    console.assert(use0.getAttributeNS(xlinkNs, 'href') === '#updated', 'xlink:href must be updated');
+    console.assert(use0.href.baseVal === '#updated', 'baseVal reflects updated xlink:href');
+
+    // Removing xlink:href resets to empty string
+    use0.removeAttributeNS(xlinkNs, 'href');
+    console.assert(use0.href.baseVal === '', 'removing xlink:href resets baseVal to empty string');
+
+    // Connected <use> reflects href changes
+    const u = document.getElementById('u');
+    console.assert(u.href.baseVal === '#r1', 'initial connected use href');
+    u.href.baseVal = '#r2';
+    console.assert(u.getAttribute('href') === '#r2', 'connected use href updated via baseVal');
+    console.assert(u.href.baseVal === '#r2', 'connected use baseVal reflects #r2');
+
+    if (typeof testEnd === 'function') {
+      testEnd();
+    }
+  </script>
+</body>
+</html>

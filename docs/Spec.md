@@ -2166,7 +2166,7 @@ C++ class and a corresponding `FrameSVG*Box` layout box. Please see
 | [svg](https://www.w3.org/TR/SVG2/struct.html#NewDocument) | Root element. Supports `width`, `height`, `viewBox`, `preserveAspectRatio`. Nested `<svg>` creates a new viewport context. |
 | [g](https://www.w3.org/TR/SVG2/struct.html#Groups) | Grouping element. |
 | [defs](https://www.w3.org/TR/SVG2/struct.html#Head) | Non-rendered container for reusable definitions. |
-| [use](https://www.w3.org/TR/SVG2/struct.html#UseElement) | Clones a referenced element via `href`/`xlink:href`. Resolved through an internal shadow root. |
+| [use](https://www.w3.org/TR/SVG2/struct.html#UseElement) | Clones a referenced element via `href`/`xlink:href`. Resolved through an internal shadow root. Implements `SVGURIReference` (`href` `SVGAnimatedString`). |
 | [symbol](https://www.w3.org/TR/SVG2/struct.html#SymbolElement) | Defines a reusable graphic, instantiated by `<use>`. |
 | [switch](https://www.w3.org/TR/SVG2/struct.html#SwitchElement) | Conditional rendering of child elements. |
 | [rect](https://www.w3.org/TR/SVG2/shapes.html#RectElement) | Supports `x`, `y`, `width`, `height`, `rx`, `ry`. |
@@ -3265,7 +3265,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 
 ### SVG family — runtime caveats
 
-65 `SVG*.idl` files exist under `src/core/dom/svg/`; 44 element subclasses are registered in `SVGDocument::createSVGElement`. Inline `<svg>...</svg>` and `createElementNS('http://www.w3.org/2000/svg', tag)` produce correctly namespaced `SVG*Element` instances (NOT `HTMLUnknownElement`). `SVGAnimatedLength.baseVal.value` reads parsed attribute values; `SVGImageElement` exposes `SVGURIReference` (`href` `SVGAnimatedString` reflecting `href`/`xlink:href`); presentation attributes map to CSS (`getComputedStyle(rect).fill === 'rgb(255,0,0)'`); `<svg width/height>` allocates a real layout box (`getBoundingClientRect()` returns it). SVG elements are rendered — see the [SVG](#svg) section for the full supported surface.
+65 `SVG*.idl` files exist under `src/core/dom/svg/`; 44 element subclasses are registered in `SVGDocument::createSVGElement`. Inline `<svg>...</svg>` and `createElementNS('http://www.w3.org/2000/svg', tag)` produce correctly namespaced `SVG*Element` instances (NOT `HTMLUnknownElement`). `SVGAnimatedLength.baseVal.value` reads parsed attribute values; `SVGImageElement` and `SVGUseElement` expose `SVGURIReference` (`href` `SVGAnimatedString` reflecting `href`/`xlink:href`); presentation attributes map to CSS (`getComputedStyle(rect).fill === 'rgb(255,0,0)'`); `<svg width/height>` allocates a real layout box (`getBoundingClientRect()` returns it). SVG elements are rendered — see the [SVG](#svg) section for the full supported surface.
 
 **Known limitations** (methods authors typically expect but are missing):
 

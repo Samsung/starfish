@@ -21,6 +21,7 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/ShadowRoot.h"
+#include "core/dom/svg/SVGAnimatedString.h"
 #include "core/dom/svg/SVGUseElement.h"
 
 namespace Starfish {
@@ -34,6 +35,7 @@ void* SVGUseElement::operator new(size_t size)
         GC_word desc[GC_BITMAP_SIZE(SVGUseElement)] = { 0 };
         SVGElement::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(SVGUseElement, m_href));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGUseElement, m_hrefObject));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGUseElement, m_target));
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGUseElement));
         typeInited = true;
@@ -47,6 +49,28 @@ SVGUseElement::SVGUseElement(Document* document, const QualifiedName& qname)
 {
 }
 
+String* SVGUseElement::effectiveHrefAttributeValue()
+{
+    StaticStrings* ss = starfish()->staticStrings();
+    if (hasAttribute(ss->m_href) != SIZE_MAX) {
+        return getAttributeOrEmpty(ss->m_href);
+    }
+    Optional<String*> xlinkVal =
+        getAttributeNS(ss->m_xlinkHref.namespaceURI().getValue().string(),
+                       ss->m_href.localName());
+    return xlinkVal.hasValue() ? xlinkVal.getValue() : String::emptyString;
+}
+
+SVGAnimatedString* SVGUseElement::href()
+{
+    if (!m_hrefObject.hasValue()) {
+        StaticStrings* ss = starfish()->staticStrings();
+        String* value = effectiveHrefAttributeValue();
+        m_hrefObject = new SVGAnimatedString(this, ss->m_href, value, value);
+    }
+    return m_hrefObject.getValue();
+}
+
 void SVGUseElement::didAttributeChanged(QualifiedName name,
                                         Optional<String*> old, String* value,
                                         bool attributeCreated,
@@ -55,13 +79,48 @@ void SVGUseElement::didAttributeChanged(QualifiedName name,
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
     StaticStrings* ss = starfish()->staticStrings();
-    if (ss->m_href == name || ss->m_xlinkHref == name ||
-        (!name.hasPrefix() &&
-         ss->m_xlinkHref.hasSameNamespaceURI(name.namespaceURI()) &&
-         ss->m_xlinkHref.hasSameLocalName(name.localName()))) {
-        m_href = value;
+    bool isPlainHref = (ss->m_href == name);
+    bool isXLinkHref =
+        (ss->m_xlinkHref == name ||
+         (ss->m_xlinkHref.hasSameNamespaceURI(name.namespaceURI()) &&
+          ss->m_xlinkHref.hasSameLocalName(name.localName())));
+    if (isPlainHref || isXLinkHref) {
+        String* effectiveValue = effectiveHrefAttributeValue();
+        if (m_hrefObject.hasValue()) {
+            m_hrefObject->setBaseVal(effectiveValue, true);
+        }
+        bool hasPlainHref = hasAttribute(ss->m_href) != SIZE_MAX;
+        if (isXLinkHref && hasPlainHref) {
+            // Plain "href" takes precedence over "xlink:href".
+            return;
+        }
+        m_href = effectiveValue;
         setNeedsStyleRecalc();
         setNeedsFrameTreeBuild();
+    }
+}
+
+void SVGUseElement::updateSVGAttributeNeeded(QualifiedName name)
+{
+    StaticStrings* ss = starfish()->staticStrings();
+    if (ss->m_href == name) {
+        // https://svgwg.org/svg2-draft/linking.html#XLinkRefAttrs
+        // If "href" is not set but an XLink "href" attribute is present,
+        // reflect mutations into the existing XLink attribute.
+        if (hasAttribute(ss->m_href) == SIZE_MAX &&
+            hasAttributeNS(ss->m_xlinkHref.namespaceURI().getValue().string(),
+                           ss->m_href.localName())) {
+            for (size_t i = 0; i < attributeCount(); i++) {
+                QualifiedName attrName = getAssuredAttributeName(i);
+                if (ss->m_xlinkHref.hasSameNamespaceURI(
+                        attrName.namespaceURI()) &&
+                    ss->m_xlinkHref.hasSameLocalName(attrName.localName())) {
+                    setAttribute(attrName, href()->baseVal());
+                    return;
+                }
+            }
+        }
+        setAttribute(ss->m_href, href()->baseVal());
     }
 }
 
