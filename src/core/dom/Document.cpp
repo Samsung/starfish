@@ -950,7 +950,7 @@ void Document::dispose()
     }
 
     m_isMutationObserverMicroTaskQueued = false;
-    GCUnorderedSet<MutationObserver*>().swap(m_activeMuationObservers);
+    GCVector<MutationObserver*>().swap(m_activeMuationObservers);
     GCVector<HTMLSlotElement*>().swap(m_signalSlots);
 }
 
@@ -2751,7 +2751,13 @@ bool Document::hasMutationObservers() const
 
 void Document::enqueueMutationObserverMicroTask(MutationObserver* observer)
 {
-    m_activeMuationObservers.insert(observer);
+    // WHATWG DOM "notify mutation observers" iterates observers in registration
+    // / queueing order rather than hash-table order.
+    if (std::find(m_activeMuationObservers.begin(),
+                  m_activeMuationObservers.end(),
+                  observer) == m_activeMuationObservers.end()) {
+        m_activeMuationObservers.push_back(observer);
+    }
     ensureMutationAndSlotMicrotaskQueued();
 }
 
@@ -2792,8 +2798,8 @@ void Document::ensureMutationAndSlotMicrotaskQueued()
         [](void* data) {
             auto* self = static_cast<Document*>(data);
             self->m_isMutationObserverMicroTaskQueued = false;
-            GCUnorderedSet<MutationObserver*> notifySet;
-            notifySet.swap(self->m_activeMuationObservers);
+            GCVector<MutationObserver*> notifyList;
+            notifyList.swap(self->m_activeMuationObservers);
             // Capture (and empty) the signal-slots set up front, before
             // delivering mutation records. Per WHATWG DOM "notify mutation
             // observers", signalSet is cloned at the start, so slot changes
@@ -2801,7 +2807,7 @@ void Document::ensureMutationAndSlotMicrotaskQueued()
             // coalescing into this one.
             GCVector<HTMLSlotElement*> slotSet;
             slotSet.swap(self->m_signalSlots);
-            for (auto* observer : notifySet) {
+            for (auto* observer : notifyList) {
                 observer->notify();
             }
             // Fire slotchange after mutation observers are notified, within the

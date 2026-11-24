@@ -907,7 +907,7 @@ protected:
                    GC_WORD_OFFSET(Document, m_nativeGradientCacheLRUList));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_intersectionObservers));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resizeObservers));
-        markHashTable(desc, GC_WORD_OFFSET(Document, m_activeMuationObservers));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_activeMuationObservers));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_signalSlots));
 
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_svgPaintClientElements));
@@ -1000,7 +1000,7 @@ protected:
     GCVector<IntersectionObserver*> m_intersectionObservers;
     GCVector<ResizeObserver*> m_resizeObservers;
     MutationObserverOptionType m_mutationTypes;
-    GCUnorderedSet<MutationObserver*> m_activeMuationObservers;
+    GCVector<MutationObserver*> m_activeMuationObservers;
     // Slots queued for a slotchange event, fired from the mutation-observer
     // microtask checkpoint after observers are notified (WHATWG DOM). Ordered +
     // deduped because the spec's "signal slots" is an ordered set and the

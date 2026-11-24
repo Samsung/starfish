@@ -91,6 +91,7 @@ http://web-platform.test:8000/dom/nodes/Node-parentElement.html
 http://web-platform.test:8000/dom/nodes/Element-previousElementSibling.html
 http://web-platform.test:8000/dom/nodes/Element-insertAdjacentElement.html
 http://web-platform.test:8000/dom/nodes/ParentNode-prepend.html
+http://web-platform.test:8000/dom/nodes/ParentNode-replaceChildren.html
 http://web-platform.test:8000/dom/nodes/Node-isEqualNode.html
 http://web-platform.test:8000/dom/nodes/Node-normalize.html
 http://web-platform.test:8000/dom/nodes/getElementsByClassName-12.htm

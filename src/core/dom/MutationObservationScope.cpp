@@ -228,4 +228,10 @@ void ChildListMutationObservationScope::updateSiblingIfNeeds(
         m_mutatedChildren->nextSibling = child->nextSibling();
     }
 }
+
+void ChildListMutationObservationScope::clearSiblings()
+{
+    m_mutatedChildren->previousSibling = nullptr;
+    m_mutatedChildren->nextSibling = nullptr;
+}
 } // namespace Starfish

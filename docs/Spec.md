@@ -520,7 +520,7 @@ section are supported.
 | | method | void exitFullscreen() | Exits fullscreen. `webkitExitFullscreen()` is an alias. |
 | Document (non-standard) | method | (HTMLCollection or Node or null) document._nodeName_ | Returns elements of type a, applet, area, embed, form, frameset, img, or object with name="_nodeName_". Returns an element if there is only one such element. |
 | [VisibilityChange Event](https://www.w3.org/TR/page-visibility/#sec-visibilitychange-event) | Event Handler | visibilitychange | Fire when the content of a tab has become visible or has been hidden. |
-| [DocumentFragment](https://dom.spec.whatwg.org/#interface-documentfragment) | interface | DocumentFragment | A minimal node container; siblings inserted into the live tree via `appendChild` are moved out of the fragment. The `DocumentFragment()` constructor is **not** implemented — calling `new DocumentFragment()` throws `TypeError: Illegal constructor`; use `document.createDocumentFragment()` instead. Implements `NonElementParentNode` + `ParentNode` (so `getElementById`, `children`, `firstElementChild`, `lastElementChild`, `childElementCount`, `prepend`, `append`, `querySelector`, `querySelectorAll`). |
+| [DocumentFragment](https://dom.spec.whatwg.org/#interface-documentfragment) | interface | DocumentFragment | A minimal node container; siblings inserted into the live tree via `appendChild` are moved out of the fragment. The `DocumentFragment()` constructor is **not** implemented — calling `new DocumentFragment()` throws `TypeError: Illegal constructor`; use `document.createDocumentFragment()` instead. Implements `NonElementParentNode` + `ParentNode` (so `getElementById`, `children`, `firstElementChild`, `lastElementChild`, `childElementCount`, `prepend`, `append`, `replaceChildren`, `querySelector`, `querySelectorAll`). |
 | [DocumentType](https://dom.spec.whatwg.org/#documenttype) | interface | DocumentType | Document type |
 |  | attribute | name | Return the context object’s name. |
 |  | attribute | publicId | Return the context object’s public ID. |
@@ -1192,9 +1192,9 @@ section are supported.
 |  | attribute | childElementCount | Returns an unsigned long giving the amount of children that the object has. |
 |  | method | void prepend((Node or DOMString)... nodes) | Inserts nodes before the first child of node, while replacing strings in nodes with equivalent Text nodes. |
 |  | method | void append((Node or DOMString)... nodes) | Inserts nodes after the last child of node, while replacing strings in nodes with equivalent Text nodes. |
+|  | method | void replaceChildren((Node or DOMString)... nodes) | Replaces all children of node with nodes, while replacing strings in nodes with equivalent Text nodes. |
 |  | method | Element? querySelector(DOMString selectors) | Returns the first Element with the current element as root that matches the specified group of selectors. |
 |  | method | NodeList querySelectorAll(DOMString selectors) | Returns a NodeList representing a list of elements with the current element as root that matches the specified group of selectors. |
-|  | misc | replaceChildren | **Not implemented** in LWE. Calling `el.replaceChildren(...)` raises `TypeError`. Use `el.innerHTML = ''` followed by `append(...)` instead. |
 | [Slottable](https://dom.spec.whatwg.org/#slotable) | interface | Slottable | Mixin implemented by `Element` and `Text`. |
 |  | attribute | assignedSlot | Returns the assigned `<slot>` element, or `null`. |
 | [ElementAnimation](https://www.w3.org/TR/web-animations-1/#extensions-to-the-element-interface) | interface | ElementAnimation | Mixin on `Element`. |

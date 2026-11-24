@@ -76,6 +76,7 @@ public:
     void childAdded(Node* child);
     void childRemoved(Node* child, bool forceUpdateSibling = false);
     void updateSiblingIfNeeds(Node* child, bool forceUpdateSibling);
+    void clearSiblings();
     void enqueueChildListMutationRecordIfNeeds();
 
 private:

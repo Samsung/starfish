@@ -918,6 +918,34 @@ void Node::append(const GCVector<NodeOrDOMString>& nodes)
     appendChild(node);
 }
 
+void Node::replaceChildren(const GCVector<NodeOrDOMString>& nodes)
+{
+    // https://dom.spec.whatwg.org/#dom-parentnode-replacechildren
+    // Avoid allocating a throwaway empty DocumentFragment when clearing.
+    Node* node = nullptr;
+    if (!nodes.empty()) {
+        // 1. Convert nodes into a node given this's node document.
+        node = convertNodesIntoNode(nodes, document());
+
+        // 2. Ensure pre-insertion validity of node into this before null.
+        // Must happen before removing any existing children so a failed
+        // validation leaves this unchanged.
+        validatePreinsert(node, nullptr);
+    }
+
+    // 3. Replace all with node within this.
+    ChildListMutationObservationScope scope;
+    scope.startChildListMutationScope(this);
+    while (Node* child = firstChild()) {
+        removeChild(child);
+    }
+    if (node) {
+        appendChild(node);
+    }
+    // "replace all" always queues a mutation record with null siblings.
+    scope.clearSiblings();
+}
+
 Node* Node::nearestParentElement()
 {
     Node* t = this;

@@ -9,6 +9,7 @@ interface ParentNode {
 
   [CEReactions, Unscopable, RaisesException] void prepend((Node or DOMString)... nodes);
   [CEReactions, Unscopable, RaisesException] void append((Node or DOMString)... nodes);
+  [CEReactions, Unscopable, RaisesException] void replaceChildren((Node or DOMString)... nodes);
 
   [RaisesException] Element? querySelector(DOMString selectors);
   [NewObject, RaisesException] NodeList querySelectorAll(DOMString selectors);
