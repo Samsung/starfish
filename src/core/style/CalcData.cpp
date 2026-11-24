@@ -65,7 +65,10 @@ String* CalcValue::toString()
         return m_data.m_timeData.toString();
     } else if (m_type.isPercentage()) {
         StringBuilder builder;
-        builder.appendString(String::fromFloat(m_data.m_numberData * 100.f));
+        // CSS Values 4 serializes a zero percentage without a sign.
+        float percentage = m_data.m_numberData * 100.f;
+        builder.appendString(
+            String::fromFloat(percentage == 0 ? 0 : percentage));
         builder.appendChar('%');
         return builder.finalize();
     } else if (m_type.isCalcData()) {
