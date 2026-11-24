@@ -1,0 +1,6 @@
+Tests Overlay.highlightNode and getHighlightObjectForTest
+highlightNode succeeded: true
+tagName: DIV
+size: 86x36
+hideHighlight succeeded: true
+setInspectMode succeeded: true

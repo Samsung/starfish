@@ -1,0 +1,18 @@
+Tests Page capture, frame and history methods
+png signature: PNG
+clipped capture is smaller: true
+pdf signature: %PDF-
+screencast frame is png: true
+frame tree has a main frame: true
+resource tree frame matches: true
+layout viewport width > 0: true
+setDocumentContent: replaced
+isolated world context: number
+injected script ran: 42
+history entries > 1: true
+back from second: true
+bringToFront answers: true
+setBypassCSP answers: true
+getAppManifest answers: true
+dialog: confirm "sure?"
+handleJavaScriptDialog answers: true

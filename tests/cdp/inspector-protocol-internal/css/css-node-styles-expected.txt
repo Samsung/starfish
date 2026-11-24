@@ -1,0 +1,9 @@
+Tests the CSS domain on one node
+computed color: rgb(1, 2, 3)
+computed width: 50px
+inline height: 20px
+rule #box matched: true
+sheet text names the rule: true
+color after setStyleTexts: rgb(7, 8, 9)
+color after setStyleSheetText: rgb(4, 5, 6)
+opacity after addRule: 0.5

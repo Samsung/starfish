@@ -1,0 +1,4 @@
+Tests DOMDebugger.getEventListeners
+click: useCapture=false
+keydown: useCapture=true
+window has none of them: true

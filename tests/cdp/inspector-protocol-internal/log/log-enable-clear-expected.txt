@@ -1,0 +1,4 @@
+Tests Log.enable, clear, disable
+Log.enable: ok
+Log.clear: ok
+Log.disable: ok

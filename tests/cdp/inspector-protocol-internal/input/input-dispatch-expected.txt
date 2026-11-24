@@ -1,0 +1,6 @@
+Tests Input dispatch methods
+inserted text reached the field: true
+synthesizeTapGesture answers: true
+synthesizeScrollGesture answers: true
+synthesizePinchGesture answers: true
+events: click input keydown keypress keyup mousedown mousemove mouseup touchend touchmove touchstart

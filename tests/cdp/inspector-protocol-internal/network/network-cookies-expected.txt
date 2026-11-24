@@ -1,0 +1,5 @@
+Tests Network cookie methods
+cookies: a,b
+getAllCookies has a: true
+after deleteCookies: b
+after clearBrowserCookies: ""

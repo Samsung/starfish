@@ -1,0 +1,12 @@
+Tests Network request events, headers, bodies and blocking
+script ran: true
+document body has the title: true
+script ran after blocking: undefined
+request network-page.html X-Test=yes
+response network-page.html 200 Document
+request network-script.js X-Test=yes
+response network-script.js 200 Script
+request network-page.html X-Test=yes
+response network-page.html 200 Document
+request network-script.js X-Test=yes
+failed net::ERR_BLOCKED_BY_CLIENT

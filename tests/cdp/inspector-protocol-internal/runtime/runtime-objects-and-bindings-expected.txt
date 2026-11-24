@@ -1,0 +1,9 @@
+Tests Runtime objects, scripts and bindings
+returnByValue: {"a":1,"b":[2,3]}
+awaitPromise: 7
+exception reported: true
+own properties: x,y
+callFunctionOn: 42
+runScript: 42
+bindingCalled: notify(hello)
+heap used > 0: true

@@ -1,0 +1,4 @@
+Tests Tracing.start, end and getCategories
+categories listed: true
+trace has events: true
+requestMemoryDump answers: true

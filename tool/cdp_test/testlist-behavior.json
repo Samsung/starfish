@@ -415,6 +415,10 @@
       "expected": "fail",
       "category": "script-error"
     },
+    "css/css-node-styles.js": {
+      "expected": "pass",
+      "suite": "internal"
+    },
     "css/highlight-pseudo-inheritance.js": {
       "expected": "fail",
       "category": "script-error"
@@ -617,6 +621,14 @@
       "expected": "fail",
       "category": "output-differs"
     },
+    "dom-debugger/dom-debugger-event-listeners.js": {
+      "expected": "pass",
+      "suite": "internal"
+    },
+    "dom-snapshot/dom-snapshot-capture.js": {
+      "expected": "pass",
+      "suite": "internal"
+    },
     "dom/breakpoint-csp-violation-enforced.js": {
       "expected": "fail",
       "category": "timeout"
@@ -640,6 +652,10 @@
     "dom/dom-include-whitespace.js": {
       "expected": "fail",
       "category": "output-differs"
+    },
+    "dom/dom-node-editing.js": {
+      "expected": "pass",
+      "suite": "internal"
     },
     "dom/dom-node-push-by-path-to-frontend.js": {
       "expected": "fail",
@@ -687,6 +703,10 @@
     "emulation/emulation-oopifs.js": {
       "expected": "fail",
       "category": "output-differs"
+    },
+    "emulation/emulation-overrides.js": {
+      "expected": "pass",
+      "suite": "internal"
     },
     "emulation/emulation-per-handler-sensor-overrides.js": {
       "expected": "fail",
@@ -1479,6 +1499,10 @@
       "expected": "fail",
       "category": "timeout"
     },
+    "input/input-dispatch.js": {
+      "expected": "pass",
+      "suite": "internal"
+    },
     "inspector/worker-script-loaded.js": {
       "expected": "fail",
       "category": "timeout"
@@ -1897,6 +1921,10 @@
     "log-feature-policy-parse-console-message.js": {
       "expected": "fail",
       "category": "output-differs"
+    },
+    "log/log-enable-clear.js": {
+      "expected": "pass",
+      "suite": "internal"
     },
     "main-target-commands.js": {
       "expected": "fail",
@@ -2406,6 +2434,14 @@
       "expected": "fail",
       "category": "output-differs"
     },
+    "network/network-cookies.js": {
+      "expected": "pass",
+      "suite": "internal"
+    },
+    "network/network-page-load-events.js": {
+      "expected": "pass",
+      "suite": "internal"
+    },
     "network/network-state-override-navigation.js": {
       "expected": "fail",
       "category": "output-differs"
@@ -2608,6 +2644,10 @@
     "overlay/oopif-subframe-navigation.js": {
       "expected": "fail",
       "category": "timeout"
+    },
+    "overlay/overlay-highlight-node.js": {
+      "expected": "pass",
+      "suite": "internal"
     },
     "overlay/overlay-setshowdisplaycutout.js": {
       "expected": "fail",
@@ -2847,6 +2887,10 @@
     "page/navigated-heavy-ad.js": {
       "expected": "fail",
       "category": "timeout"
+    },
+    "page/page-capture-and-history.js": {
+      "expected": "pass",
+      "suite": "internal"
     },
     "page/page-captureScreenshot-clip-emulation.js": {
       "expected": "fail",
@@ -3141,6 +3185,10 @@
     "runtime/runtime-exception-thrown-cors-issue-summary.js": {
       "expected": "fail",
       "category": "timeout"
+    },
+    "runtime/runtime-objects-and-bindings.js": {
+      "expected": "pass",
+      "suite": "internal"
     },
     "runtime/serialization-dom-types.js": {
       "expected": "fail",
@@ -3790,6 +3838,10 @@
     "tracing/timeline-scheduler-yield.js": {
       "expected": "fail",
       "category": "output-differs"
+    },
+    "tracing/tracing-start-end.js": {
+      "expected": "pass",
+      "suite": "internal"
     },
     "tracing/unused-preload.js": {
       "expected": "fail",

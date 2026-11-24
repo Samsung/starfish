@@ -1,0 +1,8 @@
+Tests DOMSnapshot.captureSnapshot and getSnapshot
+documents: 1
+has DIV: true
+has SPAN: true
+parents and names line up: true
+a laid out node is display:block: true
+layout has bounds: true
+getSnapshot answers: true

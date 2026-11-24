@@ -1,0 +1,10 @@
+Tests Emulation overrides
+metrics override: 400x300 dpr=2
+print media: true
+dark scheme: true
+media cleared: false
+userAgent: Emulated/1.0
+setGeolocationOverride answers: true
+clearGeolocationOverride answers: true
+setVisibleSize answers: true
+script runs again: 2

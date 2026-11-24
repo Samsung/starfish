@@ -1,0 +1,24 @@
+Tests DOM domain node queries and edits
+querySelectorAll p: 2
+describeNode: DIV children=2
+attributes: id list class c1 c2
+class names: c1 c2
+setAttributeValue: tip
+removeAttribute: false
+getOuterHTML: <p id="a">A</p>
+setOuterHTML: A2
+copyTo: 1
+moveTo: 3
+removeNode: 2
+setNodeValue: B2
+box model: 40x20
+content quads: 1 of 8 numbers
+getNodeForLocation: DIV
+resolveNode: DIV
+requestNode round trip: true
+pushNodesByBackendIdsToFrontend: 1
+focus: field
+performSearch results: true
+getSearchResults: true
+getFlattenedDocument: true
+undo/redo answer: true
