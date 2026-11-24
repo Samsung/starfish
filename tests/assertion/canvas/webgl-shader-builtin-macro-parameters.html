@@ -1,0 +1,53 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebGL shader macro parameters named after built-in constants</title>
+<script>
+function check(gl, output, header, prelude, expression, expected, label) {
+  var shader = gl.createShader(gl.FRAGMENT_SHADER);
+  // A negative array size makes an incorrect constant value fail compilation.
+  gl.shaderSource(shader, header + prelude + '\nvoid main() {\n' +
+      'float a[(' + expression + ') ? 1 : -1]; a[0] = 1.0; ' +
+      output + ' = vec4(a[0]); }');
+  gl.compileShader(shader);
+  console.assert(gl.getShaderParameter(shader, gl.COMPILE_STATUS) === expected,
+                 label + ': ' + gl.getShaderInfoLog(shader));
+  gl.deleteShader(shader);
+}
+
+var gl1 = document.createElement('canvas').getContext('webgl');
+if (gl1) {
+  check(gl1, 'gl_FragColor', 'precision mediump float;\n',
+        '#define ID(gl_MaxDrawBuffers) (gl_MaxDrawBuffers)\n' +
+        '#define LIMIT() gl_MaxDrawBuffers',
+        'ID(9) == 9 && LIMIT() == 1 && gl_MaxDrawBuffers == 1', true,
+        'argument, zero-parameter macro, and ordinary built-in');
+}
+var gl2 = document.createElement('canvas').getContext('webgl2');
+if (gl2) {
+  // Three.js's batching prelude aliases the draw ID in vertex shaders.
+  var vertex = gl2.createShader(gl2.VERTEX_SHADER);
+  gl2.shaderSource(vertex, '#version 300 es\n#define USE_BATCHING\n' +
+      '#ifdef USE_BATCHING\n#ifndef GL_ANGLE_multi_draw\n' +
+      '#define gl_DrawID _gl_DrawID\nuniform int _gl_DrawID;\n#endif\n#endif\n' +
+      'void main() { gl_Position = vec4(float(gl_DrawID)); }');
+  gl2.compileShader(vertex);
+  console.assert(gl2.getShaderParameter(vertex, gl2.COMPILE_STATUS),
+                 'vertex draw-ID fallback: ' + gl2.getShaderInfoLog(vertex));
+  gl2.deleteShader(vertex);
+  var header = '#version 300 es\nprecision mediump float;\nout vec4 color;\n';
+  check(gl2, 'color', header,
+        'const int minimum = gl_MinProgramTexelOffset;\n' +
+        'const int maximum = gl_MaxProgramTexelOffset;\n' +
+        '#define DIFF(gl_MaxProgramTexelOffset, gl_MinProgramTexelOffset) ' +
+        '(gl_MaxProgramTexelOffset - gl_MinProgramTexelOffset)\n' +
+        '#define MIX(gl_MinProgramTexelOffset) ' +
+        '(gl_MinProgramTexelOffset + gl_MaxProgramTexelOffset)\n' +
+        '#define OFFSET gl_MinProgramTexelOffset',
+        'DIFF(20, 5) == 15 && MIX(3) == 3 + maximum && OFFSET == minimum',
+        true, 'two parameters, a built-in in the same body, and an object-like macro');
+  check(gl2, 'color', header,
+        '#define PICK(gl_MaxProgramTexelOffset) gl_MaxProgramTexelOffset',
+        'PICK(1, 2) == 1', false, 'incorrect argument count');
+}
+if (typeof testEnd === 'function') testEnd();
+</script>

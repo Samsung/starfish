@@ -1937,6 +1937,10 @@ static bool isNonZeroConstantIndex(const std::string& text, size_t i,
     return index && i < end && text[i] == ']';
 }
 
+static size_t macroBodyBegin(const std::string& view, size_t nameEnd,
+                             size_t end,
+                             std::unordered_set<std::string>& params);
+
 // The text the driver compiles: `view` with the names of the shader
 // extensions the context did not enable hidden, their #extension directives
 // replaced, and in GLSL ES 1.00 the directives of an enabled one that follow
@@ -2052,6 +2056,7 @@ bool WebGLRenderingContext::shaderSourceForDriver(
     std::unordered_map<std::string, bool> topLevelMacros;
     // The same for function-like macros.
     std::unordered_set<std::string> topLevelFunctionMacros;
+    std::unordered_set<std::string> macroParams;
     out.clear();
     out.reserve(view.size());
     code.clear();
@@ -2106,6 +2111,7 @@ bool WebGLRenderingContext::shaderSourceForDriver(
                 }
             }
             bool isMacroName = directive == "define";
+            size_t paramsStart = end;
             std::string definedName;
             bool isObjectLike = false;
             bool bodyHasDefined = false;
@@ -2142,6 +2148,9 @@ bool WebGLRenderingContext::shaderSourceForDriver(
                     isMacroName = false;
                     definedName = token;
                     isObjectLike = tokenEnd == end || view[tokenEnd] != '(';
+                    if (!isObjectLike) {
+                        paramsStart = tokenEnd;
+                    }
                 } else if (directive == "define" && token == "defined") {
                     bodyHasDefined = true;
                 } else if (directive == "undef" && i >= afterDirective) {
@@ -2217,18 +2226,26 @@ bool WebGLRenderingContext::shaderSourceForDriver(
                     // (GL_ABC_x) is renamed too; resolve names after
                     // preprocessing to keep it.
                     out += "webgl_" + token;
-                } else if (isName && hidesMaxDrawBuffers &&
-                           token == "gl_MaxDrawBuffers" &&
-                           (!isDirective || directive == "define")) {
-                    // GLSL ES 1.00 §7.4: 1 without WEBGL_draw_buffers.
-                    out += '1';
-                } else if (isName && essl3 &&
-                           (token == "gl_MinProgramTexelOffset" ||
-                            token == "gl_MaxProgramTexelOffset") &&
-                           (!isDirective || directive == "define")) {
-                    // The range getParameter() reports, the GLSL ES 3.00 §7.3
-                    // minimums.
-                    out += token == "gl_MinProgramTexelOffset" ? "(-8)" : "7";
+                } else if (isName && (!isDirective || directive == "define") &&
+                           ((hidesMaxDrawBuffers &&
+                             token == "gl_MaxDrawBuffers") ||
+                            (essl3 && (token == "gl_MinProgramTexelOffset" ||
+                                       token == "gl_MaxProgramTexelOffset")))) {
+                    // Macro parameters stand for their arguments, even when
+                    // named after a built-in (GLSL ES 3.00 section 3.5).
+                    if (paramsStart != end) {
+                        macroBodyBegin(view, paramsStart, end, macroParams);
+                        paramsStart = end;
+                    }
+                    if (!isObjectLike && directive == "define" &&
+                        macroParams.count(token)) {
+                        out += token;
+                    } else if (token == "gl_MaxDrawBuffers") {
+                        out += '1';
+                    } else {
+                        out +=
+                            token == "gl_MinProgramTexelOffset" ? "(-8)" : "7";
+                    }
                 } else {
                     out += token;
                 }
