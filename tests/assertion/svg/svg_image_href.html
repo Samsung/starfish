@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SVGImageElement.href (SVGURIReference) and xlink:href compatibility</title>
+  <link rel="help" href="https://svgwg.org/svg2-draft/types.html#InterfaceSVGURIReference">
+  <link rel="help" href="https://svgwg.org/svg2-draft/linking.html#XLinkRefAttrs">
+</head>
+<body>
+  <script>
+    const svgNs = 'http://www.w3.org/2000/svg';
+    const xlinkNs = 'http://www.w3.org/1999/xlink';
+
+    // Default empty state and [SameObject] identity
+    const img0 = document.createElementNS(svgNs, 'image');
+    console.assert(img0.href !== undefined, 'SVGImageElement.href must exist');
+    console.assert(img0.href === img0.href, 'SVGImageElement.href must be [SameObject]');
+    console.assert(img0.href.baseVal === '', 'default baseVal must be empty string');
+    console.assert(img0.href.animVal === '', 'default animVal must be empty string');
+
+    // Setting baseVal sets null-namespace href attribute
+    img0.href.baseVal = 'data:image/png;base64,';
+    console.assert(img0.hasAttributeNS(null, 'href'), 'baseVal setter must create href attribute');
+    console.assert(!img0.hasAttributeNS(xlinkNs, 'href'), 'baseVal setter must not create xlink:href');
+    console.assert(img0.getAttributeNS(null, 'href') === 'data:image/png;base64,', 'href attribute matches baseVal');
+    console.assert(img0.href.baseVal === 'data:image/png;base64,', 'baseVal reflects set value');
+    console.assert(img0.href.animVal === 'data:image/png;base64,', 'animVal reflects set value');
+
+    // Plain href takes precedence over xlink:href
+    img0.setAttributeNS(xlinkNs, 'xlink:href', 'fallback.png');
+    console.assert(img0.href.baseVal === 'data:image/png;base64,', 'href takes precedence over xlink:href');
+
+    // Removing plain href falls back to xlink:href
+    img0.removeAttributeNS(null, 'href');
+    console.assert(img0.href.baseVal === 'fallback.png', 'removing href falls back to xlink:href');
+    console.assert(img0.href.animVal === 'fallback.png', 'animVal falls back to xlink:href');
+
+    // When only xlink:href is present, setting baseVal updates xlink:href in place
+    img0.href.baseVal = 'updated.png';
+    console.assert(!img0.hasAttributeNS(null, 'href'), 'must not create plain href when backed by xlink:href');
+    console.assert(img0.getAttributeNS(xlinkNs, 'href') === 'updated.png', 'xlink:href must be updated');
+    console.assert(img0.href.baseVal === 'updated.png', 'baseVal reflects updated xlink:href');
+
+    // Removing xlink:href resets to empty string
+    img0.removeAttributeNS(xlinkNs, 'href');
+    console.assert(img0.href.baseVal === '', 'removing xlink:href resets baseVal to empty string');
+
+    // Unprefixed XLink namespace attribute works identically
+    const img1 = document.createElementNS(svgNs, 'image');
+    img1.setAttributeNS(xlinkNs, 'href', 'unprefixed.png');
+    console.assert(img1.href.baseVal === 'unprefixed.png', 'reads unprefixed XLink href');
+    img1.href.baseVal = 'unprefixed2.png';
+    console.assert(!img1.hasAttributeNS(null, 'href'), 'stays backed by XLink attribute');
+    console.assert(img1.getAttributeNS(xlinkNs, 'href') === 'unprefixed2.png', 'updates unprefixed XLink href');
+
+    if (typeof testEnd === 'function') {
+      testEnd();
+    }
+  </script>
+</body>
+</html>

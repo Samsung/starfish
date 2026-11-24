@@ -1,5 +1,5 @@
-// https://www.w3.org/TR/SVG11/struct.html#InterfaceSVGImageElement
-// TODO implement SVGURIReference, SVGTests, SVGLangSpace, SVGExternalResourcesRequired, SVGStylable, SVGTransformable  
+// https://svgwg.org/svg2-draft/embedded.html#InterfaceSVGImageElement
+// TODO implement SVGTests, SVGLangSpace, SVGExternalResourcesRequired, SVGStylable, SVGTransformable
 interface SVGImageElement : SVGElement {
   readonly attribute SVGAnimatedLength x;
   readonly attribute SVGAnimatedLength y;
@@ -7,3 +7,5 @@ interface SVGImageElement : SVGElement {
   readonly attribute SVGAnimatedLength height;
   [Unimplemented] readonly attribute SVGAnimatedPreserveAspectRatio preserveAspectRatio;
 };
+
+SVGImageElement implements SVGURIReference;

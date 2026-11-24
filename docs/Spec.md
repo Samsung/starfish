@@ -2176,7 +2176,7 @@ C++ class and a corresponding `FrameSVG*Box` layout box. Please see
 | [polyline](https://www.w3.org/TR/SVG2/shapes.html#PolylineElement) | Supports `points`. |
 | [polygon](https://www.w3.org/TR/SVG2/shapes.html#PolygonElement) | Supports `points`. |
 | [path](https://www.w3.org/TR/SVG2/shapes.html#PathElement) | Full path data (`M`, `L`, `C`, `Q`, `A`, `Z`, etc.). |
-| [image](https://www.w3.org/TR/SVG2/embedded.html#ImageElement) | Embeds raster image via `href`/`xlink:href`. |
+| [image](https://www.w3.org/TR/SVG2/embedded.html#ImageElement) | Embeds raster image via `href`/`xlink:href`. Implements `SVGURIReference` (`href` `SVGAnimatedString`). |
 | [text](https://www.w3.org/TR/SVG2/text.html#TextElement) | Supports `x`, `y`, `dx`, `dy`, `fill`, `font-*`. |
 | [tspan](https://www.w3.org/TR/SVG2/text.html#TextElement) | Sub-text within `<text>`. |
 | [linearGradient](https://www.w3.org/TR/SVG2/pservers.html#LinearGradients) | Supports `x1`, `y1`, `x2`, `y2`, `gradientUnits`, `gradientTransform`, `spreadMethod`. |
@@ -3265,7 +3265,7 @@ The `console` global is hand-written (not an IDL interface). The `CONSOLE_APIS` 
 
 ### SVG family — runtime caveats
 
-64 `SVG*.idl` files exist under `src/core/dom/svg/`; 44 element subclasses are registered in `SVGDocument::createSVGElement`. Inline `<svg>...</svg>` and `createElementNS('http://www.w3.org/2000/svg', tag)` produce correctly namespaced `SVG*Element` instances (NOT `HTMLUnknownElement`). `SVGAnimatedLength.baseVal.value` reads parsed attribute values; presentation attributes map to CSS (`getComputedStyle(rect).fill === 'rgb(255,0,0)'`); `<svg width/height>` allocates a real layout box (`getBoundingClientRect()` returns it). SVG elements are rendered — see the [SVG](#svg) section for the full supported surface.
+65 `SVG*.idl` files exist under `src/core/dom/svg/`; 44 element subclasses are registered in `SVGDocument::createSVGElement`. Inline `<svg>...</svg>` and `createElementNS('http://www.w3.org/2000/svg', tag)` produce correctly namespaced `SVG*Element` instances (NOT `HTMLUnknownElement`). `SVGAnimatedLength.baseVal.value` reads parsed attribute values; `SVGImageElement` exposes `SVGURIReference` (`href` `SVGAnimatedString` reflecting `href`/`xlink:href`); presentation attributes map to CSS (`getComputedStyle(rect).fill === 'rgb(255,0,0)'`); `<svg width/height>` allocates a real layout box (`getBoundingClientRect()` returns it). SVG elements are rendered — see the [SVG](#svg) section for the full supported surface.
 
 **Known limitations** (methods authors typically expect but are missing):
 

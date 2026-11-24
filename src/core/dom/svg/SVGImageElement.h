@@ -25,6 +25,7 @@
 namespace Starfish {
 
 class SVGSVGElement;
+class SVGAnimatedString;
 class ImageResource;
 enum class RequestErrorType;
 
@@ -77,6 +78,8 @@ public:
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(width);
     STARFISH_SVG_ANIMATED_LENGTH_GETTER(height);
 
+    SVGAnimatedString* href();
+
     NativeImageData* imageData()
     {
         return m_imageData;
@@ -101,6 +104,7 @@ protected:
 
     void unloadImage();
     void loadImage(String* src);
+    String* effectiveHrefAttributeValue();
 
     ImageResource* m_imageResource{ nullptr };
     NativeImageData* m_imageData{ nullptr };
@@ -111,6 +115,7 @@ protected:
     Optional<SVGAnimatedLength*> m_y;
     Optional<SVGAnimatedLength*> m_width;
     Optional<SVGAnimatedLength*> m_height;
+    Optional<SVGAnimatedString*> m_href;
 };
 } // namespace Starfish
 

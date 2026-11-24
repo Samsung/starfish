@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
+#include "core/dom/svg/SVGAnimatedString.h"
 #include "core/dom/svg/SVGImageElement.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/loader/ElementResourceClient.h"
@@ -40,6 +41,7 @@ void* SVGImageElement::operator new(size_t size)
         GC_set_bit(desc, GC_WORD_OFFSET(SVGImageElement, m_y));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGImageElement, m_width));
         GC_set_bit(desc, GC_WORD_OFFSET(SVGImageElement, m_height));
+        GC_set_bit(desc, GC_WORD_OFFSET(SVGImageElement, m_href));
         SVGElement::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGImageElement));
         typeInited = true;
@@ -148,6 +150,28 @@ void SVGImageElement::computeAttributeChangeDamage(AtomicString name)
     }
 }
 
+String* SVGImageElement::effectiveHrefAttributeValue()
+{
+    StaticStrings* ss = starfish()->staticStrings();
+    if (hasAttribute(ss->m_href) != SIZE_MAX) {
+        return getAttributeOrEmpty(ss->m_href);
+    }
+    Optional<String*> xlinkVal =
+        getAttributeNS(ss->m_xlinkHref.namespaceURI().getValue().string(),
+                       ss->m_href.localName());
+    return xlinkVal.hasValue() ? xlinkVal.getValue() : String::emptyString;
+}
+
+SVGAnimatedString* SVGImageElement::href()
+{
+    if (!m_href.hasValue()) {
+        StaticStrings* ss = starfish()->staticStrings();
+        String* value = effectiveHrefAttributeValue();
+        m_href = new SVGAnimatedString(this, ss->m_href, value, value);
+    }
+    return m_href.getValue();
+}
+
 void SVGImageElement::didAttributeChanged(QualifiedName name,
                                           Optional<String*> old, String* value,
                                           bool attributeCreated,
@@ -156,12 +180,29 @@ void SVGImageElement::didAttributeChanged(QualifiedName name,
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
     StaticStrings* ss = starfish()->staticStrings();
-    if (ss->m_href == name || ss->m_xlinkHref == name ||
-        (!name.hasPrefix() &&
-         ss->m_xlinkHref.hasSameNamespaceURI(name.namespaceURI()) &&
-         ss->m_xlinkHref.hasSameLocalName(name.localName()))) {
+    bool isPlainHref = (ss->m_href == name);
+    bool isXLinkHref =
+        (ss->m_xlinkHref == name ||
+         (ss->m_xlinkHref.hasSameNamespaceURI(name.namespaceURI()) &&
+          ss->m_xlinkHref.hasSameLocalName(name.localName())));
+    if (isPlainHref || isXLinkHref) {
+        if (m_href.hasValue()) {
+            m_href->setBaseVal(effectiveHrefAttributeValue(), true);
+        }
+        bool hasPlainHref = hasAttribute(ss->m_href) != SIZE_MAX;
+        if (isXLinkHref && hasPlainHref) {
+            // Plain "href" takes precedence over "xlink:href".
+            return;
+        }
         if (attributeRemoved) {
-            unloadImage();
+            if (isPlainHref &&
+                hasAttributeNS(
+                    ss->m_xlinkHref.namespaceURI().getValue().string(),
+                    ss->m_href.localName())) {
+                loadImage(effectiveHrefAttributeValue());
+            } else {
+                unloadImage();
+            }
         } else {
             if (!old.hasValue() || (old.hasValue() && !old->equals(value))) {
                 loadImage(value);
@@ -182,6 +223,24 @@ void SVGImageElement::updateSVGAttributeNeeded(QualifiedName name)
         setAttribute(ss->m_width, width()->baseVal()->valueAsString());
     } else if (ss->m_height == name) {
         setAttribute(ss->m_height, height()->baseVal()->valueAsString());
+    } else if (ss->m_href == name) {
+        // https://svgwg.org/svg2-draft/linking.html#XLinkRefAttrs
+        // If "href" is not set but an XLink "href" attribute is present,
+        // reflect mutations into the existing XLink attribute.
+        if (hasAttribute(ss->m_href) == SIZE_MAX &&
+            hasAttributeNS(ss->m_xlinkHref.namespaceURI().getValue().string(),
+                           ss->m_href.localName())) {
+            for (size_t i = 0; i < attributeCount(); i++) {
+                QualifiedName attrName = getAssuredAttributeName(i);
+                if (ss->m_xlinkHref.hasSameNamespaceURI(
+                        attrName.namespaceURI()) &&
+                    ss->m_xlinkHref.hasSameLocalName(attrName.localName())) {
+                    setAttribute(attrName, href()->baseVal());
+                    return;
+                }
+            }
+        }
+        setAttribute(ss->m_href, href()->baseVal());
     }
 }
 
