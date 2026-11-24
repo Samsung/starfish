@@ -207,26 +207,34 @@ CalcTerm* CalcTerm::resolvedCopy(Leaf& leaf) const
 String* CalcTerm::toString()
 {
     STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
+    if (m_values.size() == 1) {
+        return m_values[0].toString();
+    }
+
     StringBuilder builder;
-    auto it = m_values.begin();
-    builder.appendString((*it).toString());
-    it++;
-    auto it2 = m_operators.begin();
-    while (it != m_values.end()) {
-        builder.appendString(String::spaceString);
-        bool operand = *it2;
-
-        if (operand == MUL) {
-            builder.appendChar('*');
-        } else {
-            builder.appendChar('/');
+    auto isNumberFactor = [&](size_t index) {
+        return m_values[index].type().isNumber() &&
+               (!index || m_operators[index - 1] == MUL);
+    };
+    auto append = [&](size_t index) {
+        if (builder.length()) {
+            builder.appendString(String::createASCIIString(
+                index && m_operators[index - 1] == DIV ? " / " : " * "));
         }
+        builder.appendString(m_values[index].toString());
+    };
 
-        builder.appendString(String::spaceString);
-        builder.appendString((*it).toString());
-
-        it++;
-        it2++;
+    // CSS Values 4 sorts numeric factors before other children of a
+    // product. Divisors are inversion nodes, so keep them in the second pass.
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (isNumberFactor(i)) {
+            append(i);
+        }
+    }
+    for (size_t i = 0; i < m_values.size(); ++i) {
+        if (!isNumberFactor(i)) {
+            append(i);
+        }
     }
 
     return builder.finalize();
@@ -721,9 +729,10 @@ namespace {
 
     int termRank(CalcTerm* term)
     {
-        // Nested min()/max()/clamp() terms keep their written position: they
-        // are never merged or reordered.
-        if (term->values().begin()->type().isCalcData()) {
+        // Products and nested functions are operator nodes. CSS Values 4
+        // keeps them after plain values, in their original order.
+        if (term->values().size() != 1 ||
+            term->values()[0].type().isCalcData()) {
             return 300;
         }
         CalcValueType type = term->type();
@@ -965,12 +974,24 @@ String* CalcData::toString()
         GCVector<CalcTerm*> mergedArgument;
         mergeConsecutiveSameUnit(argument, mergedArgument);
 
+        auto serializeTerm = [&](CalcTerm* term) {
+            String* serialized = term->toString();
+            if (mergedArgument.size() == 1 || isSingleValueTerm(term)) {
+                return serialized;
+            }
+            StringBuilder product;
+            product.appendChar('(');
+            product.appendString(serialized);
+            product.appendChar(')');
+            return product.finalize();
+        };
+
         auto termIt = mergedArgument.begin();
-        builder.appendString((*termIt)->toString());
+        builder.appendString(serializeTerm(*termIt));
         ++termIt;
         while (termIt != mergedArgument.end()) {
             builder.appendString(String::spaceString);
-            String* serialized = (*termIt)->toString();
+            String* serialized = serializeTerm(*termIt);
             if (serialized->charAt(0) == '-') {
                 builder.appendString(String::createASCIIString("- "));
                 builder.appendString(
