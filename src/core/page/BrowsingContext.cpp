@@ -1175,6 +1175,8 @@ static TouchEvent* createTouchEvent(Document* document, String* name,
     TouchEvent* event = new TouchEvent(document, name, touches, count);
     event->setBubbles(true);
     event->setCancelable(true);
+    // https://w3c.github.io/touch-events/#list-of-touchevent-types
+    event->setComposed(true);
     event->setView(document->window());
     return event;
 }
@@ -1186,6 +1188,8 @@ static MouseEvent* createMouseEvent(Document* document, String* name,
         new MouseEvent(document->executionContext(), name, data);
     event->setBubbles(true);
     event->setCancelable(true);
+    // https://w3c.github.io/uievents/#events-mouseevents
+    event->setComposed(true);
     event->setView(document->window());
     return event;
 }
@@ -1197,6 +1201,8 @@ static PointerEvent* createPointerEvent(Document* document, String* name,
         new PointerEvent(document->executionContext(), name, data, pointerType);
     event->setBubbles(true);
     event->setCancelable(true);
+    // https://w3c.github.io/pointerevents/#the-pointerdown-event
+    event->setComposed(true);
     event->setView(document->window());
     return event;
 }
@@ -1317,6 +1323,8 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
                         data);
                     e->setCancelable(false);
                     e->setBubbles(false);
+                    // https://w3c.github.io/uievents/#event-type-mouseenter
+                    e->setComposed(false);
                     (*iter)->dispatchEventByUA(newElement, e, true);
                 }
             }
@@ -1352,6 +1360,8 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
                                              data);
                         e->setCancelable(false);
                         e->setBubbles(false);
+                        // https://w3c.github.io/uievents/#event-type-mouseleave
+                        e->setComposed(false);
                         leaveTarget->dispatchEventByUA(oldElement, e, true);
                     }
                     leaveTarget = leaveTarget->parentElement();

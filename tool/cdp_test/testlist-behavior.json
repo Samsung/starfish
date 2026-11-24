@@ -1491,6 +1491,10 @@
       "expected": "fail",
       "category": "output-differs"
     },
+    "input/composed-ui-events.js": {
+      "expected": "pass",
+      "suite": "internal"
+    },
     "input/dispatch-drag-event-sanitize.js": {
       "expected": "fail",
       "category": "output-differs"

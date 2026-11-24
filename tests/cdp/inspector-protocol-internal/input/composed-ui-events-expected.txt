@@ -1,0 +1,6 @@
+Tests composed flag on trusted mouse, touch, and pointer events across shadow DOM
+inner mouseenter composed=false
+host mousedown target=host composed=true
+host pointerdown pointerType=mouse target=host composed=true
+host touchstart target=host composed=true
+host pointerdown pointerType=touch target=host composed=true
