@@ -1,0 +1,193 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>MediaSource and SourceBuffer with MP4 and WebM segments</title>
+<link rel="help" href="https://w3c.github.io/media-source/">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[media-source-api] " + document.title);
+  };
+}
+</script>
+<body>
+<script>
+// The media files are copies of web-platform-tests media-source/mp4
+// (3-Clause BSD): fragmented H.264 and AAC.
+var MP4_VIDEO = {url: "resources/test-v-128k-640x480-30fps-10kfr.mp4",
+                 type: 'video/mp4; codecs="avc1.4D4001"'};
+var MP4_AUDIO = {url: "resources/test-a-128k-44100Hz-1ch.mp4",
+                 type: 'audio/mp4; codecs="mp4a.40.2"'};
+var WEBM_TYPES = ['video/webm; codecs="vp9"', 'audio/webm; codecs="opus"'];
+
+function load(media) {
+  return fetch(media.url).then(function (r) { return r.arrayBuffer(); });
+}
+function once(target, type) {
+  return new Promise(function (resolve) {
+    target.addEventListener(type, function handler(e) {
+      target.removeEventListener(type, handler);
+      resolve(e);
+    });
+  });
+}
+function append(buffer, data) {
+  var done = once(buffer, "updateend");
+  buffer.appendBuffer(data);
+  return done;
+}
+function open(element) {
+  var source = new MediaSource();
+  console.assert(source.readyState === "closed", "a new MediaSource is closed");
+  var opened = once(source, "sourceopen");
+  element.src = URL.createObjectURL(source);
+  return opened.then(function () {
+    console.assert(source.readyState === "open", "attaching opens it");
+    return source;
+  });
+}
+
+[MP4_VIDEO.type, MP4_AUDIO.type].concat(WEBM_TYPES).forEach(function (type) {
+  console.assert(MediaSource.isTypeSupported(type), "isTypeSupported " + type);
+});
+console.assert(!MediaSource.isTypeSupported("video/x-unknown"), "an unknown type is unsupported");
+
+var video = document.createElement("video");
+video.muted = true;
+document.body.appendChild(video);
+
+function mp4() {
+  var source, buffer, data, events = [];
+  return Promise.all([open(video), load(MP4_VIDEO)]).then(function (r) {
+    source = r[0];
+    data = r[1];
+    buffer = source.addSourceBuffer(MP4_VIDEO.type);
+    console.assert(source.sourceBuffers.length === 1, "addSourceBuffer");
+    console.assert(buffer.mode === "segments", "mode defaults to segments");
+    console.assert(buffer.timestampOffset === 0, "timestampOffset defaults to 0");
+    console.assert(buffer.appendWindowStart === 0 &&
+                   buffer.appendWindowEnd === Infinity, "default append window");
+    buffer.appendWindowStart = 0;
+    buffer.appendWindowEnd = 100;
+    console.assert(buffer.appendWindowEnd === 100, "appendWindowEnd");
+    buffer.appendWindowEnd = Infinity;
+    ["updatestart", "update", "updateend"].forEach(function (type) {
+      buffer["on" + type] = function () { events.push(type); };
+      console.assert(typeof buffer["on" + type] === "function", "on" + type);
+    });
+    buffer.onerror = function () { events.push("error"); };
+    buffer.onabort = function () { events.push("abort"); };
+    return append(buffer, data);
+  }).then(function () {
+    console.assert(events.join() === "updatestart,update,updateend",
+                   "append fires updatestart, update, updateend: " + events.join());
+    console.assert(!buffer.updating, "not updating after updateend");
+    console.assert(buffer.buffered.length === 1 && buffer.buffered.end(0) > 0,
+                   "appended media is buffered");
+    console.assert(source.duration > 0, "duration from the init segment: " + source.duration);
+    console.assert(source.activeSourceBuffers.length === 1, "the video buffer is active");
+    console.assert(video.currentSrc.indexOf("blob:") === 0, "currentSrc is the MediaSource URL");
+
+    // abort() outside an append only resets the parser.
+    buffer.abort();
+    buffer.mode = "sequence";
+    console.assert(buffer.mode === "sequence", "mode can switch to sequence");
+    buffer.mode = "segments";
+    buffer.timestampOffset = 0;
+
+    var removed = once(buffer, "updateend");
+    buffer.remove(0, buffer.buffered.end(0) + 1);
+    return removed;
+  }).then(function () {
+    console.assert(buffer.buffered.length === 0, "removing past the end empties the buffer");
+    return append(buffer, data);
+  }).then(function () {
+    var ended = once(source, "sourceended");
+    source.endOfStream();
+    return ended;
+  }).then(function () {
+    console.assert(source.readyState === "ended", "endOfStream ends the source");
+    var playing = once(video, "timeupdate");
+    video.play();
+    return playing;
+  }).then(function () {
+    var seeked = once(video, "seeked");
+    video.currentTime = 0.5;
+    return seeked;
+  }).then(function () {
+    console.assert(Math.abs(video.currentTime - 0.5) < 0.2, "seek lands near 0.5: " + video.currentTime);
+    video.pause();
+    source.removeSourceBuffer(buffer);
+    console.assert(source.sourceBuffers.length === 0, "removeSourceBuffer");
+  });
+}
+
+function aac() {
+  var audio = document.createElement("audio");
+  audio.muted = true;
+  return Promise.all([open(audio), load(MP4_AUDIO)]).then(function (r) {
+    var source = r[0];
+    var buffer = source.addSourceBuffer(MP4_AUDIO.type);
+    return append(buffer, r[1]).then(function () {
+      console.assert(buffer.buffered.length === 1, "AAC segments buffer");
+      buffer.changeType(MP4_AUDIO.type);
+      source.endOfStream();
+      console.assert(source.readyState === "ended", "AAC source ended");
+    });
+  });
+}
+
+// MediaCapabilities answers for the configurations a player would ask about.
+function capabilities() {
+  var mc = navigator.mediaCapabilities;
+  var video = {contentType: MP4_VIDEO.type, width: 640, height: 480,
+               bitrate: 128000, framerate: 30};
+  return mc.decodingInfo({type: "media-source", video: video}).then(function (info) {
+    console.assert(info.supported === true, "decodingInfo supports H.264 for MSE");
+    console.assert(typeof info.smooth === "boolean" &&
+                   typeof info.powerEfficient === "boolean", "decodingInfo flags");
+    return mc.decodingInfo({type: "file", audio: {contentType: MP4_AUDIO.type,
+                                                  channels: "1", bitrate: 128000,
+                                                  samplerate: 44100}});
+  }).then(function (info) {
+    console.assert(info.supported === true, "decodingInfo supports AAC files");
+    return mc.decodingInfo({type: "media-source",
+                            video: {contentType: "video/x-unknown", width: 1, height: 1,
+                                    bitrate: 1, framerate: 1}});
+  }).then(function (info) {
+    console.assert(info.supported === false, "an unknown type is not supported");
+  });
+}
+
+// HTMLMediaElement members a player page touches besides playback.
+function elementSurface() {
+  var v = document.createElement("video");
+  console.assert(v.canPlayType("video/mp4") !== "", "canPlayType video/mp4");
+  v.controls = true;
+  console.assert(v.controls && v.hasAttribute("controls"), "controls reflects");
+  v.controls = false;
+  var track = v.addTextTrack("subtitles", "Korean", "ko");
+  console.assert(track.kind === "subtitles" && track.language === "ko", "addTextTrack");
+  console.assert(v.textTracks.length === 1, "textTracks");
+  console.assert(v.currentSrc === "", "no currentSrc before a load");
+}
+
+var deadline = setTimeout(function () {
+  console.assert(false, "the MediaSource sequence finished in time");
+  testEnd();
+}, 20000);
+elementSurface();
+mp4().then(aac).then(capabilities).catch(function (e) {
+  console.assert(false, "unexpected rejection: " + e);
+}).then(function () {
+  clearTimeout(deadline);
+  testEnd();
+});
+</script>
+</body>

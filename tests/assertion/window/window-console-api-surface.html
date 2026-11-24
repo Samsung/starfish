@@ -1,0 +1,48 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Window scrolling, focus and console members</title>
+<link rel="help" href="https://drafts.csswg.org/cssom-view/#extensions-to-the-window-interface">
+<link rel="help" href="https://console.spec.whatwg.org/">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[window-console-api-surface] " + document.title);
+  };
+}
+</script>
+<body style="margin: 0">
+<div style="width: 5000px; height: 5000px"></div>
+<script>
+// Window scrolling moves the viewport and the offsets follow it.
+window.scrollTo(100, 200);
+console.assert(scrollX === 100 && scrollY === 200, "scrollTo");
+console.assert(pageXOffset === scrollX && pageYOffset === scrollY, "pageX/YOffset alias scrollX/Y");
+window.scrollBy(10, 20);
+console.assert(scrollX === 110 && scrollY === 220, "scrollBy");
+window.scroll({left: 0, top: 0});
+console.assert(scrollX === 0 && scrollY === 0, "scroll");
+
+window.focus();
+window.blur();
+console.assert(window.length === 0, "a window without frames has length 0");
+console.assert(typeof window.name === "string", "name");
+
+// Console members are callable and return undefined.
+var results = [
+  console.debug("debug"), console.info("info"), console.warn("warn"),
+  console.group("group"), console.groupCollapsed("collapsed"),
+  console.groupEnd(), console.groupEnd(),
+  console.time("t"), console.timeLog("t", "mid"), console.timeEnd("t"),
+  console.timeEnd("never-started")
+];
+console.assert(results.every(function (r) { return r === undefined; }), "console methods return undefined");
+testEnd();
+</script>
+</body>

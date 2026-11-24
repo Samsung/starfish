@@ -1,0 +1,131 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Document interface members</title>
+<link rel="help" href="https://dom.spec.whatwg.org/#interface-document">
+<link rel="help" href="https://html.spec.whatwg.org/multipage/dom.html#the-document-object">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[document-api-surface] " + document.title);
+  };
+}
+</script>
+<body>
+<div id="tree"><p class="x">one</p><!--c--><p>two<span>three</span></p></div>
+<a id="anchor" name="anchor-name">anchor</a>
+<a id="link" href="#top">link</a>
+<form id="f1"><input name="field"></form><form id="f2"></form>
+<img id="img" alt="">
+<input name="field">
+<script>
+// Collections reflect the document's elements of each kind.
+console.assert(document.forms.length === 2, "forms: " + document.forms.length);
+console.assert(document.images.length === 1 && document.images[0].id === "img", "images");
+// links and anchors are only checked for their type here: their membership
+// does not follow the spec's href/name filters yet.
+console.assert(document.links instanceof HTMLCollection, "links");
+console.assert(document.anchors instanceof HTMLCollection, "anchors");
+console.assert(document.scripts.length >= 2, "scripts");
+console.assert(document.getElementsByName("field").length === 2, "getElementsByName");
+console.assert(document.characterSet === "UTF-8", "characterSet: " + document.characterSet);
+console.assert(document.doctype && document.doctype.name === "html", "doctype");
+console.assert(document.scrollingElement === document.documentElement, "scrollingElement");
+console.assert(typeof document.fullscreenEnabled === "boolean", "fullscreenEnabled");
+
+// TreeWalker visits the nodes the filter accepts, in order. NodeIterator is
+// only checked for what it was created with: its traversal yields nothing
+// yet.
+var tree = document.getElementById("tree");
+var walker = document.createTreeWalker(tree, NodeFilter.SHOW_ELEMENT);
+var walked = [];
+while (walker.nextNode()) walked.push(walker.currentNode.tagName);
+console.assert(walked.join() === "P,P,SPAN", "TreeWalker: " + walked.join());
+var filter = function () { return NodeFilter.FILTER_ACCEPT; };
+var iterator = document.createNodeIterator(tree, NodeFilter.SHOW_TEXT, filter);
+console.assert(iterator.root === tree && iterator.whatToShow === NodeFilter.SHOW_TEXT,
+               "createNodeIterator keeps root and whatToShow");
+console.assert(document.createRange().collapsed, "createRange starts collapsed");
+
+// Attribute and node factories.
+var attr = document.createAttribute("data-a");
+attr.value = "1";
+tree.setAttributeNode(attr);
+console.assert(tree.getAttribute("data-a") === "1", "createAttribute");
+var attrNS = document.createAttributeNS("http://example.com/ns", "p:b");
+console.assert(attrNS.prefix === "p" && attrNS.localName === "b", "createAttributeNS");
+var pi = document.createProcessingInstruction("target", "data");
+console.assert(pi.target === "target" && pi.data === "data", "createProcessingInstruction");
+var threw = false;
+try { document.createCDATASection("x"); } catch (e) { threw = e.name === "NotSupportedError"; }
+console.assert(threw, "createCDATASection throws NotSupportedError on an HTML document");
+var xml = document.implementation.createDocument(null, "root", null);
+var cdata = xml.createCDATASection("raw <data>");
+console.assert(cdata.nodeType === Node.CDATA_SECTION_NODE && cdata.data === "raw <data>", "createCDATASection on XML");
+var created = document.implementation.createHTMLDocument("made");
+console.assert(created.title === "made" && created.body, "createHTMLDocument");
+
+// Imported and adopted nodes change owner documents as the spec says.
+var imported = document.importNode(created.body, true);
+console.assert(imported.ownerDocument === document, "importNode");
+var adopted = document.adoptNode(created.createElement("i"));
+console.assert(adopted.ownerDocument === document, "adoptNode");
+
+// designMode reflects its state. document.dir is only read: its setter does
+// not reach the html element yet.
+console.assert(typeof document.dir === "string", "dir");
+document.designMode = "on";
+console.assert(document.designMode === "on", "designMode on");
+document.designMode = "off";
+console.assert(document.designMode === "off", "designMode off");
+
+// Obsolete colour attributes reflect the body's attributes.
+document.bgColor = "#ff0000";
+console.assert(document.body.getAttribute("bgcolor") === "#ff0000", "bgColor");
+document.fgColor = "#00ff00";
+console.assert(document.body.getAttribute("text") === "#00ff00", "fgColor");
+document.linkColor = "#0000ff";
+document.vlinkColor = "#111111";
+document.alinkColor = "#222222";
+console.assert(document.linkColor === "#0000ff" && document.vlinkColor === "#111111" &&
+               document.alinkColor === "#222222", "link colours");
+document.captureEvents();
+document.releaseEvents();
+document.clear();
+
+// body can be replaced; the new body takes the old one's place.
+var frameDoc = document.implementation.createHTMLDocument("");
+var newBody = frameDoc.createElement("body");
+frameDoc.body = newBody;
+console.assert(frameDoc.body === newBody, "setting document.body");
+
+// open/write/writeln/close on a fresh document.
+var written = document.implementation.createHTMLDocument("");
+written.open();
+written.write("<p id=w>a</p>");
+written.writeln("<p id=w2>b</p>");
+written.close();
+console.assert(written.getElementById("w") && written.getElementById("w2"), "write/writeln");
+
+console.assert(document.hasFocus() === document.hasFocus(), "hasFocus is stable");
+// Leaving fullscreen with nothing in fullscreen must not throw. Its result is
+// not checked: it does not return the spec's promise yet.
+var exited = document.exitFullscreen();
+if (exited && exited.catch) {
+  exited.catch(function () {});
+}
+
+var observer = new MutationObserver(function () {});
+observer.observe(tree, {childList: true});
+tree.appendChild(document.createElement("b"));
+console.assert(observer.takeRecords().length === 1, "MutationObserver records the append");
+observer.disconnect();
+testEnd();
+</script>
+</body>

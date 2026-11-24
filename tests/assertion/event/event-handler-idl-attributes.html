@@ -1,0 +1,59 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Event handler IDL attributes on Window, Document and HTMLElement</title>
+<link rel="help" href="https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-idl-attributes">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[event-handler-idl-attributes] " + document.title);
+  };
+}
+</script>
+<body>
+<script>
+// Every on* attribute a target exposes: a function stored through it reads
+// back unchanged, runs for an event of that name, and null clears it.
+function handlerNames(target) {
+  var names = [];
+  for (var name in target) {
+    if (name.indexOf("on") === 0 && names.indexOf(name) < 0) {
+      names.push(name);
+    }
+  }
+  return names;
+}
+
+function check(label, target) {
+  var names = handlerNames(target);
+  console.assert(names.length > 20, label + " exposes event handlers: " + names.length);
+  names.forEach(function (name) {
+    var calls = 0;
+    var handler = function () { calls++; };
+    target[name] = handler;
+    console.assert(target[name] === handler, label + "." + name + " reads back the handler");
+    target.dispatchEvent(new Event(name.slice(2)));
+    console.assert(calls === 1, label + "." + name + " runs once for its event, ran " + calls);
+    target[name] = null;
+    console.assert(target[name] === null, label + "." + name + " clears to null");
+    target.dispatchEvent(new Event(name.slice(2)));
+    console.assert(calls === 1, label + "." + name + " no longer runs once cleared");
+  });
+}
+
+check("window", window);
+check("document", document);
+check("div", document.createElement("div"));
+
+// A non-callable object is not a handler and reads back as null.
+document.body.onclick = "not a function";
+console.assert(document.body.onclick === null, "a string is not stored as a handler");
+testEnd();
+</script>
+</body>

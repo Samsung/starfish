@@ -1,0 +1,116 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Element interface members</title>
+<link rel="help" href="https://dom.spec.whatwg.org/#interface-element">
+<link rel="help" href="https://drafts.csswg.org/cssom-view/#extension-to-the-element-interface">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[element-api-surface] " + document.title);
+  };
+}
+</script>
+<style>
+#scroller { width: 100px; height: 100px; overflow: scroll; border: 3px solid black; }
+#content { width: 400px; height: 400px; }
+</style>
+<body>
+<div id="scroller"><div id="content"></div></div>
+<div id="host"><span id="anchor">anchor</span></div>
+<button id="button" name="go">go</button>
+<script>
+var NS = "http://example.com/ns";
+var el = document.createElement("div");
+
+// Attribute names, nodes and namespaced attributes.
+el.setAttribute("a", "1");
+el.setAttributeNS(NS, "p:b", "2");
+console.assert(el.getAttributeNames().join() === "a,p:b", "getAttributeNames: " + el.getAttributeNames());
+console.assert(el.getAttributeNode("a").value === "1", "getAttributeNode");
+console.assert(el.getAttributeNodeNS(NS, "b").value === "2", "getAttributeNodeNS");
+console.assert(el.getAttributeNS(NS, "b") === "2", "getAttributeNS");
+console.assert(el.hasAttributeNS(NS, "b"), "hasAttributeNS");
+el.removeAttributeNS(NS, "b");
+console.assert(!el.hasAttributeNS(NS, "b"), "removeAttributeNS");
+var node = el.getAttributeNode("a");
+console.assert(el.removeAttributeNode(node) === node && !el.hasAttribute("a"), "removeAttributeNode");
+var nsAttr = document.createAttributeNS(NS, "p:c");
+nsAttr.value = "3";
+el.setAttributeNodeNS(nsAttr);
+console.assert(el.getAttributeNS(NS, "c") === "3", "setAttributeNodeNS");
+var plain = document.createAttribute("d");
+plain.value = "4";
+el.setAttributeNode(plain);
+console.assert(el.getAttribute("d") === "4", "setAttributeNode");
+
+// insertAdjacentElement / insertAdjacentText in all four positions.
+var anchor = document.getElementById("anchor");
+var made = function (t) { var e = document.createElement(t); return e; };
+anchor.insertAdjacentElement("beforebegin", made("i"));
+anchor.insertAdjacentElement("afterend", made("b"));
+anchor.insertAdjacentElement("afterbegin", made("u"));
+anchor.insertAdjacentElement("beforeend", made("s"));
+anchor.insertAdjacentText("afterbegin", "<");
+anchor.insertAdjacentText("beforeend", ">");
+var host = document.getElementById("host");
+console.assert(host.innerHTML === '<i></i><span id="anchor">&lt;<u></u>anchor<s></s>&gt;</span><b></b>',
+               "insertAdjacent*: " + host.innerHTML);
+var threw = false;
+try { anchor.insertAdjacentText("nowhere", "x"); } catch (e) { threw = e.name === "SyntaxError"; }
+console.assert(threw, "insertAdjacentText rejects an unknown position");
+
+// outerHTML replaces the element in its parent.
+host.querySelector("b").outerHTML = "<em id=replaced>r</em>";
+console.assert(document.getElementById("replaced").parentNode === host, "outerHTML setter");
+
+// tabIndex and name reflect their attributes.
+var button = document.getElementById("button");
+button.tabIndex = 3;
+console.assert(button.getAttribute("tabindex") === "3", "tabIndex reflects");
+console.assert(button.name === "go", "name");
+button.focus();
+console.assert(document.activeElement === button, "focus");
+button.blur();
+console.assert(document.activeElement !== button, "blur");
+
+// CSSOM View on a scrolling box with a 3px border.
+var scroller = document.getElementById("scroller");
+console.assert(scroller.clientLeft === 3 && scroller.clientTop === 3, "clientLeft/Top");
+console.assert(scroller.getClientRects().length === 1, "getClientRects");
+scroller.scrollTo(10, 20);
+console.assert(scroller.scrollLeft === 10 && scroller.scrollTop === 20, "scrollTo");
+scroller.scrollBy(5, 5);
+console.assert(scroller.scrollLeft === 15 && scroller.scrollTop === 25, "scrollBy");
+scroller.scroll({left: 0, top: 0});
+console.assert(scroller.scrollLeft === 0 && scroller.scrollTop === 0, "scroll");
+document.getElementById("content").scrollIntoView();
+if (scroller.scrollIntoViewIfNeeded) {
+  scroller.scrollIntoViewIfNeeded();
+}
+
+// No pointer is captured before anything asks. Capturing an unknown pointer
+// is only required not to crash here: the spec's NotFoundError is not
+// thrown yet.
+console.assert(!scroller.hasPointerCapture(1), "no pointer capture yet");
+try { scroller.setPointerCapture(12345); } catch (e) {}
+try { scroller.releasePointerCapture(12345); } catch (e) {}
+
+// dir and lang.
+el.dir = "rtl";
+el.lang = "ko";
+console.assert(el.dir === "rtl" && el.lang === "ko", "dir and lang");
+
+// Element.animate returns an animation that can be cancelled.
+var animation = scroller.animate([{opacity: 0}, {opacity: 1}], {duration: 1000});
+console.assert(animation && typeof animation.cancel === "function", "animate");
+animation.cancel();
+testEnd();
+</script>
+</body>
