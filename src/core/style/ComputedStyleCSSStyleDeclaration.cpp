@@ -530,22 +530,62 @@ void ComputedStyleCSSStyleDeclaration::updateWithLengthValueForMBP(
     addValuePair(cssStyleValuePair);
 }
 
-void ComputedStyleCSSStyleDeclaration::updateValue(
-    CSSStyleValuePair::KeyKind keyKind, String* customPropertyName)
+Optional<ComputedStyle*>
+ComputedStyleCSSStyleDeclaration::resolveStyleForProperty(
+    CSSStyleValuePair::KeyKind keyKind)
 {
     triggerResolveComputedStyleIfNeeds(keyKind);
 
     if (m_node->isDocument()) {
-        return;
+        return nullptr;
     }
 
-    ComputedStyle* style = m_node->style();
-    if (style == nullptr) {
-        style = resolveStyleOfNonRenderedElement();
-        if (style == nullptr) {
-            return;
-        }
+    if (auto* style = m_node->style()) {
+        return style;
     }
+    return resolveStyleOfNonRenderedElement();
+}
+
+String* ComputedStyleCSSStyleDeclaration::BackgroundPosition()
+{
+    auto style =
+        resolveStyleForProperty(CSSStyleValuePair::KeyKind::BackgroundPosition);
+    if (!style) {
+        return String::emptyString;
+    }
+
+    auto* background = style->background();
+    uint32_t xCount =
+        background ? std::max(1u, background->positionXCount()) : 1;
+    uint32_t yCount =
+        background ? std::max(1u, background->positionYCount()) : 1;
+    // CSS Backgrounds 3 repeats position values to match the image layers.
+    // Use that pairing when the computed axis lists have different lengths.
+    uint32_t count =
+        xCount == yCount ? xCount : std::max(1u, style->backgroundLayerSize());
+
+    StringBuilder builder;
+    for (uint32_t i = 0; i < count; ++i) {
+        if (i) {
+            builder.appendString(", ");
+        }
+        builder.appendString(
+            lengthToCSSStyleValue(style->backgroundPositionX(i)).toString());
+        builder.appendString(String::spaceString);
+        builder.appendString(
+            lengthToCSSStyleValue(style->backgroundPositionY(i)).toString());
+    }
+    return builder.finalize();
+}
+
+void ComputedStyleCSSStyleDeclaration::updateValue(
+    CSSStyleValuePair::KeyKind keyKind, String* customPropertyName)
+{
+    auto resolvedStyle = resolveStyleForProperty(keyKind);
+    if (!resolvedStyle) {
+        return;
+    }
+    ComputedStyle* style = resolvedStyle.getValue();
 
     // Create CSSStyleValuePair and set the resolved style value to
     // CSSStyleValuePair. And add CSSStyleValuePair to m_cssValues.

@@ -342,7 +342,7 @@ protected:
     void setBackgroundRepeat(const char* value, size_t len, bool isImportant);
     void removeBackgroundRepeat();
 
-    String* BackgroundPosition();
+    virtual String* BackgroundPosition();
     void setBackgroundPosition(const char* value, size_t len, bool isImportant);
     void removeBackgroundPosition();
 
@@ -542,6 +542,8 @@ public:
     void resolveStyleIfNeeds();
     void buildFrameTreeIfNeeds();
 
+    String* BackgroundPosition() override;
+
     void updateValue(CSSStyleValuePair::KeyKind keyKind,
                      String* customPropertyName) override;
 
@@ -559,6 +561,8 @@ private:
 
     void triggerResolveComputedStyleIfNeeds(CSSStyleValuePair::KeyKind keyKind);
 
+    Optional<ComputedStyle*> resolveStyleForProperty(
+        CSSStyleValuePair::KeyKind keyKind);
     ComputedStyle* resolveStyleOfNonRenderedElement();
 
     RequiredStyleResolveStage requiredStage(CSSStyleValuePair::KeyKind keyKind,

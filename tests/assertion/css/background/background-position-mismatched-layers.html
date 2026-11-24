@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Computed background position with different axis list lengths</title>
+<link rel="help" href="https://drafts.csswg.org/css-backgrounds-3/#layering">
+<div id="target"></div>
+<script>
+if (typeof testEnd !== 'function') {
+  let pass = 0, fail = 0;
+  const nativeAssert = console.assert.bind(console);
+  console.assert = (condition, message) => {
+    if (condition) {
+      ++pass;
+    } else {
+      ++fail;
+      nativeAssert(false, message);
+    }
+  };
+  window.testEnd = () => {
+    const verdict = (fail ? 'FAIL' : 'PASS') + ' (' + pass + ' passed, ' + fail + ' failed)';
+    document.title = verdict;
+  };
+}
+
+const target = document.getElementById('target');
+const style = target.style;
+const computed = getComputedStyle(target);
+const image = 'linear-gradient(red, blue)';
+
+function check(expected) {
+  const actual = computed.backgroundPosition;
+  console.assert(actual === expected, 'Expected ' + expected + ', got ' + actual);
+}
+
+style.backgroundImage = [image, image].join(', ');
+style.backgroundPosition = '10% 0px, 20% 0px';
+style.backgroundPositionY = '5px';
+check('10% 5px, 20% 5px');
+
+style.backgroundImage = [image, image, image].join(', ');
+check('10% 5px, 20% 5px, 10% 5px');
+
+style.backgroundPosition = '0% 15px, 0% 25px';
+style.backgroundPositionX = '30%';
+check('30% 15px, 30% 25px, 30% 15px');
+
+style.backgroundImage = image;
+check('30% 15px');
+testEnd();
+</script>
