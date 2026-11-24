@@ -2671,6 +2671,35 @@ bool CSSStyleDeclaration::isInInlineStyleWithVarFunctionValueKind(
     return isInlineStyle() && hasCSSValuePair(keyKind);
 }
 
+// Splits a serialized list at its top-level commas: a comma inside a
+// function such as min() belongs to that item.
+static void splitTopLevelCommas(String* list, GCVector<StringView>& items)
+{
+    size_t start = 0;
+    size_t depth = 0;
+    char32_t quote = 0;
+    for (size_t i = 0; i < list->length(); i++) {
+        char32_t c = list->charAt(i);
+        if (c == '\\') {
+            ++i;
+        } else if (quote) {
+            if (c == quote) {
+                quote = 0;
+            }
+        } else if (c == '"' || c == '\'') {
+            quote = c;
+        } else if (c == '(') {
+            depth++;
+        } else if (c == ')' && depth) {
+            depth--;
+        } else if (c == ',' && !depth) {
+            items.emplace_back(list, start, i);
+            start = i + 1;
+        }
+    }
+    items.emplace_back(list, start, list->length());
+}
+
 String* CSSStyleDeclaration::Background()
 {
     StringBuilder builder;
@@ -2694,8 +2723,12 @@ String* CSSStyleDeclaration::Background()
 
     GCVector<StringView> vImages, vPositions, vSizes, vRepeats, vAttachments,
         vOrigins, vClips;
-    StringUtils::tokenize(images, ",", 1, vImages);
-    StringUtils::tokenize(positions, ",", 1, vPositions);
+    if (images->length()) {
+        splitTopLevelCommas(images, vImages);
+    }
+    if (positions->length()) {
+        splitTopLevelCommas(positions, vPositions);
+    }
     StringUtils::tokenize(sizes, ",", 1, vSizes);
     StringUtils::tokenize(repeats, ",", 1, vRepeats);
     StringUtils::tokenize(attachments, ",", 1, vAttachments);
@@ -2722,11 +2755,19 @@ String* CSSStyleDeclaration::Background()
         max = vClips.size();
     }
 
+    // CSS Backgrounds 3 matches the used position list to the image layers.
+    if (isComputedStyle()) {
+        max = vImages.size();
+    }
     for (unsigned int i = 0; i < max; i++) {
         String* image =
             (i < vImages.size()) ? vImages[i].trim() : String::emptyString;
-        String* position = (i < vPositions.size()) ? vPositions[i].trim()
-                                                   : String::emptyString;
+        size_t positionIndex = isComputedStyle() && !vPositions.empty()
+                                   ? i % vPositions.size()
+                                   : i;
+        String* position = (positionIndex < vPositions.size())
+                               ? vPositions[positionIndex].trim()
+                               : String::emptyString;
         String* size =
             (i < vSizes.size()) ? vSizes[i].trim() : String::emptyString;
         String* repeat =
@@ -6366,26 +6407,6 @@ void CSSStyleDeclaration::removeGap()
     removeCSSValuePair(CSSStyleValuePair::KeyKind::RowGap);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::ColumnGap);
     removeCSSValuePair(CSSStyleValuePair::KeyKind::Gap);
-}
-
-// Splits a serialized list at its top-level commas: a comma inside a
-// function such as min() belongs to that item.
-static void splitTopLevelCommas(String* list, GCVector<StringView>& items)
-{
-    size_t start = 0;
-    size_t depth = 0;
-    for (size_t i = 0; i < list->length(); i++) {
-        char32_t c = list->charAt(i);
-        if (c == '(') {
-            depth++;
-        } else if (c == ')' && depth) {
-            depth--;
-        } else if (c == ',' && !depth) {
-            items.emplace_back(list, start, i);
-            start = i + 1;
-        }
-    }
-    items.emplace_back(list, start, list->length());
 }
 
 String* CSSStyleDeclaration::UnitPosition(CSSStyleValuePair::KeyKind keyKind)

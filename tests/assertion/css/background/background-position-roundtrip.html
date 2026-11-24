@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Computed background preserves positions across layers</title>
+<link rel="help" href="https://drafts.csswg.org/css-backgrounds-3/#layering">
+<div id="source"></div><div id="target"></div>
+<script>
+if (typeof testEnd !== 'function') {
+  let pass = 0, fail = 0;
+  const nativeAssert = console.assert.bind(console);
+  console.assert = (condition, message) => {
+    if (condition) {
+      ++pass;
+    } else {
+      ++fail;
+      nativeAssert(false, message);
+    }
+  };
+  window.testEnd = () => {
+    const verdict = (fail ? 'FAIL' : 'PASS') + ' (' + pass + ' passed, ' + fail + ' failed)';
+    document.title = verdict;
+  };
+}
+
+const source = document.getElementById('source');
+const target = document.getElementById('target');
+
+function check(images, positions, expected) {
+  source.style.backgroundImage = images;
+  source.style.backgroundPosition = positions;
+  target.style.background = '';
+  target.style.background = getComputedStyle(source).background;
+  const actual = getComputedStyle(target).backgroundPosition;
+  console.assert(actual === expected, 'Expected ' + expected + ', got ' + actual);
+}
+
+check('url(a.png), url(b.png)', '10px 20px', '10px 20px, 10px 20px');
+check('linear-gradient(red, blue), url(b.png), url(c.png)', '1px 2px, 3px 4px',
+      '1px 2px, 3px 4px, 1px 2px');
+check('none', '1px 2px, 3px 4px', '1px 2px');
+testEnd();
+</script>

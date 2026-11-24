@@ -1224,3 +1224,4 @@ tests/assertion/window/window-console-api-surface.html
 tests/assertion/media/media-source-api.html
 tests/assertion/css/background/background-position-inherit.html
 tests/assertion/css/background/background-position-mismatched-layers.html
+tests/assertion/css/background/background-position-roundtrip.html
