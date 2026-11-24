@@ -1432,57 +1432,28 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         addValuePair(bgRepeatY);
 
     } break;
-    case CSSStyleValuePair::KeyKind::BackgroundPositionX: {
-        CSSStyleValuePair bgPositionX;
-
-        bgPositionX.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPositionX);
-        if (!style->backgroundLayerSize()) {
-            bgPositionX.setPercentageValue(0);
-            addValuePair(bgPositionX);
-            return;
-        }
-        bgPositionX.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-
-        ValueList* bgPositionXValues;
-
-        bgPositionXValues = new ValueList(Separator::CommaSeparator);
-
-        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item;
-
-            item = lengthToCSSStyleValue(style->backgroundPositionX(i));
-            bgPositionXValues->push_back(item);
-        }
-
-        bgPositionX.setValueList(bgPositionXValues);
-        addValuePair(bgPositionX);
-
-    } break;
+    case CSSStyleValuePair::KeyKind::BackgroundPositionX:
     case CSSStyleValuePair::KeyKind::BackgroundPositionY: {
-        CSSStyleValuePair bgPositionY;
-
-        bgPositionY.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundPositionY);
-        if (!style->backgroundLayerSize()) {
-            bgPositionY.setPercentageValue(0);
-            addValuePair(bgPositionY);
-            return;
+        auto* background = style->background();
+        bool isX = keyKind == CSSStyleValuePair::KeyKind::BackgroundPositionX;
+        // CSS Backgrounds 3 matches lists to the image count at used-value
+        // time. The computed position keeps its own list.
+        uint32_t count = background ? (isX ? background->positionXCount()
+                                           : background->positionYCount())
+                                    : 0;
+        CSSStyleValuePair position;
+        position.setKeyKind(keyKind);
+        if (!count) {
+            position.setPercentageValue(0);
+        } else {
+            ValueList* values = new ValueList(Separator::CommaSeparator);
+            for (uint32_t i = 0; i < count; ++i) {
+                values->push_back(lengthToCSSStyleValue(
+                    isX ? background->positionX(i) : background->positionY(i)));
+            }
+            position.setValueList(values);
         }
-        bgPositionY.setValueKind(CSSStyleValuePair::ValueKind::ValueListKind);
-
-        ValueList* bgPositionYValues;
-
-        bgPositionYValues = new ValueList(Separator::CommaSeparator);
-
-        for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
-            CSSStyleValuePair item;
-
-            item = lengthToCSSStyleValue(style->backgroundPositionY(i));
-            bgPositionYValues->push_back(item);
-        }
-
-        bgPositionY.setValueList(bgPositionYValues);
-        addValuePair(bgPositionY);
-
+        addValuePair(position);
     } break;
     case CSSStyleValuePair::KeyKind::BorderImageSource: {
         CSSStyleValuePair p;

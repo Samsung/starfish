@@ -717,6 +717,15 @@ public:
         }
     }
 
+    uint32_t positionXCount() const
+    {
+        return m_maxLayerPositionX;
+    }
+    uint32_t positionYCount() const
+    {
+        return m_maxLayerPositionY;
+    }
+
     uint32_t sizeOfLayers()
     {
         STARFISH_ASSERT(m_maxLayerImage <= m_layers.size());

@@ -4952,10 +4952,10 @@ void StyleResolver::applyProperty(Element* element,
         style->resetBackgroundPositionXs();
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            uint32_t size = parentStyle->backgroundLayerSize();
-            for (uint32_t i = 0; i < size; i++) {
-                style->setBackgroundPositionX(
-                    parentStyle->backgroundPositionX(i), i);
+            if (auto* background = parentStyle->background()) {
+                for (uint32_t i = 0; i < background->positionXCount(); ++i) {
+                    style->setBackgroundPositionX(background->positionX(i), i);
+                }
             }
         } else {
             setComputedStyleUnitPositionX(
@@ -4969,10 +4969,10 @@ void StyleResolver::applyProperty(Element* element,
         style->resetBackgroundPositionYs();
         if (newCssValue.valueKind() == CSSStyleValuePair::ValueKind::Inherit) {
             MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-            uint32_t size = parentStyle->backgroundLayerSize();
-            for (uint32_t i = 0; i < size; i++) {
-                style->setBackgroundPositionY(
-                    parentStyle->backgroundPositionY(i), i);
+            if (auto* background = parentStyle->background()) {
+                for (uint32_t i = 0; i < background->positionYCount(); ++i) {
+                    style->setBackgroundPositionY(background->positionY(i), i);
+                }
             }
         } else {
             setComputedStyleUnitPositionY(
