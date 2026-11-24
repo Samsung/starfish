@@ -658,6 +658,7 @@ tests/assertion/dom/Range11.html
 tests/assertion/dom/Range12.html
 tests/assertion/dom/range_create_contextual_fragment_svg_script.html
 tests/assertion/dom/Range13.html
+tests/assertion/dom/xml_serializer_and_contextual_fragment.html
 tests/pixel/dom/Range14.html
 tests/assertion/dom/HTMLScriptElement01.html
 tests/assertion/dom/HTMLScriptElement02.html

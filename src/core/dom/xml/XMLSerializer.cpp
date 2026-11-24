@@ -24,6 +24,10 @@
 #include "core/dom/Comment.h"
 #include "core/dom/Document.h"
 #include "core/dom/DocumentType.h"
+#include "core/dom/ProcessingInstruction.h"
+
+#include <unordered_map>
+#include <vector>
 
 #include <../third_party/rapidxml/rapidxml.hpp>
 #include <../third_party/rapidxml/rapidxml_print.hpp>
@@ -208,4 +212,504 @@ String* XMLSerializer::serializeToXML(Node* e, bool includeSelf)
 
     return String::fromUTF8(s.data(), s.length());
 }
+
+// https://w3c.github.io/DOM-Parsing/#xml-serialization
+static const char kXMLNamespace[] = "http://www.w3.org/XML/1998/namespace";
+static const char kXMLNSNamespace[] = "http://www.w3.org/2000/xmlns/";
+static const char kHTMLNamespace[] = "http://www.w3.org/1999/xhtml";
+
+using NamespacePrefixMap =
+    std::unordered_map<std::string, std::vector<std::string>>;
+
+static bool isHTMLVoidElementName(String* localName)
+{
+    return localName->equals("area") || localName->equals("base") ||
+           localName->equals("basefont") || localName->equals("bgsound") ||
+           localName->equals("br") || localName->equals("col") ||
+           localName->equals("embed") || localName->equals("frame") ||
+           localName->equals("hr") || localName->equals("img") ||
+           localName->equals("input") || localName->equals("keygen") ||
+           localName->equals("link") || localName->equals("meta") ||
+           localName->equals("param") || localName->equals("source") ||
+           localName->equals("track") || localName->equals("wbr");
+}
+
+static void appendEscapedText(StringBuilder& out, String* text)
+{
+    auto data = text->bufferAccessData();
+    for (size_t i = 0; i < data.length; i++) {
+        char32_t ch = data.charAt(i);
+        if (ch == '&') {
+            out.appendString("&amp;");
+        } else if (ch == '<') {
+            out.appendString("&lt;");
+        } else if (ch == '>') {
+            out.appendString("&gt;");
+        } else {
+            out.appendChar(ch);
+        }
+    }
+}
+
+static void appendEscapedAttrValue(StringBuilder& out, String* value)
+{
+    auto data = value->bufferAccessData();
+    for (size_t i = 0; i < data.length; i++) {
+        char32_t ch = data.charAt(i);
+        if (ch == '&') {
+            out.appendString("&amp;");
+        } else if (ch == '"') {
+            out.appendString("&quot;");
+        } else if (ch == '<') {
+            out.appendString("&lt;");
+        } else if (ch == '>') {
+            out.appendString("&gt;");
+        } else if (ch == '\t') {
+            out.appendString("&#9;");
+        } else if (ch == '\n') {
+            out.appendString("&#xA;");
+        } else if (ch == '\r') {
+            out.appendString("&#xD;");
+        } else {
+            out.appendChar(ch);
+        }
+    }
+}
+
+static void appendEscapedAttrValue(StringBuilder& out, const std::string& value)
+{
+    for (size_t i = 0; i < value.size(); i++) {
+        unsigned char ch = static_cast<unsigned char>(value[i]);
+        if (ch == '&') {
+            out.appendString("&amp;");
+        } else if (ch == '"') {
+            out.appendString("&quot;");
+        } else if (ch == '<') {
+            out.appendString("&lt;");
+        } else if (ch == '>') {
+            out.appendString("&gt;");
+        } else if (ch == '\t') {
+            out.appendString("&#9;");
+        } else if (ch == '\n') {
+            out.appendString("&#xA;");
+        } else if (ch == '\r') {
+            out.appendString("&#xD;");
+        } else if (ch < 0x80) {
+            out.appendChar(static_cast<char>(ch));
+        } else {
+            String* utf8 = String::fromUTF8(value.data() + i, value.size() - i);
+            appendEscapedAttrValue(out, utf8);
+            return;
+        }
+    }
+}
+
+static void appendUTF8(StringBuilder& out, const std::string& str)
+{
+    for (size_t i = 0; i < str.size(); i++) {
+        unsigned char ch = static_cast<unsigned char>(str[i]);
+        if (ch < 0x80) {
+            out.appendChar(static_cast<char>(ch));
+        } else {
+            out.appendString(String::fromUTF8(str.data() + i, str.size() - i));
+            return;
+        }
+    }
+}
+
+struct ScopedPrefixMapGuard {
+    NamespacePrefixMap& map;
+    std::vector<std::string> addedNamespaces;
+
+    explicit ScopedPrefixMapGuard(NamespacePrefixMap& m)
+        : map(m)
+    {
+    }
+
+    void add(const std::string& ns, const std::string& prefix)
+    {
+        map[ns].push_back(prefix);
+        addedNamespaces.push_back(ns);
+    }
+
+    ~ScopedPrefixMapGuard()
+    {
+        for (auto it = addedNamespaces.rbegin(); it != addedNamespaces.rend();
+             ++it) {
+            auto mapIt = map.find(*it);
+            if (mapIt != map.end() && !mapIt->second.empty()) {
+                mapIt->second.pop_back();
+                if (mapIt->second.empty()) {
+                    map.erase(mapIt);
+                }
+            }
+        }
+    }
+};
+
+using LocalPrefixList = std::vector<std::pair<std::string, std::string>>;
+
+static const std::string* findLocalPrefix(const LocalPrefixList& list,
+                                          const std::string& prefix)
+{
+    for (auto it = list.rbegin(); it != list.rend(); ++it) {
+        if (it->first == prefix) {
+            return &it->second;
+        }
+    }
+    return nullptr;
+}
+
+static bool hasPrefixInMap(const NamespacePrefixMap& map, const std::string& ns,
+                           const std::string& prefix)
+{
+    auto it = map.find(ns);
+    if (it == map.end()) {
+        return false;
+    }
+    for (const auto& p : it->second) {
+        if (p == prefix) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool retrievePreferredPrefix(const NamespacePrefixMap& map,
+                                    const std::string& ns, std::string& out)
+{
+    auto it = map.find(ns);
+    if (it == map.end() || it->second.empty()) {
+        return false;
+    }
+    out = it->second.back();
+    return true;
+}
+
+static std::string generatePrefix(ScopedPrefixMapGuard& scope,
+                                  const std::string& newNs,
+                                  unsigned& prefixIndex)
+{
+    std::string generated = "ns" + std::to_string(prefixIndex++);
+    scope.add(newNs, generated);
+    return generated;
+}
+
+static std::string getNamespaceString(const QualifiedName& qname,
+                                      bool& hasNamespace)
+{
+    if (qname.hasNamespaceURI()) {
+        String* ns = qname.namespaceURI().getValue().string();
+        if (ns->length() > 0) {
+            hasNamespace = true;
+            return ns->toUTF8NonGCString();
+        }
+    }
+    hasNamespace = false;
+    return std::string();
+}
+
+static void serializeXMLNode(Node* node, bool hasContextNamespace,
+                             const std::string& contextNamespace,
+                             NamespacePrefixMap& prefixMap,
+                             unsigned& prefixIndex, StringBuilder& markup);
+
+static void serializeXMLElement(Element* element, bool hasContextNamespace,
+                                const std::string& contextNamespace,
+                                NamespacePrefixMap& map, unsigned& prefixIndex,
+                                StringBuilder& markup)
+{
+    // https://w3c.github.io/DOM-Parsing/#xml-serializing-an-element-node
+    // Mutate the shared NamespacePrefixMap in place with an RAII undo guard so
+    // elements without namespace declarations incur zero map allocations.
+    ScopedPrefixMapGuard prefixScope(map);
+    LocalPrefixList localPrefixes;
+
+    bool hasDefaultNamespaceAttrValue = false;
+    std::string defaultNamespaceAttrValue;
+
+    // Step 4: Record the namespace information for element.
+    size_t attrCount = element->attributeCount();
+    for (size_t i = 0; i < attrCount; i++) {
+        QualifiedName attrName = element->getAssuredAttributeName(i);
+        bool attrHasNs = false;
+        std::string attrNs = getNamespaceString(attrName, attrHasNs);
+        if (attrHasNs && attrNs == kXMLNSNamespace) {
+            std::string attrValue =
+                element->getAssuredAttribute(i)->toUTF8NonGCString();
+            if (!attrName.hasPrefix()) {
+                hasDefaultNamespaceAttrValue = true;
+                defaultNamespaceAttrValue = attrValue;
+            } else {
+                std::string local = attrName.localName()->toUTF8NonGCString();
+                if (attrValue != kXMLNamespace) {
+                    localPrefixes.emplace_back(local, attrValue);
+                    prefixScope.add(attrValue, local);
+                }
+            }
+        }
+    }
+
+    bool hasInheritedNs = hasContextNamespace;
+    std::string inheritedNs = contextNamespace;
+
+    bool elemHasNs = false;
+    std::string ns = getNamespaceString(element->name(), elemHasNs);
+
+    bool elemHasPrefix = element->name().hasPrefix();
+    std::string elemPrefix =
+        elemHasPrefix
+            ? element->name().prefix().getValue().string()->toUTF8NonGCString()
+            : std::string();
+    String* elemLocalName = element->localName();
+
+    bool ignoreNamespaceDefinitionAttribute = false;
+    std::string elemOutPrefix;
+    std::string extraXmlnsDecl;
+
+    if (hasInheritedNs == elemHasNs && (!elemHasNs || inheritedNs == ns)) {
+        // Step 9: inherited ns matches element's ns.
+        if (hasDefaultNamespaceAttrValue) {
+            ignoreNamespaceDefinitionAttribute = true;
+        }
+        if (elemHasNs && ns == kXMLNamespace) {
+            elemOutPrefix = "xml";
+        }
+    } else {
+        // Step 10: inherited ns differs from element's ns.
+        std::string candidatePrefix;
+        bool hasCandidatePrefix =
+            elemHasNs && retrievePreferredPrefix(map, ns, candidatePrefix);
+        const std::string* localBinding =
+            elemHasPrefix ? findLocalPrefix(localPrefixes, elemPrefix)
+                          : nullptr;
+
+        if (elemHasNs && ns == kXMLNamespace) {
+            elemOutPrefix = "xml";
+        } else if (elemHasPrefix && elemHasNs && localBinding &&
+                   *localBinding == ns) {
+            elemOutPrefix = elemPrefix;
+        } else if (elemHasPrefix && elemHasNs && !localBinding) {
+            // Element's own prefix is not conflicting with a local xmlns:p.
+            if (hasCandidatePrefix && hasPrefixInMap(map, ns, elemPrefix)) {
+                elemOutPrefix = elemPrefix;
+            } else {
+                prefixScope.add(ns, elemPrefix);
+                localPrefixes.emplace_back(elemPrefix, ns);
+                elemOutPrefix = elemPrefix;
+                extraXmlnsDecl = " xmlns:" + elemPrefix + "=\"";
+            }
+        } else if (hasCandidatePrefix) {
+            elemOutPrefix = candidatePrefix;
+        } else if (elemHasPrefix && elemHasNs) {
+            // Prefix collided with a local xmlns:prefix="other".
+            std::string gen = generatePrefix(prefixScope, ns, prefixIndex);
+            localPrefixes.emplace_back(gen, ns);
+            elemOutPrefix = gen;
+            extraXmlnsDecl = " xmlns:" + gen + "=\"";
+        } else if (hasDefaultNamespaceAttrValue &&
+                   ((elemHasNs && defaultNamespaceAttrValue == ns) ||
+                    (!elemHasNs && defaultNamespaceAttrValue.empty()))) {
+            hasInheritedNs = elemHasNs;
+            inheritedNs = ns;
+        } else {
+            hasInheritedNs = elemHasNs;
+            inheritedNs = ns;
+            ignoreNamespaceDefinitionAttribute = true;
+            extraXmlnsDecl = " xmlns=\"";
+        }
+    }
+
+    auto appendQualifiedTagName = [&]() {
+        if (!elemOutPrefix.empty()) {
+            appendUTF8(markup, elemOutPrefix);
+            markup.appendChar(':');
+        }
+        markup.appendString(elemLocalName);
+    };
+
+    markup.appendChar('<');
+    appendQualifiedTagName();
+
+    if (!extraXmlnsDecl.empty()) {
+        appendUTF8(markup, extraXmlnsDecl);
+        if (elemHasNs) {
+            appendEscapedAttrValue(markup, ns);
+        }
+        markup.appendChar('"');
+    }
+
+    // Step 11: Serialize attributes.
+    for (size_t i = 0; i < attrCount; i++) {
+        QualifiedName attrName = element->getAssuredAttributeName(i);
+        String* attrValue = element->getAssuredAttribute(i);
+        bool attrHasNs = false;
+        std::string attrNs = getNamespaceString(attrName, attrHasNs);
+        String* attrLocal = attrName.localName();
+
+        if (!attrHasNs && attrLocal->equals("xmlns")) {
+            // Drop inconsistent null-namespace xmlns="..." attributes
+            // (https://github.com/w3c/DOM-Parsing/issues/47).
+            if (ignoreNamespaceDefinitionAttribute ||
+                (!elemHasNs && attrValue->length() > 0) ||
+                (elemHasNs && attrValue->toUTF8NonGCString() != ns)) {
+                continue;
+            }
+        }
+
+        if (attrHasNs && attrNs == kXMLNSNamespace) {
+            if (!attrName.hasPrefix()) {
+                if (ignoreNamespaceDefinitionAttribute) {
+                    continue;
+                }
+                if (attrValue->length() == 0 && !elemHasNs &&
+                    !hasContextNamespace) {
+                    continue;
+                }
+            }
+            markup.appendChar(' ');
+            if (attrName.hasPrefix()) {
+                markup.appendString("xmlns:");
+            }
+            markup.appendString(attrLocal);
+            markup.appendString("=\"");
+            appendEscapedAttrValue(markup, attrValue);
+            markup.appendChar('"');
+            continue;
+        }
+
+        std::string attrPrefix;
+        if (attrHasNs) {
+            if (attrNs == kXMLNamespace) {
+                attrPrefix = "xml";
+            } else {
+                std::string candidate;
+                if (retrievePreferredPrefix(map, attrNs, candidate)) {
+                    attrPrefix = candidate;
+                } else {
+                    attrPrefix =
+                        generatePrefix(prefixScope, attrNs, prefixIndex);
+                    markup.appendString(" xmlns:");
+                    appendUTF8(markup, attrPrefix);
+                    markup.appendString("=\"");
+                    appendEscapedAttrValue(markup, attrNs);
+                    markup.appendChar('"');
+                }
+            }
+        }
+
+        markup.appendChar(' ');
+        if (!attrPrefix.empty()) {
+            appendUTF8(markup, attrPrefix);
+            markup.appendChar(':');
+        }
+        markup.appendString(attrLocal);
+        markup.appendString("=\"");
+        appendEscapedAttrValue(markup, attrValue);
+        markup.appendChar('"');
+    }
+
+    // Step 12-17: Children and end tag.
+    bool isHTML = elemHasNs && ns == kHTMLNamespace;
+    if (!element->firstChild()) {
+        if (isHTML && !isHTMLVoidElementName(elemLocalName)) {
+            markup.appendString("></");
+            appendQualifiedTagName();
+            markup.appendChar('>');
+        } else if (isHTML) {
+            markup.appendString(" />");
+        } else {
+            markup.appendString("/>");
+        }
+        return;
+    }
+
+    markup.appendChar('>');
+    for (Node* child = element->firstChild(); child;
+         child = child->nextSibling()) {
+        serializeXMLNode(child, hasInheritedNs, inheritedNs, map, prefixIndex,
+                         markup);
+    }
+    markup.appendString("</");
+    appendQualifiedTagName();
+    markup.appendChar('>');
+}
+
+static void serializeXMLNode(Node* node, bool hasContextNamespace,
+                             const std::string& contextNamespace,
+                             NamespacePrefixMap& prefixMap,
+                             unsigned& prefixIndex, StringBuilder& markup)
+{
+    if (node->isElement()) {
+        serializeXMLElement(node->asElement(), hasContextNamespace,
+                            contextNamespace, prefixMap, prefixIndex, markup);
+    } else if (node->isDocument() || node->isDocumentFragment()) {
+        for (Node* child = node->firstChild(); child;
+             child = child->nextSibling()) {
+            serializeXMLNode(child, hasContextNamespace, contextNamespace,
+                             prefixMap, prefixIndex, markup);
+        }
+    } else if (node->isCDATASection()) {
+        markup.appendString("<![CDATA[");
+        markup.appendString(node->asCharacterData()->data());
+        markup.appendString("]]>");
+    } else if (node->isText()) {
+        appendEscapedText(markup, node->asCharacterData()->data());
+    } else if (node->isComment()) {
+        markup.appendString("<!--");
+        markup.appendString(node->asCharacterData()->data());
+        markup.appendString("-->");
+    } else if (node->isDocumentType()) {
+        DocumentType* dt = node->asDocumentType();
+        markup.appendString("<!DOCTYPE ");
+        markup.appendString(dt->name());
+        String* publicId = dt->publicId();
+        String* systemId = dt->systemId();
+        if (publicId->length() > 0) {
+            markup.appendString(" PUBLIC \"");
+            markup.appendString(publicId);
+            markup.appendChar('"');
+            if (systemId->length() > 0) {
+                markup.appendString(" \"");
+                markup.appendString(systemId);
+                markup.appendChar('"');
+            }
+        } else if (systemId->length() > 0) {
+            markup.appendString(" SYSTEM \"");
+            markup.appendString(systemId);
+            markup.appendChar('"');
+        }
+        markup.appendChar('>');
+    } else if (node->isProcessingInstruction()) {
+        ProcessingInstruction* pi = node->asProcessingInstruction();
+        markup.appendString("<?");
+        markup.appendString(pi->target());
+        markup.appendChar(' ');
+        markup.appendString(pi->data());
+        markup.appendString("?>");
+    }
+    // Attr and any other node types serialize to the empty string.
+}
+
+XMLSerializer::XMLSerializer(Document* document)
+    : ScriptWrappable(this)
+    , DocumentHoldable(document)
+{
+}
+
+ScriptBindingInstance* XMLSerializer::scriptBindingInstance()
+{
+    return document()->scriptBindingInstance();
+}
+
+String* XMLSerializer::serializeToString(Node* root)
+{
+    NamespacePrefixMap map;
+    map[kXMLNamespace].push_back("xml");
+    unsigned prefixIndex = 1;
+    StringBuilder markup;
+    serializeXMLNode(root, false, std::string(), map, prefixIndex, markup);
+    return markup.finalize();
+}
+
 } // namespace Starfish

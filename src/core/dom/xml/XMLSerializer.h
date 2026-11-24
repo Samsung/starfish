@@ -20,12 +20,27 @@
 #ifndef __StarfishXMLSerializer__
 #define __StarfishXMLSerializer__
 
+#include "binding/DocumentHoldable.h"
+#include "binding/ScriptWrappable.h"
+
 namespace Starfish {
 
-class Element;
+class Document;
+class Node;
 
-class XMLSerializer : public gc {
+class XMLSerializer : public ScriptWrappable, public DocumentHoldable {
 public:
+    XMLSerializer(Document* document);
+
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isXMLSerializer() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
+
+    // https://w3c.github.io/DOM-Parsing/#dom-xmlserializer-serializetostring
+    String* serializeToString(Node* root);
+
+    // Internal HTML/XML fragment serializer used by innerHTML/outerHTML/XHR.
     static String* serializeToXML(Node* e, bool includeSelf);
 };
 } // namespace Starfish

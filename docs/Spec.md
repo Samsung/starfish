@@ -563,6 +563,9 @@ section are supported.
 |  | constructor | DOMParser() | Create a new DOMParser |
 |  | enum | SupportedType | "text/html", "text/xml", "application/xml", "application/xhtml+xml", "image/svg+xml" |
 |  | method | Document parseFromString(DOMString str, SupportedType type) | Parse str using a parser that matches type's supported MIME types. |
+| [XMLSerializer](https://w3c.github.io/DOM-Parsing/#the-xmlserializer-interface) | interface | XMLSerializer | Serializes a DOM tree into an XML string. |
+|  | constructor | XMLSerializer() | Creates a new `XMLSerializer`. |
+|  | method | DOMString serializeToString(Node root) | Serializes `root` into an XML string following the XML serialization algorithm. |
 | [DOMPoint](https://drafts.fxtf.org/geometry/#DOMPoint) | interface | DOMPoint |  |
 |  | constructor | DOMPoint(optional unrestricted double x = 0, optional unrestricted double y = 0, optional unrestricted double z = 0, optional unrestricted double w = 1) | Creates a new DOMPoint object. |
 |  | attribute | x | Return the x coordinate value of the object it was invoked on. |

@@ -1,0 +1,9 @@
+// https://w3c.github.io/DOM-Parsing/#the-xmlserializer-interface
+
+[
+  Constructor,
+  ConstructorCallWith=Document,
+  Exposed=Window
+] interface XMLSerializer {
+  [RaisesException] DOMString serializeToString(Node root);
+};

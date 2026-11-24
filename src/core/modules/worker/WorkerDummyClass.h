@@ -64,6 +64,17 @@ public:
 
 class XMLSerializer {
 public:
+    XMLSerializer(Document* document)
+    {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    String* serializeToString(Node* root)
+    {
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return nullptr;
+    }
+
     static String* serializeToXML(Element* e, bool includeSelf)
     {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();

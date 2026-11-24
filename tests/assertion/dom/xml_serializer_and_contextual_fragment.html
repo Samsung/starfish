@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>XMLSerializer and Range.createContextualFragment</title>
+</head>
+<body>
+  <script>
+    // 1. XMLSerializer basic & Google Maps sanitization pattern
+    const serializer = new XMLSerializer();
+    const htmlDoc = document.implementation.createHTMLDocument('');
+    const range = htmlDoc.createRange();
+    range.selectNode(htmlDoc.body);
+    const frag = range.createContextualFragment('<span>Map &amp; <b>Data</b></span>');
+    htmlDoc.body.appendChild(frag);
+    const serialized = serializer.serializeToString(htmlDoc.body);
+    console.assert(
+      serialized === '<body xmlns="http://www.w3.org/1999/xhtml"><span>Map &amp; <b>Data</b></span></body>',
+      'HTML body XML serialization mismatch: ' + serialized
+    );
+
+    // Text, comment, CDATA, DocumentFragment, Attr, ProcessingInstruction, DocumentType
+    console.assert(serializer.serializeToString(document.createTextNode('a < b & c > d')) === 'a &lt; b &amp; c &gt; d', 'text escaping');
+    console.assert(serializer.serializeToString(document.createComment('note')) === '<!--note-->', 'comment serialization');
+    console.assert(serializer.serializeToString(document.createAttribute('foo')) === '', 'attr serializes to empty string');
+    const df = document.createDocumentFragment();
+    df.append(document.createElement('div'), document.createElement('br'));
+    console.assert(
+      serializer.serializeToString(df) === '<div xmlns="http://www.w3.org/1999/xhtml"></div><br xmlns="http://www.w3.org/1999/xhtml" />',
+      'DocumentFragment serialization: ' + serializer.serializeToString(df)
+    );
+
+    // 2. Range.createContextualFragment script execution when inserted
+    window.__ranContextualScript = false;
+    const r2 = document.createRange();
+    r2.selectNodeContents(document.body);
+    const scriptFrag = r2.createContextualFragment('<script>window.__ranContextualScript = true;</' + 'script>');
+    console.assert(window.__ranContextualScript === false, 'script must not run before insertion');
+    document.body.appendChild(scriptFrag);
+    console.assert(window.__ranContextualScript === true, 'script must run upon insertion');
+
+    // 3. XMLSerializer comment serialization (require well-formed is false)
+    console.assert(
+      serializer.serializeToString(document.createComment('a--b')) === '<!--a--b-->',
+      'comment with -- must serialize without throwing'
+    );
+
+    if (typeof testEnd === 'function') {
+      testEnd();
+    }
+  </script>
+</body>
+</html>

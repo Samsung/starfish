@@ -57,6 +57,7 @@ static void buildDocumentFromXML(
     if (node->type() == rapidxml::node_type::node_element) {
         AtomicString localName = AtomicString::emptyAtomicString();
         AtomicString namespaceURI = AtomicString::emptyAtomicString();
+        AtomicString elemPrefix = AtomicString::emptyAtomicString();
         std::string localNameStd = node->name();
 
         rapidxml::xml_attribute<char>* attr = node->first_attribute();
@@ -64,14 +65,10 @@ static void buildDocumentFromXML(
             std::string attrName = attr->name();
             if (attrName == "xmlns") {
                 namespaceMap[std::string("")] =
-                    AtomicString::createAttrAtomicString(starfish,
-                                                         attr->value());
-                namespaceURI =
                     AtomicString::createAtomicString(starfish, attr->value());
             } else if (attrName.find("xmlns:") == 0) {
                 namespaceMap[attrName.substr(6)] =
-                    AtomicString::createAttrAtomicString(starfish,
-                                                         attr->value());
+                    AtomicString::createAtomicString(starfish, attr->value());
             }
 
             attr = attr->next_attribute();
@@ -79,53 +76,97 @@ static void buildDocumentFromXML(
 
         auto colonPos = localNameStd.find(':');
         if (std::string::npos != colonPos) {
+            std::string ns = localNameStd.substr(0, colonPos);
+            elemPrefix = AtomicString::createAtomicString(starfish, ns.c_str(),
+                                                          ns.size());
             localName = AtomicString::createAtomicString(
                 starfish, node->name() + colonPos + 1);
 
-            std::string ns = localNameStd.substr(0, colonPos);
             auto iter = namespaceMap.find(ns);
             if (iter != namespaceMap.end()) {
                 namespaceURI = iter->second;
+            } else if (ns == "xml") {
+                namespaceURI = starfish->staticStrings()->m_xmlNamespaceURI;
             }
         } else {
             localName =
                 AtomicString::createAtomicString(starfish, node->name());
-        }
-        size_t colon = localName.string()->find(":");
-        if (colon != SIZE_MAX) {
-            localName.string()->substring(0, colon);
+            auto iter = namespaceMap.find(std::string(""));
+            if (iter != namespaceMap.end()) {
+                namespaceURI = iter->second;
+            }
         }
 
+        QualifiedName elemQName =
+            !elemPrefix.isEmptyAtomicString()
+                ? QualifiedName(elemPrefix, namespaceURI, localName)
+                : (!namespaceURI.isEmptyAtomicString()
+                       ? QualifiedName(namespaceURI, localName)
+                       : QualifiedName(localName));
+
         if (namespaceURI == starfish->staticStrings()->m_xhtmlNamespaceURI) {
-            newNode = HTMLDocument::createHTMLElement(
-                parent->document(), QualifiedName(namespaceURI, localName));
+            newNode =
+                HTMLDocument::createHTMLElement(parent->document(), elemQName);
         } else if (namespaceURI ==
                    starfish->staticStrings()->m_svgNamespaceURI) {
-            newNode = SVGDocument::createSVGElement(
-                parent->document(), QualifiedName(namespaceURI, localName));
+            newNode =
+                SVGDocument::createSVGElement(parent->document(), elemQName);
         } else {
-            newNode = new NamedElement(parent->document(),
-                                       QualifiedName(namespaceURI, localName));
+            newNode = new NamedElement(parent->document(), elemQName);
         }
 
         attr = node->first_attribute();
         while (attr) {
             STARFISH_ASSERT(attr->name() != nullptr);
             STARFISH_ASSERT(attr->value() != nullptr);
-            if (namespaceURI ==
-                starfish->staticStrings()->m_xhtmlNamespaceURI) {
-                newNode->asElement()->setAttribute(
-                    QualifiedName(AtomicString::emptyAtomicString(),
-                                  AtomicString::createAttrAtomicString(
-                                      starfish, attr->name())),
-                    String::fromUTF8(attr->value(), attr->value_size()));
+            std::string attrNameStd = attr->name();
+            QualifiedName attrQName;
+            if (attrNameStd == "xmlns") {
+                attrQName = QualifiedName(
+                    starfish->staticStrings()->m_xmlnsNamespaceURI,
+                    AtomicString::createAtomicString(starfish, "xmlns", 5));
+            } else if (attrNameStd.find("xmlns:") == 0) {
+                std::string local = attrNameStd.substr(6);
+                attrQName = QualifiedName(
+                    AtomicString::createAtomicString(starfish, "xmlns", 5),
+                    starfish->staticStrings()->m_xmlnsNamespaceURI,
+                    AtomicString::createAtomicString(starfish, local.c_str(),
+                                                     local.size()));
             } else {
-                newNode->asElement()->setAttribute(
-                    QualifiedName(AtomicString::emptyAtomicString(),
-                                  AtomicString::createAtomicString(
-                                      starfish, attr->name())),
-                    String::fromUTF8(attr->value(), attr->value_size()));
+                auto attrColon = attrNameStd.find(':');
+                if (attrColon != std::string::npos) {
+                    std::string pfx = attrNameStd.substr(0, attrColon);
+                    std::string local = attrNameStd.substr(attrColon + 1);
+                    AtomicString attrNs = AtomicString::emptyAtomicString();
+                    if (pfx == "xml") {
+                        attrNs = starfish->staticStrings()->m_xmlNamespaceURI;
+                    } else {
+                        auto it = namespaceMap.find(pfx);
+                        if (it != namespaceMap.end()) {
+                            attrNs = it->second;
+                        }
+                    }
+                    AtomicString pfxAtom = AtomicString::createAtomicString(
+                        starfish, pfx.c_str(), pfx.size());
+                    AtomicString localAtom = AtomicString::createAtomicString(
+                        starfish, local.c_str(), local.size());
+                    attrQName =
+                        attrNs.isEmptyAtomicString()
+                            ? QualifiedName(AtomicString::createAtomicString(
+                                  starfish, attr->name()))
+                            : QualifiedName(pfxAtom, attrNs, localAtom);
+                } else if (namespaceURI ==
+                           starfish->staticStrings()->m_xhtmlNamespaceURI) {
+                    attrQName =
+                        QualifiedName(AtomicString::createAttrAtomicString(
+                            starfish, attr->name()));
+                } else {
+                    attrQName = QualifiedName(AtomicString::createAtomicString(
+                        starfish, attr->name()));
+                }
             }
+            newNode->asElement()->setAttribute(
+                attrQName, String::fromUTF8(attr->value(), attr->value_size()));
 
             attr = attr->next_attribute();
         }
