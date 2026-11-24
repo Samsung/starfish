@@ -381,7 +381,25 @@ public:
                 posY = hasDamage = true;
             }
         }
-        return hasDamage;
+        // CSSOM and explicit inheritance also observe the entries that
+        // have no corresponding image. An absent list means one default
+        // entry, so it is equivalent to explicitly setting that value.
+        size_t beforeX = std::max<uint32_t>(1, before->positionXCount());
+        size_t afterX = std::max<uint32_t>(1, after->positionXCount());
+        size_t beforeY = std::max<uint32_t>(1, before->positionYCount());
+        size_t afterY = std::max<uint32_t>(1, after->positionYCount());
+        posX |= beforeX != afterX;
+        posY |= beforeY != afterY;
+        for (size_t i = maxLayer;
+             (!posX && i < beforeX) || (!posY && i < beforeY); ++i) {
+            if (!posX && i < beforeX) {
+                posX = before->positionX(i) != after->positionX(i);
+            }
+            if (!posY && i < beforeY) {
+                posY = before->positionY(i) != after->positionY(i);
+            }
+        }
+        return hasDamage || posX || posY;
     }
 
     void setColor(Unit::Color color)

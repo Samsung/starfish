@@ -1222,3 +1222,4 @@ tests/assertion/document/document-api-surface.html
 tests/assertion/dom/element-api-surface.html
 tests/assertion/window/window-console-api-surface.html
 tests/assertion/media/media-source-api.html
+tests/assertion/css/background/background-position-inherit.html
