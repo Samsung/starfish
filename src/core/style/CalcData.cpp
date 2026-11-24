@@ -212,29 +212,21 @@ String* CalcTerm::toString()
     }
 
     StringBuilder builder;
-    auto isNumberFactor = [&](size_t index) {
-        return m_values[index].type().isNumber() &&
-               (!index || m_operators[index - 1] == MUL);
-    };
-    auto append = [&](size_t index) {
-        if (builder.length()) {
-            builder.appendString(String::createASCIIString(
-                index && m_operators[index - 1] == DIV ? " / " : " * "));
+    // CSS Values 4 puts numeric factors first. The first multiplication
+    // can commute, but moving later factors across a partial product
+    // changes its evaluation order and can overflow or underflow.
+    bool swapFirstPair = m_operators[0] == MUL &&
+                         !m_values[0].type().isNumber() &&
+                         m_values[1].type().isNumber();
+    builder.appendString(m_values[swapFirstPair ? 1 : 0].toString());
+    for (size_t i = 1; i < m_values.size(); ++i) {
+        if (m_operators[i - 1] == DIV) {
+            builder.appendString(" / ");
+        } else {
+            builder.appendString(" * ");
         }
+        size_t index = i == 1 && swapFirstPair ? 0 : i;
         builder.appendString(m_values[index].toString());
-    };
-
-    // CSS Values 4 sorts numeric factors before other children of a
-    // product. Divisors are inversion nodes, so keep them in the second pass.
-    for (size_t i = 0; i < m_values.size(); ++i) {
-        if (isNumberFactor(i)) {
-            append(i);
-        }
-    }
-    for (size_t i = 0; i < m_values.size(); ++i) {
-        if (!isNumberFactor(i)) {
-            append(i);
-        }
     }
 
     return builder.finalize();
