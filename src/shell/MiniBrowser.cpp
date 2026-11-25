@@ -386,6 +386,28 @@ bool MiniBrowser::createWindow(const InitOption& initOption)
 bool MiniBrowser::createLWE(const InitOption& initOption)
 {
 #if defined(SHELL_HOST_GL_WEBCONTAINER)
+    if (!createGLWebContainer(initOption)) {
+        return false;
+    }
+    connectWindowEvents();
+#elif defined(SHELL_HOST_WEBVIEW)
+    createWebView(initOption);
+#elif defined(SHELL_HOST_HEADLESS_WEBCONTAINER)
+    m_lwe = LWE::WebContainer::CreateHeadless(
+        initOption.geometry.width, initOption.geometry.height,
+        initOption.scaleFactor, "serif", "ko-KR", "Asia/Seoul");
+#endif
+
+#if defined(SHELL_CAN_REPLAY_API)
+    startReplayIfRequested();
+#endif
+
+    return true;
+}
+
+#if defined(SHELL_HOST_GL_WEBCONTAINER)
+bool MiniBrowser::createGLWebContainer(const InitOption& initOption)
+{
     LWE::WebContainer::WebContainerArguments args{
         .width = initOption.geometry.width,
         .height = initOption.geometry.height,
@@ -430,6 +452,11 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
         return false;
     }
 
+    return true;
+}
+
+void MiniBrowser::connectWindowEvents()
+{
     m_window->setWindowSizeEventHandler(
         [this](int width, int height) { m_lwe->ResizeTo(width, height); });
 
@@ -496,13 +523,17 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
             m_lwe->DispatchCompositionUpdateEvent(text);
         }
     });
+}
+#endif
 
-#elif defined(SHELL_HOST_WEBVIEW)
+#if defined(SHELL_HOST_WEBVIEW)
+void MiniBrowser::createWebView(const InitOption& initOption)
+{
     if (initOption.headless) {
         m_headlessLwe = LWE::WebContainer::CreateHeadless(
             initOption.geometry.width, initOption.geometry.height,
             initOption.scaleFactor, "serif", "ko-KR", "Asia/Seoul");
-        return true;
+        return;
     }
     m_lwe = LWE::WebView::Create(
         m_window->getNativeWindowHandle(), initOption.geometry.x,
@@ -513,44 +544,37 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
     m_window->setFocusInHandler([this]() { m_lwe->Focus(); });
     m_window->addAutoFitChild(m_lwe->Unwrap());
 #endif
-#elif defined(SHELL_HOST_HEADLESS_WEBCONTAINER)
-    m_lwe = LWE::WebContainer::CreateHeadless(
-        initOption.geometry.width, initOption.geometry.height,
-        initOption.scaleFactor, "serif", "ko-KR", "Asia/Seoul");
-#endif
-
-#if defined(STARFISH_ENABLE_TEST) &&         \
-    (defined(SHELL_HOST_GL_WEBCONTAINER) || \
-     defined(SHELL_HOST_HEADLESS_WEBCONTAINER))
-    {
-        const char* replayPath = getenv("STARFISH_API_REPLAY");
-        if (replayPath && replayPath[0] != '\0') {
-            float speedFactor = 1.0f;
-            const char* speedStr = getenv("STARFISH_API_REPLAY_SPEED");
-            if (speedStr && speedStr[0] != '\0')
-                speedFactor = std::atof(speedStr);
-
-            struct ReplayStartCtx {
-                LWE::WebContainer* wc;
-                std::string path;
-                float speed;
-            };
-            auto* ctx = new ReplayStartCtx{ m_lwe, replayPath, speedFactor };
-            m_lwe->AddTimeout(
-                [](void* data) {
-                    auto* ctx = static_cast<ReplayStartCtx*>(data);
-                    StarfishShell::APIReplayer replayer;
-                    if (replayer.load(ctx->path.c_str()))
-                        replayer.startReplay(ctx->wc, ctx->speed);
-                    delete ctx;
-                },
-                ctx, 100);
-        }
-    }
-#endif
-
-    return true;
 }
+#endif
+
+#if defined(SHELL_CAN_REPLAY_API)
+void MiniBrowser::startReplayIfRequested()
+{
+    const char* replayPath = getenv("STARFISH_API_REPLAY");
+    if (replayPath && replayPath[0] != '\0') {
+        float speedFactor = 1.0f;
+        const char* speedStr = getenv("STARFISH_API_REPLAY_SPEED");
+        if (speedStr && speedStr[0] != '\0')
+            speedFactor = std::atof(speedStr);
+
+        struct ReplayStartCtx {
+            LWE::WebContainer* wc;
+            std::string path;
+            float speed;
+        };
+        auto* ctx = new ReplayStartCtx{ m_lwe, replayPath, speedFactor };
+        m_lwe->AddTimeout(
+            [](void* data) {
+                auto* ctx = static_cast<ReplayStartCtx*>(data);
+                StarfishShell::APIReplayer replayer;
+                if (replayer.load(ctx->path.c_str()))
+                    replayer.startReplay(ctx->wc, ctx->speed);
+                delete ctx;
+            },
+            ctx, 100);
+    }
+}
+#endif
 
 std::string MiniBrowser::storageDir()
 {

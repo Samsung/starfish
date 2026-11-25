@@ -158,6 +158,17 @@ private:
     bool createWindow(const InitOption& initOption);
 
     bool createLWE(const InitOption& initOption);
+#if defined(SHELL_HOST_GL_WEBCONTAINER)
+    bool createGLWebContainer(const InitOption& initOption);
+    // Forwards the window's input, resize and exit events to the container.
+    void connectWindowEvents();
+#endif
+#if defined(SHELL_HOST_WEBVIEW)
+    void createWebView(const InitOption& initOption);
+#endif
+#if defined(SHELL_CAN_REPLAY_API)
+    void startReplayIfRequested();
+#endif
 
     std::string storageDir();
 

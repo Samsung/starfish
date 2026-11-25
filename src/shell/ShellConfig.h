@@ -31,7 +31,7 @@
     defined(STARFISH_SHELL_TCORE_WL)
 // A windowed LWE::WebView; --headless swaps in a WebContainer at run time.
 #define SHELL_HOST_WEBVIEW
-#elif defined(STARFISH_SHELL_EFL_HEADLESS) ||   \
+#elif defined(STARFISH_SHELL_EFL_HEADLESS) || \
     defined(STARFISH_SHELL_TCORE_HEADLESS) || \
     defined(STARFISH_SHELL_GLIB_HEADLESS)
 // A WebContainer that never paints.
@@ -53,6 +53,13 @@
 
 #if defined(STARFISH_ENABLE_TEST)
 #define SHELL_ENABLE_TEST
+#endif
+
+// `Starfish replay` drives a WebContainer, so it needs a shell that hosts one.
+#if defined(STARFISH_ENABLE_TEST) &&        \
+    (defined(SHELL_HOST_GL_WEBCONTAINER) || \
+     defined(SHELL_HOST_HEADLESS_WEBCONTAINER))
+#define SHELL_CAN_REPLAY_API
 #endif
 
 #if defined(STARFISH_TIZEN)
