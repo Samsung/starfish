@@ -558,6 +558,9 @@ static void serializeXMLElement(Element* element, bool hasContextNamespace,
         }
 
         if (attrHasNs && attrNs == kXMLNSNamespace) {
+            if (attrValue->equals(kXMLNamespace)) {
+                continue;
+            }
             if (!attrName.hasPrefix()) {
                 if (ignoreNamespaceDefinitionAttribute) {
                     continue;

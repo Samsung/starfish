@@ -45,6 +45,16 @@
       'comment with -- must serialize without throwing'
     );
 
+    // 4. An xmlns declaration binding the XML namespace is dropped
+    const xmlNsDoc = new DOMParser().parseFromString(
+      '<e xmlns:p="http://www.w3.org/XML/1998/namespace"/>',
+      'application/xml');
+    const xmlNsOut = serializer.serializeToString(xmlNsDoc.documentElement);
+    console.assert(
+      xmlNsOut.indexOf('xmlns:p') === -1,
+      'xmlns:p bound to the XML namespace must be dropped: ' + xmlNsOut
+    );
+
     if (typeof testEnd === 'function') {
       testEnd();
     }
