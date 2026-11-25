@@ -102,70 +102,67 @@ namespace {
         return true;
     }
 
+    // Creates a socket for the socket file at path from inside its directory,
+    // so a long path still fits sockaddr_un, and lets finish bind or connect
+    // it while the directory is entered. finish closes the socket when it
+    // fails. Returns the descriptor, or -1.
+    template <typename Finish>
+    int withUnixSocket(const std::string& path, Finish finish)
+    {
+        std::string directory;
+        std::string name;
+        splitPath(path, directory, name);
+
+        DirectoryGuard guard(directory);
+        if (!guard.didEnter()) {
+            return -1;
+        }
+
+        sockaddr_un address = {};
+        if (!setAddress(address, name)) {
+            return -1;
+        }
+
+        int descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
+        if (descriptor < 0) {
+            return -1;
+        }
+        return finish(descriptor, address, name) ? descriptor : -1;
+    }
+
 } // namespace
 
 int bindUnixSocket(const std::string& path, int mode, int backlog)
 {
-    std::string directory;
-    std::string name;
-    splitPath(path, directory, name);
-
-    DirectoryGuard guard(directory);
-    if (!guard.didEnter()) {
-        return -1;
-    }
-
-    sockaddr_un address = {};
-    if (!setAddress(address, name)) {
-        return -1;
-    }
-
-    int descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (descriptor < 0) {
-        return -1;
-    }
-
-    // A socket file left by a dead daemon would make bind fail with EADDRINUSE.
-    unlink(name.c_str());
-    if (bind(descriptor, reinterpret_cast<sockaddr*>(&address),
-             sizeof(address)) != 0 ||
-        chmod(name.c_str(), static_cast<mode_t>(mode)) != 0 ||
-        listen(descriptor, backlog) != 0) {
-        close(descriptor);
+    return withUnixSocket(path, [&](int descriptor, sockaddr_un& address,
+                                    const std::string& name) {
+        // A socket file left by a dead daemon would make bind fail with
+        // EADDRINUSE.
         unlink(name.c_str());
-        return -1;
-    }
-    return descriptor;
+        if (bind(descriptor, reinterpret_cast<sockaddr*>(&address),
+                 sizeof(address)) != 0 ||
+            chmod(name.c_str(), static_cast<mode_t>(mode)) != 0 ||
+            listen(descriptor, backlog) != 0) {
+            close(descriptor);
+            unlink(name.c_str());
+            return false;
+        }
+        return true;
+    });
 }
 
 int connectUnixSocket(const std::string& path)
 {
-    std::string directory;
-    std::string name;
-    splitPath(path, directory, name);
-
     // A missing directory means no session, same as a missing socket.
-    DirectoryGuard guard(directory);
-    if (!guard.didEnter()) {
-        return -1;
-    }
-
-    sockaddr_un address = {};
-    if (!setAddress(address, name)) {
-        return -1;
-    }
-
-    int descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (descriptor < 0) {
-        return -1;
-    }
-
-    if (connect(descriptor, reinterpret_cast<sockaddr*>(&address),
-                sizeof(address)) != 0) {
-        close(descriptor);
-        return -1;
-    }
-    return descriptor;
+    return withUnixSocket(
+        path, [](int descriptor, sockaddr_un& address, const std::string&) {
+            if (connect(descriptor, reinterpret_cast<sockaddr*>(&address),
+                        sizeof(address)) != 0) {
+                close(descriptor);
+                return false;
+            }
+            return true;
+        });
 }
 
 } // namespace StarfishCLI
