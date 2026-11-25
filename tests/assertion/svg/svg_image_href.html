@@ -53,9 +53,22 @@
     console.assert(!img1.hasAttributeNS(null, 'href'), 'stays backed by XLink attribute');
     console.assert(img1.getAttributeNS(xlinkNs, 'href') === 'unprefixed2.png', 'updates unprefixed XLink href');
 
-    if (typeof testEnd === 'function') {
-      testEnd();
-    }
+    // An unprefixed XLink href must load the image, not be shadowed as if it were a plain href
+    const pixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const img2 = document.createElementNS(svgNs, 'image');
+    img2.setAttributeNS(xlinkNs, 'href', pixel);
+    img2.width.baseVal.value = 1;
+    img2.height.baseVal.value = 1;
+
+    window.onload = () => {
+      const ctx = document.createElement('canvas').getContext('2d');
+      ctx.drawImage(img2, 0, 0);
+      console.assert(ctx.getImageData(0, 0, 1, 1).data[3] > 0,'unprefixed XLink href loads the image');
+
+      if (typeof testEnd === 'function') {
+        testEnd();
+      }
+    };
   </script>
 </body>
 </html>

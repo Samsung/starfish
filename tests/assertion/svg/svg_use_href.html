@@ -14,6 +14,12 @@
     </defs>
     <use id="u" href="#r1"/>
   </svg>
+  <svg width="100" height="100">
+    <defs>
+      <rect id="r3" width="30" height="30" fill="green"/>
+    </defs>
+    <use id="u2"/>
+  </svg>
   <script>
     const svgNs = 'http://www.w3.org/2000/svg';
     const xlinkNs = 'http://www.w3.org/1999/xlink';
@@ -59,9 +65,17 @@
     console.assert(u.getAttribute('href') === '#r2', 'connected use href updated via baseVal');
     console.assert(u.href.baseVal === '#r2', 'connected use baseVal reflects #r2');
 
-    if (typeof testEnd === 'function') {
-      testEnd();
-    }
+    // An unprefixed XLink href must render the referenced element, not be shadowed as if it were a plain href
+    const u2 = document.getElementById('u2');
+    u2.setAttributeNS(xlinkNs, 'href', '#r3');
+
+    window.onload = () => {
+      console.assert(u2.getBoundingClientRect().width > 0, 'unprefixed XLink href renders the referenced element');
+
+      if (typeof testEnd === 'function') {
+        testEnd();
+      }
+    };
   </script>
 </body>
 </html>

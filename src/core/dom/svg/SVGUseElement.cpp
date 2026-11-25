@@ -52,8 +52,9 @@ SVGUseElement::SVGUseElement(Document* document, const QualifiedName& qname)
 String* SVGUseElement::effectiveHrefAttributeValue()
 {
     StaticStrings* ss = starfish()->staticStrings();
-    if (hasAttribute(ss->m_href) != SIZE_MAX) {
-        return getAttributeOrEmpty(ss->m_href);
+    if (hasAttributeNS(Optional<String*>(), ss->m_href.localName())) {
+        return getAttributeNS(Optional<String*>(), ss->m_href.localName())
+            .getValue();
     }
     Optional<String*> xlinkVal =
         getAttributeNS(ss->m_xlinkHref.namespaceURI().getValue().string(),
@@ -89,7 +90,8 @@ void SVGUseElement::didAttributeChanged(QualifiedName name,
         if (m_hrefObject.hasValue()) {
             m_hrefObject->setBaseVal(effectiveValue, true);
         }
-        bool hasPlainHref = hasAttribute(ss->m_href) != SIZE_MAX;
+        bool hasPlainHref =
+            hasAttributeNS(Optional<String*>(), ss->m_href.localName());
         if (isXLinkHref && hasPlainHref) {
             // Plain "href" takes precedence over "xlink:href".
             return;
@@ -107,7 +109,7 @@ void SVGUseElement::updateSVGAttributeNeeded(QualifiedName name)
         // https://svgwg.org/svg2-draft/linking.html#XLinkRefAttrs
         // If "href" is not set but an XLink "href" attribute is present,
         // reflect mutations into the existing XLink attribute.
-        if (hasAttribute(ss->m_href) == SIZE_MAX &&
+        if (!hasAttributeNS(Optional<String*>(), ss->m_href.localName()) &&
             hasAttributeNS(ss->m_xlinkHref.namespaceURI().getValue().string(),
                            ss->m_href.localName())) {
             for (size_t i = 0; i < attributeCount(); i++) {
@@ -115,12 +117,15 @@ void SVGUseElement::updateSVGAttributeNeeded(QualifiedName name)
                 if (ss->m_xlinkHref.hasSameNamespaceURI(
                         attrName.namespaceURI()) &&
                     ss->m_xlinkHref.hasSameLocalName(attrName.localName())) {
-                    setAttribute(attrName, href()->baseVal());
+                    setAttribute(
+                        AttributeName(attrName, AttributeName::MatchNS),
+                        href()->baseVal());
                     return;
                 }
             }
         }
-        setAttribute(ss->m_href, href()->baseVal());
+        setAttribute(AttributeName(ss->m_href, AttributeName::MatchNS),
+                     href()->baseVal());
     }
 }
 
