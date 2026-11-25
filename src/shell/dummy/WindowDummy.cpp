@@ -45,7 +45,9 @@ public:
                 eglDestroySurface(m_eglDisplay, m_eglSurface);
             if (m_eglContext != EGL_NO_CONTEXT)
                 eglDestroyContext(m_eglDisplay, m_eglContext);
-            eglTerminate(m_eglDisplay);
+            // No eglTerminate: EGL_DEFAULT_DISPLAY is shared with every
+            // other window and view in the process, and terminating it
+            // invalidates their contexts and surfaces too.
         }
     }
 

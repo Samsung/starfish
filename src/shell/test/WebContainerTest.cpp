@@ -189,6 +189,49 @@ TEST_F(WebContainerCreationTest, WebGLAfterRecreatingContainer)
         }
     }
 }
+
+// Tearing one window down must leave the GL of a view on another window
+// usable; they share the process' default EGL display.
+TEST_F(WebContainerCreationTest, WebGLSurvivesAnotherWindowTeardown)
+{
+    static const char* draw = R"JS(
+        (function() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl', { antialias: false });
+            if (!gl)
+                return false;
+            gl.clearColor(0, 1, 0, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            const pixel = new Uint8Array(4);
+            gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+            return pixel[0] === 0 && pixel[1] === 255 &&
+                   pixel[2] === 0 && pixel[3] === 255;
+        })()
+    )JS";
+
+    Window* otherWindow = Window::create();
+    otherWindow->setInitHint(HINT_VISIBLE, 0);
+    otherWindow->init("Starfish", 800, 600);
+    LWE::WebContainer* other = LWE::WebContainer::CreateGL(
+        getWebContainerArgs(), getRendererConfig(otherWindow));
+    ASSERT_TRUE(other);
+    other->LoadData("<p>other</p>");
+
+    m_lwe = LWE::WebContainer::CreateGL(getWebContainerArgs(),
+                                        getRendererConfig(m_window));
+    ASSERT_TRUE(m_lwe);
+    m_lwe->LoadData("<p>survivor</p>");
+    m_window->appLoop()->start(1);
+    EXPECT_EQ("true", other->EvaluateJavaScript(draw));
+    EXPECT_EQ("true", m_lwe->EvaluateJavaScript(draw));
+
+    other->StopLoading();
+    other->Destroy();
+    delete otherWindow;
+
+    m_window->appLoop()->start(1);
+    EXPECT_EQ("true", m_lwe->EvaluateJavaScript(draw));
+}
 #endif
 
 class WebContainerDestroyTest : public ::testing::Test {
