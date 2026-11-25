@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPAXSerializer__)
 #define __StarfishCDPAXSerializer__
 
+#include "AXFrameIdSource.h"
 #include "AXName.h"
 #include "rapidjson/document.h"
 #include <string>
@@ -31,15 +32,14 @@ class Element;
 class HTMLTextEditable;
 class Node;
 class NodeRegistry;
-class PageDomain;
 
 // Turns AX nodes into the Accessibility domain's AXNode objects.
 class AXSerializer {
 public:
-    AXSerializer(NodeRegistry* registry, PageDomain* page,
+    AXSerializer(NodeRegistry* registry, AXFrameIdSource* frameIds,
                  rapidjson::Document::AllocatorType* allocator)
         : m_registry(registry)
-        , m_page(page)
+        , m_frameIds(frameIds)
         , m_allocator(allocator)
     {
     }
@@ -106,7 +106,7 @@ private:
     rapidjson::Value stringValue(const std::string& text);
 
     NodeRegistry* m_registry;
-    PageDomain* m_page;
+    AXFrameIdSource* m_frameIds;
     rapidjson::Document::AllocatorType* m_allocator;
 };
 

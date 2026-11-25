@@ -26,7 +26,6 @@
 #include "AXRole.h"
 #include "AXTree.h"
 #include "../NodeRegistry.h"
-#include "../domains/PageDomain.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLDialogElement.h"
@@ -1387,10 +1386,10 @@ rapidjson::Value AXSerializer::serialize(AXNode* node, bool forceNameAndRole)
     if (node->parent()) {
         out.AddMember("parentId", stringValue(node->parent()->id()),
                       *m_allocator);
-    } else if (node->kind() == AXNodeKind::Root && m_page) {
+    } else if (node->kind() == AXNodeKind::Root && m_frameIds) {
         Document* document = node->domNode()->asDocument();
         std::string frameId =
-            m_page->frameIdForBrowsingContext(document->browsingContext());
+            m_frameIds->frameIdForBrowsingContext(document->browsingContext());
         if (!frameId.empty()) {
             out.AddMember("frameId", stringValue(frameId), *m_allocator);
         }

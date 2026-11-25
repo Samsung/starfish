@@ -21,6 +21,7 @@
 #define __StarfishCDPPageDomain__
 
 #include "../CDPDomain.h"
+#include "../ax/AXFrameIdSource.h"
 #include <string>
 
 namespace Starfish {
@@ -31,7 +32,7 @@ class BrowsingContext;
 class CDPSession;
 class WebView;
 
-class PageDomain : public CDPDomain {
+class PageDomain : public CDPDomain, public AXFrameIdSource {
 public:
     PageDomain(CDPDispatcher* d)
         : m_dispatcher(d)
@@ -110,7 +111,7 @@ public:
         uint32_t contextId);
     Optional<BrowsingContext*> browsingContextForFrameId(
         const std::string& frameId);
-    std::string frameIdForBrowsingContext(BrowsingContext* context);
+    std::string frameIdForBrowsingContext(BrowsingContext* context) override;
 
     // Stop an active Page.startScreencast: cancel the repetitive capture timer
     // and clear the screencast session state. Safe to call when inactive.
