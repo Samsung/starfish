@@ -1053,6 +1053,92 @@ void FfmpegWrapperPlayer::decodingThread()
             av_frame_unref(frame);
         }
     };
+    auto seek = [&]() {
+        int64_t target = m_seekTargetMs.load();
+        int result =
+            av_seek_frame(m_fmtCtx, -1, target * 1000, AVSEEK_FLAG_BACKWARD);
+        noteResponseLocation();
+        if (result >= 0) {
+            if (m_codecCtx) {
+                avcodec_flush_buffers(m_codecCtx);
+            }
+            if (m_audioCodecCtx) {
+                avcodec_flush_buffers(m_audioCodecCtx);
+            }
+            if (m_audioFlushCallback) {
+                m_audioFlushCallback(target / 1000.0);
+            }
+            av_frame_unref(heldVideo);
+            earlyAudioMs = -1;
+            earlyAudioEndMs = -1;
+            m_currentPositionMs.store(target);
+            seekFloorMs = target;
+            eof = false;
+            resetClock = true;
+        }
+        std::function<void(void*)> callback;
+        void* data;
+        {
+            std::lock_guard<std::mutex> lock(m_stateMutex);
+            callback = m_seekCompleteCallback;
+            data = m_seekCompleteData;
+        }
+        if (callback) {
+            callback(data);
+        }
+    };
+    // The demuxer has no more packets. Returns early, with eof still unset,
+    // on a stop or seek, or while a paused element keeps its tail waiting.
+    auto reachEnd = [&]() {
+        if (m_codecCtx) {
+            avcodec_send_packet(m_codecCtx, nullptr);
+            deliver(m_codecCtx, m_videoStreamIndex);
+        }
+        if (m_audioCodecCtx) {
+            avcodec_send_packet(m_audioCodecCtx, nullptr);
+            deliver(m_audioCodecCtx, m_audioStreamIndex);
+        }
+        // The held video frame still shows at its time; a stop ends
+        // the loop and the loop takes a seek.
+        if (heldVideo->buf[0] && !showHeldVideo()) {
+            return;
+        }
+        // Routed audio was queued ahead of the clock. The media ends
+        // when the clock reaches its last frame, as unrouted media
+        // does, and not before the graph has rendered that frame
+        // when it is playing it; currentTime keeps advancing
+        // meanwhile. A paused element keeps its tail waiting.
+        // https://html.spec.whatwg.org/multipage/media.html#reaches-the-end
+        if (earlyAudioMs >= 0) {
+            std::unique_lock<std::mutex> lock(m_stateMutex);
+            bool ended = false;
+            while (!ended && waitForClock(lock, clockMs() + 5, true)) {
+                const int64_t nowMs = clockMs();
+                m_currentPositionMs.store(
+                    std::max<int64_t>(m_currentPositionMs.load(),
+                                      std::min(nowMs, earlyAudioEndMs)));
+                if (nowMs >= earlyAudioMs) {
+                    lock.unlock();
+                    ended = m_audioQueuedCallback() <= 0 ||
+                            nowMs >= earlyAudioEndMs +
+                                         STARFISH_ROUTED_AUDIO_DRAIN_GRACE_MS;
+                    lock.lock();
+                }
+            }
+            if (!ended) {
+                return;
+            }
+        }
+        // Keep the thread available for a replay seek.
+        eof = true;
+        {
+            std::lock_guard<std::mutex> lock(m_stateMutex);
+            m_state = State::PAUSED;
+        }
+        if (!m_stopRequested && m_completeCallback) {
+            m_completeCallback(m_completeCallbackData);
+        }
+    };
     while (!m_stopRequested) {
         {
             std::unique_lock<std::mutex> lock(m_stateMutex);
@@ -1065,38 +1151,7 @@ void FfmpegWrapperPlayer::decodingThread()
             }
         }
         if (m_seekRequested.exchange(false)) {
-            int64_t target = m_seekTargetMs.load();
-            int result = av_seek_frame(m_fmtCtx, -1, target * 1000,
-                                       AVSEEK_FLAG_BACKWARD);
-            noteResponseLocation();
-            if (result >= 0) {
-                if (m_codecCtx) {
-                    avcodec_flush_buffers(m_codecCtx);
-                }
-                if (m_audioCodecCtx) {
-                    avcodec_flush_buffers(m_audioCodecCtx);
-                }
-                if (m_audioFlushCallback) {
-                    m_audioFlushCallback(target / 1000.0);
-                }
-                av_frame_unref(heldVideo);
-                earlyAudioMs = -1;
-                earlyAudioEndMs = -1;
-                m_currentPositionMs.store(target);
-                seekFloorMs = target;
-                eof = false;
-                resetClock = true;
-            }
-            std::function<void(void*)> callback;
-            void* data;
-            {
-                std::lock_guard<std::mutex> lock(m_stateMutex);
-                callback = m_seekCompleteCallback;
-                data = m_seekCompleteData;
-            }
-            if (callback) {
-                callback(data);
-            }
+            seek();
             continue;
         }
         if (eof) {
@@ -1106,56 +1161,7 @@ void FfmpegWrapperPlayer::decodingThread()
         noteResponseLocation();
         if (result < 0) {
             if (result == AVERROR_EOF) {
-                if (m_codecCtx) {
-                    avcodec_send_packet(m_codecCtx, nullptr);
-                    deliver(m_codecCtx, m_videoStreamIndex);
-                }
-                if (m_audioCodecCtx) {
-                    avcodec_send_packet(m_audioCodecCtx, nullptr);
-                    deliver(m_audioCodecCtx, m_audioStreamIndex);
-                }
-                // The held video frame still shows at its time; a stop ends
-                // the loop and a seek is taken above.
-                if (heldVideo->buf[0] && !showHeldVideo()) {
-                    continue;
-                }
-                // Routed audio was queued ahead of the clock. The media ends
-                // when the clock reaches its last frame, as unrouted media
-                // does, and not before the graph has rendered that frame
-                // when it is playing it; currentTime keeps advancing
-                // meanwhile. A paused element keeps its tail waiting.
-                // https://html.spec.whatwg.org/multipage/media.html#reaches-the-end
-                if (earlyAudioMs >= 0) {
-                    std::unique_lock<std::mutex> lock(m_stateMutex);
-                    bool ended = false;
-                    while (!ended && waitForClock(lock, clockMs() + 5, true)) {
-                        const int64_t nowMs = clockMs();
-                        m_currentPositionMs.store(std::max<int64_t>(
-                            m_currentPositionMs.load(),
-                            std::min(nowMs, earlyAudioEndMs)));
-                        if (nowMs >= earlyAudioMs) {
-                            lock.unlock();
-                            ended =
-                                m_audioQueuedCallback() <= 0 ||
-                                nowMs >=
-                                    earlyAudioEndMs +
-                                        STARFISH_ROUTED_AUDIO_DRAIN_GRACE_MS;
-                            lock.lock();
-                        }
-                    }
-                    if (!ended) {
-                        continue;
-                    }
-                }
-                // Keep the thread available for a replay seek.
-                eof = true;
-                {
-                    std::lock_guard<std::mutex> lock(m_stateMutex);
-                    m_state = State::PAUSED;
-                }
-                if (!m_stopRequested && m_completeCallback) {
-                    m_completeCallback(m_completeCallbackData);
-                }
+                reachEnd();
                 continue;
             }
             if (!m_stopRequested && m_errorCallback) {
