@@ -138,7 +138,7 @@ http://web-platform.test:8000/css/css-values/line-break-ch-unit.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-values/minmax-length-invalid.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-values/minmax-length-percent-computed.html
 http://web-platform.test:8000/css/css-values/minmax-length-percent-invalid.html
-# [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-values/minmax-length-percent-serialize.html
+http://web-platform.test:8000/css/css-values/minmax-length-percent-serialize.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/minmax-length-serialize.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/minmax-number-computed.html
 # [vacuous-pass:PROPERTY_UNSUPPORTED] http://web-platform.test:8000/css/css-values/minmax-number-invalid.html
