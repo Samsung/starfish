@@ -15,6 +15,7 @@ http://web-platform.test:8000/html/webappapis/scripting/events/invalid-uncompile
 http://web-platform.test:8000/html/webappapis/scripting/events/event-handler-onresize.html
 http://web-platform.test:8000/html/webappapis/scripting/events/event-handler-javascript.html
 http://web-platform.test:8000/html/webappapis/scripting/events/body-onload.html
+http://web-platform.test:8000/html/webappapis/scripting/events/event-handler-handleEvent-ignored.html
 # [auto-fail] http://web-platform.test:8000/html/webappapis/dynamic-markup-insertion/opening-the-input-stream/origin-check-in-document-open-same-origin-domain.sub.html
 # [auto-fail] http://web-platform.test:8000/html/webappapis/dynamic-markup-insertion/opening-the-input-stream/origin-check-in-document-open-basic.html
 http://web-platform.test:8000/html/webappapis/animation-frames/same-dispatch-time.html
