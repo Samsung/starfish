@@ -156,7 +156,7 @@ int Shell::runMiniBrowser(int argc, char* argv[])
 
     auto browser = std::unique_ptr<MiniBrowser>(new MiniBrowser());
     LWE::InitializeOption initOption = LWE::InitializeOption::None;
-    if (!others.preferIsolatedThread) {
+    if (others.preferSeparateThread) {
         initOption = initOption | LWE::InitializeOption::PreferSeparateThread;
     }
     if (others.preferIncrementalGC) {

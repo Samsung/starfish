@@ -99,7 +99,7 @@ public:
     struct OtherOptions {
         bool crashTest = false;
         bool disableConsole = false;
-        bool preferIsolatedThread = true;
+        bool preferSeparateThread = false;
         bool preferIncrementalGC = false;
         double timeout = 0; // seconds, 0 means no timeout.
         // Overrides the localStorage/cookies/HTTP-cache/worker-storage

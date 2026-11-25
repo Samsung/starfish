@@ -167,7 +167,7 @@ void MiniBrowser::parseArgs(int argc, char* argv[],
         } else if (const char* value = valueOf(arg, "--storage-dir=")) {
             others.storageDir = value;
         } else if (isFlag(arg, "--prefer-isolated-thread")) {
-            others.preferIsolatedThread = false;
+            others.preferSeparateThread = true;
         } else if (isFlag(arg, "--prefer-incremental-gc")) {
             others.preferIncrementalGC = true;
         } else if (isFlag(arg, "--headless")) {
