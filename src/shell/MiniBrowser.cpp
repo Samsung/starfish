@@ -41,6 +41,20 @@ enum StarfishStartUpFlag {
     enableDebugRepaintRegion = 1 << 6,
     enableRegressionTest = 1 << 7,
 };
+
+// True when `arg` is exactly the option `name`.
+bool isFlag(const char* arg, const char* name)
+{
+    return strcmp(arg, name) == 0;
+}
+
+// For an option written as "--name=<value>" returns the value; nullptr when
+// `arg` is some other option. `prefix` includes the trailing '='.
+const char* valueOf(const char* arg, const char* prefix)
+{
+    size_t length = strlen(prefix);
+    return strncmp(arg, prefix, length) == 0 ? arg + length : nullptr;
+}
 } // namespace
 
 #if defined(SHELL_HOST_WEBVIEW)
@@ -61,106 +75,102 @@ void MiniBrowser::parseArgs(int argc, char* argv[],
 {
     // argv[1] is url.
     for (int i = 2; i < argc; i++) {
-        if (strcmp(argv[i], "--dump-computed-style") == 0) {
+        const char* arg = argv[i];
+        if (isFlag(arg, "--dump-computed-style")) {
             env.flag |= StarfishStartUpFlag::enableComputedStyleDump;
-        } else if (strcmp(argv[i], "--dump-frame-tree") == 0) {
+        } else if (isFlag(arg, "--dump-frame-tree")) {
             env.flag |= StarfishStartUpFlag::enableFrameTreeDump;
-        } else if (strcmp(argv[i], "--dump-stacking-context") == 0) {
+        } else if (isFlag(arg, "--dump-stacking-context")) {
             env.flag |= StarfishStartUpFlag::enableStackingContextDump;
-        } else if (strcmp(argv[i], "--dump-hittest") == 0) {
+        } else if (isFlag(arg, "--dump-hittest")) {
             env.flag |= StarfishStartUpFlag::enableHitTestDump;
-        } else if (strcmp(argv[i], "--debug-graphics-layer") == 0) {
+        } else if (isFlag(arg, "--debug-graphics-layer")) {
             env.flag |= StarfishStartUpFlag::enableDebugGraphicsLayer;
-        } else if (strcmp(argv[i], "--debug-repaint-region") == 0) {
+        } else if (isFlag(arg, "--debug-repaint-region")) {
             env.flag |= StarfishStartUpFlag::enableDebugRepaintRegion;
-        } else if (strcmp(argv[i], "--pixel-test") == 0) {
+        } else if (isFlag(arg, "--pixel-test")) {
 #ifdef SHELL_ENABLE_TEST
             env.pixelTest = true;
 #endif
-        } else if (strcmp(argv[i], "--ref-test") == 0) {
+        } else if (isFlag(arg, "--ref-test")) {
 #ifdef SHELL_ENABLE_TEST
             env.referenceTestState = true;
 #endif
-        } else if (strstr(argv[i], "--width=") == argv[i]) {
-            init.geometry.width = std::atoi(argv[i] + strlen("--width="));
-        } else if (strstr(argv[i], "--height=") == argv[i]) {
-            init.geometry.height = std::atoi(argv[i] + strlen("--height="));
-        } else if (strcmp(argv[i], "--regression-test") == 0) {
+        } else if (const char* value = valueOf(arg, "--width=")) {
+            init.geometry.width = std::atoi(value);
+        } else if (const char* value = valueOf(arg, "--height=")) {
+            init.geometry.height = std::atoi(value);
+        } else if (isFlag(arg, "--regression-test")) {
             env.flag |= StarfishStartUpFlag::enableRegressionTest;
-        } else if (strstr(argv[i], "--screen-shot=") == argv[i]) {
-            env.screenShot = argv[i] + strlen("--screen-shot=");
-        } else if (strstr(argv[i], "--screen-shot-width=") == argv[i]) {
-            env.screenShotWidth = (argv[i] + strlen("--screen-shot-width="));
-        } else if (strstr(argv[i], "--screen-shot-height=") == argv[i]) {
-            env.screenShotHeight = argv[i] + strlen("--screen-shot-height=");
-        } else if (strcmp(argv[i], "--hide-window") == 0) {
+        } else if (const char* value = valueOf(arg, "--screen-shot=")) {
+            env.screenShot = value;
+        } else if (const char* value = valueOf(arg, "--screen-shot-width=")) {
+            env.screenShotWidth = value;
+        } else if (const char* value = valueOf(arg, "--screen-shot-height=")) {
+            env.screenShotHeight = value;
+        } else if (isFlag(arg, "--hide-window")) {
             // Only hides the window. Regression mode (font substitution,
             // synchronous image loads) is opt-in via --regression-test so a
             // headless run can still exercise the page's own web fonts.
             env.hideWindow = true;
-        } else if (strcmp(argv[i], "--network-log-verbose") == 0) {
+        } else if (isFlag(arg, "--network-log-verbose")) {
             env.networkLogVerbose = true;
-        } else if (strstr(argv[i], "--posX=") == argv[i]) {
-            init.geometry.x = std::atoi(argv[i] + strlen("--posX="));
-        } else if (strstr(argv[i], "--posY=") == argv[i]) {
-            init.geometry.y = std::atoi(argv[i] + strlen("--posY="));
-        } else if (strstr(argv[i], "--device-pixel-ratio=") == argv[i]) {
-            init.scaleFactor =
-                std::atof(argv[i] + strlen("--device-pixel-ratio="));
-        } else if (strstr(argv[i], "--useragent=") == argv[i]) {
-            settings.customUserAgentString = argv[i] + strlen("--useragent=");
-        } else if (strcmp(argv[i], "--disable-web-security") == 0) {
+        } else if (const char* value = valueOf(arg, "--posX=")) {
+            init.geometry.x = std::atoi(value);
+        } else if (const char* value = valueOf(arg, "--posY=")) {
+            init.geometry.y = std::atoi(value);
+        } else if (const char* value = valueOf(arg, "--device-pixel-ratio=")) {
+            init.scaleFactor = std::atof(value);
+        } else if (const char* value = valueOf(arg, "--useragent=")) {
+            settings.customUserAgentString = value;
+        } else if (isFlag(arg, "--disable-web-security")) {
             settings.enableSecurity = false;
-        } else if (strcmp(argv[i], "--tts-forced") == 0) {
+        } else if (isFlag(arg, "--tts-forced")) {
             settings.ttsMode = LWE::TTSMode::Forced;
-        } else if (strcmp(argv[i], "--crash-test") == 0) {
+        } else if (isFlag(arg, "--crash-test")) {
             others.crashTest = true;
-        } else if (strstr(argv[i], "--needs-download-webfont-early") ==
-                   argv[i]) {
+        } else if (isFlag(arg, "--needs-download-webfont-early")) {
             settings.needsDownloadWebFontsEarly = true;
-        } else if (strcmp(argv[i], "--disable-console") == 0) {
+        } else if (isFlag(arg, "--disable-console")) {
             others.disableConsole = true;
-        } else if (strstr(argv[i],
-                          "--needs-downscale-image-resource-larger-than=") ==
-                   argv[i]) {
-            settings.needsDownScaleImageResourceLargerThan = std::atoi(
-                argv[i] +
-                strlen("--needs-downscale-image-resource-larger-than="));
-        } else if (strstr(argv[i], "--max-video-decode-size=") == argv[i]) {
+        } else if (const char* value = valueOf(
+                       arg, "--needs-downscale-image-resource-larger-than=")) {
+            settings.needsDownScaleImageResourceLargerThan = std::atoi(value);
+        } else if (const char* value =
+                       valueOf(arg, "--max-video-decode-size=")) {
             unsigned width = 0, height = 0;
-            if (sscanf(argv[i] + strlen("--max-video-decode-size="), "%ux%u",
-                       &width, &height) == 2) {
+            if (sscanf(value, "%ux%u", &width, &height) == 2) {
                 settings.maxVideoDecodeWidth = width;
                 settings.maxVideoDecodeHeight = height;
             }
-        } else if (strstr(argv[i], "--scrollbar-unvisible")) {
+        } else if (isFlag(arg, "--scrollbar-unvisible")) {
             settings.scrollbarVisible = false;
-        } else if (strstr(argv[i], "--use-external-popup")) {
+        } else if (isFlag(arg, "--use-external-popup")) {
             settings.useExternalPopup = true;
-        } else if (strstr(argv[i], "--use-spatial-navigation")) {
+        } else if (isFlag(arg, "--use-spatial-navigation")) {
             settings.useSpatialNavigation = true;
-        } else if (strcmp(argv[i], "--use-http2") == 0) {
+        } else if (isFlag(arg, "--use-http2")) {
             settings.useHTTP2 = true;
-        } else if (strstr(argv[i], "--tts-language=") == argv[i]) {
-            settings.language = argv[i] + strlen("--tts-language=");
-        } else if (strstr(argv[i], "--ignore-ssl-verify")) {
+        } else if (const char* value = valueOf(arg, "--tts-language=")) {
+            settings.language = value;
+        } else if (isFlag(arg, "--ignore-ssl-verify")) {
             env.starfishIgnoreSSLVerify = true;
-        } else if (strstr(argv[i], "--gl-compositor-scale=") == argv[i]) {
+        } else if (const char* value = valueOf(arg, "--gl-compositor-scale=")) {
             // this is secret feature for testing(working on gl + efl webview)
-            env.glCompositorScale = argv[i] + strlen("--gl-compositor-scale=");
-        } else if (strstr(argv[i], "--show-fps") == argv[i]) {
+            env.glCompositorScale = value;
+        } else if (isFlag(arg, "--show-fps")) {
             settings.showFps = true;
-        } else if (strcmp(argv[i], "--enable-video-overlay") == 0) {
+        } else if (isFlag(arg, "--enable-video-overlay")) {
             settings.videoOverlayEnabled = true;
-        } else if (strstr(argv[i], "--timeout=") == argv[i]) {
-            others.timeout = std::atoi(argv[i] + strlen("--timeout="));
-        } else if (strstr(argv[i], "--storage-dir=") == argv[i]) {
-            others.storageDir = argv[i] + strlen("--storage-dir=");
-        } else if (strcmp(argv[i], "--prefer-isolated-thread") == 0) {
+        } else if (const char* value = valueOf(arg, "--timeout=")) {
+            others.timeout = std::atoi(value);
+        } else if (const char* value = valueOf(arg, "--storage-dir=")) {
+            others.storageDir = value;
+        } else if (isFlag(arg, "--prefer-isolated-thread")) {
             others.preferIsolatedThread = false;
-        } else if (strcmp(argv[i], "--prefer-incremental-gc") == 0) {
+        } else if (isFlag(arg, "--prefer-incremental-gc")) {
             others.preferIncrementalGC = true;
-        } else if (strcmp(argv[i], "--headless") == 0) {
+        } else if (isFlag(arg, "--headless")) {
 #if defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11_WEBCONTAINER)
             // These shells need a display for their window and event loop
             // before the engine starts, so they cannot run headless.
