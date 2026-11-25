@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPFetchDomain__)
 #define __StarfishCDPFetchDomain__
 
+#include "../CDPDomain.h"
 #include <string>
 
 namespace Starfish {
@@ -34,13 +35,13 @@ class CDPCommand;
 // the parked load to the original URL; fulfillRequest resumes it to a data: URL
 // built from the supplied body; failRequest abandons it. Sub-resource requests
 // are not intercepted (no hook to pause them on).
-class FetchDomain {
+class FetchDomain : public CDPDomain {
 public:
     FetchDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
 
     // Emit Fetch.requestPaused for a top-level navigation. Returns the
     // interception requestId so the caller can park the navigation under it.
@@ -48,6 +49,12 @@ public:
                                      const std::string& url);
 
 private:
+    void handleEnable(CDPCommand& cmd, const std::string& method);
+    void handleDisable(CDPCommand& cmd, const std::string& method);
+    void handleContinueRequest(CDPCommand& cmd, const std::string& method);
+    void handleFulfillRequest(CDPCommand& cmd, const std::string& method);
+    void handleFailRequest(CDPCommand& cmd, const std::string& method);
+
     CDPDispatcher* m_dispatcher;
 };
 

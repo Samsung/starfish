@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPDOMStorageDomain__)
 #define __StarfishCDPDOMStorageDomain__
 
+#include "../CDPDomain.h"
 #include <string>
 
 namespace Starfish {
@@ -35,13 +36,13 @@ class StorageInternal;
 // window.localStorage / window.sessionStorage bindings use, so reads and writes
 // are shared with page script. enable/disable ack only. Handlers run on the
 // main thread.
-class DOMStorageDomain {
+class DOMStorageDomain : public CDPDomain {
 public:
     DOMStorageDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
 
 private:
     // Resolve the StorageInternal for the storageId in cmd's params, using the

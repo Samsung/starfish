@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPOverlayDomain__)
 #define __StarfishCDPOverlayDomain__
 
+#include "../CDPDomain.h"
 #include <string>
 
 namespace Starfish {
@@ -44,13 +45,13 @@ class CDPCommand;
 // dimensions) and returns it as the {highlight:{...}} object DevTools renders
 // for a node. This is pure computation (no drawing), so it works in headless.
 // Handlers run on the main thread.
-class OverlayDomain {
+class OverlayDomain : public CDPDomain {
 public:
     OverlayDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
 
 private:
     CDPDispatcher* m_dispatcher;

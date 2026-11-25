@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPEmulationDomain__)
 #define __StarfishCDPEmulationDomain__
 
+#include "../CDPDomain.h"
 #include <string>
 #include <cstdint>
 
@@ -40,7 +41,7 @@ class CDPCommand;
 // setCPUThrottlingRate are acked without effect (the engine fixes timezone /
 // locale at construction and has no throttling). Other Emulation.* methods are
 // acked as no-ops. Handlers run on the main thread.
-class EmulationDomain {
+class EmulationDomain : public CDPDomain {
 public:
     EmulationDomain(CDPDispatcher* d)
         : m_dispatcher(d)
@@ -50,9 +51,23 @@ public:
         , m_savedDpr(1)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
 
 private:
+    void handleSetDeviceMetricsOverride(CDPCommand& cmd,
+                                        const std::string& method);
+    void handleClearDeviceMetricsOverride(CDPCommand& cmd,
+                                          const std::string& method);
+    void handleSetUserAgentOverride(CDPCommand& cmd, const std::string& method);
+    void handleSetGeolocationOverride(CDPCommand& cmd,
+                                      const std::string& method);
+    void handleClearGeolocationOverride(CDPCommand& cmd,
+                                        const std::string& method);
+    void handleSetEmulatedMedia(CDPCommand& cmd, const std::string& method);
+    void handleSetScriptExecutionDisabled(CDPCommand& cmd,
+                                          const std::string& method);
+    void handleSetVisibleSize(CDPCommand& cmd, const std::string& method);
+
     CDPDispatcher* m_dispatcher;
     // Renderer physical size + DPR captured before the first metrics override,
     // used to restore on clearDeviceMetricsOverride.

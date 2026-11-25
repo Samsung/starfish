@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPDOMSnapshotDomain__)
 #define __StarfishCDPDOMSnapshotDomain__
 
+#include "../CDPDomain.h"
 #include <string>
 
 namespace Starfish {
@@ -34,13 +35,13 @@ class CDPCommand;
 // requested computedStyles (resolved via Element::getComputedStyle).
 // getSnapshot returns the legacy nested form built from the same walk. Handlers
 // run on the main thread. enable/disable ack only.
-class DOMSnapshotDomain {
+class DOMSnapshotDomain : public CDPDomain {
 public:
     DOMSnapshotDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
 
 private:
     CDPDispatcher* m_dispatcher;

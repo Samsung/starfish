@@ -1559,932 +1559,76 @@ void PageDomain::navigate(CDPCommand& cmd, const std::string& urlString,
     finishNavigation(sid);
 }
 
-void PageDomain::processMessage(CDPCommand& cmd, const std::string& method)
+void PageDomain::handleEnable(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    s->pageEnabled = true;
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handleDisable(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    s->pageEnabled = false;
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handleSetBypassCSP(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    // Process-wide CSP enforcement bypass. When enabled, all CSP allow*
+    // checks short-circuit to true (policies are still parsed, just not
+    // enforced), matching Chrome's Page.setBypassCSP.
+    bool enabled = cmd.params() && cmd.params()->HasMember("enabled") &&
+                   (*cmd.params())["enabled"].IsBool() &&
+                   (*cmd.params())["enabled"].GetBool();
+    ContentSecurityPolicy::setBypass(enabled);
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handleGetFrameTree(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
     WebView* wv = m_dispatcher->webView();
 
-    if (method == "enable") {
-        s->pageEnabled = true;
-        cmd.sendResultEmpty();
-        return;
-    }
-    if (method == "disable") {
-        s->pageEnabled = false;
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "setBypassCSP") {
-        // Process-wide CSP enforcement bypass. When enabled, all CSP allow*
-        // checks short-circuit to true (policies are still parsed, just not
-        // enforced), matching Chrome's Page.setBypassCSP.
-        bool enabled = cmd.params() && cmd.params()->HasMember("enabled") &&
-                       (*cmd.params())["enabled"].IsBool() &&
-                       (*cmd.params())["enabled"].GetBool();
-        ContentSecurityPolicy::setBypass(enabled);
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "getFrameTree") {
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        rapidjson::Value frameTree(rapidjson::kObjectType);
-
-        if (cmd.sessionId() == "STARTUP") {
-            // Graceful startup frame (Puppeteer probes before attach).
-            rapidjson::Value frame(rapidjson::kObjectType);
-            frame.AddMember("id", "TID-STARTUP", alloc);
-            frame.AddMember("loaderId", "LID-STARTUP", alloc);
-            frame.AddMember("securityOrigin", "chrome://newtab/", alloc);
-            frame.AddMember("url", "about:blank", alloc);
-            frame.AddMember("secureContextType", "Secure", alloc);
-            frameTree.AddMember("frame", frame, alloc);
-        } else {
-            rapidjson::Value frame(rapidjson::kObjectType);
-            buildFrame(s, wv, frame, alloc);
-            frameTree.AddMember("frame", frame, alloc);
-
-            // Include child iframe frames as a nested tree (direct children,
-            // grandchildren, ...). Ensure records exist so the ids match those
-            // used by the emitted frameAttached/executionContextCreated.
-            sweepDetachedFrames(cmd.sessionId());
-            ensureChildFrameRecords();
-            std::vector<DiscoveredFrame> frames;
-            collectChildContexts(wv, frames);
-
-            // Recursively assemble the childFrames array for the frame at
-            // `parentPath` (empty == main). Returns nullptr placeholder via the
-            // out-param pattern: builds into `dst`.
-            std::function<void(const std::vector<uint32_t>&, const std::string&,
-                               rapidjson::Value&)>
-                buildChildTree = [&](const std::vector<uint32_t>& parentPath,
-                                     const std::string& parentFrameId,
-                                     rapidjson::Value& dst) {
-                    rapidjson::Value childFrames(rapidjson::kArrayType);
-                    bool any = false;
-                    for (const DiscoveredFrame& df : frames) {
-                        if (df.parentPath != parentPath) {
-                            continue;
-                        }
-                        ChildFrame* cf = nullptr;
-                        for (ChildFrame& existing : s->childFrames) {
-                            if (existing.path == df.path) {
-                                cf = &existing;
-                                break;
-                            }
-                        }
-                        if (!cf) {
-                            continue;
-                        }
-                        any = true;
-                        std::string curl = contextUrl(df.bc);
-                        std::string corigin = contextOrigin(df.bc);
-                        rapidjson::Value childTree(rapidjson::kObjectType);
-                        rapidjson::Value cframe(rapidjson::kObjectType);
-                        cframe.AddMember("id",
-                                         rapidjson::Value(cf->frameId.c_str(),
-                                                          cf->frameId.size(),
-                                                          alloc),
-                                         alloc);
-                        cframe.AddMember("parentId",
-                                         rapidjson::Value(parentFrameId.c_str(),
-                                                          parentFrameId.size(),
-                                                          alloc),
-                                         alloc);
-                        cframe.AddMember("loaderId",
-                                         rapidjson::Value(s->loaderId.c_str(),
-                                                          s->loaderId.size(),
-                                                          alloc),
-                                         alloc);
-                        cframe.AddMember(
-                            "url",
-                            rapidjson::Value(curl.c_str(), curl.size(), alloc),
-                            alloc);
-                        cframe.AddMember("domainAndRegistry", "", alloc);
-                        cframe.AddMember("securityOrigin",
-                                         rapidjson::Value(corigin.c_str(),
-                                                          corigin.size(),
-                                                          alloc),
-                                         alloc);
-                        cframe.AddMember("mimeType", "text/html", alloc);
-                        cframe.AddMember("secureContextType", "InsecureScheme",
-                                         alloc);
-                        cframe.AddMember("crossOriginIsolatedContextType",
-                                         "NotIsolated", alloc);
-                        rapidjson::Value feats(rapidjson::kArrayType);
-                        cframe.AddMember("gatedAPIFeatures", feats, alloc);
-                        childTree.AddMember("frame", cframe, alloc);
-                        // Recurse: this frame's own childFrames.
-                        buildChildTree(df.path, cf->frameId, childTree);
-                        childFrames.PushBack(childTree, alloc);
-                    }
-                    if (any) {
-                        dst.AddMember("childFrames", childFrames, alloc);
-                    }
-                };
-            buildChildTree(std::vector<uint32_t>(), s->frameId, frameTree);
-        }
-        result.AddMember("frameTree", frameTree, alloc);
-        cmd.sendResult(result, doc);
-        return;
-    }
-
-    if (method == "setLifecycleEventsEnabled") {
-        bool enabled = false;
-        if (cmd.params() && cmd.params()->HasMember("enabled") &&
-            (*cmd.params())["enabled"].IsBool()) {
-            enabled = (*cmd.params())["enabled"].GetBool();
-        }
-        s->lifecycleEventsEnabled = enabled;
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "navigate") {
-        if (!cmd.params() || !cmd.params()->HasMember("url") ||
-            !(*cmd.params())["url"].IsString()) {
-            cmd.sendError(-32602, "'url' is required");
-            return;
-        }
-        const char* url = (*cmd.params())["url"].GetString();
-        navigate(cmd, url);
-        return;
-    }
-
-    if (method == "setDocumentContent") {
-        if (!cmd.params() || !cmd.params()->HasMember("html") ||
-            !(*cmd.params())["html"].IsString()) {
-            cmd.sendError(-32602, "'html' is required");
-            return;
-        }
-        // frameId is accepted but only the main frame is supported: the engine
-        // has no API to replace a child iframe's document out-of-band, so a
-        // non-main frameId is treated as the main frame (best effort).
-        std::string html = (*cmd.params())["html"].GetString();
-        const std::string& sid = cmd.sessionId();
-
-        setDocumentContentFromHtml(sid, html);
-
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "reload") {
-        const std::string& sid = cmd.sessionId();
-        WebView* wv = m_dispatcher->webView();
-
-        // Reload re-navigates the current document's URL. Clients wait for
-        // Page.loadEventFired after reload (Chromium's inspector-protocol
-        // tests do; puppeteer's page.reload() gates on the same lifecycle),
-        // so run the navigate path: beginNavigation, the real navigation
-        // with a history-replacing entry, then finishNavigation's lifecycle.
-        // Unlike Page.navigate, Fetch interception of the document request is
-        // not parked: a reload through an enabled Fetch domain still loads.
-        BrowsingContext* bc = wv->mainBrowsingContext();
-        if (bc && bc->document() && bc->document()->urlString()) {
-            String* url = bc->document()->urlString();
-            beginNavigation(sid, url->toUTF8NonGCString());
-            wv->navigate(new ResourceURL(url), HistoryManagerAction::Replace,
-                         new ReferrerURL(String::emptyString));
-            finishNavigation(sid);
-        }
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "bringToFront") {
-        // Single active page per WebView and no windowing/visibility control is
-        // exposed by the engine, so there is nothing to raise. Acknowledge so
-        // page.bringToFront() resolves.
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "getNavigationHistory") {
-        // Map the WebView's HistoryManager onto CDP's navigation history. The
-        // entry id is the absolute index (stable within a getNavigationHistory
-        // /navigateToHistoryEntry round-trip, which is all puppeteer needs for
-        // goBack/goForward).
-        HistoryManager* hm = wv->historyManager();
-
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("currentIndex", (int)hm->currentIndex(), alloc);
-        rapidjson::Value entries(rapidjson::kArrayType);
-        for (size_t i = 0; i < hm->entryCount(); i++) {
-            String* u = hm->entryURL(i);
-            std::string url = u ? u->toUTF8NonGCString() : std::string();
-            String* t = hm->entryTitle(i);
-            std::string title = t ? t->toUTF8NonGCString() : std::string();
-
-            rapidjson::Value entry(rapidjson::kObjectType);
-            entry.AddMember("id", (int)i, alloc);
-            entry.AddMember(
-                "url", rapidjson::Value(url.c_str(), url.size(), alloc), alloc);
-            entry.AddMember("userTypedURL",
-                            rapidjson::Value(url.c_str(), url.size(), alloc),
-                            alloc);
-            entry.AddMember(
-                "title", rapidjson::Value(title.c_str(), title.size(), alloc),
-                alloc);
-            entry.AddMember("transitionType", "typed", alloc);
-            entries.PushBack(entry, alloc);
-        }
-        result.AddMember("entries", entries, alloc);
-        cmd.sendResult(result, doc);
-        return;
-    }
-
-    if (method == "navigateToHistoryEntry") {
-        if (!cmd.params() || !cmd.params()->HasMember("entryId") ||
-            !(*cmd.params())["entryId"].IsInt()) {
-            cmd.sendError(-32602, "'entryId' is required");
-            return;
-        }
-        int entryId = (*cmd.params())["entryId"].GetInt();
-        HistoryManager* hm = wv->historyManager();
-        if (entryId < 0 || (size_t)entryId >= hm->entryCount()) {
-            cmd.sendError(-32602, "Invalid 'entryId'");
-            return;
-        }
-
-        const std::string& sid = cmd.sessionId();
-        String* u = hm->entryURL((size_t)entryId);
-        std::string url = u ? u->toUTF8NonGCString() : std::string();
-
-        beginNavigation(sid, url);
-
-        // Reuse HistoryManager navigation (navigateAsync -> navigate). This is
-        // a real cross-document load to the target entry, going through the
-        // same BrowsingContext rebuild that loadHTMLDocument triggers.
-        hm->goToIndex((size_t)entryId);
-
-        cmd.sendResultEmpty();
-
-        // Synthesize the same lifecycle/context events as navigate so that
-        // page.evaluate() / page.$ after goBack/goForward run against the new
-        // document's freshly-announced contexts (incl. isolated worlds).
-        finishNavigation(sid);
-        return;
-    }
-
-    if (method == "resetNavigationHistory") {
-        wv->historyManager()->clear();
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "getLayoutMetrics") {
-        // Viewport size from the real Window (window.innerWidth/innerHeight),
-        // falling back to the screen rect when there is no laid-out document.
-        BrowsingContext* lbc = wv->mainBrowsingContext();
-        Window* win = lbc ? lbc->window() : nullptr;
-        int w = win ? (int)win->innerWidth() : 0;
-        int h = win ? (int)win->innerHeight() : 0;
-        if (w <= 0) {
-            w = wv->screenInfo().rect.size().width();
-        }
-        if (h <= 0) {
-            h = wv->screenInfo().rect.size().height();
-        }
-
-        // Content size from the root element's laid-out scroll extent
-        // (documentElement.scrollWidth/scrollHeight), at least the viewport.
-        int cw = w;
-        int ch = h;
-        if (lbc && lbc->document() && lbc->document()->documentElement()) {
-            int sw = (int)lbc->document()->documentElement()->scrollWidth();
-            int sh = (int)lbc->document()->documentElement()->scrollHeight();
-            if (sw > cw) {
-                cw = sw;
-            }
-            if (sh > ch) {
-                ch = sh;
-            }
-        }
-
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-
-        rapidjson::Value layoutViewport(rapidjson::kObjectType);
-        layoutViewport.AddMember("pageX", 0, alloc);
-        layoutViewport.AddMember("pageY", 0, alloc);
-        layoutViewport.AddMember("clientWidth", w, alloc);
-        layoutViewport.AddMember("clientHeight", h, alloc);
-        result.AddMember("layoutViewport", layoutViewport, alloc);
-
-        rapidjson::Value visualViewport(rapidjson::kObjectType);
-        visualViewport.AddMember("offsetX", 0, alloc);
-        visualViewport.AddMember("offsetY", 0, alloc);
-        visualViewport.AddMember("pageX", 0, alloc);
-        visualViewport.AddMember("pageY", 0, alloc);
-        visualViewport.AddMember("clientWidth", w, alloc);
-        visualViewport.AddMember("clientHeight", h, alloc);
-        visualViewport.AddMember("scale", 1, alloc);
-        result.AddMember("visualViewport", visualViewport, alloc);
-
-        rapidjson::Value contentSize(rapidjson::kObjectType);
-        contentSize.AddMember("x", 0, alloc);
-        contentSize.AddMember("y", 0, alloc);
-        contentSize.AddMember("width", cw, alloc);
-        contentSize.AddMember("height", ch, alloc);
-        result.AddMember("contentSize", contentSize, alloc);
-
-        rapidjson::Value cssLayoutViewport(rapidjson::kObjectType);
-        cssLayoutViewport.AddMember("pageX", 0, alloc);
-        cssLayoutViewport.AddMember("pageY", 0, alloc);
-        cssLayoutViewport.AddMember("clientWidth", w, alloc);
-        cssLayoutViewport.AddMember("clientHeight", h, alloc);
-        result.AddMember("cssLayoutViewport", cssLayoutViewport, alloc);
-
-        rapidjson::Value cssVisualViewport(rapidjson::kObjectType);
-        cssVisualViewport.AddMember("offsetX", 0, alloc);
-        cssVisualViewport.AddMember("offsetY", 0, alloc);
-        cssVisualViewport.AddMember("pageX", 0, alloc);
-        cssVisualViewport.AddMember("pageY", 0, alloc);
-        cssVisualViewport.AddMember("clientWidth", w, alloc);
-        cssVisualViewport.AddMember("clientHeight", h, alloc);
-        cssVisualViewport.AddMember("scale", 1, alloc);
-        result.AddMember("cssVisualViewport", cssVisualViewport, alloc);
-
-        rapidjson::Value cssContentSize(rapidjson::kObjectType);
-        cssContentSize.AddMember("x", 0, alloc);
-        cssContentSize.AddMember("y", 0, alloc);
-        cssContentSize.AddMember("width", cw, alloc);
-        cssContentSize.AddMember("height", ch, alloc);
-        result.AddMember("cssContentSize", cssContentSize, alloc);
-
-        cmd.sendResult(result, doc);
-        return;
-    }
-
-    if (method == "addScriptToEvaluateOnNewDocument") {
-        std::string source;
-        if (cmd.params() && cmd.params()->HasMember("source") &&
-            (*cmd.params())["source"].IsString()) {
-            source = (*cmd.params())["source"].GetString();
-        }
-        std::string identifier =
-            "SCRIPT-" + std::to_string(++s->evaluateOnNewDocumentCounter);
-        s->evaluateOnNewDocumentScripts.push_back({ identifier, source });
-
-        // A worldName here registers a named isolated world that the browser
-        // auto-creates for each new document (puppeteer's utility world).
-        // Record it so child frames get an isolated-world context bound to
-        // them.
-        if (cmd.params() && cmd.params()->HasMember("worldName") &&
-            (*cmd.params())["worldName"].IsString()) {
-            std::string wn = (*cmd.params())["worldName"].GetString();
-            if (!wn.empty()) {
-                bool known = false;
-                for (const std::string& n : s->newDocumentWorldNames) {
-                    if (n == wn) {
-                        known = true;
-                        break;
-                    }
-                }
-                if (!known) {
-                    s->newDocumentWorldNames.push_back(wn);
-                }
-            }
-        }
-
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "identifier",
-            rapidjson::Value(identifier.c_str(), identifier.size(), alloc),
-            alloc);
-        cmd.sendResult(result, doc);
-        return;
-    }
-
-    if (method == "removeScriptToEvaluateOnNewDocument") {
-        if (cmd.params() && cmd.params()->HasMember("identifier") &&
-            (*cmd.params())["identifier"].IsString()) {
-            std::string id = (*cmd.params())["identifier"].GetString();
-            auto& v = s->evaluateOnNewDocumentScripts;
-            for (auto it = v.begin(); it != v.end(); ++it) {
-                if (it->identifier == id) {
-                    v.erase(it);
-                    break;
-                }
-            }
-        }
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "captureScreenshot") {
-        // format: png (default) | jpeg. quality: jpeg only. clip: optional
-        // {x,y,width,height,scale}. Returns { data: <base64> }.
-        std::string format = "png";
-        if (cmd.params() && cmd.params()->HasMember("format") &&
-            (*cmd.params())["format"].IsString()) {
-            format = (*cmd.params())["format"].GetString();
-        }
-
-        // Viewport in device pixels.
-        float dpr = wv->screenInfo().devicePixelRatio;
-        if (dpr <= 0) {
-            dpr = 1;
-        }
-        int viewW = wv->screenInfo().rect.size().width();
-        int viewH = wv->screenInfo().rect.size().height();
-
-        // Capture region (CSS px). Default: whole viewport.
-        double clipX = 0, clipY = 0, clipW = viewW, clipH = viewH,
-               clipScale = 1;
-        if (cmd.params() && cmd.params()->HasMember("clip") &&
-            (*cmd.params())["clip"].IsObject()) {
-            const rapidjson::Value& clip = (*cmd.params())["clip"];
-            if (clip.HasMember("x") && clip["x"].IsNumber())
-                clipX = clip["x"].GetDouble();
-            if (clip.HasMember("y") && clip["y"].IsNumber())
-                clipY = clip["y"].GetDouble();
-            if (clip.HasMember("width") && clip["width"].IsNumber())
-                clipW = clip["width"].GetDouble();
-            if (clip.HasMember("height") && clip["height"].IsNumber())
-                clipH = clip["height"].GetDouble();
-            if (clip.HasMember("scale") && clip["scale"].IsNumber())
-                clipScale = clip["scale"].GetDouble();
-        }
-        if (clipScale <= 0) {
-            clipScale = 1;
-        }
-
-        // Ensure layout is current so reported dimensions match the document.
-        wv->layoutIfNeeded(false);
-
-        // Output buffer dimensions in physical pixels.
-        size_t outW = (size_t)(clipW * dpr * clipScale);
-        size_t outH = (size_t)(clipH * dpr * clipScale);
-        if (outW == 0) {
-            outW = 1;
-        }
-        if (outH == 0) {
-            outH = 1;
-        }
-
-        // Try to read back real pixels from the active renderer. The GL
-        // backend implements captureScreenshotRGBA via glReadPixels; the Mock
-        // (glib_headless) backend does not rasterize and returns false.
-        std::vector<uint8_t> rgba;
-        bool gotRealPixels = false;
-        Renderer* renderer = wv->renderer();
-        if (renderer) {
-            // captureScreenshotRGBA paints + composites the current document
-            // into the framebuffer and reads it back (GL backend).
-            uint32_t capW = 0, capH = 0;
-            std::vector<uint8_t> fb;
-            if (renderer->captureScreenshotRGBA(fb, capW, capH)) {
-                // Report the renderer's full framebuffer dimensions; clip is
-                // not applied to the raw readback in this MVP.
-                outW = capW;
-                outH = capH;
-                rgba.swap(fb);
-                gotRealPixels = true;
-            }
-        }
-
-        if (!gotRealPixels) {
-            // Mock/headless backend: no real pixel buffer to read back, so the
-            // captured surface is transparent. We still produce a valid,
-            // correctly sized image so the CDP/puppeteer contract holds.
-            rgba.assign((size_t)outW * outH * 4, 0);
-        }
-
-        // libjpeg is not linked in the glib_headless backend, so jpeg requests
-        // fall back to PNG (the buffer is encoded the same way either way).
-        (void)format;
-        std::vector<uint8_t> encoded = ImageEncoder::encodePNG(
-            rgba.data(), outW, outH, ImageEncoder::ImageColorSpace::RGBA);
-
-        std::string b64 = cdpBase64Encode(encoded.data(), encoded.size());
-
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "data", rapidjson::Value(b64.c_str(), b64.size(), alloc), alloc);
-        cmd.sendResult(result, doc);
-        return;
-    }
-
-    if (method == "startScreencast") {
-        // Periodically capture the viewport and emit Page.screencastFrame.
-        // format (png|jpeg), quality (jpeg), maxWidth/maxHeight, everyNthFrame
-        // are accepted; only format/quality/everyNthFrame are stored. jpeg
-        // falls back to PNG where libjpeg is absent (same as
-        // captureScreenshot), and maxWidth/maxHeight are not applied to the raw
-        // framebuffer readback in this MVP.
-        if (cmd.params() && cmd.params()->HasMember("format") &&
-            (*cmd.params())["format"].IsString()) {
-            s->screencastFormat = (*cmd.params())["format"].GetString();
-        }
-        if (cmd.params() && cmd.params()->HasMember("quality") &&
-            (*cmd.params())["quality"].IsInt()) {
-            s->screencastQuality = (*cmd.params())["quality"].GetInt();
-        }
-        if (cmd.params() && cmd.params()->HasMember("everyNthFrame") &&
-            (*cmd.params())["everyNthFrame"].IsInt()) {
-            int n = (*cmd.params())["everyNthFrame"].GetInt();
-            s->screencastEveryNthFrame = n > 0 ? n : 1;
-        }
-
-        // Re-arm cleanly if already running.
-        stopScreencast(s, wv);
-
-        GlobalScope* gs = wv->mainBrowsingContext()
-                              ? wv->mainBrowsingContext()->window()
-                              : nullptr;
-        if (!wv->timer() || !gs) {
-            // No message loop to drive captures; acknowledge so the client's
-            // page.startScreencast() still resolves (no frames will arrive).
-            cmd.sendResultEmpty();
-            return;
-        }
-
-        s->screencastActive = true;
-        s->screencastAcked = true; // first frame emits immediately
-
-        // ~10 fps. The timer fires repetitively; backpressure in the handler
-        // gates emission on the previous frame's ack.
-        ScreencastTimerData* td = new ScreencastTimerData();
-        td->dispatcher = m_dispatcher;
-        td->sessionId = s->sessionId;
-        s->screencastTimerId = wv->timer()->addTimer(
-            100, gs, &PageDomain::onScreencastTimer, td, /*repetitive=*/true);
-
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "stopScreencast") {
-        stopScreencast(s, wv);
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "screencastFrameAck") {
-        // The client confirmed receipt of a frame; release backpressure so the
-        // next timer tick emits the following frame. sessionId is the frame
-        // number we sent; we accept it without strict matching (any ack
-        // advances), which is sufficient for the single-in-flight model here.
-        s->screencastAcked = true;
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "printToPDF") {
-        // Honor the paper/layout options (paperWidth/Height, landscape, scale,
-        // margins, pageRanges) by sizing the PDF pages and placing/scaling the
-        // captured viewport bitmap inside each page's printable area, slicing
-        // across multiple pages when the content overflows one page.
-        // transferMode "ReturnAsStream" is supported below (data otherwise).
-        PrintToPdfOptions opt = parsePrintToPdfOptions(cmd.params());
-
-        // Full document content height (CSS px) drives pagination in both the
-        // raster and fallback paths (this also forces a layout).
-        double contentHCssPx = mainContentHeightCssPx(wv);
-
-        std::vector<uint8_t> pdf;
-
-#if defined(PORT_CANVAS_BACKEND_CAIRO)
-        // Read back real pixels from the renderer (GL backend), then embed the
-        // bitmap into a cairo PDF surface -- the same readback the screenshot
-        // path uses, so content matches captureScreenshot.
-        wv->layoutIfNeeded(false);
-        Renderer* renderer = wv->renderer();
-        if (renderer) {
-            uint32_t capW = 0, capH = 0;
-            std::vector<uint8_t> fb;
-            if (renderer->captureScreenshotRGBA(fb, capW, capH)) {
-                float dpr = wv->screenInfo().devicePixelRatio;
-                pdf = buildRasterPdf(fb, capW, capH, dpr, contentHCssPx, opt);
-            }
-        }
-#endif
-
-        if (pdf.empty()) {
-            // Mock/headless backend (no cairo, no real pixels), or any failure
-            // above: emit structurally valid blank page(s) at the requested
-            // paper size. Page count is derived from the document content
-            // height (CSS px == pt at scale 1) vs one printable area so that
-            // page-count verification reflects the pagination contract even
-            // headless.
-            double docHPts = contentHCssPx * opt.scale;
-            int totalPages = 1;
-            if (docHPts >= 1) {
-                totalPages = (int)std::ceil(docHPts / opt.printableHeightPts());
-                if (totalPages < 1) {
-                    totalPages = 1;
-                }
-            }
-            // Honor pageRanges: count only selected pages (matches the cairo
-            // path's per-slice selection).
-            int pageCount = 0;
-            for (int p = 1; p <= totalPages; p++) {
-                if (pageInRanges(opt.pageRanges, p, totalPages)) {
-                    pageCount++;
-                }
-            }
-            if (pageCount < 1) {
-                pageCount = 1; // always emit at least one valid page
-            }
-            pdf = buildFallbackPdf(opt.pageWidthPts(), opt.pageHeightPts(),
-                                   pageCount);
-        }
-
-        // transferMode "ReturnAsStream" (puppeteer's page.pdf() default):
-        // return a stream handle; the client drains it via IO.read/IO.close.
-        // Otherwise (default "ReturnAsBase64") return the data inline.
-        std::string transferMode = "ReturnAsBase64";
-        if (cmd.params() && cmd.params()->HasMember("transferMode") &&
-            (*cmd.params())["transferMode"].IsString()) {
-            transferMode = (*cmd.params())["transferMode"].GetString();
-        }
-
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-
-        if (transferMode == "ReturnAsStream") {
-            std::string handle =
-                std::to_string(++s->ioStreamCounter); // IO handles are strings
-            IOStream stream;
-            stream.data = std::move(pdf);
-            s->ioStreams[handle] = std::move(stream);
-            result.AddMember(
-                "stream",
-                rapidjson::Value(handle.c_str(), handle.size(), alloc), alloc);
-            // CDP also includes an empty data field in stream mode.
-            result.AddMember("data", "", alloc);
-        } else {
-            std::string b64 = cdpBase64Encode(pdf.data(), pdf.size());
-            result.AddMember("data",
-                             rapidjson::Value(b64.c_str(), b64.size(), alloc),
-                             alloc);
-        }
-        cmd.sendResult(result, doc);
-        return;
-    }
-
-    if (method == "createIsolatedWorld") {
-        // Allocate a distinct execution context id for the world and announce
-        // it via Runtime.executionContextCreated so puppeteer's IsolatedWorld
-        // resolves its context. Evaluations against this id route to the same
-        // underlying Escargot context (no real isolation).
-        uint32_t ctxId = s->nextIsolatedContextId++;
-        std::string worldName;
-        if (cmd.params() && cmd.params()->HasMember("worldName") &&
-            (*cmd.params())["worldName"].IsString()) {
-            worldName = (*cmd.params())["worldName"].GetString();
-        }
-        std::string uniqueId = "world-" + std::to_string(ctxId);
-
-        // The world is created for a specific frame (puppeteer passes frameId).
-        // If that frameId is a child iframe, bind the world to that frame so
-        // its executionContextCreated carries the child frameId and evaluations
-        // on this contextId route to the child's BrowsingContext.
-        std::string frameId = s->frameId;
-        bool isChild = false;
-        std::vector<uint32_t> childPath;
-        if (cmd.params() && cmd.params()->HasMember("frameId") &&
-            (*cmd.params())["frameId"].IsString()) {
-            std::string reqFrame = (*cmd.params())["frameId"].GetString();
-            ensureChildFrameRecords();
-            for (const ChildFrame& cf : s->childFrames) {
-                if (cf.frameId == reqFrame) {
-                    frameId = reqFrame;
-                    isChild = true;
-                    childPath = cf.path;
-                    break;
-                }
-            }
-        }
-
-        // Record the world so it can be re-announced after each navigation
-        // (puppeteer creates the utility world once and never re-calls
-        // createIsolatedWorld; it expects the browser to re-emit the context).
-        IsolatedWorld world;
-        world.contextId = ctxId;
-        world.worldName = worldName;
-        world.uniqueId = uniqueId;
-        world.frameId = frameId;
-        world.isChild = isChild;
-        world.childPath = childPath;
-        s->isolatedWorlds.push_back(world);
-
-        emitIsolatedWorldCreated(cmd.sessionId(), ctxId, worldName, uniqueId,
-                                 frameId);
-
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("executionContextId", (int)ctxId, alloc);
-        cmd.sendResult(result, doc);
-        return;
-    }
-
-    if (method == "handleJavaScriptDialog") {
-        // Single-thread MVP: alert/confirm/prompt do not block the engine; by
-        // the time the client responds, the page has already resumed with the
-        // default value (confirm=false, prompt=null). So this is an
-        // acknowledgement only — accept/promptText cannot retroactively change
-        // the value the page already received. We still emit
-        // Page.javascriptDialogClosed so clients (puppeteer Dialog) settle.
-        bool accept = false;
-        if (cmd.params() && cmd.params()->HasMember("accept") &&
-            (*cmd.params())["accept"].IsBool()) {
-            accept = (*cmd.params())["accept"].GetBool();
-        }
-        std::string userInput;
-        if (cmd.params() && cmd.params()->HasMember("promptText") &&
-            (*cmd.params())["promptText"].IsString()) {
-            userInput = (*cmd.params())["promptText"].GetString();
-        }
-        cmd.sendResultEmpty();
-
-        if (s->pageEnabled) {
-            rapidjson::Document doc;
-            rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-            rapidjson::Value params(rapidjson::kObjectType);
-            params.AddMember("result", accept, alloc);
-            params.AddMember(
-                "userInput",
-                rapidjson::Value(userInput.c_str(), userInput.size(), alloc),
-                alloc);
-            CDPCommand evt(m_dispatcher, Optional<int64_t>(), cmd.sessionId(),
-                           nullptr);
-            evt.sendEvent("Page.javascriptDialogClosed", params, doc);
-        }
-        return;
-    }
-
-    if (method == "captureSnapshot") {
-        // format: "mhtml" (only supported). Serializes the current main
-        // document into a minimal MHTML (RFC 2557 multipart/related): a header
-        // part plus the main HTML document, followed by one part per captured
-        // subresource (text bodies inline, binary bodies base64). Returns {
-        // data }.
-        std::string format = "mhtml";
-        if (cmd.params() && cmd.params()->HasMember("format") &&
-            (*cmd.params())["format"].IsString()) {
-            format = (*cmd.params())["format"].GetString();
-        }
-        if (format != "mhtml") {
-            cmd.sendError(-32602, "Unsupported snapshot format");
-            return;
-        }
-
-        wv->layoutIfNeeded(false);
-        std::string mainUrl = currentUrl(wv);
-        std::string html = mainDocumentHTML(wv);
-
-        const std::string boundary = "----MultipartBoundary--starfish----";
-        std::string mhtml;
-        mhtml += "From: <Saved by Starfish>\r\n";
-        mhtml += "Subject: \r\n";
-        mhtml += "Date: \r\n";
-        mhtml += "MIME-Version: 1.0\r\n";
-        mhtml += "Content-Type: multipart/related;\r\n";
-        mhtml += "\ttype=\"text/html\";\r\n";
-        mhtml += "\tboundary=\"" + boundary + "\"\r\n";
-        mhtml += "\r\n";
-
-        // Main document part.
-        mhtml += "--" + boundary + "\r\n";
-        mhtml += "Content-Type: text/html\r\n";
-        mhtml += "Content-Transfer-Encoding: quoted-printable\r\n";
-        mhtml += "Content-Location: " + mainUrl + "\r\n";
-        mhtml += "\r\n";
-        // Emit the HTML verbatim (not strictly QP-encoded). Newlines normalized
-        // to CRLF so the part body is well-formed for line-based MHTML readers.
-        for (size_t i = 0; i < html.size(); i++) {
-            char c = html[i];
-            if (c == '\n') {
-                mhtml += "\r\n";
-            } else if (c == '\r') {
-                // skip; a following '\n' (or standalone) emits CRLF
-                if (i + 1 >= html.size() || html[i + 1] != '\n') {
-                    mhtml += "\r\n";
-                }
-            } else {
-                mhtml += c;
-            }
-        }
-        mhtml += "\r\n";
-
-        // Subresource parts: each recorded resource that has a captured body.
-        for (const ResourceRecord& r : s->resources) {
-            if (r.type == "Document") {
-                continue; // the main document is already the first part
-            }
-            auto bit = s->networkBodies.find(r.requestId);
-            if (bit == s->networkBodies.end() || bit->second.empty()) {
-                continue;
-            }
-            const std::string& raw = bit->second;
-            bool b64 = false;
-            auto fit = s->networkBodyBase64.find(r.requestId);
-            if (fit != s->networkBodyBase64.end()) {
-                b64 = fit->second;
-            }
-            mhtml += "--" + boundary + "\r\n";
-            mhtml += "Content-Type: " + r.mimeType + "\r\n";
-            if (b64) {
-                mhtml += "Content-Transfer-Encoding: base64\r\n";
-            } else {
-                mhtml += "Content-Transfer-Encoding: quoted-printable\r\n";
-            }
-            mhtml += "Content-Location: " + r.url + "\r\n";
-            mhtml += "\r\n";
-            if (b64) {
-                mhtml += cdpBase64Encode(
-                    reinterpret_cast<const uint8_t*>(raw.data()), raw.size());
-                mhtml += "\r\n";
-            } else {
-                for (size_t i = 0; i < raw.size(); i++) {
-                    char c = raw[i];
-                    if (c == '\n') {
-                        mhtml += "\r\n";
-                    } else if (c == '\r') {
-                        if (i + 1 >= raw.size() || raw[i + 1] != '\n') {
-                            mhtml += "\r\n";
-                        }
-                    } else {
-                        mhtml += c;
-                    }
-                }
-                mhtml += "\r\n";
-            }
-        }
-
-        // Closing boundary.
-        mhtml += "--" + boundary + "--\r\n";
-
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("data",
-                         rapidjson::Value(mhtml.c_str(), mhtml.size(), alloc),
-                         alloc);
-        cmd.sendResult(result, doc);
-        return;
-    }
-
-    if (method == "getResourceTree") {
-        // frameTree: { frame, resources[], childFrames? }. The main frame
-        // reuses buildFrame; resources are the wire records seen by the network
-        // hook (subresources + the document). Child frames are listed without
-        // their own resource lists (single-frame resource tracking MVP).
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        rapidjson::Value frameTree(rapidjson::kObjectType);
-
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    rapidjson::Value frameTree(rapidjson::kObjectType);
+
+    if (cmd.sessionId() == "STARTUP") {
+        // Graceful startup frame (Puppeteer probes before attach).
+        rapidjson::Value frame(rapidjson::kObjectType);
+        frame.AddMember("id", "TID-STARTUP", alloc);
+        frame.AddMember("loaderId", "LID-STARTUP", alloc);
+        frame.AddMember("securityOrigin", "chrome://newtab/", alloc);
+        frame.AddMember("url", "about:blank", alloc);
+        frame.AddMember("secureContextType", "Secure", alloc);
+        frameTree.AddMember("frame", frame, alloc);
+    } else {
         rapidjson::Value frame(rapidjson::kObjectType);
         buildFrame(s, wv, frame, alloc);
         frameTree.AddMember("frame", frame, alloc);
 
-        rapidjson::Value resources(rapidjson::kArrayType);
-        for (const ResourceRecord& r : s->resources) {
-            if (r.type == "Document") {
-                continue; // the document is the frame itself, not a subresource
-            }
-            rapidjson::Value res(rapidjson::kObjectType);
-            res.AddMember("url",
-                          rapidjson::Value(r.url.c_str(), r.url.size(), alloc),
-                          alloc);
-            res.AddMember(
-                "type", rapidjson::Value(r.type.c_str(), r.type.size(), alloc),
-                alloc);
-            res.AddMember(
-                "mimeType",
-                rapidjson::Value(r.mimeType.c_str(), r.mimeType.size(), alloc),
-                alloc);
-            resources.PushBack(res, alloc);
-        }
-        frameTree.AddMember("resources", resources, alloc);
-
-        // Child iframe frames as a nested tree (no per-child resource list in
-        // this MVP). Mirrors getFrameTree's nesting.
+        // Include child iframe frames as a nested tree (direct children,
+        // grandchildren, ...). Ensure records exist so the ids match those
+        // used by the emitted frameAttached/executionContextCreated.
+        sweepDetachedFrames(cmd.sessionId());
         ensureChildFrameRecords();
         std::vector<DiscoveredFrame> frames;
         collectChildContexts(wv, frames);
 
+        // Recursively assemble the childFrames array for the frame at
+        // `parentPath` (empty == main). Returns nullptr placeholder via the
+        // out-param pattern: builds into `dst`.
         std::function<void(const std::vector<uint32_t>&, const std::string&,
                            rapidjson::Value&)>
-            buildResTree = [&](const std::vector<uint32_t>& parentPath,
-                               const std::string& parentFrameId,
-                               rapidjson::Value& dst) {
+            buildChildTree = [&](const std::vector<uint32_t>& parentPath,
+                                 const std::string& parentFrameId,
+                                 rapidjson::Value& dst) {
                 rapidjson::Value childFrames(rapidjson::kArrayType);
                 bool any = false;
                 for (const DiscoveredFrame& df : frames) {
@@ -2538,180 +1682,1135 @@ void PageDomain::processMessage(CDPCommand& cmd, const std::string& method)
                     rapidjson::Value feats(rapidjson::kArrayType);
                     cframe.AddMember("gatedAPIFeatures", feats, alloc);
                     childTree.AddMember("frame", cframe, alloc);
-                    rapidjson::Value cres(rapidjson::kArrayType);
-                    childTree.AddMember("resources", cres, alloc);
-                    buildResTree(df.path, cf->frameId, childTree);
+                    // Recurse: this frame's own childFrames.
+                    buildChildTree(df.path, cf->frameId, childTree);
                     childFrames.PushBack(childTree, alloc);
                 }
                 if (any) {
                     dst.AddMember("childFrames", childFrames, alloc);
                 }
             };
-        buildResTree(std::vector<uint32_t>(), s->frameId, frameTree);
+        buildChildTree(std::vector<uint32_t>(), s->frameId, frameTree);
+    }
+    result.AddMember("frameTree", frameTree, alloc);
+    cmd.sendResult(result, doc);
+}
 
-        result.AddMember("frameTree", frameTree, alloc);
-        cmd.sendResult(result, doc);
+void PageDomain::handleSetLifecycleEventsEnabled(CDPCommand& cmd,
+                                                 const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    bool enabled = false;
+    if (cmd.params() && cmd.params()->HasMember("enabled") &&
+        (*cmd.params())["enabled"].IsBool()) {
+        enabled = (*cmd.params())["enabled"].GetBool();
+    }
+    s->lifecycleEventsEnabled = enabled;
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handleNavigate(CDPCommand& cmd, const std::string&)
+{
+    if (!cmd.params() || !cmd.params()->HasMember("url") ||
+        !(*cmd.params())["url"].IsString()) {
+        cmd.sendError(-32602, "'url' is required");
+        return;
+    }
+    const char* url = (*cmd.params())["url"].GetString();
+    navigate(cmd, url);
+}
+
+void PageDomain::handleSetDocumentContent(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    if (!cmd.params() || !cmd.params()->HasMember("html") ||
+        !(*cmd.params())["html"].IsString()) {
+        cmd.sendError(-32602, "'html' is required");
+        return;
+    }
+    // frameId is accepted but only the main frame is supported: the engine
+    // has no API to replace a child iframe's document out-of-band, so a
+    // non-main frameId is treated as the main frame (best effort).
+    std::string html = (*cmd.params())["html"].GetString();
+    const std::string& sid = cmd.sessionId();
+
+    setDocumentContentFromHtml(sid, html);
+
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handleReload(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    const std::string& sid = cmd.sessionId();
+    WebView* wv = m_dispatcher->webView();
+
+    // Reload re-navigates the current document's URL. Clients wait for
+    // Page.loadEventFired after reload (Chromium's inspector-protocol
+    // tests do; puppeteer's page.reload() gates on the same lifecycle),
+    // so run the navigate path: beginNavigation, the real navigation
+    // with a history-replacing entry, then finishNavigation's lifecycle.
+    // Unlike Page.navigate, Fetch interception of the document request is
+    // not parked: a reload through an enabled Fetch domain still loads.
+    BrowsingContext* bc = wv->mainBrowsingContext();
+    if (bc && bc->document() && bc->document()->urlString()) {
+        String* url = bc->document()->urlString();
+        beginNavigation(sid, url->toUTF8NonGCString());
+        wv->navigate(new ResourceURL(url), HistoryManagerAction::Replace,
+                     new ReferrerURL(String::emptyString));
+        finishNavigation(sid);
+    }
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handleBringToFront(CDPCommand& cmd, const std::string&)
+{
+    // Single active page per WebView and no windowing/visibility control is
+    // exposed by the engine, so there is nothing to raise. Acknowledge so
+    // page.bringToFront() resolves.
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handleGetNavigationHistory(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+    WebView* wv = m_dispatcher->webView();
+
+    // Map the WebView's HistoryManager onto CDP's navigation history. The
+    // entry id is the absolute index (stable within a getNavigationHistory
+    // /navigateToHistoryEntry round-trip, which is all puppeteer needs for
+    // goBack/goForward).
+    HistoryManager* hm = wv->historyManager();
+
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("currentIndex", (int)hm->currentIndex(), alloc);
+    rapidjson::Value entries(rapidjson::kArrayType);
+    for (size_t i = 0; i < hm->entryCount(); i++) {
+        String* u = hm->entryURL(i);
+        std::string url = u ? u->toUTF8NonGCString() : std::string();
+        String* t = hm->entryTitle(i);
+        std::string title = t ? t->toUTF8NonGCString() : std::string();
+
+        rapidjson::Value entry(rapidjson::kObjectType);
+        entry.AddMember("id", (int)i, alloc);
+        entry.AddMember("url", rapidjson::Value(url.c_str(), url.size(), alloc),
+                        alloc);
+        entry.AddMember("userTypedURL",
+                        rapidjson::Value(url.c_str(), url.size(), alloc),
+                        alloc);
+        entry.AddMember("title",
+                        rapidjson::Value(title.c_str(), title.size(), alloc),
+                        alloc);
+        entry.AddMember("transitionType", "typed", alloc);
+        entries.PushBack(entry, alloc);
+    }
+    result.AddMember("entries", entries, alloc);
+    cmd.sendResult(result, doc);
+}
+
+void PageDomain::handleNavigateToHistoryEntry(CDPCommand& cmd,
+                                              const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+    WebView* wv = m_dispatcher->webView();
+
+    if (!cmd.params() || !cmd.params()->HasMember("entryId") ||
+        !(*cmd.params())["entryId"].IsInt()) {
+        cmd.sendError(-32602, "'entryId' is required");
+        return;
+    }
+    int entryId = (*cmd.params())["entryId"].GetInt();
+    HistoryManager* hm = wv->historyManager();
+    if (entryId < 0 || (size_t)entryId >= hm->entryCount()) {
+        cmd.sendError(-32602, "Invalid 'entryId'");
         return;
     }
 
-    if (method == "getResourceContent") {
-        // { frameId, url } -> { content, base64Encoded }. The main document URL
-        // returns the live serialized HTML; any other URL returns its captured
-        // network body (base64 for binary). frameId is accepted but only the
-        // main frame's resources are tracked.
-        std::string url;
-        if (cmd.params() && cmd.params()->HasMember("url") &&
-            (*cmd.params())["url"].IsString()) {
-            url = (*cmd.params())["url"].GetString();
-        }
-        if (url.empty()) {
-            cmd.sendError(-32602, "'url' is required");
-            return;
-        }
+    const std::string& sid = cmd.sessionId();
+    String* u = hm->entryURL((size_t)entryId);
+    std::string url = u ? u->toUTF8NonGCString() : std::string();
 
-        std::string content;
-        bool base64Encoded = false;
-        bool found = false;
+    beginNavigation(sid, url);
 
-        // Main document: serialize live (matches the captureSnapshot main
-        // part).
-        if (url == currentUrl(wv)) {
-            content = mainDocumentHTML(wv);
-            found = !content.empty();
+    // Reuse HistoryManager navigation (navigateAsync -> navigate). This is
+    // a real cross-document load to the target entry, going through the
+    // same BrowsingContext rebuild that loadHTMLDocument triggers.
+    hm->goToIndex((size_t)entryId);
+
+    cmd.sendResultEmpty();
+
+    // Synthesize the same lifecycle/context events as navigate so that
+    // page.evaluate() / page.$ after goBack/goForward run against the new
+    // document's freshly-announced contexts (incl. isolated worlds).
+    finishNavigation(sid);
+}
+
+void PageDomain::handleResetNavigationHistory(CDPCommand& cmd,
+                                              const std::string&)
+{
+    WebView* wv = m_dispatcher->webView();
+
+    wv->historyManager()->clear();
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handleGetLayoutMetrics(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+    WebView* wv = m_dispatcher->webView();
+
+    // Viewport size from the real Window (window.innerWidth/innerHeight),
+    // falling back to the screen rect when there is no laid-out document.
+    BrowsingContext* lbc = wv->mainBrowsingContext();
+    Window* win = lbc ? lbc->window() : nullptr;
+    int w = win ? (int)win->innerWidth() : 0;
+    int h = win ? (int)win->innerHeight() : 0;
+    if (w <= 0) {
+        w = wv->screenInfo().rect.size().width();
+    }
+    if (h <= 0) {
+        h = wv->screenInfo().rect.size().height();
+    }
+
+    // Content size from the root element's laid-out scroll extent
+    // (documentElement.scrollWidth/scrollHeight), at least the viewport.
+    int cw = w;
+    int ch = h;
+    if (lbc && lbc->document() && lbc->document()->documentElement()) {
+        int sw = (int)lbc->document()->documentElement()->scrollWidth();
+        int sh = (int)lbc->document()->documentElement()->scrollHeight();
+        if (sw > cw) {
+            cw = sw;
         }
+        if (sh > ch) {
+            ch = sh;
+        }
+    }
 
-        // Otherwise look up the captured body by URL (most recent match wins).
-        if (!found) {
-            for (auto it = s->resources.rbegin(); it != s->resources.rend();
-                 ++it) {
-                if (it->url != url) {
-                    continue;
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+
+    rapidjson::Value layoutViewport(rapidjson::kObjectType);
+    layoutViewport.AddMember("pageX", 0, alloc);
+    layoutViewport.AddMember("pageY", 0, alloc);
+    layoutViewport.AddMember("clientWidth", w, alloc);
+    layoutViewport.AddMember("clientHeight", h, alloc);
+    result.AddMember("layoutViewport", layoutViewport, alloc);
+
+    rapidjson::Value visualViewport(rapidjson::kObjectType);
+    visualViewport.AddMember("offsetX", 0, alloc);
+    visualViewport.AddMember("offsetY", 0, alloc);
+    visualViewport.AddMember("pageX", 0, alloc);
+    visualViewport.AddMember("pageY", 0, alloc);
+    visualViewport.AddMember("clientWidth", w, alloc);
+    visualViewport.AddMember("clientHeight", h, alloc);
+    visualViewport.AddMember("scale", 1, alloc);
+    result.AddMember("visualViewport", visualViewport, alloc);
+
+    rapidjson::Value contentSize(rapidjson::kObjectType);
+    contentSize.AddMember("x", 0, alloc);
+    contentSize.AddMember("y", 0, alloc);
+    contentSize.AddMember("width", cw, alloc);
+    contentSize.AddMember("height", ch, alloc);
+    result.AddMember("contentSize", contentSize, alloc);
+
+    rapidjson::Value cssLayoutViewport(rapidjson::kObjectType);
+    cssLayoutViewport.AddMember("pageX", 0, alloc);
+    cssLayoutViewport.AddMember("pageY", 0, alloc);
+    cssLayoutViewport.AddMember("clientWidth", w, alloc);
+    cssLayoutViewport.AddMember("clientHeight", h, alloc);
+    result.AddMember("cssLayoutViewport", cssLayoutViewport, alloc);
+
+    rapidjson::Value cssVisualViewport(rapidjson::kObjectType);
+    cssVisualViewport.AddMember("offsetX", 0, alloc);
+    cssVisualViewport.AddMember("offsetY", 0, alloc);
+    cssVisualViewport.AddMember("pageX", 0, alloc);
+    cssVisualViewport.AddMember("pageY", 0, alloc);
+    cssVisualViewport.AddMember("clientWidth", w, alloc);
+    cssVisualViewport.AddMember("clientHeight", h, alloc);
+    cssVisualViewport.AddMember("scale", 1, alloc);
+    result.AddMember("cssVisualViewport", cssVisualViewport, alloc);
+
+    rapidjson::Value cssContentSize(rapidjson::kObjectType);
+    cssContentSize.AddMember("x", 0, alloc);
+    cssContentSize.AddMember("y", 0, alloc);
+    cssContentSize.AddMember("width", cw, alloc);
+    cssContentSize.AddMember("height", ch, alloc);
+    result.AddMember("cssContentSize", cssContentSize, alloc);
+
+    cmd.sendResult(result, doc);
+}
+
+void PageDomain::handleAddScriptToEvaluateOnNewDocument(CDPCommand& cmd,
+                                                        const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    std::string source;
+    if (cmd.params() && cmd.params()->HasMember("source") &&
+        (*cmd.params())["source"].IsString()) {
+        source = (*cmd.params())["source"].GetString();
+    }
+    std::string identifier =
+        "SCRIPT-" + std::to_string(++s->evaluateOnNewDocumentCounter);
+    s->evaluateOnNewDocumentScripts.push_back({ identifier, source });
+
+    // A worldName here registers a named isolated world that the browser
+    // auto-creates for each new document (puppeteer's utility world).
+    // Record it so child frames get an isolated-world context bound to
+    // them.
+    if (cmd.params() && cmd.params()->HasMember("worldName") &&
+        (*cmd.params())["worldName"].IsString()) {
+        std::string wn = (*cmd.params())["worldName"].GetString();
+        if (!wn.empty()) {
+            bool known = false;
+            for (const std::string& n : s->newDocumentWorldNames) {
+                if (n == wn) {
+                    known = true;
+                    break;
                 }
-                auto bit = s->networkBodies.find(it->requestId);
-                if (bit == s->networkBodies.end()) {
-                    continue;
-                }
-                bool b64 = false;
-                auto fit = s->networkBodyBase64.find(it->requestId);
-                if (fit != s->networkBodyBase64.end()) {
-                    b64 = fit->second;
-                }
-                if (b64) {
-                    content = cdpBase64Encode(
-                        reinterpret_cast<const uint8_t*>(bit->second.data()),
-                        bit->second.size());
-                    base64Encoded = true;
-                } else {
-                    content = bit->second;
-                }
-                found = true;
+            }
+            if (!known) {
+                s->newDocumentWorldNames.push_back(wn);
+            }
+        }
+    }
+
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember(
+        "identifier",
+        rapidjson::Value(identifier.c_str(), identifier.size(), alloc), alloc);
+    cmd.sendResult(result, doc);
+}
+
+void PageDomain::handleRemoveScriptToEvaluateOnNewDocument(CDPCommand& cmd,
+                                                           const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    if (cmd.params() && cmd.params()->HasMember("identifier") &&
+        (*cmd.params())["identifier"].IsString()) {
+        std::string id = (*cmd.params())["identifier"].GetString();
+        auto& v = s->evaluateOnNewDocumentScripts;
+        for (auto it = v.begin(); it != v.end(); ++it) {
+            if (it->identifier == id) {
+                v.erase(it);
                 break;
             }
         }
+    }
+    cmd.sendResultEmpty();
+}
 
-        if (!found) {
-            cmd.sendError(-32000, "No resource with given URL found");
-            return;
+void PageDomain::handleCaptureScreenshot(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+    WebView* wv = m_dispatcher->webView();
+
+    // format: png (default) | jpeg. quality: jpeg only. clip: optional
+    // {x,y,width,height,scale}. Returns { data: <base64> }.
+    std::string format = "png";
+    if (cmd.params() && cmd.params()->HasMember("format") &&
+        (*cmd.params())["format"].IsString()) {
+        format = (*cmd.params())["format"].GetString();
+    }
+
+    // Viewport in device pixels.
+    float dpr = wv->screenInfo().devicePixelRatio;
+    if (dpr <= 0) {
+        dpr = 1;
+    }
+    int viewW = wv->screenInfo().rect.size().width();
+    int viewH = wv->screenInfo().rect.size().height();
+
+    // Capture region (CSS px). Default: whole viewport.
+    double clipX = 0, clipY = 0, clipW = viewW, clipH = viewH, clipScale = 1;
+    if (cmd.params() && cmd.params()->HasMember("clip") &&
+        (*cmd.params())["clip"].IsObject()) {
+        const rapidjson::Value& clip = (*cmd.params())["clip"];
+        if (clip.HasMember("x") && clip["x"].IsNumber())
+            clipX = clip["x"].GetDouble();
+        if (clip.HasMember("y") && clip["y"].IsNumber())
+            clipY = clip["y"].GetDouble();
+        if (clip.HasMember("width") && clip["width"].IsNumber())
+            clipW = clip["width"].GetDouble();
+        if (clip.HasMember("height") && clip["height"].IsNumber())
+            clipH = clip["height"].GetDouble();
+        if (clip.HasMember("scale") && clip["scale"].IsNumber())
+            clipScale = clip["scale"].GetDouble();
+    }
+    if (clipScale <= 0) {
+        clipScale = 1;
+    }
+
+    // Ensure layout is current so reported dimensions match the document.
+    wv->layoutIfNeeded(false);
+
+    // Output buffer dimensions in physical pixels.
+    size_t outW = (size_t)(clipW * dpr * clipScale);
+    size_t outH = (size_t)(clipH * dpr * clipScale);
+    if (outW == 0) {
+        outW = 1;
+    }
+    if (outH == 0) {
+        outH = 1;
+    }
+
+    // Try to read back real pixels from the active renderer. The GL
+    // backend implements captureScreenshotRGBA via glReadPixels; the Mock
+    // (glib_headless) backend does not rasterize and returns false.
+    std::vector<uint8_t> rgba;
+    bool gotRealPixels = false;
+    Renderer* renderer = wv->renderer();
+    if (renderer) {
+        // captureScreenshotRGBA paints + composites the current document
+        // into the framebuffer and reads it back (GL backend).
+        uint32_t capW = 0, capH = 0;
+        std::vector<uint8_t> fb;
+        if (renderer->captureScreenshotRGBA(fb, capW, capH)) {
+            // Report the renderer's full framebuffer dimensions; clip is
+            // not applied to the raw readback in this MVP.
+            outW = capW;
+            outH = capH;
+            rgba.swap(fb);
+            gotRealPixels = true;
         }
+    }
 
+    if (!gotRealPixels) {
+        // Mock/headless backend: no real pixel buffer to read back, so the
+        // captured surface is transparent. We still produce a valid,
+        // correctly sized image so the CDP/puppeteer contract holds.
+        rgba.assign((size_t)outW * outH * 4, 0);
+    }
+
+    // libjpeg is not linked in the glib_headless backend, so jpeg requests
+    // fall back to PNG (the buffer is encoded the same way either way).
+    (void)format;
+    std::vector<uint8_t> encoded = ImageEncoder::encodePNG(
+        rgba.data(), outW, outH, ImageEncoder::ImageColorSpace::RGBA);
+
+    std::string b64 = cdpBase64Encode(encoded.data(), encoded.size());
+
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("data", rapidjson::Value(b64.c_str(), b64.size(), alloc),
+                     alloc);
+    cmd.sendResult(result, doc);
+}
+
+void PageDomain::handleStartScreencast(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+    WebView* wv = m_dispatcher->webView();
+
+    // Periodically capture the viewport and emit Page.screencastFrame.
+    // format (png|jpeg), quality (jpeg), maxWidth/maxHeight, everyNthFrame
+    // are accepted; only format/quality/everyNthFrame are stored. jpeg
+    // falls back to PNG where libjpeg is absent (same as
+    // captureScreenshot), and maxWidth/maxHeight are not applied to the raw
+    // framebuffer readback in this MVP.
+    if (cmd.params() && cmd.params()->HasMember("format") &&
+        (*cmd.params())["format"].IsString()) {
+        s->screencastFormat = (*cmd.params())["format"].GetString();
+    }
+    if (cmd.params() && cmd.params()->HasMember("quality") &&
+        (*cmd.params())["quality"].IsInt()) {
+        s->screencastQuality = (*cmd.params())["quality"].GetInt();
+    }
+    if (cmd.params() && cmd.params()->HasMember("everyNthFrame") &&
+        (*cmd.params())["everyNthFrame"].IsInt()) {
+        int n = (*cmd.params())["everyNthFrame"].GetInt();
+        s->screencastEveryNthFrame = n > 0 ? n : 1;
+    }
+
+    // Re-arm cleanly if already running.
+    stopScreencast(s, wv);
+
+    GlobalScope* gs = wv->mainBrowsingContext()
+                          ? wv->mainBrowsingContext()->window()
+                          : nullptr;
+    if (!wv->timer() || !gs) {
+        // No message loop to drive captures; acknowledge so the client's
+        // page.startScreencast() still resolves (no frames will arrive).
+        cmd.sendResultEmpty();
+        return;
+    }
+
+    s->screencastActive = true;
+    s->screencastAcked = true; // first frame emits immediately
+
+    // ~10 fps. The timer fires repetitively; backpressure in the handler
+    // gates emission on the previous frame's ack.
+    ScreencastTimerData* td = new ScreencastTimerData();
+    td->dispatcher = m_dispatcher;
+    td->sessionId = s->sessionId;
+    s->screencastTimerId = wv->timer()->addTimer(
+        100, gs, &PageDomain::onScreencastTimer, td, /*repetitive=*/true);
+
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handleStopScreencast(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+    WebView* wv = m_dispatcher->webView();
+
+    stopScreencast(s, wv);
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handleScreencastFrameAck(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    // The client confirmed receipt of a frame; release backpressure so the
+    // next timer tick emits the following frame. sessionId is the frame
+    // number we sent; we accept it without strict matching (any ack
+    // advances), which is sufficient for the single-in-flight model here.
+    s->screencastAcked = true;
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handlePrintToPDF(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+    WebView* wv = m_dispatcher->webView();
+
+    // Honor the paper/layout options (paperWidth/Height, landscape, scale,
+    // margins, pageRanges) by sizing the PDF pages and placing/scaling the
+    // captured viewport bitmap inside each page's printable area, slicing
+    // across multiple pages when the content overflows one page.
+    // transferMode "ReturnAsStream" is supported below (data otherwise).
+    PrintToPdfOptions opt = parsePrintToPdfOptions(cmd.params());
+
+    // Full document content height (CSS px) drives pagination in both the
+    // raster and fallback paths (this also forces a layout).
+    double contentHCssPx = mainContentHeightCssPx(wv);
+
+    std::vector<uint8_t> pdf;
+
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
+    // Read back real pixels from the renderer (GL backend), then embed the
+    // bitmap into a cairo PDF surface -- the same readback the screenshot
+    // path uses, so content matches captureScreenshot.
+    wv->layoutIfNeeded(false);
+    Renderer* renderer = wv->renderer();
+    if (renderer) {
+        uint32_t capW = 0, capH = 0;
+        std::vector<uint8_t> fb;
+        if (renderer->captureScreenshotRGBA(fb, capW, capH)) {
+            float dpr = wv->screenInfo().devicePixelRatio;
+            pdf = buildRasterPdf(fb, capW, capH, dpr, contentHCssPx, opt);
+        }
+    }
+#endif
+
+    if (pdf.empty()) {
+        // Mock/headless backend (no cairo, no real pixels), or any failure
+        // above: emit structurally valid blank page(s) at the requested
+        // paper size. Page count is derived from the document content
+        // height (CSS px == pt at scale 1) vs one printable area so that
+        // page-count verification reflects the pagination contract even
+        // headless.
+        double docHPts = contentHCssPx * opt.scale;
+        int totalPages = 1;
+        if (docHPts >= 1) {
+            totalPages = (int)std::ceil(docHPts / opt.printableHeightPts());
+            if (totalPages < 1) {
+                totalPages = 1;
+            }
+        }
+        // Honor pageRanges: count only selected pages (matches the cairo
+        // path's per-slice selection).
+        int pageCount = 0;
+        for (int p = 1; p <= totalPages; p++) {
+            if (pageInRanges(opt.pageRanges, p, totalPages)) {
+                pageCount++;
+            }
+        }
+        if (pageCount < 1) {
+            pageCount = 1; // always emit at least one valid page
+        }
+        pdf = buildFallbackPdf(opt.pageWidthPts(), opt.pageHeightPts(),
+                               pageCount);
+    }
+
+    // transferMode "ReturnAsStream" (puppeteer's page.pdf() default):
+    // return a stream handle; the client drains it via IO.read/IO.close.
+    // Otherwise (default "ReturnAsBase64") return the data inline.
+    std::string transferMode = "ReturnAsBase64";
+    if (cmd.params() && cmd.params()->HasMember("transferMode") &&
+        (*cmd.params())["transferMode"].IsString()) {
+        transferMode = (*cmd.params())["transferMode"].GetString();
+    }
+
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+
+    if (transferMode == "ReturnAsStream") {
+        std::string handle =
+            std::to_string(++s->ioStreamCounter); // IO handles are strings
+        IOStream stream;
+        stream.data = std::move(pdf);
+        s->ioStreams[handle] = std::move(stream);
+        result.AddMember("stream",
+                         rapidjson::Value(handle.c_str(), handle.size(), alloc),
+                         alloc);
+        // CDP also includes an empty data field in stream mode.
+        result.AddMember("data", "", alloc);
+    } else {
+        std::string b64 = cdpBase64Encode(pdf.data(), pdf.size());
+        result.AddMember(
+            "data", rapidjson::Value(b64.c_str(), b64.size(), alloc), alloc);
+    }
+    cmd.sendResult(result, doc);
+}
+
+void PageDomain::handleCreateIsolatedWorld(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    // Allocate a distinct execution context id for the world and announce
+    // it via Runtime.executionContextCreated so puppeteer's IsolatedWorld
+    // resolves its context. Evaluations against this id route to the same
+    // underlying Escargot context (no real isolation).
+    uint32_t ctxId = s->nextIsolatedContextId++;
+    std::string worldName;
+    if (cmd.params() && cmd.params()->HasMember("worldName") &&
+        (*cmd.params())["worldName"].IsString()) {
+        worldName = (*cmd.params())["worldName"].GetString();
+    }
+    std::string uniqueId = "world-" + std::to_string(ctxId);
+
+    // The world is created for a specific frame (puppeteer passes frameId).
+    // If that frameId is a child iframe, bind the world to that frame so
+    // its executionContextCreated carries the child frameId and evaluations
+    // on this contextId route to the child's BrowsingContext.
+    std::string frameId = s->frameId;
+    bool isChild = false;
+    std::vector<uint32_t> childPath;
+    if (cmd.params() && cmd.params()->HasMember("frameId") &&
+        (*cmd.params())["frameId"].IsString()) {
+        std::string reqFrame = (*cmd.params())["frameId"].GetString();
+        ensureChildFrameRecords();
+        for (const ChildFrame& cf : s->childFrames) {
+            if (cf.frameId == reqFrame) {
+                frameId = reqFrame;
+                isChild = true;
+                childPath = cf.path;
+                break;
+            }
+        }
+    }
+
+    // Record the world so it can be re-announced after each navigation
+    // (puppeteer creates the utility world once and never re-calls
+    // createIsolatedWorld; it expects the browser to re-emit the context).
+    IsolatedWorld world;
+    world.contextId = ctxId;
+    world.worldName = worldName;
+    world.uniqueId = uniqueId;
+    world.frameId = frameId;
+    world.isChild = isChild;
+    world.childPath = childPath;
+    s->isolatedWorlds.push_back(world);
+
+    emitIsolatedWorldCreated(cmd.sessionId(), ctxId, worldName, uniqueId,
+                             frameId);
+
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("executionContextId", (int)ctxId, alloc);
+    cmd.sendResult(result, doc);
+}
+
+void PageDomain::handleHandleJavaScriptDialog(CDPCommand& cmd,
+                                              const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    // Single-thread MVP: alert/confirm/prompt do not block the engine; by
+    // the time the client responds, the page has already resumed with the
+    // default value (confirm=false, prompt=null). So this is an
+    // acknowledgement only — accept/promptText cannot retroactively change
+    // the value the page already received. We still emit
+    // Page.javascriptDialogClosed so clients (puppeteer Dialog) settle.
+    bool accept = false;
+    if (cmd.params() && cmd.params()->HasMember("accept") &&
+        (*cmd.params())["accept"].IsBool()) {
+        accept = (*cmd.params())["accept"].GetBool();
+    }
+    std::string userInput;
+    if (cmd.params() && cmd.params()->HasMember("promptText") &&
+        (*cmd.params())["promptText"].IsString()) {
+        userInput = (*cmd.params())["promptText"].GetString();
+    }
+    cmd.sendResultEmpty();
+
+    if (s->pageEnabled) {
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "content", rapidjson::Value(content.c_str(), content.size(), alloc),
+        rapidjson::Value params(rapidjson::kObjectType);
+        params.AddMember("result", accept, alloc);
+        params.AddMember(
+            "userInput",
+            rapidjson::Value(userInput.c_str(), userInput.size(), alloc),
             alloc);
-        result.AddMember("base64Encoded", base64Encoded, alloc);
-        cmd.sendResult(result, doc);
+        CDPCommand evt(m_dispatcher, Optional<int64_t>(), cmd.sessionId(),
+                       nullptr);
+        evt.sendEvent("Page.javascriptDialogClosed", params, doc);
+    }
+}
+
+void PageDomain::handleCaptureSnapshot(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+    WebView* wv = m_dispatcher->webView();
+
+    // format: "mhtml" (only supported). Serializes the current main
+    // document into a minimal MHTML (RFC 2557 multipart/related): a header
+    // part plus the main HTML document, followed by one part per captured
+    // subresource (text bodies inline, binary bodies base64). Returns {
+    // data }.
+    std::string format = "mhtml";
+    if (cmd.params() && cmd.params()->HasMember("format") &&
+        (*cmd.params())["format"].IsString()) {
+        format = (*cmd.params())["format"].GetString();
+    }
+    if (format != "mhtml") {
+        cmd.sendError(-32602, "Unsupported snapshot format");
         return;
     }
 
-    if (method == "getAppManifest") {
-        // { url, data?, errors[], parsed? }. url is the absolute URL of the
-        // document's <link rel="manifest">. If a body for that URL was captured
-        // by the network hook, it is returned as `data`. Manifest parsing is
-        // not implemented, so `parsed` is omitted and `errors` is always empty.
-        std::string url = manifestUrl(wv);
+    wv->layoutIfNeeded(false);
+    std::string mainUrl = currentUrl(wv);
+    std::string html = mainDocumentHTML(wv);
 
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "url", rapidjson::Value(url.c_str(), url.size(), alloc), alloc);
+    const std::string boundary = "----MultipartBoundary--starfish----";
+    std::string mhtml;
+    mhtml += "From: <Saved by Starfish>\r\n";
+    mhtml += "Subject: \r\n";
+    mhtml += "Date: \r\n";
+    mhtml += "MIME-Version: 1.0\r\n";
+    mhtml += "Content-Type: multipart/related;\r\n";
+    mhtml += "\ttype=\"text/html\";\r\n";
+    mhtml += "\tboundary=\"" + boundary + "\"\r\n";
+    mhtml += "\r\n";
 
-        // Attach the manifest body if it was captured for this URL.
-        if (!url.empty()) {
-            for (auto it = s->resources.rbegin(); it != s->resources.rend();
-                 ++it) {
-                if (it->url != url) {
-                    continue;
-                }
-                auto bit = s->networkBodies.find(it->requestId);
-                if (bit == s->networkBodies.end()) {
-                    continue;
-                }
-                auto fit = s->networkBodyBase64.find(it->requestId);
-                bool b64 = fit != s->networkBodyBase64.end() && fit->second;
-                if (!b64) {
-                    result.AddMember("data",
-                                     rapidjson::Value(bit->second.c_str(),
-                                                      bit->second.size(),
-                                                      alloc),
-                                     alloc);
-                }
-                break;
+    // Main document part.
+    mhtml += "--" + boundary + "\r\n";
+    mhtml += "Content-Type: text/html\r\n";
+    mhtml += "Content-Transfer-Encoding: quoted-printable\r\n";
+    mhtml += "Content-Location: " + mainUrl + "\r\n";
+    mhtml += "\r\n";
+    // Emit the HTML verbatim (not strictly QP-encoded). Newlines normalized
+    // to CRLF so the part body is well-formed for line-based MHTML readers.
+    for (size_t i = 0; i < html.size(); i++) {
+        char c = html[i];
+        if (c == '\n') {
+            mhtml += "\r\n";
+        } else if (c == '\r') {
+            // skip; a following '\n' (or standalone) emits CRLF
+            if (i + 1 >= html.size() || html[i + 1] != '\n') {
+                mhtml += "\r\n";
             }
+        } else {
+            mhtml += c;
         }
+    }
+    mhtml += "\r\n";
 
-        rapidjson::Value errors(rapidjson::kArrayType);
-        result.AddMember("errors", errors, alloc);
-        cmd.sendResult(result, doc);
+    // Subresource parts: each recorded resource that has a captured body.
+    for (const ResourceRecord& r : s->resources) {
+        if (r.type == "Document") {
+            continue; // the main document is already the first part
+        }
+        auto bit = s->networkBodies.find(r.requestId);
+        if (bit == s->networkBodies.end() || bit->second.empty()) {
+            continue;
+        }
+        const std::string& raw = bit->second;
+        bool b64 = false;
+        auto fit = s->networkBodyBase64.find(r.requestId);
+        if (fit != s->networkBodyBase64.end()) {
+            b64 = fit->second;
+        }
+        mhtml += "--" + boundary + "\r\n";
+        mhtml += "Content-Type: " + r.mimeType + "\r\n";
+        if (b64) {
+            mhtml += "Content-Transfer-Encoding: base64\r\n";
+        } else {
+            mhtml += "Content-Transfer-Encoding: quoted-printable\r\n";
+        }
+        mhtml += "Content-Location: " + r.url + "\r\n";
+        mhtml += "\r\n";
+        if (b64) {
+            mhtml += cdpBase64Encode(
+                reinterpret_cast<const uint8_t*>(raw.data()), raw.size());
+            mhtml += "\r\n";
+        } else {
+            for (size_t i = 0; i < raw.size(); i++) {
+                char c = raw[i];
+                if (c == '\n') {
+                    mhtml += "\r\n";
+                } else if (c == '\r') {
+                    if (i + 1 >= raw.size() || raw[i + 1] != '\n') {
+                        mhtml += "\r\n";
+                    }
+                } else {
+                    mhtml += c;
+                }
+            }
+            mhtml += "\r\n";
+        }
+    }
+
+    // Closing boundary.
+    mhtml += "--" + boundary + "--\r\n";
+
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember(
+        "data", rapidjson::Value(mhtml.c_str(), mhtml.size(), alloc), alloc);
+    cmd.sendResult(result, doc);
+}
+
+void PageDomain::handleGetResourceTree(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+    WebView* wv = m_dispatcher->webView();
+
+    // frameTree: { frame, resources[], childFrames? }. The main frame
+    // reuses buildFrame; resources are the wire records seen by the network
+    // hook (subresources + the document). Child frames are listed without
+    // their own resource lists (single-frame resource tracking MVP).
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    rapidjson::Value frameTree(rapidjson::kObjectType);
+
+    rapidjson::Value frame(rapidjson::kObjectType);
+    buildFrame(s, wv, frame, alloc);
+    frameTree.AddMember("frame", frame, alloc);
+
+    rapidjson::Value resources(rapidjson::kArrayType);
+    for (const ResourceRecord& r : s->resources) {
+        if (r.type == "Document") {
+            continue; // the document is the frame itself, not a subresource
+        }
+        rapidjson::Value res(rapidjson::kObjectType);
+        res.AddMember(
+            "url", rapidjson::Value(r.url.c_str(), r.url.size(), alloc), alloc);
+        res.AddMember("type",
+                      rapidjson::Value(r.type.c_str(), r.type.size(), alloc),
+                      alloc);
+        res.AddMember(
+            "mimeType",
+            rapidjson::Value(r.mimeType.c_str(), r.mimeType.size(), alloc),
+            alloc);
+        resources.PushBack(res, alloc);
+    }
+    frameTree.AddMember("resources", resources, alloc);
+
+    // Child iframe frames as a nested tree (no per-child resource list in
+    // this MVP). Mirrors getFrameTree's nesting.
+    ensureChildFrameRecords();
+    std::vector<DiscoveredFrame> frames;
+    collectChildContexts(wv, frames);
+
+    std::function<void(const std::vector<uint32_t>&, const std::string&,
+                       rapidjson::Value&)>
+        buildResTree = [&](const std::vector<uint32_t>& parentPath,
+                           const std::string& parentFrameId,
+                           rapidjson::Value& dst) {
+            rapidjson::Value childFrames(rapidjson::kArrayType);
+            bool any = false;
+            for (const DiscoveredFrame& df : frames) {
+                if (df.parentPath != parentPath) {
+                    continue;
+                }
+                ChildFrame* cf = nullptr;
+                for (ChildFrame& existing : s->childFrames) {
+                    if (existing.path == df.path) {
+                        cf = &existing;
+                        break;
+                    }
+                }
+                if (!cf) {
+                    continue;
+                }
+                any = true;
+                std::string curl = contextUrl(df.bc);
+                std::string corigin = contextOrigin(df.bc);
+                rapidjson::Value childTree(rapidjson::kObjectType);
+                rapidjson::Value cframe(rapidjson::kObjectType);
+                cframe.AddMember("id",
+                                 rapidjson::Value(cf->frameId.c_str(),
+                                                  cf->frameId.size(), alloc),
+                                 alloc);
+                cframe.AddMember("parentId",
+                                 rapidjson::Value(parentFrameId.c_str(),
+                                                  parentFrameId.size(), alloc),
+                                 alloc);
+                cframe.AddMember("loaderId",
+                                 rapidjson::Value(s->loaderId.c_str(),
+                                                  s->loaderId.size(), alloc),
+                                 alloc);
+                cframe.AddMember(
+                    "url", rapidjson::Value(curl.c_str(), curl.size(), alloc),
+                    alloc);
+                cframe.AddMember("domainAndRegistry", "", alloc);
+                cframe.AddMember(
+                    "securityOrigin",
+                    rapidjson::Value(corigin.c_str(), corigin.size(), alloc),
+                    alloc);
+                cframe.AddMember("mimeType", "text/html", alloc);
+                cframe.AddMember("secureContextType", "InsecureScheme", alloc);
+                cframe.AddMember("crossOriginIsolatedContextType",
+                                 "NotIsolated", alloc);
+                rapidjson::Value feats(rapidjson::kArrayType);
+                cframe.AddMember("gatedAPIFeatures", feats, alloc);
+                childTree.AddMember("frame", cframe, alloc);
+                rapidjson::Value cres(rapidjson::kArrayType);
+                childTree.AddMember("resources", cres, alloc);
+                buildResTree(df.path, cf->frameId, childTree);
+                childFrames.PushBack(childTree, alloc);
+            }
+            if (any) {
+                dst.AddMember("childFrames", childFrames, alloc);
+            }
+        };
+    buildResTree(std::vector<uint32_t>(), s->frameId, frameTree);
+
+    result.AddMember("frameTree", frameTree, alloc);
+    cmd.sendResult(result, doc);
+}
+
+void PageDomain::handleGetResourceContent(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+    WebView* wv = m_dispatcher->webView();
+
+    // { frameId, url } -> { content, base64Encoded }. The main document URL
+    // returns the live serialized HTML; any other URL returns its captured
+    // network body (base64 for binary). frameId is accepted but only the
+    // main frame's resources are tracked.
+    std::string url;
+    if (cmd.params() && cmd.params()->HasMember("url") &&
+        (*cmd.params())["url"].IsString()) {
+        url = (*cmd.params())["url"].GetString();
+    }
+    if (url.empty()) {
+        cmd.sendError(-32602, "'url' is required");
         return;
     }
 
-    if (method == "getInstallabilityErrors") {
-        // PWA installability is not evaluated; report no errors.
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        rapidjson::Value errs(rapidjson::kArrayType);
-        result.AddMember("installabilityErrors", errs, alloc);
-        cmd.sendResult(result, doc);
+    std::string content;
+    bool base64Encoded = false;
+    bool found = false;
+
+    // Main document: serialize live (matches the captureSnapshot main
+    // part).
+    if (url == currentUrl(wv)) {
+        content = mainDocumentHTML(wv);
+        found = !content.empty();
+    }
+
+    // Otherwise look up the captured body by URL (most recent match wins).
+    if (!found) {
+        for (auto it = s->resources.rbegin(); it != s->resources.rend(); ++it) {
+            if (it->url != url) {
+                continue;
+            }
+            auto bit = s->networkBodies.find(it->requestId);
+            if (bit == s->networkBodies.end()) {
+                continue;
+            }
+            bool b64 = false;
+            auto fit = s->networkBodyBase64.find(it->requestId);
+            if (fit != s->networkBodyBase64.end()) {
+                b64 = fit->second;
+            }
+            if (b64) {
+                content = cdpBase64Encode(
+                    reinterpret_cast<const uint8_t*>(bit->second.data()),
+                    bit->second.size());
+                base64Encoded = true;
+            } else {
+                content = bit->second;
+            }
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        cmd.sendError(-32000, "No resource with given URL found");
         return;
     }
 
-    if (method == "getManifestIcons") {
-        // No manifest icon extraction; ack with an empty result (primaryIcon
-        // omitted).
-        cmd.sendResultEmpty();
-        return;
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("content",
+                     rapidjson::Value(content.c_str(), content.size(), alloc),
+                     alloc);
+    result.AddMember("base64Encoded", base64Encoded, alloc);
+    cmd.sendResult(result, doc);
+}
+
+void PageDomain::handleGetAppManifest(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+    WebView* wv = m_dispatcher->webView();
+
+    // { url, data?, errors[], parsed? }. url is the absolute URL of the
+    // document's <link rel="manifest">. If a body for that URL was captured
+    // by the network hook, it is returned as `data`. Manifest parsing is
+    // not implemented, so `parsed` is omitted and `errors` is always empty.
+    std::string url = manifestUrl(wv);
+
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("url", rapidjson::Value(url.c_str(), url.size(), alloc),
+                     alloc);
+
+    // Attach the manifest body if it was captured for this URL.
+    if (!url.empty()) {
+        for (auto it = s->resources.rbegin(); it != s->resources.rend(); ++it) {
+            if (it->url != url) {
+                continue;
+            }
+            auto bit = s->networkBodies.find(it->requestId);
+            if (bit == s->networkBodies.end()) {
+                continue;
+            }
+            auto fit = s->networkBodyBase64.find(it->requestId);
+            bool b64 = fit != s->networkBodyBase64.end() && fit->second;
+            if (!b64) {
+                result.AddMember("data",
+                                 rapidjson::Value(bit->second.c_str(),
+                                                  bit->second.size(), alloc),
+                                 alloc);
+            }
+            break;
+        }
     }
 
-    if (method == "generateTestReport") {
-        // The engine has no ReportingObserver implementation, so no report can
-        // be delivered to page script. Accept the call so tooling does not
-        // error.
-        cmd.sendResultEmpty();
+    rapidjson::Value errors(rapidjson::kArrayType);
+    result.AddMember("errors", errors, alloc);
+    cmd.sendResult(result, doc);
+}
+
+void PageDomain::handleGetInstallabilityErrors(CDPCommand& cmd,
+                                               const std::string&)
+{
+    // PWA installability is not evaluated; report no errors.
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    rapidjson::Value errs(rapidjson::kArrayType);
+    result.AddMember("installabilityErrors", errs, alloc);
+    cmd.sendResult(result, doc);
+}
+
+void PageDomain::handleGetManifestIcons(CDPCommand& cmd, const std::string&)
+{
+    // No manifest icon extraction; ack with an empty result (primaryIcon
+    // omitted).
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handleGenerateTestReport(CDPCommand& cmd, const std::string&)
+{
+    // The engine has no ReportingObserver implementation, so no report can
+    // be delivered to page script. Accept the call so tooling does not
+    // error.
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handleSetInterceptFileChooserDialog(CDPCommand& cmd,
+                                                     const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    // Headless: there is no native file chooser to intercept. Record the
+    // requested state and ack; no Page.fileChooserOpened is ever emitted.
+    s->interceptFileChooserDialog = cmd.params() &&
+                                    cmd.params()->HasMember("enabled") &&
+                                    (*cmd.params())["enabled"].IsBool() &&
+                                    (*cmd.params())["enabled"].GetBool();
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::handleCrash(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    // Intentionally not crashing the process; ack so the client's request
+    // completes. (A real crash would tear down the inspector connection.)
+    cmd.sendResultEmpty();
+}
+
+void PageDomain::processMessage(CDPCommand& cmd, const std::string& method)
+{
+    static const CDPMethodHandler<PageDomain> handlers[] = {
+        { "enable", &PageDomain::handleEnable },
+        { "disable", &PageDomain::handleDisable },
+        { "setBypassCSP", &PageDomain::handleSetBypassCSP },
+        { "getFrameTree", &PageDomain::handleGetFrameTree },
+        { "setLifecycleEventsEnabled",
+          &PageDomain::handleSetLifecycleEventsEnabled },
+        { "navigate", &PageDomain::handleNavigate },
+        { "setDocumentContent", &PageDomain::handleSetDocumentContent },
+        { "reload", &PageDomain::handleReload },
+        { "bringToFront", &PageDomain::handleBringToFront },
+        { "getNavigationHistory", &PageDomain::handleGetNavigationHistory },
+        { "navigateToHistoryEntry", &PageDomain::handleNavigateToHistoryEntry },
+        { "resetNavigationHistory", &PageDomain::handleResetNavigationHistory },
+        { "getLayoutMetrics", &PageDomain::handleGetLayoutMetrics },
+        { "addScriptToEvaluateOnNewDocument",
+          &PageDomain::handleAddScriptToEvaluateOnNewDocument },
+        { "removeScriptToEvaluateOnNewDocument",
+          &PageDomain::handleRemoveScriptToEvaluateOnNewDocument },
+        { "captureScreenshot", &PageDomain::handleCaptureScreenshot },
+        { "startScreencast", &PageDomain::handleStartScreencast },
+        { "stopScreencast", &PageDomain::handleStopScreencast },
+        { "screencastFrameAck", &PageDomain::handleScreencastFrameAck },
+        { "printToPDF", &PageDomain::handlePrintToPDF },
+        { "createIsolatedWorld", &PageDomain::handleCreateIsolatedWorld },
+        { "handleJavaScriptDialog", &PageDomain::handleHandleJavaScriptDialog },
+        { "captureSnapshot", &PageDomain::handleCaptureSnapshot },
+        { "getResourceTree", &PageDomain::handleGetResourceTree },
+        { "getResourceContent", &PageDomain::handleGetResourceContent },
+        { "getAppManifest", &PageDomain::handleGetAppManifest },
+        { "getInstallabilityErrors",
+          &PageDomain::handleGetInstallabilityErrors },
+        { "getManifestIcons", &PageDomain::handleGetManifestIcons },
+        { "generateTestReport", &PageDomain::handleGenerateTestReport },
+        { "setInterceptFileChooserDialog",
+          &PageDomain::handleSetInterceptFileChooserDialog },
+        { "crash", &PageDomain::handleCrash },
+    };
+    if (CDPHandlerFn<PageDomain> handler =
+            findCDPMethodHandler(handlers, method)) {
+        (this->*handler)(cmd, method);
         return;
     }
-
-    if (method == "setInterceptFileChooserDialog") {
-        // Headless: there is no native file chooser to intercept. Record the
-        // requested state and ack; no Page.fileChooserOpened is ever emitted.
-        s->interceptFileChooserDialog = cmd.params() &&
-                                        cmd.params()->HasMember("enabled") &&
-                                        (*cmd.params())["enabled"].IsBool() &&
-                                        (*cmd.params())["enabled"].GetBool();
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "crash") {
-        // Intentionally not crashing the process; ack so the client's request
-        // completes. (A real crash would tear down the inspector connection.)
-        cmd.sendResultEmpty();
-        return;
-    }
-
     cmd.sendError(-32601, "'method' wasn't found");
 }
 

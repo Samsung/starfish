@@ -1118,455 +1118,497 @@ void NetworkDomain::scheduleNetworkIdleCheck(WebView* wv)
         500, gs, &NetworkDomain::onNetworkIdleTimer, td, false);
 }
 
-void NetworkDomain::processMessage(CDPCommand& cmd, const std::string& method)
+void NetworkDomain::handleEnable(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
 
-    if (method == "enable") {
-        s->networkEnabled = true;
-        cmd.sendResultEmpty();
-        return;
+    s->networkEnabled = true;
+    cmd.sendResultEmpty();
+}
+
+void NetworkDomain::handleDisable(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    s->networkEnabled = false;
+    cmd.sendResultEmpty();
+}
+
+void NetworkDomain::handleSetCookie(CDPCommand& cmd, const std::string&)
+{
+    WebView* wv = m_dispatcher->webView();
+    CookieEntry e;
+    e.name = paramStr(cmd, "name");
+    e.value = paramStr(cmd, "value");
+    std::string domain, path;
+    resolveTarget(cmd, wv, domain, path);
+    e.domain = domain;
+    e.path = path;
+    e.secure = paramBool(cmd, "secure", false);
+    e.httpOnly = paramBool(cmd, "httpOnly", false);
+    e.expires =
+        hasNumber(cmd, "expires") ? (int64_t)paramNum(cmd, "expires", 0) : 0;
+    // Chrome-specific fields.
+    if (cmd.params() && cmd.params()->HasMember("priority") &&
+        (*cmd.params())["priority"].IsString()) {
+        std::string p = (*cmd.params())["priority"].GetString();
+        if (p == "VeryLow" || p == "Low" || p == "Medium" || p == "High" ||
+            p == "VeryHigh") {
+            e.priority = p;
+        } else {
+            e.priority = "Medium";
+        }
     }
-    if (method == "disable") {
-        s->networkEnabled = false;
-        cmd.sendResultEmpty();
-        return;
+    if (cmd.params() && cmd.params()->HasMember("sourcePort") &&
+        (*cmd.params())["sourcePort"].IsInt()) {
+        e.sourcePort = (*cmd.params())["sourcePort"].GetInt();
     }
-
-    if (method == "setCookie") {
-        WebView* wv = m_dispatcher->webView();
-        CookieEntry e;
-        e.name = paramStr(cmd, "name");
-        e.value = paramStr(cmd, "value");
-        std::string domain, path;
-        resolveTarget(cmd, wv, domain, path);
-        e.domain = domain;
-        e.path = path;
-        e.secure = paramBool(cmd, "secure", false);
-        e.httpOnly = paramBool(cmd, "httpOnly", false);
-        e.expires = hasNumber(cmd, "expires")
-                        ? (int64_t)paramNum(cmd, "expires", 0)
-                        : 0;
-        // Chrome-specific fields.
-        if (cmd.params() && cmd.params()->HasMember("priority") &&
-            (*cmd.params())["priority"].IsString()) {
-            std::string p = (*cmd.params())["priority"].GetString();
-            if (p == "VeryLow" || p == "Low" || p == "Medium" || p == "High" ||
-                p == "VeryHigh") {
-                e.priority = p;
-            } else {
-                e.priority = "Medium";
-            }
+    if (cmd.params() && cmd.params()->HasMember("sourceScheme") &&
+        (*cmd.params())["sourceScheme"].IsString()) {
+        std::string sch = (*cmd.params())["sourceScheme"].GetString();
+        if (sch == "Unset" || sch == "Secure" || sch == "NonSecure") {
+            e.sourceScheme = sch;
         }
-        if (cmd.params() && cmd.params()->HasMember("sourcePort") &&
-            (*cmd.params())["sourcePort"].IsInt()) {
-            e.sourcePort = (*cmd.params())["sourcePort"].GetInt();
-        }
-        if (cmd.params() && cmd.params()->HasMember("sourceScheme") &&
-            (*cmd.params())["sourceScheme"].IsString()) {
-            std::string sch = (*cmd.params())["sourceScheme"].GetString();
-            if (sch == "Unset" || sch == "Secure" || sch == "NonSecure") {
-                e.sourceScheme = sch;
-            }
-        }
-        bool ok = !e.name.empty() && !e.domain.empty();
-        if (ok) {
-            writeCookieLine(e);
-        }
-        rapidjson::Document doc;
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("success", ok, doc.GetAllocator());
-        cmd.sendResult(result, doc);
-        return;
     }
-
-    if (method == "setCookies") {
-        WebView* wv = m_dispatcher->webView();
-        if (cmd.params() && cmd.params()->HasMember("cookies") &&
-            (*cmd.params())["cookies"].IsArray()) {
-            rapidjson::Value& cookies = (*cmd.params())["cookies"];
-            std::string curHost = urlHost(currentUrl(wv));
-            if (!writeCookieArray(cookies, curHost, std::string())) {
-                cmd.sendError(-32602, "Invalid cookie fields");
-                return;
-            }
-        }
-        cmd.sendResultEmpty();
-        return;
+    bool ok = !e.name.empty() && !e.domain.empty();
+    if (ok) {
+        writeCookieLine(e);
     }
+    rapidjson::Document doc;
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("success", ok, doc.GetAllocator());
+    cmd.sendResult(result, doc);
+}
 
-    if (method == "getCookies" || method == "getAllCookies") {
-        std::vector<CookieEntry> all = readAllCookies();
-
-        // Build the list of (host,path) filters. getAllCookies => none.
-        std::vector<std::pair<std::string, std::string>> filters;
-        if (method == "getCookies") {
-            if (cmd.params() && cmd.params()->HasMember("urls") &&
-                (*cmd.params())["urls"].IsArray() &&
-                (*cmd.params())["urls"].Size() > 0) {
-                rapidjson::Value& urls = (*cmd.params())["urls"];
-                for (rapidjson::SizeType i = 0; i < urls.Size(); ++i) {
-                    if (urls[i].IsString()) {
-                        std::string u = urls[i].GetString();
-                        filters.push_back({ urlHost(u), urlPath(u) });
-                    }
-                }
-            } else {
-                std::string u = currentUrl(m_dispatcher->webView());
-                filters.push_back({ urlHost(u), urlPath(u) });
-            }
+void NetworkDomain::handleSetCookies(CDPCommand& cmd, const std::string&)
+{
+    WebView* wv = m_dispatcher->webView();
+    if (cmd.params() && cmd.params()->HasMember("cookies") &&
+        (*cmd.params())["cookies"].IsArray()) {
+        rapidjson::Value& cookies = (*cmd.params())["cookies"];
+        std::string curHost = urlHost(currentUrl(wv));
+        if (!writeCookieArray(cookies, curHost, std::string())) {
+            cmd.sendError(-32602, "Invalid cookie fields");
+            return;
         }
+    }
+    cmd.sendResultEmpty();
+}
 
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value arr(rapidjson::kArrayType);
-        time_t now = time(nullptr);
-        for (const CookieEntry& e : all) {
-            if (e.expires != 0 && (int64_t)now > e.expires) {
-                continue; // expired
-            }
-            bool include = filters.empty();
-            for (const auto& f : filters) {
-                if (cookieDomainMatches(e.domain, f.first) &&
-                    cookiePathMatches(e.path, f.second)) {
-                    include = true;
-                    break;
+void NetworkDomain::handleGetCookies(CDPCommand& cmd, const std::string& method)
+{
+    std::vector<CookieEntry> all = readAllCookies();
+
+    // Build the list of (host,path) filters. getAllCookies => none.
+    std::vector<std::pair<std::string, std::string>> filters;
+    if (method == "getCookies") {
+        if (cmd.params() && cmd.params()->HasMember("urls") &&
+            (*cmd.params())["urls"].IsArray() &&
+            (*cmd.params())["urls"].Size() > 0) {
+            rapidjson::Value& urls = (*cmd.params())["urls"];
+            for (rapidjson::SizeType i = 0; i < urls.Size(); ++i) {
+                if (urls[i].IsString()) {
+                    std::string u = urls[i].GetString();
+                    filters.push_back({ urlHost(u), urlPath(u) });
                 }
             }
-            if (include) {
-                addCookieObject(arr, alloc, e);
+        } else {
+            std::string u = currentUrl(m_dispatcher->webView());
+            filters.push_back({ urlHost(u), urlPath(u) });
+        }
+    }
+
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value arr(rapidjson::kArrayType);
+    time_t now = time(nullptr);
+    for (const CookieEntry& e : all) {
+        if (e.expires != 0 && (int64_t)now > e.expires) {
+            continue; // expired
+        }
+        bool include = filters.empty();
+        for (const auto& f : filters) {
+            if (cookieDomainMatches(e.domain, f.first) &&
+                cookiePathMatches(e.path, f.second)) {
+                include = true;
+                break;
             }
         }
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("cookies", arr, alloc);
-        cmd.sendResult(result, doc);
+        if (include) {
+            addCookieObject(arr, alloc, e);
+        }
+    }
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("cookies", arr, alloc);
+    cmd.sendResult(result, doc);
+}
+
+void NetworkDomain::handleDeleteCookies(CDPCommand& cmd, const std::string&)
+{
+    WebView* wv = m_dispatcher->webView();
+    std::string name = paramStr(cmd, "name");
+    std::string domain, path;
+    resolveTarget(cmd, wv, domain, path);
+
+    // Match against the jar and overwrite each match with a past expiry so
+    // curl drops it. domain/path from resolveTarget pick the deletion key,
+    // but the jar may store the domain with a leading '.', so match
+    // loosely.
+    std::vector<CookieEntry> all = readAllCookies();
+    for (CookieEntry e : all) {
+        if (e.name != name) {
+            continue;
+        }
+        if (!cookieDomainMatches(e.domain, domain) && e.domain != domain) {
+            continue;
+        }
+        std::string cp = e.path.empty() ? "/" : e.path;
+        if (cp != path) {
+            continue;
+        }
+        e.expires = 1; // in the past => removal
+        writeCookieLine(e);
+    }
+    cmd.sendResultEmpty();
+}
+
+void NetworkDomain::handleGetResponseBody(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    std::string requestId = paramStr(cmd, "requestId");
+    if (requestId.empty()) {
+        cmd.sendError(-32000,
+                      "No data found for resource with given identifier");
         return;
     }
 
-    if (method == "deleteCookies") {
-        WebView* wv = m_dispatcher->webView();
-        std::string name = paramStr(cmd, "name");
-        std::string domain, path;
-        resolveTarget(cmd, wv, domain, path);
-
-        // Match against the jar and overwrite each match with a past expiry so
-        // curl drops it. domain/path from resolveTarget pick the deletion key,
-        // but the jar may store the domain with a leading '.', so match
-        // loosely.
-        std::vector<CookieEntry> all = readAllCookies();
-        for (CookieEntry e : all) {
-            if (e.name != name) {
-                continue;
-            }
-            if (!cookieDomainMatches(e.domain, domain) && e.domain != domain) {
-                continue;
-            }
-            std::string cp = e.path.empty() ? "/" : e.path;
-            if (cp != path) {
-                continue;
-            }
-            e.expires = 1; // in the past => removal
-            writeCookieLine(e);
+    // Prefer the real bytes captured by the ResourceLoader hook (document
+    // and subresources alike). base64-encode non-text payloads.
+    auto bit = s->networkBodies.find(requestId);
+    if (bit != s->networkBodies.end()) {
+        const std::string& raw = bit->second;
+        bool b64 = false;
+        auto fit = s->networkBodyBase64.find(requestId);
+        if (fit != s->networkBodyBase64.end()) {
+            b64 = fit->second;
         }
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "getResponseBody") {
-        std::string requestId = paramStr(cmd, "requestId");
-        if (requestId.empty()) {
-            cmd.sendError(-32000,
-                          "No data found for resource with given identifier");
-            return;
-        }
-
-        // Prefer the real bytes captured by the ResourceLoader hook (document
-        // and subresources alike). base64-encode non-text payloads.
-        auto bit = s->networkBodies.find(requestId);
-        if (bit != s->networkBodies.end()) {
-            const std::string& raw = bit->second;
-            bool b64 = false;
-            auto fit = s->networkBodyBase64.find(requestId);
-            if (fit != s->networkBodyBase64.end()) {
-                b64 = fit->second;
-            }
-            std::string body =
-                b64 ? cdpBase64Encode(
-                          reinterpret_cast<const uint8_t*>(raw.data()),
-                          raw.size())
-                    : raw;
-            rapidjson::Document doc;
-            rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-            rapidjson::Value result(rapidjson::kObjectType);
-            result.AddMember("body",
-                             rapidjson::Value(body.c_str(), body.size(), alloc),
-                             alloc);
-            result.AddMember("base64Encoded", b64, alloc);
-            cmd.sendResult(result, doc);
-            return;
-        }
-
-        // Fallback: no captured bytes (e.g. data: navigation, which has no real
-        // network request). Serialize the live document for the latest
-        // navigation request id.
-        if (requestId != s->lastNavigationRequestId) {
-            cmd.sendError(-32000,
-                          "No data found for resource with given identifier");
-            return;
-        }
-        std::string body;
-        WebView* wv = m_dispatcher->webView();
-        BrowsingContext* bc = wv ? wv->mainBrowsingContext() : nullptr;
-        if (bc && bc->document() && bc->document()->documentElement()) {
-            String* html = bc->document()->documentElement()->outerHTML();
-            if (html) {
-                body = "<!DOCTYPE html>\n" + html->toUTF8NonGCString();
-            }
-        }
+        std::string body =
+            b64 ? cdpBase64Encode(reinterpret_cast<const uint8_t*>(raw.data()),
+                                  raw.size())
+                : raw;
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
         result.AddMember(
             "body", rapidjson::Value(body.c_str(), body.size(), alloc), alloc);
-        result.AddMember("base64Encoded", false, alloc);
+        result.AddMember("base64Encoded", b64, alloc);
         cmd.sendResult(result, doc);
         return;
     }
 
-    if (method == "searchInResponseBody") {
-        std::string requestId = paramStr(cmd, "requestId");
-        std::string query = paramStr(cmd, "query");
-        bool caseSensitive = paramBool(cmd, "caseSensitive", false);
-        bool isRegex = paramBool(cmd, "isRegex", false);
+    // Fallback: no captured bytes (e.g. data: navigation, which has no real
+    // network request). Serialize the live document for the latest
+    // navigation request id.
+    if (requestId != s->lastNavigationRequestId) {
+        cmd.sendError(-32000,
+                      "No data found for resource with given identifier");
+        return;
+    }
+    std::string body;
+    WebView* wv = m_dispatcher->webView();
+    BrowsingContext* bc = wv ? wv->mainBrowsingContext() : nullptr;
+    if (bc && bc->document() && bc->document()->documentElement()) {
+        String* html = bc->document()->documentElement()->outerHTML();
+        if (html) {
+            body = "<!DOCTYPE html>\n" + html->toUTF8NonGCString();
+        }
+    }
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("body", rapidjson::Value(body.c_str(), body.size(), alloc),
+                     alloc);
+    result.AddMember("base64Encoded", false, alloc);
+    cmd.sendResult(result, doc);
+}
 
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        rapidjson::Value matches(rapidjson::kArrayType);
+void NetworkDomain::handleSearchInResponseBody(CDPCommand& cmd,
+                                               const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
 
-        // Look up the captured response body for this requestId. If none was
-        // recorded (e.g. a synthetic data: navigation, or an unknown id), the
-        // search yields no matches (empty result), matching Chrome.
-        auto bit = s->networkBodies.find(requestId);
-        if (bit != s->networkBodies.end() && !query.empty()) {
-            const std::string& body = bit->second;
+    std::string requestId = paramStr(cmd, "requestId");
+    std::string query = paramStr(cmd, "query");
+    bool caseSensitive = paramBool(cmd, "caseSensitive", false);
+    bool isRegex = paramBool(cmd, "isRegex", false);
 
-            // Build the matcher: regex when isRegex, otherwise a literal
-            // substring search. caseSensitive=false (default) lowercases both
-            // sides / passes std::regex::icase. A malformed regex matches
-            // nothing rather than erroring (best-effort, like Chrome's tolerant
-            // behavior for clients).
-            std::regex re;
-            bool reValid = false;
-            std::string needleLower = query;
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    rapidjson::Value matches(rapidjson::kArrayType);
+
+    // Look up the captured response body for this requestId. If none was
+    // recorded (e.g. a synthetic data: navigation, or an unknown id), the
+    // search yields no matches (empty result), matching Chrome.
+    auto bit = s->networkBodies.find(requestId);
+    if (bit != s->networkBodies.end() && !query.empty()) {
+        const std::string& body = bit->second;
+
+        // Build the matcher: regex when isRegex, otherwise a literal
+        // substring search. caseSensitive=false (default) lowercases both
+        // sides / passes std::regex::icase. A malformed regex matches
+        // nothing rather than erroring (best-effort, like Chrome's tolerant
+        // behavior for clients).
+        std::regex re;
+        bool reValid = false;
+        std::string needleLower = query;
+        if (isRegex) {
+            try {
+                auto flags = std::regex::ECMAScript;
+                if (!caseSensitive) {
+                    flags |= std::regex::icase;
+                }
+                re = std::regex(query, flags);
+                reValid = true;
+            } catch (const std::regex_error&) {
+                reValid = false;
+            }
+        } else if (!caseSensitive) {
+            std::transform(needleLower.begin(), needleLower.end(),
+                           needleLower.begin(), ::tolower);
+        }
+
+        // Walk the body line by line (1-based lineNumber, CDP convention).
+        size_t start = 0;
+        int lineNumber = 0;
+        while (start <= body.size()) {
+            size_t nl = body.find('\n', start);
+            std::string line = (nl == std::string::npos)
+                                   ? body.substr(start)
+                                   : body.substr(start, nl - start);
+            // Strip a trailing CR (CRLF line endings).
+            if (!line.empty() && line.back() == '\r') {
+                line.pop_back();
+            }
+
+            bool hit = false;
             if (isRegex) {
-                try {
-                    auto flags = std::regex::ECMAScript;
-                    if (!caseSensitive) {
-                        flags |= std::regex::icase;
-                    }
-                    re = std::regex(query, flags);
-                    reValid = true;
-                } catch (const std::regex_error&) {
-                    reValid = false;
-                }
-            } else if (!caseSensitive) {
-                std::transform(needleLower.begin(), needleLower.end(),
-                               needleLower.begin(), ::tolower);
+                hit = reValid && std::regex_search(line, re);
+            } else if (caseSensitive) {
+                hit = line.find(query) != std::string::npos;
+            } else {
+                std::string lineLower = line;
+                std::transform(lineLower.begin(), lineLower.end(),
+                               lineLower.begin(), ::tolower);
+                hit = lineLower.find(needleLower) != std::string::npos;
             }
 
-            // Walk the body line by line (1-based lineNumber, CDP convention).
-            size_t start = 0;
-            int lineNumber = 0;
-            while (start <= body.size()) {
-                size_t nl = body.find('\n', start);
-                std::string line = (nl == std::string::npos)
-                                       ? body.substr(start)
-                                       : body.substr(start, nl - start);
-                // Strip a trailing CR (CRLF line endings).
-                if (!line.empty() && line.back() == '\r') {
-                    line.pop_back();
-                }
+            if (hit) {
+                rapidjson::Value m(rapidjson::kObjectType);
+                m.AddMember("lineNumber", lineNumber, alloc);
+                m.AddMember("lineContent",
+                            rapidjson::Value(line.c_str(), line.size(), alloc),
+                            alloc);
+                matches.PushBack(m, alloc);
+            }
 
-                bool hit = false;
-                if (isRegex) {
-                    hit = reValid && std::regex_search(line, re);
-                } else if (caseSensitive) {
-                    hit = line.find(query) != std::string::npos;
-                } else {
-                    std::string lineLower = line;
-                    std::transform(lineLower.begin(), lineLower.end(),
-                                   lineLower.begin(), ::tolower);
-                    hit = lineLower.find(needleLower) != std::string::npos;
-                }
+            if (nl == std::string::npos) {
+                break;
+            }
+            start = nl + 1;
+            lineNumber++;
+        }
+    }
 
-                if (hit) {
-                    rapidjson::Value m(rapidjson::kObjectType);
-                    m.AddMember("lineNumber", lineNumber, alloc);
-                    m.AddMember(
-                        "lineContent",
-                        rapidjson::Value(line.c_str(), line.size(), alloc),
-                        alloc);
-                    matches.PushBack(m, alloc);
-                }
+    result.AddMember("result", matches, alloc);
+    cmd.sendResult(result, doc);
+}
 
-                if (nl == std::string::npos) {
-                    break;
-                }
-                start = nl + 1;
-                lineNumber++;
+void NetworkDomain::handleGetRequestPostData(CDPCommand& cmd,
+                                             const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    std::string requestId = paramStr(cmd, "requestId");
+    auto it = s->networkRequestPostData.find(requestId);
+    if (requestId.empty() || it == s->networkRequestPostData.end()) {
+        // Chrome errors when the request had no body. Mirror that so
+        // request.postData()/fetchPostData() behave as expected.
+        cmd.sendError(-32000, "No post data available for the request");
+        return;
+    }
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember(
+        "postData",
+        rapidjson::Value(it->second.c_str(), it->second.size(), alloc), alloc);
+    cmd.sendResult(result, doc);
+}
+
+void NetworkDomain::handleSetExtraHTTPHeaders(CDPCommand& cmd,
+                                              const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    // Store the headers on the session; the ResourceLoader network hook
+    // (applyExtraHTTPHeaders) injects them into every real outgoing request
+    // for this WebView.
+    s->extraHTTPHeaders.clear();
+    if (cmd.params() && cmd.params()->HasMember("headers") &&
+        (*cmd.params())["headers"].IsObject()) {
+        const rapidjson::Value& h = (*cmd.params())["headers"];
+        for (auto m = h.MemberBegin(); m != h.MemberEnd(); ++m) {
+            if (m->value.IsString()) {
+                s->extraHTTPHeaders[m->name.GetString()] = m->value.GetString();
             }
         }
-
-        result.AddMember("result", matches, alloc);
-        cmd.sendResult(result, doc);
-        return;
     }
+    cmd.sendResultEmpty();
+}
 
-    if (method == "getRequestPostData") {
-        std::string requestId = paramStr(cmd, "requestId");
-        auto it = s->networkRequestPostData.find(requestId);
-        if (requestId.empty() || it == s->networkRequestPostData.end()) {
-            // Chrome errors when the request had no body. Mirror that so
-            // request.postData()/fetchPostData() behave as expected.
-            cmd.sendError(-32000, "No post data available for the request");
-            return;
-        }
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "postData",
-            rapidjson::Value(it->second.c_str(), it->second.size(), alloc),
-            alloc);
-        cmd.sendResult(result, doc);
-        return;
-    }
+void NetworkDomain::handleEmulateNetworkConditions(CDPCommand& cmd,
+                                                   const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
 
-    if (method == "setExtraHTTPHeaders") {
-        // Store the headers on the session; the ResourceLoader network hook
-        // (applyExtraHTTPHeaders) injects them into every real outgoing request
-        // for this WebView.
-        s->extraHTTPHeaders.clear();
-        if (cmd.params() && cmd.params()->HasMember("headers") &&
-            (*cmd.params())["headers"].IsObject()) {
-            const rapidjson::Value& h = (*cmd.params())["headers"];
-            for (auto m = h.MemberBegin(); m != h.MemberEnd(); ++m) {
-                if (m->value.IsString()) {
-                    s->extraHTTPHeaders[m->name.GetString()] =
-                        m->value.GetString();
-                }
+    // offline gates the ResourceLoader blocking hook (shouldBlockRequest).
+    // latency/throughput are stored for completeness but not enforced --
+    // no throttling is implemented in this engine.
+    s->networkOffline = paramBool(cmd, "offline", false);
+    s->networkLatency = paramNum(cmd, "latency", 0);
+    s->networkDownloadThroughput = paramNum(cmd, "downloadThroughput", -1);
+    s->networkUploadThroughput = paramNum(cmd, "uploadThroughput", -1);
+    cmd.sendResultEmpty();
+}
+
+void NetworkDomain::handleSetBlockedURLs(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    s->networkBlockedUrls.clear();
+    if (cmd.params() && cmd.params()->HasMember("urls") &&
+        (*cmd.params())["urls"].IsArray()) {
+        const rapidjson::Value& urls = (*cmd.params())["urls"];
+        for (rapidjson::SizeType i = 0; i < urls.Size(); ++i) {
+            if (urls[i].IsString()) {
+                s->networkBlockedUrls.push_back(urls[i].GetString());
             }
         }
-        cmd.sendResultEmpty();
-        return;
     }
+    cmd.sendResultEmpty();
+}
 
-    if (method == "emulateNetworkConditions") {
-        // offline gates the ResourceLoader blocking hook (shouldBlockRequest).
-        // latency/throughput are stored for completeness but not enforced --
-        // no throttling is implemented in this engine.
-        s->networkOffline = paramBool(cmd, "offline", false);
-        s->networkLatency = paramNum(cmd, "latency", 0);
-        s->networkDownloadThroughput = paramNum(cmd, "downloadThroughput", -1);
-        s->networkUploadThroughput = paramNum(cmd, "uploadThroughput", -1);
-        cmd.sendResultEmpty();
-        return;
-    }
+void NetworkDomain::handleSetCacheDisabled(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
 
-    if (method == "setBlockedURLs") {
-        s->networkBlockedUrls.clear();
-        if (cmd.params() && cmd.params()->HasMember("urls") &&
-            (*cmd.params())["urls"].IsArray()) {
-            const rapidjson::Value& urls = (*cmd.params())["urls"];
-            for (rapidjson::SizeType i = 0; i < urls.Size(); ++i) {
-                if (urls[i].IsString()) {
-                    s->networkBlockedUrls.push_back(urls[i].GetString());
-                }
-            }
-        }
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "setCacheDisabled") {
-        // Toggle the process HTTPCache between LOAD_NO_CACHE (bypass disk
-        // cache) and LOAD_DEFAULT. The cache is process-wide, so the effect is
-        // global even though the state is tracked per session. If HTTPCache is
-        // not built or not available on this thread, fall through to an ack
-        // (state stored).
-        bool disabled = paramBool(cmd, "cacheDisabled", false);
-        s->networkCacheDisabled = disabled;
+    // Toggle the process HTTPCache between LOAD_NO_CACHE (bypass disk
+    // cache) and LOAD_DEFAULT. The cache is process-wide, so the effect is
+    // global even though the state is tracked per session. If HTTPCache is
+    // not built or not available on this thread, fall through to an ack
+    // (state stored).
+    bool disabled = paramBool(cmd, "cacheDisabled", false);
+    s->networkCacheDisabled = disabled;
 #if defined(STARFISH_ENABLE_HTTPCACHE)
-        WebView* wv = m_dispatcher->webView();
-        if (wv) {
-            Optional<HTTPCache*> cache = wv->starfish()->httpCache();
-            if (cache) {
-                cache.getValue()->setCacheMode(disabled
-                                                   ? HTTPCache::LOAD_NO_CACHE
-                                                   : HTTPCache::LOAD_DEFAULT);
-            }
+    WebView* wv = m_dispatcher->webView();
+    if (wv) {
+        Optional<HTTPCache*> cache = wv->starfish()->httpCache();
+        if (cache) {
+            cache.getValue()->setCacheMode(disabled ? HTTPCache::LOAD_NO_CACHE
+                                                    : HTTPCache::LOAD_DEFAULT);
         }
-#endif
-        cmd.sendResultEmpty();
-        return;
     }
+#endif
+    cmd.sendResultEmpty();
+}
 
-    if (method == "clearBrowserCache") {
-        // Drop every cached HTTP response. No-op ack when HTTPCache is absent.
+void NetworkDomain::handleClearBrowserCache(CDPCommand& cmd, const std::string&)
+{
+    // Drop every cached HTTP response. No-op ack when HTTPCache is absent.
 #if defined(STARFISH_ENABLE_HTTPCACHE)
-        WebView* wv = m_dispatcher->webView();
-        if (wv) {
-            Optional<HTTPCache*> cache = wv->starfish()->httpCache();
-            if (cache) {
-                cache.getValue()->clear();
-            }
+    WebView* wv = m_dispatcher->webView();
+    if (wv) {
+        Optional<HTTPCache*> cache = wv->starfish()->httpCache();
+        if (cache) {
+            cache.getValue()->clear();
         }
+    }
 #endif
-        cmd.sendResultEmpty();
+    cmd.sendResultEmpty();
+}
+
+void NetworkDomain::handleClearBrowserCookies(CDPCommand& cmd,
+                                              const std::string&)
+{
+    // Expire every cookie in the shared curl jar (same backing store as the
+    // Network/Storage cookie methods).
+    clearAllCookies();
+    cmd.sendResultEmpty();
+}
+
+void NetworkDomain::handleGetCertificate(CDPCommand& cmd, const std::string&)
+{
+    // TLS certificate chains are not collected by this engine. Return the
+    // empty result shape Chrome uses when no certificate is known.
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("tableNames", rapidjson::Value(rapidjson::kArrayType),
+                     alloc);
+    cmd.sendResult(result, doc);
+}
+
+void NetworkDomain::handleSetUserAgentOverride(CDPCommand& cmd,
+                                               const std::string&)
+{
+    // Set the per-WebView custom user agent; navigator.userAgent and real
+    // outgoing request User-Agent headers read this. Empty userAgent clears
+    // the override (falls back to the built-in UA).
+    std::string ua = paramStr(cmd, "userAgent");
+    WebView* wv = m_dispatcher->webView();
+    if (wv) {
+        wv->setCustomUserAgentString(String::fromUTF8(ua.c_str(), ua.size()));
+    }
+    cmd.sendResultEmpty();
+}
+
+void NetworkDomain::handleReplayXHR(CDPCommand& cmd, const std::string&)
+{
+    // Re-issuing a captured XHR is not supported; ack without action.
+    cmd.sendResultEmpty();
+}
+
+void NetworkDomain::processMessage(CDPCommand& cmd, const std::string& method)
+{
+    static const CDPMethodHandler<NetworkDomain> handlers[] = {
+        { "enable", &NetworkDomain::handleEnable },
+        { "disable", &NetworkDomain::handleDisable },
+        { "setCookie", &NetworkDomain::handleSetCookie },
+        { "setCookies", &NetworkDomain::handleSetCookies },
+        { "getCookies", &NetworkDomain::handleGetCookies },
+        { "getAllCookies", &NetworkDomain::handleGetCookies },
+        { "deleteCookies", &NetworkDomain::handleDeleteCookies },
+        { "getResponseBody", &NetworkDomain::handleGetResponseBody },
+        { "searchInResponseBody", &NetworkDomain::handleSearchInResponseBody },
+        { "getRequestPostData", &NetworkDomain::handleGetRequestPostData },
+        { "setExtraHTTPHeaders", &NetworkDomain::handleSetExtraHTTPHeaders },
+        { "emulateNetworkConditions",
+          &NetworkDomain::handleEmulateNetworkConditions },
+        { "setBlockedURLs", &NetworkDomain::handleSetBlockedURLs },
+        { "setCacheDisabled", &NetworkDomain::handleSetCacheDisabled },
+        { "clearBrowserCache", &NetworkDomain::handleClearBrowserCache },
+        { "clearBrowserCookies", &NetworkDomain::handleClearBrowserCookies },
+        { "getCertificate", &NetworkDomain::handleGetCertificate },
+        { "setUserAgentOverride", &NetworkDomain::handleSetUserAgentOverride },
+        { "replayXHR", &NetworkDomain::handleReplayXHR },
+    };
+    if (CDPHandlerFn<NetworkDomain> handler =
+            findCDPMethodHandler(handlers, method)) {
+        (this->*handler)(cmd, method);
         return;
     }
-
-    if (method == "clearBrowserCookies") {
-        // Expire every cookie in the shared curl jar (same backing store as the
-        // Network/Storage cookie methods).
-        clearAllCookies();
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "getCertificate") {
-        // TLS certificate chains are not collected by this engine. Return the
-        // empty result shape Chrome uses when no certificate is known.
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("tableNames", rapidjson::Value(rapidjson::kArrayType),
-                         alloc);
-        cmd.sendResult(result, doc);
-        return;
-    }
-
-    if (method == "setUserAgentOverride") {
-        // Set the per-WebView custom user agent; navigator.userAgent and real
-        // outgoing request User-Agent headers read this. Empty userAgent clears
-        // the override (falls back to the built-in UA).
-        std::string ua = paramStr(cmd, "userAgent");
-        WebView* wv = m_dispatcher->webView();
-        if (wv) {
-            wv->setCustomUserAgentString(
-                String::fromUTF8(ua.c_str(), ua.size()));
-        }
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "replayXHR") {
-        // Re-issuing a captured XHR is not supported; ack without action.
-        cmd.sendResultEmpty();
-        return;
-    }
-
     // Any remaining Network.* method (setBypassServiceWorker etc.) is accepted
     // but has no backing implementation in this MVP.
     cmd.sendResultEmpty();

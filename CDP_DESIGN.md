@@ -293,16 +293,23 @@ private:
 ### 1.7 도메인 클래스 공통 형태
 
 각 도메인은 GC 비상속. 메인 스레드 전용. `processMessage` 진입점.
+모든 도메인은 `CDPDomain`(`src/core/cdp/CDPDomain.h`)을 구현하고, 디스패처는
+이 인터페이스로만 도메인을 호출한다. 그래서 CDP 코어(`src/core/cdp`)는
+`domains/` 구현에 의존하지 않는다. 연결 종료, 타깃 파괴 같은 디스패처
+생명주기는 `CDPDomain`의 훅(`cancelPendingWork`, `resetConnection`,
+`willResetSession`, `willDestroyTarget`, `childFrameLoaded`)으로 전달되며,
+도메인은 상태를 가진 훅만 재정의한다.
 
 ```cpp
 // e.g. RuntimeDomain.h
 namespace Starfish {
 class CDPCommand;
-class RuntimeDomain {
+class RuntimeDomain : public CDPDomain {
 public:
     RuntimeDomain(CDPDispatcher* d) : m_dispatcher(d) {}
     // method = "evaluate" 등 (도메인 prefix 제거된 부분)
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
+    void cancelPendingWork() override { cancelAllPendingEvaluations(); }
 private:
     CDPDispatcher* m_dispatcher;
 };
@@ -438,24 +445,40 @@ RapidJSON 으로 `rawJson` 파싱(Inspector.cpp:221 패턴):
 
 ### 3.2 디스패치 테이블 (`CDPDispatcher::route`)
 
-문자열 비교로 단순 분기(starfish 스타일; CDP.zig 의 uint bitcast 최적화는 불필요):
+문자열 비교로 단순 분기(starfish 스타일; CDP.zig 의 uint bitcast 최적화는 불필요).
+도메인 객체는 `domains()`(이름 → `CDPDomain*`)에서 찾고, 디스패처가 직접
+처리하는 작은 도메인(IO, Browser, Profiler 등)은 정적 표에서 찾는다:
 ```cpp
-if (domain == "Target")  m_target->processMessage(cmd, methodName);
-else if (domain == "Page")    m_page->processMessage(cmd, methodName);
-else if (domain == "Runtime") m_runtime->processMessage(cmd, methodName);
-else if (domain == "DOM")     m_dom->processMessage(cmd, methodName);
-else if (domain == "Log")     m_log->processMessage(cmd, methodName);
-else cmd.sendError(-32601, "'<method>' wasn't found");   // method not found
+for (const NamedDomain& entry : domains()) {
+    if (domain == entry.name) {
+        entry.domain->processMessage(cmd, methodName);
+        return;
+    }
+}
+static const CDPMethodHandler<CDPDispatcher> handlers[] = {
+    { "IO", &CDPDispatcher::routeIO },
+    ...
+};
+if (CDPHandlerFn<CDPDispatcher> handler = findCDPMethodHandler(handlers, domain)) {
+    (this->*handler)(cmd, methodName);
+    return;
+}
+cmd.sendResultEmpty();   // 미구현 도메인은 빈 결과로 응답
 ```
 
-각 도메인 `processMessage` 내부도 `if (method == "enable") ...` 식 분기.
+메서드가 많은 도메인의 `processMessage`도 같은 정적 표로 분기한다. 표는 정적
+배열이라 분기 시 할당이 없다. 메서드가 몇 개뿐인 도메인은
+`if (method == "enable") ...` 식 분기를 그대로 둔다.
 
 ### 3.3 핸들러 시그니처
 
 ```cpp
 void XxxDomain::processMessage(CDPCommand& cmd, const std::string& method);
 ```
-개별 메서드는 private 멤버 함수 `void cmd_<name>(CDPCommand&)` 로 구현. (browser 의 `fn enable(cmd)` 대응)
+개별 메서드는 private 멤버 함수
+`void handle<Name>(CDPCommand& cmd, const std::string& method)` 로 구현하고
+`processMessage` 의 표에 등록한다. 여러 CDP 메서드가 한 핸들러를 공유하면
+`method` 로 구분한다. (browser 의 `fn enable(cmd)` 대응)
 
 ### 3.4 에러 코드 (JSON-RPC + CDP 관례)
 

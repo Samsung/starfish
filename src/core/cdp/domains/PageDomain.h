@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPPageDomain__)
 #define __StarfishCDPPageDomain__
 
+#include "../CDPDomain.h"
 #include <string>
 
 namespace Starfish {
@@ -30,13 +31,21 @@ class BrowsingContext;
 class CDPSession;
 class WebView;
 
-class PageDomain {
+class PageDomain : public CDPDomain {
 public:
     PageDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
+    void willResetSession(CDPSession* session, WebView* webView) override
+    {
+        stopScreencast(session, webView);
+    }
+    void childFrameLoaded(const std::string& sessionId) override
+    {
+        discoverChildFrames(sessionId);
+    }
     // Shared document navigation for Page.navigate and a debugger-waiting
     // target's initial load. A queued Page.navigate has already reserved its
     // loader and emitted beginNavigation, so resume must not start it twice.
@@ -109,6 +118,46 @@ public:
     void stopScreencast(CDPSession* s, WebView* wv);
 
 private:
+    void handleEnable(CDPCommand& cmd, const std::string& method);
+    void handleDisable(CDPCommand& cmd, const std::string& method);
+    void handleSetBypassCSP(CDPCommand& cmd, const std::string& method);
+    void handleGetFrameTree(CDPCommand& cmd, const std::string& method);
+    void handleSetLifecycleEventsEnabled(CDPCommand& cmd,
+                                         const std::string& method);
+    void handleNavigate(CDPCommand& cmd, const std::string& method);
+    void handleSetDocumentContent(CDPCommand& cmd, const std::string& method);
+    void handleReload(CDPCommand& cmd, const std::string& method);
+    void handleBringToFront(CDPCommand& cmd, const std::string& method);
+    void handleGetNavigationHistory(CDPCommand& cmd, const std::string& method);
+    void handleNavigateToHistoryEntry(CDPCommand& cmd,
+                                      const std::string& method);
+    void handleResetNavigationHistory(CDPCommand& cmd,
+                                      const std::string& method);
+    void handleGetLayoutMetrics(CDPCommand& cmd, const std::string& method);
+    void handleAddScriptToEvaluateOnNewDocument(CDPCommand& cmd,
+                                                const std::string& method);
+    void handleRemoveScriptToEvaluateOnNewDocument(CDPCommand& cmd,
+                                                   const std::string& method);
+    void handleCaptureScreenshot(CDPCommand& cmd, const std::string& method);
+    void handleStartScreencast(CDPCommand& cmd, const std::string& method);
+    void handleStopScreencast(CDPCommand& cmd, const std::string& method);
+    void handleScreencastFrameAck(CDPCommand& cmd, const std::string& method);
+    void handlePrintToPDF(CDPCommand& cmd, const std::string& method);
+    void handleCreateIsolatedWorld(CDPCommand& cmd, const std::string& method);
+    void handleHandleJavaScriptDialog(CDPCommand& cmd,
+                                      const std::string& method);
+    void handleCaptureSnapshot(CDPCommand& cmd, const std::string& method);
+    void handleGetResourceTree(CDPCommand& cmd, const std::string& method);
+    void handleGetResourceContent(CDPCommand& cmd, const std::string& method);
+    void handleGetAppManifest(CDPCommand& cmd, const std::string& method);
+    void handleGetInstallabilityErrors(CDPCommand& cmd,
+                                       const std::string& method);
+    void handleGetManifestIcons(CDPCommand& cmd, const std::string& method);
+    void handleGenerateTestReport(CDPCommand& cmd, const std::string& method);
+    void handleSetInterceptFileChooserDialog(CDPCommand& cmd,
+                                             const std::string& method);
+    void handleCrash(CDPCommand& cmd, const std::string& method);
+
     // Emit Page.lifecycleEvent {frameId, loaderId, name, timestamp} for the
     // current frame/loader when lifecycle events are enabled.
     void emitLifecycle(const std::string& sessionId, const char* name);

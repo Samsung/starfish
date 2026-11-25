@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPStorageDomain__)
 #define __StarfishCDPStorageDomain__
 
+#include "../CDPDomain.h"
 #include <string>
 
 namespace Starfish {
@@ -36,13 +37,13 @@ class CDPCommand;
 // StorageNamespace (the same areas DOMStorage and window.localStorage use).
 // getStorageKeyForFrame returns the routed page's serialized origin. Handlers
 // run on the main thread.
-class StorageDomain {
+class StorageDomain : public CDPDomain {
 public:
     StorageDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
 
 private:
     CDPDispatcher* m_dispatcher;

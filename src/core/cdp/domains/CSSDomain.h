@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPCSSDomain__)
 #define __StarfishCDPCSSDomain__
 
+#include "../CDPDomain.h"
 #include <string>
 
 namespace Starfish {
@@ -38,15 +39,30 @@ class CDPCommand;
 // rules' cssText (the original source string is discarded after parsing).
 // Sheets are identified by their resolver index as "sheet-N". enable/disable
 // ack only. Handlers run on the main thread.
-class CSSDomain {
+class CSSDomain : public CDPDomain {
 public:
     CSSDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
 
 private:
+    void handleEnable(CDPCommand& cmd, const std::string& method);
+    void handleDisable(CDPCommand& cmd, const std::string& method);
+    void handleGetComputedStyleForNode(CDPCommand& cmd,
+                                       const std::string& method);
+    void handleGetInlineStylesForNode(CDPCommand& cmd,
+                                      const std::string& method);
+    void handleGetMatchedStylesForNode(CDPCommand& cmd,
+                                       const std::string& method);
+    void handleGetStyleSheetText(CDPCommand& cmd, const std::string& method);
+    void handleCreateStyleSheet(CDPCommand& cmd, const std::string& method);
+    void handleAddRule(CDPCommand& cmd, const std::string& method);
+    void handleSetStyleSheetText(CDPCommand& cmd, const std::string& method);
+    void handleSetStyleTexts(CDPCommand& cmd, const std::string& method);
+    void handleSetPropertyText(CDPCommand& cmd, const std::string& method);
+
     CDPDispatcher* m_dispatcher;
 };
 

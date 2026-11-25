@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPNetworkDomain__)
 #define __StarfishCDPNetworkDomain__
 
+#include "../CDPDomain.h"
 #include <map>
 #include <string>
 
@@ -34,13 +35,13 @@ class WebView;
 class Resource;
 class ResourceRequest;
 
-class NetworkDomain {
+class NetworkDomain : public CDPDomain {
 public:
     NetworkDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
 
     // --- Real ResourceLoader hook (main thread) -------------------------
     // Called from Resource lifecycle methods when a real network resource is
@@ -141,6 +142,26 @@ public:
     static void clearCookiesForHost(const std::string& host);
 
 private:
+    void handleEnable(CDPCommand& cmd, const std::string& method);
+    void handleDisable(CDPCommand& cmd, const std::string& method);
+    void handleSetCookie(CDPCommand& cmd, const std::string& method);
+    void handleSetCookies(CDPCommand& cmd, const std::string& method);
+    void handleGetCookies(CDPCommand& cmd, const std::string& method);
+    void handleDeleteCookies(CDPCommand& cmd, const std::string& method);
+    void handleGetResponseBody(CDPCommand& cmd, const std::string& method);
+    void handleSearchInResponseBody(CDPCommand& cmd, const std::string& method);
+    void handleGetRequestPostData(CDPCommand& cmd, const std::string& method);
+    void handleSetExtraHTTPHeaders(CDPCommand& cmd, const std::string& method);
+    void handleEmulateNetworkConditions(CDPCommand& cmd,
+                                        const std::string& method);
+    void handleSetBlockedURLs(CDPCommand& cmd, const std::string& method);
+    void handleSetCacheDisabled(CDPCommand& cmd, const std::string& method);
+    void handleClearBrowserCache(CDPCommand& cmd, const std::string& method);
+    void handleClearBrowserCookies(CDPCommand& cmd, const std::string& method);
+    void handleGetCertificate(CDPCommand& cmd, const std::string& method);
+    void handleSetUserAgentOverride(CDPCommand& cmd, const std::string& method);
+    void handleReplayXHR(CDPCommand& cmd, const std::string& method);
+
     // Resolve the CDP session that owns a WebView (nullptr if none / detached).
     CDPSession* sessionForWebView(WebView* wv);
 

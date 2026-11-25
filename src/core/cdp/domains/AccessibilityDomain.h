@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPAccessibilityDomain__)
 #define __StarfishCDPAccessibilityDomain__
 
+#include "../CDPDomain.h"
 #include <memory>
 #include <string>
 
@@ -32,13 +33,13 @@ class CDPCommand;
 class Document;
 class Node;
 
-class AccessibilityDomain {
+class AccessibilityDomain : public CDPDomain {
 public:
     AccessibilityDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
 
     // The document finished loading. Chromium resets what it knows the
     // client holds and announces the new root, so a client that was
@@ -51,6 +52,14 @@ public:
     void markNodeDirty(Node* domNode);
 
 private:
+    void handleEnable(CDPCommand& cmd, const std::string& method);
+    void handleDisable(CDPCommand& cmd, const std::string& method);
+    void handleGetFullAXTree(CDPCommand& cmd, const std::string& method);
+    void handleGetAXNodeAndAncestors(CDPCommand& cmd,
+                                     const std::string& method);
+    void handleQueryAXTree(CDPCommand& cmd, const std::string& method);
+    void handleGetChildAXNodes(CDPCommand& cmd, const std::string& method);
+
     Optional<Document*> documentFor(CDPCommand& cmd);
     // A fresh tree per command. Nothing is kept between commands, so a page
     // no client is inspecting carries no accessibility data at all.

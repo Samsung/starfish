@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPLogDomain__)
 #define __StarfishCDPLogDomain__
 
+#include "../CDPDomain.h"
 #include <string>
 
 namespace Starfish {
@@ -27,13 +28,13 @@ namespace Starfish {
 class CDPDispatcher;
 class CDPCommand;
 
-class LogDomain {
+class LogDomain : public CDPDomain {
 public:
     LogDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
 
 private:
     CDPDispatcher* m_dispatcher;

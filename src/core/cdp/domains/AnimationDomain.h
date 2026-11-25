@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPAnimationDomain__)
 #define __StarfishCDPAnimationDomain__
 
+#include "../CDPDomain.h"
 #include <string>
 
 namespace Starfish {
@@ -40,13 +41,13 @@ class WebView;
 // control). animationCreated/animationStarted are real: emitted from the
 // engine's keyframe-animation start hook (see emitAnimationStarted) when
 // Animation is enabled. Handlers run on the main thread.
-class AnimationDomain {
+class AnimationDomain : public CDPDomain {
 public:
     AnimationDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
 
     // Engine bridge (main thread). Called when a CSS keyframe animation starts
     // applying to an element. Emits Animation.animationCreated followed by

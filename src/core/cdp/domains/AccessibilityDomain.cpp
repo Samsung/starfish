@@ -194,285 +194,313 @@ std::unique_ptr<AXTree> AccessibilityDomain::buildTree(Document* document)
     return AXTree::build(document, m_dispatcher->nodeRegistry());
 }
 
-void AccessibilityDomain::processMessage(CDPCommand& cmd,
-                                         const std::string& method)
+void AccessibilityDomain::handleEnable(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* session = m_dispatcher->session();
+
+    session->accessibilityEnabled = true;
+    // Let the DOM mutation sites start reporting changes.
+    g_axNodeChangesObserved = true;
+    cmd.sendResultEmpty();
+}
+
+void AccessibilityDomain::handleDisable(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* session = m_dispatcher->session();
+
+    session->accessibilityEnabled = false;
+    cmd.sendResultEmpty();
+}
+
+void AccessibilityDomain::handleGetFullAXTree(CDPCommand& cmd,
+                                              const std::string& method)
 {
     CDPSession* session = m_dispatcher->session();
     NodeRegistry* registry = m_dispatcher->nodeRegistry();
 
-    if (method == "enable") {
-        session->accessibilityEnabled = true;
-        // Let the DOM mutation sites start reporting changes.
-        g_axNodeChangesObserved = true;
-        cmd.sendResultEmpty();
+    if (method == "getRootAXNode" && !session->accessibilityEnabled) {
+        cmd.sendError(-32000, "Accessibility has not been enabled.");
         return;
     }
-    if (method == "disable") {
-        session->accessibilityEnabled = false;
-        cmd.sendResultEmpty();
+    Optional<Document*> document = documentFor(cmd);
+    if (!document) {
+        cmd.sendError(-32000, "No document");
         return;
     }
 
-    if (method == "getFullAXTree" || method == "getRootAXNode") {
-        if (method == "getRootAXNode" && !session->accessibilityEnabled) {
-            cmd.sendError(-32000, "Accessibility has not been enabled.");
-            return;
-        }
-        Optional<Document*> document = documentFor(cmd);
-        if (!document) {
-            cmd.sendError(-32000, "No document");
-            return;
-        }
+    int depth = -1; // unlimited
+    if (cmd.params() && cmd.params()->HasMember("depth") &&
+        (*cmd.params())["depth"].IsInt()) {
+        depth = (*cmd.params())["depth"].GetInt();
+    }
 
-        int depth = -1; // unlimited
-        if (cmd.params() && cmd.params()->HasMember("depth") &&
-            (*cmd.params())["depth"].IsInt()) {
-            depth = (*cmd.params())["depth"].GetInt();
-        }
+    std::unique_ptr<AXTree> tree = buildTree(document.value());
+    rapidjson::Document out;
+    rapidjson::Document::AllocatorType& allocator = out.GetAllocator();
+    AXSerializer serializer(registry, m_dispatcher->page(), &allocator);
+    rapidjson::Value result(rapidjson::kObjectType);
 
-        std::unique_ptr<AXTree> tree = buildTree(document.value());
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& allocator = out.GetAllocator();
-        AXSerializer serializer(registry, m_dispatcher->page(), &allocator);
-        rapidjson::Value result(rapidjson::kObjectType);
+    if (method == "getRootAXNode") {
+        session->axNodesRequested.insert(tree->root()->id());
+        result.AddMember("node", serializer.serialize(tree->root()), allocator);
+        cmd.sendResult(result, out);
+        return;
+    }
 
-        if (method == "getRootAXNode") {
-            session->axNodesRequested.insert(tree->root()->id());
-            result.AddMember("node", serializer.serialize(tree->root()),
-                             allocator);
-            cmd.sendResult(result, out);
-            return;
+    // Depth counts unignored levels. Every level also brings the
+    // ignored layers under it, because the client cannot ask for the
+    // children of a node it was never told about.
+    rapidjson::Value nodes(rapidjson::kArrayType);
+    nodes.PushBack(serializer.serialize(tree->root()), allocator);
+    std::vector<std::pair<AXNode*, int>> pending;
+    pending.push_back(std::make_pair(tree->root(), 1));
+    for (size_t i = 0; i < pending.size(); i++) {
+        AXNode* node = pending[i].first;
+        int level = pending[i].second;
+        collectChildren(node, serializer, nodes, allocator);
+        if (depth != -1 && level >= depth) {
+            continue;
         }
+        std::vector<AXNode*> unignored;
+        collectUnignoredChildren(node, unignored);
+        for (AXNode* child : unignored) {
+            pending.push_back(std::make_pair(child, level + 1));
+        }
+    }
+    result.AddMember("nodes", nodes, allocator);
+    cmd.sendResult(result, out);
+}
 
-        // Depth counts unignored levels. Every level also brings the
-        // ignored layers under it, because the client cannot ask for the
-        // children of a node it was never told about.
-        rapidjson::Value nodes(rapidjson::kArrayType);
-        nodes.PushBack(serializer.serialize(tree->root()), allocator);
-        std::vector<std::pair<AXNode*, int>> pending;
-        pending.push_back(std::make_pair(tree->root(), 1));
-        for (size_t i = 0; i < pending.size(); i++) {
-            AXNode* node = pending[i].first;
-            int level = pending[i].second;
-            collectChildren(node, serializer, nodes, allocator);
-            if (depth != -1 && level >= depth) {
-                continue;
-            }
-            std::vector<AXNode*> unignored;
-            collectUnignoredChildren(node, unignored);
-            for (AXNode* child : unignored) {
-                pending.push_back(std::make_pair(child, level + 1));
-            }
-        }
+void AccessibilityDomain::handleGetAXNodeAndAncestors(CDPCommand& cmd,
+                                                      const std::string& method)
+{
+    CDPSession* session = m_dispatcher->session();
+    NodeRegistry* registry = m_dispatcher->nodeRegistry();
+
+    if (method == "getAXNodeAndAncestors" && !session->accessibilityEnabled) {
+        cmd.sendError(-32000, "Accessibility has not been enabled.");
+        return;
+    }
+
+    Node* targetNode = resolveTargetNode(m_dispatcher, cmd);
+    if (!targetNode) {
+        return;
+    }
+    Document* document = targetNode->document();
+    if (!document) {
+        cmd.sendError(-32000, "No document");
+        return;
+    }
+
+    std::unique_ptr<AXTree> tree = buildTree(document);
+    rapidjson::Document out;
+    rapidjson::Document::AllocatorType& allocator = out.GetAllocator();
+    AXSerializer serializer(registry, m_dispatcher->page(), &allocator);
+    rapidjson::Value result(rapidjson::kObjectType);
+    rapidjson::Value nodes(rapidjson::kArrayType);
+
+    AXNode* target = tree->forDOMNode(targetNode);
+    if (!target) {
+        nodes.PushBack(serializer.serializeMissing(targetNode), allocator);
+    } else {
+        nodes.PushBack(serializer.serialize(target), allocator);
+    }
+
+    bool fetchRelatives = true;
+    if (method == "getPartialAXTree" && cmd.params() &&
+        cmd.params()->HasMember("fetchRelatives") &&
+        (*cmd.params())["fetchRelatives"].IsBool()) {
+        fetchRelatives = (*cmd.params())["fetchRelatives"].GetBool();
+    }
+
+    if (method == "getPartialAXTree" && !fetchRelatives) {
+        result.AddMember("nodes", nodes, allocator);
+        cmd.sendResult(result, out);
+        return;
+    }
+    if (!target && method == "getAXNodeAndAncestors") {
+        // A node with no AX node has no ancestors to report either.
         result.AddMember("nodes", nodes, allocator);
         cmd.sendResult(result, out);
         return;
     }
 
-    if (method == "getAXNodeAndAncestors" || method == "getPartialAXTree") {
-        if (method == "getAXNodeAndAncestors" &&
-            !session->accessibilityEnabled) {
-            cmd.sendError(-32000, "Accessibility has not been enabled.");
-            return;
-        }
-
-        Node* targetNode = resolveTargetNode(m_dispatcher, cmd);
-        if (!targetNode) {
-            return;
-        }
-        Document* document = targetNode->document();
-        if (!document) {
-            cmd.sendError(-32000, "No document");
-            return;
-        }
-
-        std::unique_ptr<AXTree> tree = buildTree(document);
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& allocator = out.GetAllocator();
-        AXSerializer serializer(registry, m_dispatcher->page(), &allocator);
-        rapidjson::Value result(rapidjson::kObjectType);
-        rapidjson::Value nodes(rapidjson::kArrayType);
-
-        AXNode* target = tree->forDOMNode(targetNode);
-        if (!target) {
-            nodes.PushBack(serializer.serializeMissing(targetNode), allocator);
-        } else {
-            nodes.PushBack(serializer.serialize(target), allocator);
-        }
-
-        bool fetchRelatives = true;
-        if (method == "getPartialAXTree" && cmd.params() &&
-            cmd.params()->HasMember("fetchRelatives") &&
-            (*cmd.params())["fetchRelatives"].IsBool()) {
-            fetchRelatives = (*cmd.params())["fetchRelatives"].GetBool();
-        }
-
-        if (method == "getPartialAXTree" && !fetchRelatives) {
-            result.AddMember("nodes", nodes, allocator);
-            cmd.sendResult(result, out);
-            return;
-        }
-        if (!target && method == "getAXNodeAndAncestors") {
-            // A node with no AX node has no ancestors to report either.
-            result.AddMember("nodes", nodes, allocator);
-            cmd.sendResult(result, out);
-            return;
-        }
-
-        if (method == "getPartialAXTree" && target && !target->ignored()) {
-            collectChildren(target, serializer, nodes, allocator);
-        }
-
-        // The ancestors. When the inspected node is ignored it is missing
-        // from the first ancestor's childIds, so it is put back at the
-        // front to keep the chain connected.
-        AXNode* ancestor = target ? target->parent()
-                                  : nearestAXAncestor(tree.get(), targetNode);
-        bool connectTarget = !target || target->ignored();
-        while (ancestor) {
-            rapidjson::Value value = serializer.serialize(ancestor);
-            if (connectTarget) {
-                rapidjson::Value childIds(rapidjson::kArrayType);
-                const char* id = target ? target->id().c_str() : "ax-no-node";
-                childIds.PushBack(rapidjson::Value(id, strlen(id), allocator),
-                                  allocator);
-                for (rapidjson::SizeType i = 0; i < value["childIds"].Size();
-                     i++) {
-                    childIds.PushBack(
-                        rapidjson::Value(value["childIds"][i], allocator),
-                        allocator);
-                }
-                value["childIds"].Swap(childIds);
-                connectTarget = false;
-            }
-            nodes.PushBack(value, allocator);
-            ancestor = ancestor->parent();
-        }
-        if (method == "getAXNodeAndAncestors") {
-            for (rapidjson::SizeType i = 0; i < nodes.Size(); i++) {
-                session->axNodesRequested.insert(
-                    nodes[i]["nodeId"].GetString());
-            }
-        }
-
-        result.AddMember("nodes", nodes, allocator);
-        cmd.sendResult(result, out);
-        return;
+    if (method == "getPartialAXTree" && target && !target->ignored()) {
+        collectChildren(target, serializer, nodes, allocator);
     }
 
-    if (method == "queryAXTree") {
-        Node* rootNode = resolveTargetNode(m_dispatcher, cmd);
-        if (!rootNode) {
-            return;
-        }
-        // The accessibility tree has no node for a shadow root, so the
-        // search starts at the host instead.
-        if (rootNode->isShadowRoot()) {
-            rootNode = rootNode->asShadowRoot()->host();
-        }
-        if (!rootNode) {
-            cmd.sendError(-32602, "Root DOM node could not be found");
-            return;
-        }
-        Document* document = rootNode->document();
-        if (!document) {
-            cmd.sendError(-32000, "No document");
-            return;
-        }
-
-        std::string wantedName;
-        std::string wantedRole;
-        bool hasName = false;
-        bool hasRole = false;
-        if (cmd.params()->HasMember("accessibleName") &&
-            (*cmd.params())["accessibleName"].IsString()) {
-            wantedName = (*cmd.params())["accessibleName"].GetString();
-            hasName = true;
-        }
-        if (cmd.params()->HasMember("role") &&
-            (*cmd.params())["role"].IsString()) {
-            wantedRole = (*cmd.params())["role"].GetString();
-            hasRole = true;
-        }
-
-        std::unique_ptr<AXTree> tree = buildTree(document);
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& allocator = out.GetAllocator();
-        AXSerializer serializer(registry, m_dispatcher->page(), &allocator);
-        rapidjson::Value nodes(rapidjson::kArrayType);
-
-        AXNode* start = tree->forDOMNode(rootNode);
-        std::vector<AXNode*> reachable;
-        if (start) {
-            reachable.push_back(start);
-        }
-        while (!reachable.empty()) {
-            AXNode* node = reachable.back();
-            reachable.pop_back();
-            reachable.insert(reachable.end(), node->children().rbegin(),
-                             node->children().rend());
-            // Chromium's result carries the StaticText node but not the box
-            // under it: see the two nodes the pinned
-            // accessibility-query-axtree-expected.txt dumps for the name
-            // "title".
-            if (node->kind() == AXNodeKind::InlineText) {
-                continue;
+    // The ancestors. When the inspected node is ignored it is missing
+    // from the first ancestor's childIds, so it is put back at the
+    // front to keep the chain connected.
+    AXNode* ancestor =
+        target ? target->parent() : nearestAXAncestor(tree.get(), targetNode);
+    bool connectTarget = !target || target->ignored();
+    while (ancestor) {
+        rapidjson::Value value = serializer.serialize(ancestor);
+        if (connectTarget) {
+            rapidjson::Value childIds(rapidjson::kArrayType);
+            const char* id = target ? target->id().c_str() : "ax-no-node";
+            childIds.PushBack(rapidjson::Value(id, strlen(id), allocator),
+                              allocator);
+            for (rapidjson::SizeType i = 0; i < value["childIds"].Size(); i++) {
+                childIds.PushBack(
+                    rapidjson::Value(value["childIds"][i], allocator),
+                    allocator);
             }
-            if (hasName && node->name() != wantedName) {
-                continue;
-            }
-            // An ignored node reports the role "none" over the protocol,
-            // but it is matched on the role it actually computed.
-            if (hasRole && node->role() != wantedRole) {
-                continue;
-            }
-            nodes.PushBack(serializer.serialize(node, true), allocator);
+            value["childIds"].Swap(childIds);
+            connectTarget = false;
         }
-
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("nodes", nodes, allocator);
-        cmd.sendResult(result, out);
-        return;
+        nodes.PushBack(value, allocator);
+        ancestor = ancestor->parent();
     }
-
-    if (method == "getChildAXNodes") {
-        if (!session->accessibilityEnabled) {
-            cmd.sendError(-32000, "Accessibility has not been enabled.");
-            return;
-        }
-        if (!cmd.params() || !cmd.params()->HasMember("id") ||
-            !(*cmd.params())["id"].IsString()) {
-            cmd.sendError(-32602, "id is required");
-            return;
-        }
-        Optional<Document*> document = documentFor(cmd);
-        if (!document) {
-            cmd.sendError(-32000, "No document");
-            return;
-        }
-
-        std::unique_ptr<AXTree> tree = buildTree(document.value());
-        AXNode* parent = tree->forId((*cmd.params())["id"].GetString());
-        if (!parent) {
-            cmd.sendError(-32602, "Invalid ID");
-            return;
-        }
-
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& allocator = out.GetAllocator();
-        AXSerializer serializer(registry, m_dispatcher->page(), &allocator);
-        rapidjson::Value nodes(rapidjson::kArrayType);
-        collectChildren(parent, serializer, nodes, allocator);
+    if (method == "getAXNodeAndAncestors") {
         for (rapidjson::SizeType i = 0; i < nodes.Size(); i++) {
             session->axNodesRequested.insert(nodes[i]["nodeId"].GetString());
         }
+    }
 
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("nodes", nodes, allocator);
-        cmd.sendResult(result, out);
+    result.AddMember("nodes", nodes, allocator);
+    cmd.sendResult(result, out);
+}
+
+void AccessibilityDomain::handleQueryAXTree(CDPCommand& cmd, const std::string&)
+{
+    NodeRegistry* registry = m_dispatcher->nodeRegistry();
+
+    Node* rootNode = resolveTargetNode(m_dispatcher, cmd);
+    if (!rootNode) {
+        return;
+    }
+    // The accessibility tree has no node for a shadow root, so the
+    // search starts at the host instead.
+    if (rootNode->isShadowRoot()) {
+        rootNode = rootNode->asShadowRoot()->host();
+    }
+    if (!rootNode) {
+        cmd.sendError(-32602, "Root DOM node could not be found");
+        return;
+    }
+    Document* document = rootNode->document();
+    if (!document) {
+        cmd.sendError(-32000, "No document");
         return;
     }
 
+    std::string wantedName;
+    std::string wantedRole;
+    bool hasName = false;
+    bool hasRole = false;
+    if (cmd.params()->HasMember("accessibleName") &&
+        (*cmd.params())["accessibleName"].IsString()) {
+        wantedName = (*cmd.params())["accessibleName"].GetString();
+        hasName = true;
+    }
+    if (cmd.params()->HasMember("role") && (*cmd.params())["role"].IsString()) {
+        wantedRole = (*cmd.params())["role"].GetString();
+        hasRole = true;
+    }
+
+    std::unique_ptr<AXTree> tree = buildTree(document);
+    rapidjson::Document out;
+    rapidjson::Document::AllocatorType& allocator = out.GetAllocator();
+    AXSerializer serializer(registry, m_dispatcher->page(), &allocator);
+    rapidjson::Value nodes(rapidjson::kArrayType);
+
+    AXNode* start = tree->forDOMNode(rootNode);
+    std::vector<AXNode*> reachable;
+    if (start) {
+        reachable.push_back(start);
+    }
+    while (!reachable.empty()) {
+        AXNode* node = reachable.back();
+        reachable.pop_back();
+        reachable.insert(reachable.end(), node->children().rbegin(),
+                         node->children().rend());
+        // Chromium's result carries the StaticText node but not the box
+        // under it: see the two nodes the pinned
+        // accessibility-query-axtree-expected.txt dumps for the name
+        // "title".
+        if (node->kind() == AXNodeKind::InlineText) {
+            continue;
+        }
+        if (hasName && node->name() != wantedName) {
+            continue;
+        }
+        // An ignored node reports the role "none" over the protocol,
+        // but it is matched on the role it actually computed.
+        if (hasRole && node->role() != wantedRole) {
+            continue;
+        }
+        nodes.PushBack(serializer.serialize(node, true), allocator);
+    }
+
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("nodes", nodes, allocator);
+    cmd.sendResult(result, out);
+}
+
+void AccessibilityDomain::handleGetChildAXNodes(CDPCommand& cmd,
+                                                const std::string&)
+{
+    CDPSession* session = m_dispatcher->session();
+    NodeRegistry* registry = m_dispatcher->nodeRegistry();
+
+    if (!session->accessibilityEnabled) {
+        cmd.sendError(-32000, "Accessibility has not been enabled.");
+        return;
+    }
+    if (!cmd.params() || !cmd.params()->HasMember("id") ||
+        !(*cmd.params())["id"].IsString()) {
+        cmd.sendError(-32602, "id is required");
+        return;
+    }
+    Optional<Document*> document = documentFor(cmd);
+    if (!document) {
+        cmd.sendError(-32000, "No document");
+        return;
+    }
+
+    std::unique_ptr<AXTree> tree = buildTree(document.value());
+    AXNode* parent = tree->forId((*cmd.params())["id"].GetString());
+    if (!parent) {
+        cmd.sendError(-32602, "Invalid ID");
+        return;
+    }
+
+    rapidjson::Document out;
+    rapidjson::Document::AllocatorType& allocator = out.GetAllocator();
+    AXSerializer serializer(registry, m_dispatcher->page(), &allocator);
+    rapidjson::Value nodes(rapidjson::kArrayType);
+    collectChildren(parent, serializer, nodes, allocator);
+    for (rapidjson::SizeType i = 0; i < nodes.Size(); i++) {
+        session->axNodesRequested.insert(nodes[i]["nodeId"].GetString());
+    }
+
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("nodes", nodes, allocator);
+    cmd.sendResult(result, out);
+}
+
+void AccessibilityDomain::processMessage(CDPCommand& cmd,
+                                         const std::string& method)
+{
+    static const CDPMethodHandler<AccessibilityDomain> handlers[] = {
+        { "enable", &AccessibilityDomain::handleEnable },
+        { "disable", &AccessibilityDomain::handleDisable },
+        { "getFullAXTree", &AccessibilityDomain::handleGetFullAXTree },
+        { "getRootAXNode", &AccessibilityDomain::handleGetFullAXTree },
+        { "getAXNodeAndAncestors",
+          &AccessibilityDomain::handleGetAXNodeAndAncestors },
+        { "getPartialAXTree",
+          &AccessibilityDomain::handleGetAXNodeAndAncestors },
+        { "queryAXTree", &AccessibilityDomain::handleQueryAXTree },
+        { "getChildAXNodes", &AccessibilityDomain::handleGetChildAXNodes },
+    };
+    if (CDPHandlerFn<AccessibilityDomain> handler =
+            findCDPMethodHandler(handlers, method)) {
+        (this->*handler)(cmd, method);
+        return;
+    }
     cmd.sendError(-32601, "'method' wasn't found");
 }
 

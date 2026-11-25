@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPTargetDomain__)
 #define __StarfishCDPTargetDomain__
 
+#include "../CDPDomain.h"
 #include <string>
 #include <vector>
 
@@ -34,17 +35,37 @@ class Document;
 // Engine lifecycle bridge; ignores detached and non-top-level documents.
 void notifyTargetInfoChanged(Document* document);
 
-class TargetDomain {
+class TargetDomain : public CDPDomain {
 public:
     TargetDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
+    void resetConnection() override
+    {
+        reset();
+    }
     void notifyTargetInfoChanged(TargetContext* ctx);
     void reset();
 
 private:
+    void handleSetDiscoverTargets(CDPCommand& cmd, const std::string& method);
+    void handleSetAutoAttach(CDPCommand& cmd, const std::string& method);
+    void handleGetTargets(CDPCommand& cmd, const std::string& method);
+    void handleGetBrowserContexts(CDPCommand& cmd, const std::string& method);
+    void handleCreateBrowserContext(CDPCommand& cmd, const std::string& method);
+    void handleDisposeBrowserContext(CDPCommand& cmd,
+                                     const std::string& method);
+    void handleGetTargetInfo(CDPCommand& cmd, const std::string& method);
+    void handleAttachToTarget(CDPCommand& cmd, const std::string& method);
+    void handleAttachToBrowserTarget(CDPCommand& cmd,
+                                     const std::string& method);
+    void handleCreateTarget(CDPCommand& cmd, const std::string& method);
+    void handleCloseTarget(CDPCommand& cmd, const std::string& method);
+    void handleActivateTarget(CDPCommand& cmd, const std::string& method);
+    void handleDetachFromTarget(CDPCommand& cmd, const std::string& method);
+
     struct Subscription {
         std::string sessionId;
         bool discover = false;

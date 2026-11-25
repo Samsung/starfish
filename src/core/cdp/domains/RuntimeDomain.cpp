@@ -67,230 +67,270 @@ BrowsingContext* RuntimeDomain::targetBrowsingContext(WebView* wv,
     return wv->mainBrowsingContext();
 }
 
-void RuntimeDomain::processMessage(CDPCommand& cmd, const std::string& method)
+void RuntimeDomain::handleEnable(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
     WebView* wv = m_dispatcher->webView();
 
-    if (method == "enable") {
-        s->runtimeEnabled = true;
-        cmd.sendResultEmpty();
+    s->runtimeEnabled = true;
+    cmd.sendResultEmpty();
 
-        // Emit Runtime.executionContextCreated.
-        std::string origin;
-        BrowsingContext* bc = wv->mainBrowsingContext();
-        if (bc && bc->document() && bc->document()->origin()) {
-            origin = bc->document()->origin()->toUTF8NonGCString();
-        }
-
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value params(rapidjson::kObjectType);
-        rapidjson::Value context(rapidjson::kObjectType);
-        context.AddMember("id", (int)s->executionContextId, alloc);
-        context.AddMember(
-            "origin", rapidjson::Value(origin.c_str(), origin.size(), alloc),
-            alloc);
-        context.AddMember("name", "", alloc);
-        context.AddMember("uniqueId", "1", alloc);
-        rapidjson::Value auxData(rapidjson::kObjectType);
-        auxData.AddMember("isDefault", true, alloc);
-        auxData.AddMember("type", "default", alloc);
-        auxData.AddMember(
-            "frameId",
-            rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc),
-            alloc);
-        context.AddMember("auxData", auxData, alloc);
-        params.AddMember("context", context, alloc);
-        CDPCommand evt(m_dispatcher, Optional<int64_t>(), cmd.sessionId(),
-                       nullptr);
-        evt.sendEvent("Runtime.executionContextCreated", params, doc);
-
-        // Announce any already-present child iframe frames + their contexts.
-        // (When connecting to an already-loaded page there is no navigate, so
-        // finishNavigation's discovery never ran.)
-        m_dispatcher->page()->discoverChildFrames(cmd.sessionId());
-        return;
+    // Emit Runtime.executionContextCreated.
+    std::string origin;
+    BrowsingContext* bc = wv->mainBrowsingContext();
+    if (bc && bc->document() && bc->document()->origin()) {
+        origin = bc->document()->origin()->toUTF8NonGCString();
     }
 
-    if (method == "disable") {
-        s->runtimeEnabled = false;
-        cmd.sendResultEmpty();
-        return;
-    }
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value params(rapidjson::kObjectType);
+    rapidjson::Value context(rapidjson::kObjectType);
+    context.AddMember("id", (int)s->executionContextId, alloc);
+    context.AddMember("origin",
+                      rapidjson::Value(origin.c_str(), origin.size(), alloc),
+                      alloc);
+    context.AddMember("name", "", alloc);
+    context.AddMember("uniqueId", "1", alloc);
+    rapidjson::Value auxData(rapidjson::kObjectType);
+    auxData.AddMember("isDefault", true, alloc);
+    auxData.AddMember("type", "default", alloc);
+    auxData.AddMember(
+        "frameId",
+        rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc), alloc);
+    context.AddMember("auxData", auxData, alloc);
+    params.AddMember("context", context, alloc);
+    CDPCommand evt(m_dispatcher, Optional<int64_t>(), cmd.sessionId(), nullptr);
+    evt.sendEvent("Runtime.executionContextCreated", params, doc);
 
-    if (method == "runIfWaitingForDebugger") {
-        if (s->waitingForDebugger) {
-            s->waitingForDebugger = false;
-            if (!s->pendingNavigationUrl.empty()) {
-                std::string url;
-                url.swap(s->pendingNavigationUrl);
-                bool started = s->pendingNavigationStarted;
-                s->pendingNavigationStarted = false;
-                if (started) {
-                    // Resume reveals the existing blank document before the
-                    // queued navigation replaces it.
-                    m_dispatcher->target()->notifyTargetInfoChanged(
-                        m_dispatcher->currentContext());
-                }
-                CDPCommand navigation(m_dispatcher, Optional<int64_t>(),
-                                      cmd.sessionId(), nullptr);
-                m_dispatcher->page()->navigate(navigation, url, started);
+    // Announce any already-present child iframe frames + their contexts.
+    // (When connecting to an already-loaded page there is no navigate, so
+    // finishNavigation's discovery never ran.)
+    m_dispatcher->page()->discoverChildFrames(cmd.sessionId());
+}
+
+void RuntimeDomain::handleDisable(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    s->runtimeEnabled = false;
+    cmd.sendResultEmpty();
+}
+
+void RuntimeDomain::handleRunIfWaitingForDebugger(CDPCommand& cmd,
+                                                  const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    if (s->waitingForDebugger) {
+        s->waitingForDebugger = false;
+        if (!s->pendingNavigationUrl.empty()) {
+            std::string url;
+            url.swap(s->pendingNavigationUrl);
+            bool started = s->pendingNavigationStarted;
+            s->pendingNavigationStarted = false;
+            if (started) {
+                // Resume reveals the existing blank document before the
+                // queued navigation replaces it.
+                m_dispatcher->target()->notifyTargetInfoChanged(
+                    m_dispatcher->currentContext());
             }
+            CDPCommand navigation(m_dispatcher, Optional<int64_t>(),
+                                  cmd.sessionId(), nullptr);
+            m_dispatcher->page()->navigate(navigation, url, started);
         }
-        cmd.sendResultEmpty();
+    }
+    cmd.sendResultEmpty();
+}
+
+void RuntimeDomain::handleEvaluate(CDPCommand& cmd, const std::string&)
+{
+    WebView* wv = m_dispatcher->webView();
+
+    if (!cmd.params() || !cmd.params()->HasMember("expression") ||
+        !(*cmd.params())["expression"].IsString()) {
+        cmd.sendError(-32602, "'expression' is required");
         return;
     }
+    const rapidjson::Value& expression = (*cmd.params())["expression"];
+    bool returnByValue = false;
+    if (cmd.params()->HasMember("returnByValue") &&
+        (*cmd.params())["returnByValue"].IsBool()) {
+        returnByValue = (*cmd.params())["returnByValue"].GetBool();
+    }
+    bool awaitPromise = false;
+    if (cmd.params()->HasMember("awaitPromise") &&
+        (*cmd.params())["awaitPromise"].IsBool()) {
+        awaitPromise = (*cmd.params())["awaitPromise"].GetBool();
+    }
+    std::string source(expression.GetString(), expression.GetStringLength());
+    BrowsingContext* bc = targetBrowsingContext(wv, cmd, "contextId");
+    evaluateSource(wv, bc, source, returnByValue, awaitPromise, cmd);
+    // Page-script run synchronously here may have removed an iframe (e.g.
+    // document.querySelector('iframe').remove()); reconcile the frame tree
+    // so Page.frameDetached fires for any frame that just disappeared.
+    m_dispatcher->page()->sweepDetachedFrames(cmd.sessionId());
 
-    if (method == "evaluate") {
-        if (!cmd.params() || !cmd.params()->HasMember("expression") ||
-            !(*cmd.params())["expression"].IsString()) {
-            cmd.sendError(-32602, "'expression' is required");
-            return;
+    // page.setContent rewrite (bare-expression form).
+    maybeNotifyDocumentRewrite(wv, source, cmd.sessionId());
+}
+
+void RuntimeDomain::handleCallFunctionOn(CDPCommand& cmd, const std::string&)
+{
+    WebView* wv = m_dispatcher->webView();
+
+    std::string fnSource;
+    if (cmd.params() && cmd.params()->HasMember("functionDeclaration") &&
+        (*cmd.params())["functionDeclaration"].IsString()) {
+        fnSource = (*cmd.params())["functionDeclaration"].GetString();
+    }
+    BrowsingContext* bc = targetBrowsingContext(wv, cmd, "executionContextId");
+    callFunctionOn(wv, bc, cmd);
+    m_dispatcher->page()->sweepDetachedFrames(cmd.sessionId());
+    // page.setContent runs document.open/write/close as a function here.
+    maybeNotifyDocumentRewrite(wv, fnSource, cmd.sessionId());
+}
+
+void RuntimeDomain::handleCompileScript(CDPCommand& cmd, const std::string&)
+{
+    WebView* wv = m_dispatcher->webView();
+
+    BrowsingContext* bc = targetBrowsingContext(wv, cmd, "executionContextId");
+    compileScript(wv, bc, cmd);
+}
+
+void RuntimeDomain::handleRunScript(CDPCommand& cmd, const std::string&)
+{
+    WebView* wv = m_dispatcher->webView();
+
+    BrowsingContext* bc = targetBrowsingContext(wv, cmd, "executionContextId");
+    runScript(wv, bc, cmd);
+}
+
+void RuntimeDomain::handleGetProperties(CDPCommand& cmd, const std::string&)
+{
+    WebView* wv = m_dispatcher->webView();
+
+    // Object handles are global to the store; properties enumerate in the
+    // main context (objectId already carries the live ObjectRef).
+    getProperties(wv, wv->mainBrowsingContext(), cmd);
+}
+
+void RuntimeDomain::handleGetHeapUsage(CDPCommand& cmd, const std::string&)
+{
+    // Same GC source as Performance.getMetrics: total committed heap and
+    // used = total - free.
+    size_t total = GC_get_heap_size();
+    size_t free = GC_get_free_bytes();
+    size_t used = total > free ? total - free : 0;
+
+    rapidjson::Document doc;
+    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("usedSize", (double)used, alloc);
+    result.AddMember("totalSize", (double)total, alloc);
+    cmd.sendResult(result, doc);
+}
+
+void RuntimeDomain::handleGlobalLexicalScopeNames(CDPCommand& cmd,
+                                                  const std::string&)
+{
+    WebView* wv = m_dispatcher->webView();
+
+    globalLexicalScopeNames(wv, cmd);
+}
+
+void RuntimeDomain::handleQueryObjects(CDPCommand& cmd, const std::string&)
+{
+    // Escargot exposes no heap-instance iteration API, so the set of live
+    // objects with a given prototype cannot be enumerated. Report not
+    // implemented rather than silently returning an empty/incorrect set.
+    cmd.sendError(-32000,
+                  "Runtime.queryObjects is not supported by this engine");
+}
+
+void RuntimeDomain::handleReleaseObject(CDPCommand& cmd, const std::string&)
+{
+    if (cmd.params() && cmd.params()->HasMember("objectId") &&
+        (*cmd.params())["objectId"].IsString()) {
+        std::string oid = (*cmd.params())["objectId"].GetString();
+        if (oid.rfind("OBJ-", 0) == 0) {
+            int id = atoi(oid.c_str() + 4);
+            m_dispatcher->remoteObjectStore()->release(id);
         }
-        const rapidjson::Value& expression = (*cmd.params())["expression"];
-        bool returnByValue = false;
-        if (cmd.params()->HasMember("returnByValue") &&
-            (*cmd.params())["returnByValue"].IsBool()) {
-            returnByValue = (*cmd.params())["returnByValue"].GetBool();
+    }
+    cmd.sendResultEmpty();
+}
+
+void RuntimeDomain::handleAddBinding(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+    WebView* wv = m_dispatcher->webView();
+
+    if (!cmd.params() || !cmd.params()->HasMember("name") ||
+        !(*cmd.params())["name"].IsString()) {
+        cmd.sendError(-32602, "'name' is required");
+        return;
+    }
+    std::string name = (*cmd.params())["name"].GetString();
+    // Record for re-injection on navigate; avoid duplicates.
+    bool known = false;
+    for (const std::string& b : s->bindings) {
+        if (b == name) {
+            known = true;
+            break;
         }
-        bool awaitPromise = false;
-        if (cmd.params()->HasMember("awaitPromise") &&
-            (*cmd.params())["awaitPromise"].IsBool()) {
-            awaitPromise = (*cmd.params())["awaitPromise"].GetBool();
-        }
-        std::string source(expression.GetString(),
-                           expression.GetStringLength());
-        BrowsingContext* bc = targetBrowsingContext(wv, cmd, "contextId");
-        evaluateSource(wv, bc, source, returnByValue, awaitPromise, cmd);
-        // Page-script run synchronously here may have removed an iframe (e.g.
-        // document.querySelector('iframe').remove()); reconcile the frame tree
-        // so Page.frameDetached fires for any frame that just disappeared.
-        m_dispatcher->page()->sweepDetachedFrames(cmd.sessionId());
-
-        // page.setContent rewrite (bare-expression form).
-        maybeNotifyDocumentRewrite(wv, source, cmd.sessionId());
-        return;
     }
-
-    if (method == "callFunctionOn") {
-        std::string fnSource;
-        if (cmd.params() && cmd.params()->HasMember("functionDeclaration") &&
-            (*cmd.params())["functionDeclaration"].IsString()) {
-            fnSource = (*cmd.params())["functionDeclaration"].GetString();
-        }
-        BrowsingContext* bc =
-            targetBrowsingContext(wv, cmd, "executionContextId");
-        callFunctionOn(wv, bc, cmd);
-        m_dispatcher->page()->sweepDetachedFrames(cmd.sessionId());
-        // page.setContent runs document.open/write/close as a function here.
-        maybeNotifyDocumentRewrite(wv, fnSource, cmd.sessionId());
-        return;
+    if (!known) {
+        s->bindings.push_back(name);
     }
+    injectBinding(wv, name);
+    cmd.sendResultEmpty();
+}
 
-    if (method == "compileScript") {
-        BrowsingContext* bc =
-            targetBrowsingContext(wv, cmd, "executionContextId");
-        compileScript(wv, bc, cmd);
-        return;
-    }
+void RuntimeDomain::handleRemoveBinding(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
 
-    if (method == "runScript") {
-        BrowsingContext* bc =
-            targetBrowsingContext(wv, cmd, "executionContextId");
-        runScript(wv, bc, cmd);
-        return;
-    }
-
-    if (method == "getProperties") {
-        // Object handles are global to the store; properties enumerate in the
-        // main context (objectId already carries the live ObjectRef).
-        getProperties(wv, wv->mainBrowsingContext(), cmd);
-        return;
-    }
-
-    if (method == "getHeapUsage") {
-        // Same GC source as Performance.getMetrics: total committed heap and
-        // used = total - free.
-        size_t total = GC_get_heap_size();
-        size_t free = GC_get_free_bytes();
-        size_t used = total > free ? total - free : 0;
-
-        rapidjson::Document doc;
-        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("usedSize", (double)used, alloc);
-        result.AddMember("totalSize", (double)total, alloc);
-        cmd.sendResult(result, doc);
-        return;
-    }
-
-    if (method == "globalLexicalScopeNames") {
-        globalLexicalScopeNames(wv, cmd);
-        return;
-    }
-
-    if (method == "queryObjects") {
-        // Escargot exposes no heap-instance iteration API, so the set of live
-        // objects with a given prototype cannot be enumerated. Report not
-        // implemented rather than silently returning an empty/incorrect set.
-        cmd.sendError(-32000,
-                      "Runtime.queryObjects is not supported by this engine");
-        return;
-    }
-
-    if (method == "releaseObject") {
-        if (cmd.params() && cmd.params()->HasMember("objectId") &&
-            (*cmd.params())["objectId"].IsString()) {
-            std::string oid = (*cmd.params())["objectId"].GetString();
-            if (oid.rfind("OBJ-", 0) == 0) {
-                int id = atoi(oid.c_str() + 4);
-                m_dispatcher->remoteObjectStore()->release(id);
-            }
-        }
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "addBinding") {
-        if (!cmd.params() || !cmd.params()->HasMember("name") ||
-            !(*cmd.params())["name"].IsString()) {
-            cmd.sendError(-32602, "'name' is required");
-            return;
-        }
+    if (cmd.params() && cmd.params()->HasMember("name") &&
+        (*cmd.params())["name"].IsString()) {
         std::string name = (*cmd.params())["name"].GetString();
-        // Record for re-injection on navigate; avoid duplicates.
-        bool known = false;
-        for (const std::string& b : s->bindings) {
-            if (b == name) {
-                known = true;
+        auto& v = s->bindings;
+        for (auto it = v.begin(); it != v.end(); ++it) {
+            if (*it == name) {
+                v.erase(it);
                 break;
             }
         }
-        if (!known) {
-            s->bindings.push_back(name);
-        }
-        injectBinding(wv, name);
-        cmd.sendResultEmpty();
+    }
+    cmd.sendResultEmpty();
+}
+
+void RuntimeDomain::processMessage(CDPCommand& cmd, const std::string& method)
+{
+    static const CDPMethodHandler<RuntimeDomain> handlers[] = {
+        { "enable", &RuntimeDomain::handleEnable },
+        { "disable", &RuntimeDomain::handleDisable },
+        { "runIfWaitingForDebugger",
+          &RuntimeDomain::handleRunIfWaitingForDebugger },
+        { "evaluate", &RuntimeDomain::handleEvaluate },
+        { "callFunctionOn", &RuntimeDomain::handleCallFunctionOn },
+        { "compileScript", &RuntimeDomain::handleCompileScript },
+        { "runScript", &RuntimeDomain::handleRunScript },
+        { "getProperties", &RuntimeDomain::handleGetProperties },
+        { "getHeapUsage", &RuntimeDomain::handleGetHeapUsage },
+        { "globalLexicalScopeNames",
+          &RuntimeDomain::handleGlobalLexicalScopeNames },
+        { "queryObjects", &RuntimeDomain::handleQueryObjects },
+        { "releaseObject", &RuntimeDomain::handleReleaseObject },
+        { "addBinding", &RuntimeDomain::handleAddBinding },
+        { "removeBinding", &RuntimeDomain::handleRemoveBinding },
+    };
+    if (CDPHandlerFn<RuntimeDomain> handler =
+            findCDPMethodHandler(handlers, method)) {
+        (this->*handler)(cmd, method);
         return;
     }
-
-    if (method == "removeBinding") {
-        if (cmd.params() && cmd.params()->HasMember("name") &&
-            (*cmd.params())["name"].IsString()) {
-            std::string name = (*cmd.params())["name"].GetString();
-            auto& v = s->bindings;
-            for (auto it = v.begin(); it != v.end(); ++it) {
-                if (*it == name) {
-                    v.erase(it);
-                    break;
-                }
-            }
-        }
-        cmd.sendResultEmpty();
-        return;
-    }
-
     cmd.sendError(-32601, "'method' wasn't found");
 }
 

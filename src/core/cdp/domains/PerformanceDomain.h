@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPPerformanceDomain__)
 #define __StarfishCDPPerformanceDomain__
 
+#include "../CDPDomain.h"
 #include <string>
 
 namespace Starfish {
@@ -32,13 +33,13 @@ class CDPCommand;
 // sampled live from the engine (GC heap, DOM node count, frame count) where
 // available; metrics this engine does not track are reported as 0 so the
 // client receives the full expected key set without throwing.
-class PerformanceDomain {
+class PerformanceDomain : public CDPDomain {
 public:
     PerformanceDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
 
 private:
     CDPDispatcher* m_dispatcher;

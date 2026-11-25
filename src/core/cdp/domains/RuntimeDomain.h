@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPRuntimeDomain__)
 #define __StarfishCDPRuntimeDomain__
 
+#include "../CDPDomain.h"
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -36,13 +37,21 @@ class WebView;
 class BrowsingContext;
 class ScriptBindingInstance;
 
-class RuntimeDomain {
+class RuntimeDomain : public CDPDomain {
 public:
     RuntimeDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
+    void cancelPendingWork() override
+    {
+        cancelAllPendingEvaluations();
+    }
+    void willDestroyTarget(WebView* webView) override
+    {
+        cancelPendingEvaluations(webView, true);
+    }
 
     // Inject a window[name] native function into the main world that, when
     // called from page JS, emits Runtime.bindingCalled with the first argument
@@ -67,6 +76,23 @@ public:
     void cancelAllPendingEvaluations();
 
 private:
+    void handleEnable(CDPCommand& cmd, const std::string& method);
+    void handleDisable(CDPCommand& cmd, const std::string& method);
+    void handleRunIfWaitingForDebugger(CDPCommand& cmd,
+                                       const std::string& method);
+    void handleEvaluate(CDPCommand& cmd, const std::string& method);
+    void handleCallFunctionOn(CDPCommand& cmd, const std::string& method);
+    void handleCompileScript(CDPCommand& cmd, const std::string& method);
+    void handleRunScript(CDPCommand& cmd, const std::string& method);
+    void handleGetProperties(CDPCommand& cmd, const std::string& method);
+    void handleGetHeapUsage(CDPCommand& cmd, const std::string& method);
+    void handleGlobalLexicalScopeNames(CDPCommand& cmd,
+                                       const std::string& method);
+    void handleQueryObjects(CDPCommand& cmd, const std::string& method);
+    void handleReleaseObject(CDPCommand& cmd, const std::string& method);
+    void handleAddBinding(CDPCommand& cmd, const std::string& method);
+    void handleRemoveBinding(CDPCommand& cmd, const std::string& method);
+
     struct PendingEvaluation;
 
     // If awaitPromise is set and `value` is a still-pending Promise, register

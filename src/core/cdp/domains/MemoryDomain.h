@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPMemoryDomain__)
 #define __StarfishCDPMemoryDomain__
 
+#include "../CDPDomain.h"
 #include <string>
 
 namespace Starfish {
@@ -33,13 +34,13 @@ class CDPCommand;
 // runs a GC pass on the engine heap. The pressure-notification and sampling-
 // profile methods are acked (with empty profiles) so DevTools clients that
 // probe them do not error. Handlers run on the main thread.
-class MemoryDomain {
+class MemoryDomain : public CDPDomain {
 public:
     MemoryDomain(CDPDispatcher* d)
         : m_dispatcher(d)
     {
     }
-    void processMessage(CDPCommand& cmd, const std::string& method);
+    void processMessage(CDPCommand& cmd, const std::string& method) override;
 
 private:
     CDPDispatcher* m_dispatcher;

@@ -116,106 +116,126 @@ std::string FetchDomain::emitNavigationPaused(const std::string& sessionId,
     return requestId;
 }
 
-void FetchDomain::processMessage(CDPCommand& cmd, const std::string& method)
+void FetchDomain::handleEnable(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
 
-    if (method == "enable") {
-        s->fetchEnabled = true;
-        cmd.sendResultEmpty();
-        return;
-    }
-    if (method == "disable") {
-        s->fetchEnabled = false;
-        // If a navigation is parked, releasing interception should let it run
-        // to the original URL rather than hang forever.
-        if (s->pendingFetchNav.active) {
-            std::string sid = s->pendingFetchNav.sessionId;
-            std::string navUrl = s->pendingFetchNav.url;
-            m_dispatcher->page()->completeDeferredNavigation(sid, navUrl);
-        }
-        cmd.sendResultEmpty();
-        return;
-    }
+    s->fetchEnabled = true;
+    cmd.sendResultEmpty();
+}
 
-    if (method == "continueRequest") {
-        std::string requestId = paramStr(cmd, "requestId");
-        cmd.sendResultEmpty();
-        if (s->pendingFetchNav.active &&
-            s->pendingFetchNav.requestId == requestId) {
-            // continueRequest may override the URL; honor it if present.
-            std::string overrideUrl = paramStr(cmd, "url");
-            std::string sid = s->pendingFetchNav.sessionId;
-            std::string navUrl = s->pendingFetchNav.url;
-            std::string target = overrideUrl.empty() ? navUrl : overrideUrl;
-            m_dispatcher->page()->completeDeferredNavigation(sid, target);
+void FetchDomain::handleDisable(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    s->fetchEnabled = false;
+    // If a navigation is parked, releasing interception should let it run
+    // to the original URL rather than hang forever.
+    if (s->pendingFetchNav.active) {
+        std::string sid = s->pendingFetchNav.sessionId;
+        std::string navUrl = s->pendingFetchNav.url;
+        m_dispatcher->page()->completeDeferredNavigation(sid, navUrl);
+    }
+    cmd.sendResultEmpty();
+}
+
+void FetchDomain::handleContinueRequest(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    std::string requestId = paramStr(cmd, "requestId");
+    cmd.sendResultEmpty();
+    if (s->pendingFetchNav.active &&
+        s->pendingFetchNav.requestId == requestId) {
+        // continueRequest may override the URL; honor it if present.
+        std::string overrideUrl = paramStr(cmd, "url");
+        std::string sid = s->pendingFetchNav.sessionId;
+        std::string navUrl = s->pendingFetchNav.url;
+        std::string target = overrideUrl.empty() ? navUrl : overrideUrl;
+        m_dispatcher->page()->completeDeferredNavigation(sid, target);
+    }
+}
+
+void FetchDomain::handleFulfillRequest(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    std::string requestId = paramStr(cmd, "requestId");
+    cmd.sendResultEmpty();
+    if (s->pendingFetchNav.active &&
+        s->pendingFetchNav.requestId == requestId) {
+        // body is base64-encoded per the CDP spec. data: URLs accept
+        // base64 directly, so forward it unchanged (the document loader
+        // renders the data: URL) with the client's Content-Type.
+        std::string rawBody = paramStr(cmd, "body");
+        std::string mt = mimeFromHeaders(cmd);
+        if (mt.empty()) {
+            mt = "text/html";
         }
+        std::string dataUrl = "data:" + mt + ";base64," + rawBody;
+        std::string sid = s->pendingFetchNav.sessionId;
+        m_dispatcher->page()->completeDeferredNavigation(sid, dataUrl);
+    }
+}
+
+void FetchDomain::handleFailRequest(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    std::string requestId = paramStr(cmd, "requestId");
+    std::string errorReason;
+    if (cmd.params() && cmd.params()->HasMember("errorReason") &&
+        (*cmd.params())["errorReason"].IsString()) {
+        errorReason = (*cmd.params())["errorReason"].GetString();
+    }
+    cmd.sendResultEmpty();
+    if (s->pendingFetchNav.active &&
+        s->pendingFetchNav.requestId == requestId) {
+        std::string sid = s->pendingFetchNav.sessionId;
+        std::string navUrl = s->pendingFetchNav.url;
+        // Map CDP errorReason to Chrome's net::ERR_* text.
+        std::string errorText = "net::ERR_FAILED";
+        if (errorReason == "Aborted") {
+            errorText = "net::ERR_ABORTED";
+        } else if (errorReason == "AddressUnreachable") {
+            errorText = "net::ERR_ADDRESS_UNREACHABLE";
+        } else if (errorReason == "BlockedByClient") {
+            errorText = "net::ERR_BLOCKED_BY_CLIENT";
+        } else if (errorReason == "BlockedByResponse") {
+            errorText = "net::ERR_BLOCKED_BY_RESPONSE";
+        } else if (errorReason == "ConnectionRefused") {
+            errorText = "net::ERR_CONNECTION_REFUSED";
+        } else if (errorReason == "ConnectionReset") {
+            errorText = "net::ERR_CONNECTION_RESET";
+        } else if (errorReason == "ConnectionClosed") {
+            errorText = "net::ERR_CONNECTION_CLOSED";
+        } else if (errorReason == "ConnectionFailed") {
+            errorText = "net::ERR_CONNECTION_FAILED";
+        } else if (errorReason == "ConnectionAborted") {
+            errorText = "net::ERR_CONNECTION_ABORTED";
+        } else if (errorReason == "Failed") {
+            errorText = "net::ERR_FAILED";
+        } else if (errorReason == "TimedOut") {
+            errorText = "net::ERR_TIMED_OUT";
+        }
+        m_dispatcher->page()->failDeferredNavigation(sid, navUrl, errorText);
+    }
+}
+
+void FetchDomain::processMessage(CDPCommand& cmd, const std::string& method)
+{
+    static const CDPMethodHandler<FetchDomain> handlers[] = {
+        { "enable", &FetchDomain::handleEnable },
+        { "disable", &FetchDomain::handleDisable },
+        { "continueRequest", &FetchDomain::handleContinueRequest },
+        { "fulfillRequest", &FetchDomain::handleFulfillRequest },
+        { "failRequest", &FetchDomain::handleFailRequest },
+    };
+    if (CDPHandlerFn<FetchDomain> handler =
+            findCDPMethodHandler(handlers, method)) {
+        (this->*handler)(cmd, method);
         return;
     }
-
-    if (method == "fulfillRequest") {
-        std::string requestId = paramStr(cmd, "requestId");
-        cmd.sendResultEmpty();
-        if (s->pendingFetchNav.active &&
-            s->pendingFetchNav.requestId == requestId) {
-            // body is base64-encoded per the CDP spec. data: URLs accept
-            // base64 directly, so forward it unchanged (the document loader
-            // renders the data: URL) with the client's Content-Type.
-            std::string rawBody = paramStr(cmd, "body");
-            std::string mt = mimeFromHeaders(cmd);
-            if (mt.empty()) {
-                mt = "text/html";
-            }
-            std::string dataUrl = "data:" + mt + ";base64," + rawBody;
-            std::string sid = s->pendingFetchNav.sessionId;
-            m_dispatcher->page()->completeDeferredNavigation(sid, dataUrl);
-        }
-        return;
-    }
-
-    if (method == "failRequest") {
-        std::string requestId = paramStr(cmd, "requestId");
-        std::string errorReason;
-        if (cmd.params() && cmd.params()->HasMember("errorReason") &&
-            (*cmd.params())["errorReason"].IsString()) {
-            errorReason = (*cmd.params())["errorReason"].GetString();
-        }
-        cmd.sendResultEmpty();
-        if (s->pendingFetchNav.active &&
-            s->pendingFetchNav.requestId == requestId) {
-            std::string sid = s->pendingFetchNav.sessionId;
-            std::string navUrl = s->pendingFetchNav.url;
-            // Map CDP errorReason to Chrome's net::ERR_* text.
-            std::string errorText = "net::ERR_FAILED";
-            if (errorReason == "Aborted") {
-                errorText = "net::ERR_ABORTED";
-            } else if (errorReason == "AddressUnreachable") {
-                errorText = "net::ERR_ADDRESS_UNREACHABLE";
-            } else if (errorReason == "BlockedByClient") {
-                errorText = "net::ERR_BLOCKED_BY_CLIENT";
-            } else if (errorReason == "BlockedByResponse") {
-                errorText = "net::ERR_BLOCKED_BY_RESPONSE";
-            } else if (errorReason == "ConnectionRefused") {
-                errorText = "net::ERR_CONNECTION_REFUSED";
-            } else if (errorReason == "ConnectionReset") {
-                errorText = "net::ERR_CONNECTION_RESET";
-            } else if (errorReason == "ConnectionClosed") {
-                errorText = "net::ERR_CONNECTION_CLOSED";
-            } else if (errorReason == "ConnectionFailed") {
-                errorText = "net::ERR_CONNECTION_FAILED";
-            } else if (errorReason == "ConnectionAborted") {
-                errorText = "net::ERR_CONNECTION_ABORTED";
-            } else if (errorReason == "Failed") {
-                errorText = "net::ERR_FAILED";
-            } else if (errorReason == "TimedOut") {
-                errorText = "net::ERR_TIMED_OUT";
-            }
-            m_dispatcher->page()->failDeferredNavigation(sid, navUrl,
-                                                         errorText);
-        }
-        return;
-    }
-
     // getResponseBody / continueWithAuth / takeResponseBodyAsStream etc. have
     // no backing in the synthetic model; ack so clients proceed.
     cmd.sendResultEmpty();

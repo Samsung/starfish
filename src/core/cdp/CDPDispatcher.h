@@ -20,9 +20,11 @@
 #if defined(STARFISH_ENABLE_CDP) && !defined(__StarfishCDPDispatcher__)
 #define __StarfishCDPDispatcher__
 
+#include <array>
 #include <mutex>
 #include <string>
 #include <vector>
+#include "CDPDomain.h"
 #include "TargetContext.h"
 
 namespace Escargot {
@@ -238,11 +240,53 @@ public:
     }
 
 private:
+    void routeIO(CDPCommand& cmd, const std::string& method);
+    void routeSecurity(CDPCommand& cmd, const std::string& method);
+    void routeBrowser(CDPCommand& cmd, const std::string& method);
+    void routeProfiler(CDPCommand& cmd, const std::string& method);
+    void routeHeapProfiler(CDPCommand& cmd, const std::string& method);
+    void routeWebAuthn(CDPCommand& cmd, const std::string& method);
+    void routeDebugger(CDPCommand& cmd, const std::string& method);
+    void routeExtensions(CDPCommand& cmd, const std::string& method);
+    void routeTethering(CDPCommand& cmd, const std::string& method);
+    void routeCast(CDPCommand& cmd, const std::string& method);
+    void routeDeviceAccess(CDPCommand& cmd, const std::string& method);
+    void routeDatabase(CDPCommand& cmd, const std::string& method);
+    void routeFedCm(CDPCommand& cmd, const std::string& method);
+    void routeAutofill(CDPCommand& cmd, const std::string& method);
+    void routeBackgroundService(CDPCommand& cmd, const std::string& method);
+    void routeEventBreakpoints(CDPCommand& cmd, const std::string& method);
+    void routePreload(CDPCommand& cmd, const std::string& method);
+    void routeLayerTree(CDPCommand& cmd, const std::string& method);
+    void routeMedia(CDPCommand& cmd, const std::string& method);
+    void routeWebAudio(CDPCommand& cmd, const std::string& method);
+    void routeServiceWorker(CDPCommand& cmd, const std::string& method);
+    void routeIndexedDB(CDPCommand& cmd, const std::string& method);
+    void routeCacheStorage(CDPCommand& cmd, const std::string& method);
+    void routeSchema(CDPCommand& cmd, const std::string& method);
+    void routeInspector(CDPCommand& cmd, const std::string& method);
+    void routeDeviceOrientation(CDPCommand& cmd, const std::string& method);
+    void routeSystemInfo(CDPCommand& cmd, const std::string& method);
+    void routePerformanceTimeline(CDPCommand& cmd, const std::string& method);
+    void routeAudits(CDPCommand& cmd, const std::string& method);
+    void webAuthnEnable(CDPCommand& cmd, const std::string& method);
+    void webAuthnDisable(CDPCommand& cmd, const std::string& method);
+    void webAuthnAddVirtualAuthenticator(CDPCommand& cmd,
+                                         const std::string& method);
+
     static void onMainTrampoline(size_t handle, void* data);
     static void onConnectionClosedOnMain(size_t handle, void* data);
     void resetConnectionState();
     void route(CDPCommand& cmd, const std::string& domain,
                const std::string& method);
+
+    struct NamedDomain {
+        const char* name;
+        CDPDomain* domain;
+    };
+    static const size_t domainCount = 20;
+    // Every protocol domain object, in creation order.
+    std::array<NamedDomain, domainCount> domains() const;
 
     CDPServer* m_server;
     std::vector<TargetContext*> m_contexts; // [0] is the initial target

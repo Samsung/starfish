@@ -251,487 +251,525 @@ static rapidjson::Value buildCSSRule(StyleRule* sr,
     return rule;
 }
 
-void CSSDomain::processMessage(CDPCommand& cmd, const std::string& method)
+void CSSDomain::handleEnable(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
+
+    s->cssEnabled = true;
+    cmd.sendResultEmpty();
+}
+
+void CSSDomain::handleDisable(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    s->cssEnabled = false;
+    cmd.sendResultEmpty();
+}
+
+void CSSDomain::handleGetComputedStyleForNode(CDPCommand& cmd,
+                                              const std::string&)
+{
     NodeRegistry* reg = m_dispatcher->nodeRegistry();
 
-    if (method == "enable") {
-        s->cssEnabled = true;
-        cmd.sendResultEmpty();
+    Node* node = reg->lookup(paramNodeId(cmd));
+    if (!node || !node->isElement()) {
+        cmd.sendError(-32000, "Could not find node with given id");
         return;
     }
-    if (method == "disable") {
-        s->cssEnabled = false;
-        cmd.sendResultEmpty();
-        return;
-    }
+    CSSStyleDeclaration* style = node->asElement()->getComputedStyle();
 
-    if (method == "getComputedStyleForNode") {
-        Node* node = reg->lookup(paramNodeId(cmd));
-        if (!node || !node->isElement()) {
-            cmd.sendError(-32000, "Could not find node with given id");
-            return;
+    rapidjson::Document out;
+    rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    rapidjson::Value props(rapidjson::kArrayType);
+    for (size_t i = 0;
+         i < sizeof(kComputedProperties) / sizeof(kComputedProperties[0]);
+         i++) {
+        const char* name = kComputedProperties[i];
+        String* nameStr = String::fromUTF8(name, strlen(name));
+        String* val = style->getPropertyValue(nameStr);
+        std::string v = val ? val->toUTF8NonGCString() : std::string();
+        if (v.empty()) {
+            continue; // engine returned no value for this property
         }
-        CSSStyleDeclaration* style = node->asElement()->getComputedStyle();
-
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        rapidjson::Value props(rapidjson::kArrayType);
-        for (size_t i = 0;
-             i < sizeof(kComputedProperties) / sizeof(kComputedProperties[0]);
-             i++) {
-            const char* name = kComputedProperties[i];
-            String* nameStr = String::fromUTF8(name, strlen(name));
-            String* val = style->getPropertyValue(nameStr);
-            std::string v = val ? val->toUTF8NonGCString() : std::string();
-            if (v.empty()) {
-                continue; // engine returned no value for this property
-            }
-            rapidjson::Value entry(rapidjson::kObjectType);
-            entry.AddMember("name", rapidjson::Value(name, strlen(name), alloc),
-                            alloc);
-            entry.AddMember(
-                "value", rapidjson::Value(v.c_str(), v.size(), alloc), alloc);
-            props.PushBack(entry, alloc);
-        }
-        result.AddMember("computedStyle", props, alloc);
-        cmd.sendResult(result, out);
-        return;
-    }
-
-    if (method == "getInlineStylesForNode") {
-        Node* node = reg->lookup(paramNodeId(cmd));
-        if (!node || !node->isElement()) {
-            cmd.sendError(-32000, "Could not find node with given id");
-            return;
-        }
-        Element* el = node->asElement();
-        InlineCSSStyleDeclaration* inl = el->inlineStyleWithoutCreation();
-
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        rapidjson::Value inlineStyle(rapidjson::kObjectType);
-
-        rapidjson::Value cssProps(rapidjson::kArrayType);
-        std::string cssText;
-        if (inl) {
-            String* ct = inl->cssText();
-            cssText = ct ? ct->toUTF8NonGCString() : std::string();
-            uint32_t n = inl->length();
-            for (uint32_t i = 0; i < n; i++) {
-                String* nameS = inl->item(i);
-                std::string name =
-                    nameS ? nameS->toUTF8NonGCString() : std::string();
-                if (name.empty()) {
-                    continue;
-                }
-                String* valS = inl->getPropertyValue(nameS);
-                std::string val =
-                    valS ? valS->toUTF8NonGCString() : std::string();
-                rapidjson::Value entry(rapidjson::kObjectType);
-                entry.AddMember(
-                    "name", rapidjson::Value(name.c_str(), name.size(), alloc),
-                    alloc);
-                entry.AddMember(
-                    "value", rapidjson::Value(val.c_str(), val.size(), alloc),
-                    alloc);
-                cssProps.PushBack(entry, alloc);
-            }
-        }
-        inlineStyle.AddMember("cssProperties", cssProps, alloc);
-        inlineStyle.AddMember("shorthandEntries",
-                              rapidjson::Value(rapidjson::kArrayType), alloc);
-        inlineStyle.AddMember(
-            "cssText", rapidjson::Value(cssText.c_str(), cssText.size(), alloc),
-            alloc);
-        result.AddMember("inlineStyle", inlineStyle, alloc);
-        cmd.sendResult(result, out);
-        return;
-    }
-
-    if (method == "getMatchedStylesForNode") {
-        Node* node = reg->lookup(paramNodeId(cmd));
-        if (!node || !node->isElement()) {
-            cmd.sendError(-32000, "Could not find node with given id");
-            return;
-        }
-        Element* el = node->asElement();
-        Document* doc = el->document();
-
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-
-        // inlineStyle (same shape as getInlineStylesForNode)
-        InlineCSSStyleDeclaration* inl = el->inlineStyleWithoutCreation();
-        result.AddMember("inlineStyle",
-                         buildCSSStyle(inl, std::string(), alloc), alloc);
-
-        rapidjson::Value matched(rapidjson::kArrayType);
-        if (doc) {
-            GCVector<CSSStyleSheet*>& sheets = doc->styleResolver().sheets();
-            for (size_t si = 0; si < sheets.size(); si++) {
-                CSSStyleSheet* sheet = sheets[si];
-                if (!sheet) {
-                    continue;
-                }
-                sheet->parseSheetIfneeds();
-                std::string sheetId = "sheet-" + std::to_string(si);
-                GCVector<std::pair<StyleRule*, ResourceURL*>>& rules =
-                    sheet->styleRules();
-                for (size_t ri = 0; ri < rules.size(); ri++) {
-                    StyleRule* sr = rules[ri].first;
-                    if (!sr) {
-                        continue;
-                    }
-                    String* selText = sr->selectorList().selectorText();
-                    if (!selText || selText->length() == 0) {
-                        continue;
-                    }
-                    bool isMatch = false;
-                    try {
-                        isMatch = el->matches(selText);
-                    } catch (...) {
-                        isMatch = false; // unsupported selector
-                    }
-                    if (!isMatch) {
-                        continue;
-                    }
-                    std::string sel = selText->toUTF8NonGCString();
-
-                    rapidjson::Value rule(rapidjson::kObjectType);
-                    // selectorList
-                    rapidjson::Value selectorList(rapidjson::kObjectType);
-                    rapidjson::Value selectors(rapidjson::kArrayType);
-                    rapidjson::Value selEntry(rapidjson::kObjectType);
-                    selEntry.AddMember(
-                        "text",
-                        rapidjson::Value(sel.c_str(), sel.size(), alloc),
+        rapidjson::Value entry(rapidjson::kObjectType);
+        entry.AddMember("name", rapidjson::Value(name, strlen(name), alloc),
                         alloc);
-                    selectors.PushBack(selEntry, alloc);
-                    selectorList.AddMember("selectors", selectors, alloc);
-                    selectorList.AddMember(
-                        "text",
-                        rapidjson::Value(sel.c_str(), sel.size(), alloc),
+        entry.AddMember("value", rapidjson::Value(v.c_str(), v.size(), alloc),
                         alloc);
-                    rule.AddMember("selectorList", selectorList, alloc);
-                    rule.AddMember("origin", "regular", alloc);
-                    rule.AddMember("styleSheetId",
-                                   rapidjson::Value(sheetId.c_str(),
-                                                    sheetId.size(), alloc),
-                                   alloc);
-                    rule.AddMember(
-                        "style",
-                        buildCSSStyle(sr->styleDeclaration(), sheetId, alloc),
-                        alloc);
+        props.PushBack(entry, alloc);
+    }
+    result.AddMember("computedStyle", props, alloc);
+    cmd.sendResult(result, out);
+}
 
-                    rapidjson::Value matching(rapidjson::kArrayType);
-                    matching.PushBack(0, alloc);
+void CSSDomain::handleGetInlineStylesForNode(CDPCommand& cmd,
+                                             const std::string&)
+{
+    NodeRegistry* reg = m_dispatcher->nodeRegistry();
 
-                    rapidjson::Value mr(rapidjson::kObjectType);
-                    mr.AddMember("rule", rule, alloc);
-                    mr.AddMember("matchingSelectors", matching, alloc);
-                    matched.PushBack(mr, alloc);
-                }
-            }
-        }
-        result.AddMember("matchedCSSRules", matched, alloc);
-        cmd.sendResult(result, out);
+    Node* node = reg->lookup(paramNodeId(cmd));
+    if (!node || !node->isElement()) {
+        cmd.sendError(-32000, "Could not find node with given id");
         return;
     }
+    Element* el = node->asElement();
+    InlineCSSStyleDeclaration* inl = el->inlineStyleWithoutCreation();
 
-    if (method == "getStyleSheetText") {
-        std::string id = paramString(cmd, "styleSheetId");
-        // Expect "sheet-N"
-        size_t idx = std::string::npos;
-        if (id.rfind("sheet-", 0) == 0) {
-            idx = (size_t)atoi(id.c_str() + 6);
-        }
-        WebView* wv = m_dispatcher->webView();
-        BrowsingContext* bc = wv ? wv->mainBrowsingContext() : nullptr;
-        Document* doc = bc ? bc->document() : nullptr;
-        if (!doc || idx == std::string::npos) {
-            cmd.sendError(-32000, "No stylesheet with given id found");
-            return;
-        }
-        GCVector<CSSStyleSheet*>& sheets = doc->styleResolver().sheets();
-        if (idx >= sheets.size() || !sheets[idx]) {
-            cmd.sendError(-32000, "No stylesheet with given id found");
-            return;
-        }
-        CSSStyleSheet* sheet = sheets[idx];
-        sheet->parseSheetIfneeds();
-        // Reconstruct text by joining each rule's cssText (the original source
-        // string is discarded after parsing).
-        std::string text;
-        unsigned n = sheet->length();
-        for (unsigned i = 0; i < n; i++) {
-            CSSRule* r = sheet->item(i);
-            if (!r) {
+    rapidjson::Document out;
+    rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    rapidjson::Value inlineStyle(rapidjson::kObjectType);
+
+    rapidjson::Value cssProps(rapidjson::kArrayType);
+    std::string cssText;
+    if (inl) {
+        String* ct = inl->cssText();
+        cssText = ct ? ct->toUTF8NonGCString() : std::string();
+        uint32_t n = inl->length();
+        for (uint32_t i = 0; i < n; i++) {
+            String* nameS = inl->item(i);
+            std::string name =
+                nameS ? nameS->toUTF8NonGCString() : std::string();
+            if (name.empty()) {
                 continue;
             }
-            String* ct = r->cssText();
-            if (ct) {
-                if (!text.empty()) {
-                    text += "\n";
-                }
-                text += ct->toUTF8NonGCString();
-            }
+            String* valS = inl->getPropertyValue(nameS);
+            std::string val = valS ? valS->toUTF8NonGCString() : std::string();
+            rapidjson::Value entry(rapidjson::kObjectType);
+            entry.AddMember("name",
+                            rapidjson::Value(name.c_str(), name.size(), alloc),
+                            alloc);
+            entry.AddMember("value",
+                            rapidjson::Value(val.c_str(), val.size(), alloc),
+                            alloc);
+            cssProps.PushBack(entry, alloc);
         }
+    }
+    inlineStyle.AddMember("cssProperties", cssProps, alloc);
+    inlineStyle.AddMember("shorthandEntries",
+                          rapidjson::Value(rapidjson::kArrayType), alloc);
+    inlineStyle.AddMember(
+        "cssText", rapidjson::Value(cssText.c_str(), cssText.size(), alloc),
+        alloc);
+    result.AddMember("inlineStyle", inlineStyle, alloc);
+    cmd.sendResult(result, out);
+}
 
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "text", rapidjson::Value(text.c_str(), text.size(), alloc), alloc);
-        cmd.sendResult(result, out);
+void CSSDomain::handleGetMatchedStylesForNode(CDPCommand& cmd,
+                                              const std::string&)
+{
+    NodeRegistry* reg = m_dispatcher->nodeRegistry();
+
+    Node* node = reg->lookup(paramNodeId(cmd));
+    if (!node || !node->isElement()) {
+        cmd.sendError(-32000, "Could not find node with given id");
         return;
     }
+    Element* el = node->asElement();
+    Document* doc = el->document();
 
-    if (method == "createStyleSheet") {
-        // Create an empty <style> element and append it to <head> (falling back
-        // to documentElement). The engine generates a CSSStyleSheet for it and
-        // registers it in styleResolver().sheets(); we return its "sheet-N" id.
-        Document* doc = mainDocument(m_dispatcher);
-        if (!doc) {
-            cmd.sendError(-32000, "No document");
-            return;
-        }
-        Element* styleEl = doc->createElement(String::fromUTF8("style", 5));
-        if (!styleEl) {
-            cmd.sendError(-32000, "Failed to create stylesheet");
-            return;
-        }
-        Node* parent =
-            doc->head() ? (Node*)doc->head() : (Node*)doc->documentElement();
-        if (!parent) {
-            cmd.sendError(-32000, "No insertion point for stylesheet");
-            return;
-        }
-        parent->appendChild(styleEl);
+    rapidjson::Document out;
+    rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
 
-        CSSStyleSheet* sheet = nullptr;
-        if (styleEl->isHTMLStyleElement()) {
-            sheet = styleEl->asHTMLStyleElement()->generatedSheet();
-        }
-        // Locate the sheet's index within the resolver sheet list.
+    // inlineStyle (same shape as getInlineStylesForNode)
+    InlineCSSStyleDeclaration* inl = el->inlineStyleWithoutCreation();
+    result.AddMember("inlineStyle", buildCSSStyle(inl, std::string(), alloc),
+                     alloc);
+
+    rapidjson::Value matched(rapidjson::kArrayType);
+    if (doc) {
         GCVector<CSSStyleSheet*>& sheets = doc->styleResolver().sheets();
-        size_t idx = std::string::npos;
-        for (size_t i = 0; i < sheets.size(); i++) {
-            if (sheets[i] == sheet && sheet) {
-                idx = i;
-                break;
+        for (size_t si = 0; si < sheets.size(); si++) {
+            CSSStyleSheet* sheet = sheets[si];
+            if (!sheet) {
+                continue;
             }
-        }
-        if (idx == std::string::npos) {
-            cmd.sendError(-32000, "Failed to register stylesheet");
-            return;
-        }
-        std::string sheetId = "sheet-" + std::to_string(idx);
-
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "styleSheetId",
-            rapidjson::Value(sheetId.c_str(), sheetId.size(), alloc), alloc);
-        cmd.sendResult(result, out);
-        return;
-    }
-
-    if (method == "addRule") {
-        std::string id = paramString(cmd, "styleSheetId");
-        std::string ruleText = paramString(cmd, "ruleText");
-        Document* doc = mainDocument(m_dispatcher);
-        CSSStyleSheet* sheet = resolveSheet(doc, id);
-        if (!sheet) {
-            cmd.sendError(-32000, "No stylesheet with given id found");
-            return;
-        }
-        sheet->parseSheetIfneeds();
-        unsigned index = sheet->length();
-        try {
-            sheet->insertRule(
-                String::fromUTF8(ruleText.data(), ruleText.size()), index);
-        } catch (...) {
-            cmd.sendError(-32000, "Failed to parse the rule");
-            return;
-        }
-
-        // Fetch the freshly inserted rule's engine StyleRule for the response.
-        StyleRule* sr = nullptr;
-        CSSRule* wrapper = sheet->item(index);
-        if (wrapper && wrapper->type() == CSSRule::Type::STYLE_RULE) {
-            sr = ((CSSStyleRule*)wrapper)->styleRule();
-        }
-        if (!sr) {
-            cmd.sendError(-32000, "Failed to insert the rule");
-            return;
-        }
-
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("rule", buildCSSRule(sr, id, alloc), alloc);
-        cmd.sendResult(result, out);
-        return;
-    }
-
-    if (method == "setStyleSheetText") {
-        std::string id = paramString(cmd, "styleSheetId");
-        std::string text = paramString(cmd, "text");
-        Document* doc = mainDocument(m_dispatcher);
-        CSSStyleSheet* sheet = resolveSheet(doc, id);
-        if (!sheet) {
-            cmd.sendError(-32000, "No stylesheet with given id found");
-            return;
-        }
-        // Replace the backing <style> element's text content and regenerate the
-        // sheet through the normal engine pipeline (recalc is triggered).
-        Node* origin = sheet->origin();
-        if (!origin || !origin->isHTMLStyleElement()) {
-            cmd.sendError(-32000,
-                          "Stylesheet is not backed by a <style> element");
-            return;
-        }
-        HTMLStyleElement* styleEl = origin->asHTMLStyleElement();
-        // Remove existing children, then append the new text node.
-        while (styleEl->firstChild()) {
-            styleEl->removeChild(styleEl->firstChild());
-        }
-        styleEl->appendChild(
-            doc->createTextNode(String::fromUTF8(text.data(), text.size())));
-        styleEl->generateStyleSheet();
-
-        cmd.sendResultEmpty();
-        return;
-    }
-
-    if (method == "setStyleTexts") {
-        // edits: [{styleSheetId, range:{startLine,...}, text}]
-        // We map each edit's range.startLine (or array order) to the rule index
-        // within the sheet and replace that rule's declaration text. The
-        // reparse (StyleRuleCSSStyleDeclaration::setCssText) triggers a full
-        // recalc.
-        Document* doc = mainDocument(m_dispatcher);
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        rapidjson::Value styles(rapidjson::kArrayType);
-
-        if (cmd.params() && cmd.params()->HasMember("edits") &&
-            (*cmd.params())["edits"].IsArray()) {
-            const rapidjson::Value& edits = (*cmd.params())["edits"];
-            for (rapidjson::SizeType e = 0; e < edits.Size(); e++) {
-                const rapidjson::Value& edit = edits[e];
-                std::string id = (edit.HasMember("styleSheetId") &&
-                                  edit["styleSheetId"].IsString())
-                                     ? edit["styleSheetId"].GetString()
-                                     : std::string();
-                std::string text =
-                    (edit.HasMember("text") && edit["text"].IsString())
-                        ? edit["text"].GetString()
-                        : std::string();
-                unsigned ruleIndex = 0;
-                if (edit.HasMember("range") && edit["range"].IsObject() &&
-                    edit["range"].HasMember("startLine") &&
-                    edit["range"]["startLine"].IsInt()) {
-                    int sl = edit["range"]["startLine"].GetInt();
-                    if (sl > 0) {
-                        ruleIndex = (unsigned)sl;
-                    }
-                }
-                CSSStyleSheet* sheet = resolveSheet(doc, id);
-                if (!sheet) {
+            sheet->parseSheetIfneeds();
+            std::string sheetId = "sheet-" + std::to_string(si);
+            GCVector<std::pair<StyleRule*, ResourceURL*>>& rules =
+                sheet->styleRules();
+            for (size_t ri = 0; ri < rules.size(); ri++) {
+                StyleRule* sr = rules[ri].first;
+                if (!sr) {
                     continue;
                 }
-                sheet->parseSheetIfneeds();
-                if (ruleIndex >= sheet->length()) {
+                String* selText = sr->selectorList().selectorText();
+                if (!selText || selText->length() == 0) {
                     continue;
                 }
-                CSSRule* wrapper = sheet->item(ruleIndex);
-                if (!wrapper || wrapper->type() != CSSRule::Type::STYLE_RULE) {
+                bool isMatch = false;
+                try {
+                    isMatch = el->matches(selText);
+                } catch (...) {
+                    isMatch = false; // unsupported selector
+                }
+                if (!isMatch) {
                     continue;
                 }
-                CSSStyleRule* styleRule = (CSSStyleRule*)wrapper;
-                CSSStyleDeclaration* decl = styleRule->style();
-                if (!decl) {
-                    continue;
-                }
-                decl->setCssText(String::fromUTF8(text.data(), text.size()));
-                styles.PushBack(
-                    buildCSSStyle(styleRule->styleRule()->styleDeclaration(),
-                                  id, alloc),
+                std::string sel = selText->toUTF8NonGCString();
+
+                rapidjson::Value rule(rapidjson::kObjectType);
+                // selectorList
+                rapidjson::Value selectorList(rapidjson::kObjectType);
+                rapidjson::Value selectors(rapidjson::kArrayType);
+                rapidjson::Value selEntry(rapidjson::kObjectType);
+                selEntry.AddMember(
+                    "text", rapidjson::Value(sel.c_str(), sel.size(), alloc),
                     alloc);
+                selectors.PushBack(selEntry, alloc);
+                selectorList.AddMember("selectors", selectors, alloc);
+                selectorList.AddMember(
+                    "text", rapidjson::Value(sel.c_str(), sel.size(), alloc),
+                    alloc);
+                rule.AddMember("selectorList", selectorList, alloc);
+                rule.AddMember("origin", "regular", alloc);
+                rule.AddMember(
+                    "styleSheetId",
+                    rapidjson::Value(sheetId.c_str(), sheetId.size(), alloc),
+                    alloc);
+                rule.AddMember(
+                    "style",
+                    buildCSSStyle(sr->styleDeclaration(), sheetId, alloc),
+                    alloc);
+
+                rapidjson::Value matching(rapidjson::kArrayType);
+                matching.PushBack(0, alloc);
+
+                rapidjson::Value mr(rapidjson::kObjectType);
+                mr.AddMember("rule", rule, alloc);
+                mr.AddMember("matchingSelectors", matching, alloc);
+                matched.PushBack(mr, alloc);
             }
         }
-        result.AddMember("styles", styles, alloc);
-        cmd.sendResult(result, out);
+    }
+    result.AddMember("matchedCSSRules", matched, alloc);
+    cmd.sendResult(result, out);
+}
+
+void CSSDomain::handleGetStyleSheetText(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    std::string id = paramString(cmd, "styleSheetId");
+    // Expect "sheet-N"
+    size_t idx = std::string::npos;
+    if (id.rfind("sheet-", 0) == 0) {
+        idx = (size_t)atoi(id.c_str() + 6);
+    }
+    WebView* wv = m_dispatcher->webView();
+    BrowsingContext* bc = wv ? wv->mainBrowsingContext() : nullptr;
+    Document* doc = bc ? bc->document() : nullptr;
+    if (!doc || idx == std::string::npos) {
+        cmd.sendError(-32000, "No stylesheet with given id found");
+        return;
+    }
+    GCVector<CSSStyleSheet*>& sheets = doc->styleResolver().sheets();
+    if (idx >= sheets.size() || !sheets[idx]) {
+        cmd.sendError(-32000, "No stylesheet with given id found");
+        return;
+    }
+    CSSStyleSheet* sheet = sheets[idx];
+    sheet->parseSheetIfneeds();
+    // Reconstruct text by joining each rule's cssText (the original source
+    // string is discarded after parsing).
+    std::string text;
+    unsigned n = sheet->length();
+    for (unsigned i = 0; i < n; i++) {
+        CSSRule* r = sheet->item(i);
+        if (!r) {
+            continue;
+        }
+        String* ct = r->cssText();
+        if (ct) {
+            if (!text.empty()) {
+                text += "\n";
+            }
+            text += ct->toUTF8NonGCString();
+        }
+    }
+
+    rapidjson::Document out;
+    rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("text", rapidjson::Value(text.c_str(), text.size(), alloc),
+                     alloc);
+    cmd.sendResult(result, out);
+}
+
+void CSSDomain::handleCreateStyleSheet(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    // Create an empty <style> element and append it to <head> (falling back
+    // to documentElement). The engine generates a CSSStyleSheet for it and
+    // registers it in styleResolver().sheets(); we return its "sheet-N" id.
+    Document* doc = mainDocument(m_dispatcher);
+    if (!doc) {
+        cmd.sendError(-32000, "No document");
+        return;
+    }
+    Element* styleEl = doc->createElement(String::fromUTF8("style", 5));
+    if (!styleEl) {
+        cmd.sendError(-32000, "Failed to create stylesheet");
+        return;
+    }
+    Node* parent =
+        doc->head() ? (Node*)doc->head() : (Node*)doc->documentElement();
+    if (!parent) {
+        cmd.sendError(-32000, "No insertion point for stylesheet");
+        return;
+    }
+    parent->appendChild(styleEl);
+
+    CSSStyleSheet* sheet = nullptr;
+    if (styleEl->isHTMLStyleElement()) {
+        sheet = styleEl->asHTMLStyleElement()->generatedSheet();
+    }
+    // Locate the sheet's index within the resolver sheet list.
+    GCVector<CSSStyleSheet*>& sheets = doc->styleResolver().sheets();
+    size_t idx = std::string::npos;
+    for (size_t i = 0; i < sheets.size(); i++) {
+        if (sheets[i] == sheet && sheet) {
+            idx = i;
+            break;
+        }
+    }
+    if (idx == std::string::npos) {
+        cmd.sendError(-32000, "Failed to register stylesheet");
+        return;
+    }
+    std::string sheetId = "sheet-" + std::to_string(idx);
+
+    rapidjson::Document out;
+    rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("styleSheetId",
+                     rapidjson::Value(sheetId.c_str(), sheetId.size(), alloc),
+                     alloc);
+    cmd.sendResult(result, out);
+}
+
+void CSSDomain::handleAddRule(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    std::string id = paramString(cmd, "styleSheetId");
+    std::string ruleText = paramString(cmd, "ruleText");
+    Document* doc = mainDocument(m_dispatcher);
+    CSSStyleSheet* sheet = resolveSheet(doc, id);
+    if (!sheet) {
+        cmd.sendError(-32000, "No stylesheet with given id found");
+        return;
+    }
+    sheet->parseSheetIfneeds();
+    unsigned index = sheet->length();
+    try {
+        sheet->insertRule(String::fromUTF8(ruleText.data(), ruleText.size()),
+                          index);
+    } catch (...) {
+        cmd.sendError(-32000, "Failed to parse the rule");
         return;
     }
 
-    if (method == "setPropertyText") {
-        // Convenience single-property setter on a rule (not a standard CDP
-        // method). params: {styleSheetId, ruleIndex, name, value, priority?}
-        std::string id = paramString(cmd, "styleSheetId");
-        std::string name = paramString(cmd, "name");
-        std::string value = paramString(cmd, "value");
-        std::string priority = paramString(cmd, "priority");
-        int ruleIndex = 0;
-        if (cmd.params() && cmd.params()->HasMember("ruleIndex") &&
-            (*cmd.params())["ruleIndex"].IsInt()) {
-            ruleIndex = (*cmd.params())["ruleIndex"].GetInt();
-        }
-        Document* doc = mainDocument(m_dispatcher);
-        CSSStyleSheet* sheet = resolveSheet(doc, id);
-        if (!sheet) {
-            cmd.sendError(-32000, "No stylesheet with given id found");
-            return;
-        }
-        sheet->parseSheetIfneeds();
-        if (ruleIndex < 0 || (unsigned)ruleIndex >= sheet->length()) {
-            cmd.sendError(-32000, "Rule index out of range");
-            return;
-        }
-        CSSRule* wrapper = sheet->item((unsigned)ruleIndex);
-        if (!wrapper || wrapper->type() != CSSRule::Type::STYLE_RULE) {
-            cmd.sendError(-32000, "Rule is not a style rule");
-            return;
-        }
-        CSSStyleRule* styleRule = (CSSStyleRule*)wrapper;
-        CSSStyleDeclaration* decl = styleRule->style();
-        if (!decl) {
-            cmd.sendError(-32000, "Rule has no style");
-            return;
-        }
-        // Apply the property on the engine declaration, then re-serialize and
-        // push the whole text back through the rule wrapper's setCssText, which
-        // re-parses the rule and triggers a rule-set recalc. (setProperty alone
-        // on a rule-backed declaration does not invalidate the rule set.)
-        CSSStyleDeclaration* engineDecl =
-            styleRule->styleRule()->styleDeclaration();
-        engineDecl->setProperty(
-            String::fromUTF8(name.data(), name.size()),
-            String::fromUTF8(value.data(), value.size()),
-            String::fromUTF8(priority.data(), priority.size()));
-        String* combined = engineDecl->cssText();
-        decl->setCssText(combined ? combined : String::emptyString);
-
-        rapidjson::Document out;
-        rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
-        rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "style",
-            buildCSSStyle(styleRule->styleRule()->styleDeclaration(), id,
-                          alloc),
-            alloc);
-        cmd.sendResult(result, out);
+    // Fetch the freshly inserted rule's engine StyleRule for the response.
+    StyleRule* sr = nullptr;
+    CSSRule* wrapper = sheet->item(index);
+    if (wrapper && wrapper->type() == CSSRule::Type::STYLE_RULE) {
+        sr = ((CSSStyleRule*)wrapper)->styleRule();
+    }
+    if (!sr) {
+        cmd.sendError(-32000, "Failed to insert the rule");
         return;
     }
 
+    rapidjson::Document out;
+    rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("rule", buildCSSRule(sr, id, alloc), alloc);
+    cmd.sendResult(result, out);
+}
+
+void CSSDomain::handleSetStyleSheetText(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    std::string id = paramString(cmd, "styleSheetId");
+    std::string text = paramString(cmd, "text");
+    Document* doc = mainDocument(m_dispatcher);
+    CSSStyleSheet* sheet = resolveSheet(doc, id);
+    if (!sheet) {
+        cmd.sendError(-32000, "No stylesheet with given id found");
+        return;
+    }
+    // Replace the backing <style> element's text content and regenerate the
+    // sheet through the normal engine pipeline (recalc is triggered).
+    Node* origin = sheet->origin();
+    if (!origin || !origin->isHTMLStyleElement()) {
+        cmd.sendError(-32000, "Stylesheet is not backed by a <style> element");
+        return;
+    }
+    HTMLStyleElement* styleEl = origin->asHTMLStyleElement();
+    // Remove existing children, then append the new text node.
+    while (styleEl->firstChild()) {
+        styleEl->removeChild(styleEl->firstChild());
+    }
+    styleEl->appendChild(
+        doc->createTextNode(String::fromUTF8(text.data(), text.size())));
+    styleEl->generateStyleSheet();
+
+    cmd.sendResultEmpty();
+}
+
+void CSSDomain::handleSetStyleTexts(CDPCommand& cmd, const std::string&)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    // edits: [{styleSheetId, range:{startLine,...}, text}]
+    // We map each edit's range.startLine (or array order) to the rule index
+    // within the sheet and replace that rule's declaration text. The
+    // reparse (StyleRuleCSSStyleDeclaration::setCssText) triggers a full
+    // recalc.
+    Document* doc = mainDocument(m_dispatcher);
+    rapidjson::Document out;
+    rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    rapidjson::Value styles(rapidjson::kArrayType);
+
+    if (cmd.params() && cmd.params()->HasMember("edits") &&
+        (*cmd.params())["edits"].IsArray()) {
+        const rapidjson::Value& edits = (*cmd.params())["edits"];
+        for (rapidjson::SizeType e = 0; e < edits.Size(); e++) {
+            const rapidjson::Value& edit = edits[e];
+            std::string id = (edit.HasMember("styleSheetId") &&
+                              edit["styleSheetId"].IsString())
+                                 ? edit["styleSheetId"].GetString()
+                                 : std::string();
+            std::string text =
+                (edit.HasMember("text") && edit["text"].IsString())
+                    ? edit["text"].GetString()
+                    : std::string();
+            unsigned ruleIndex = 0;
+            if (edit.HasMember("range") && edit["range"].IsObject() &&
+                edit["range"].HasMember("startLine") &&
+                edit["range"]["startLine"].IsInt()) {
+                int sl = edit["range"]["startLine"].GetInt();
+                if (sl > 0) {
+                    ruleIndex = (unsigned)sl;
+                }
+            }
+            CSSStyleSheet* sheet = resolveSheet(doc, id);
+            if (!sheet) {
+                continue;
+            }
+            sheet->parseSheetIfneeds();
+            if (ruleIndex >= sheet->length()) {
+                continue;
+            }
+            CSSRule* wrapper = sheet->item(ruleIndex);
+            if (!wrapper || wrapper->type() != CSSRule::Type::STYLE_RULE) {
+                continue;
+            }
+            CSSStyleRule* styleRule = (CSSStyleRule*)wrapper;
+            CSSStyleDeclaration* decl = styleRule->style();
+            if (!decl) {
+                continue;
+            }
+            decl->setCssText(String::fromUTF8(text.data(), text.size()));
+            styles.PushBack(
+                buildCSSStyle(styleRule->styleRule()->styleDeclaration(), id,
+                              alloc),
+                alloc);
+        }
+    }
+    result.AddMember("styles", styles, alloc);
+    cmd.sendResult(result, out);
+}
+
+void CSSDomain::handleSetPropertyText(CDPCommand& cmd,
+                                      const std::string& method)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    // Convenience single-property setter on a rule (not a standard CDP
+    // method). params: {styleSheetId, ruleIndex, name, value, priority?}
+    std::string id = paramString(cmd, "styleSheetId");
+    std::string name = paramString(cmd, "name");
+    std::string value = paramString(cmd, "value");
+    std::string priority = paramString(cmd, "priority");
+    int ruleIndex = 0;
+    if (cmd.params() && cmd.params()->HasMember("ruleIndex") &&
+        (*cmd.params())["ruleIndex"].IsInt()) {
+        ruleIndex = (*cmd.params())["ruleIndex"].GetInt();
+    }
+    Document* doc = mainDocument(m_dispatcher);
+    CSSStyleSheet* sheet = resolveSheet(doc, id);
+    if (!sheet) {
+        cmd.sendError(-32000, "No stylesheet with given id found");
+        return;
+    }
+    sheet->parseSheetIfneeds();
+    if (ruleIndex < 0 || (unsigned)ruleIndex >= sheet->length()) {
+        cmd.sendError(-32000, "Rule index out of range");
+        return;
+    }
+    CSSRule* wrapper = sheet->item((unsigned)ruleIndex);
+    if (!wrapper || wrapper->type() != CSSRule::Type::STYLE_RULE) {
+        cmd.sendError(-32000, "Rule is not a style rule");
+        return;
+    }
+    CSSStyleRule* styleRule = (CSSStyleRule*)wrapper;
+    CSSStyleDeclaration* decl = styleRule->style();
+    if (!decl) {
+        cmd.sendError(-32000, "Rule has no style");
+        return;
+    }
+    // Apply the property on the engine declaration, then re-serialize and
+    // push the whole text back through the rule wrapper's setCssText, which
+    // re-parses the rule and triggers a rule-set recalc. (setProperty alone
+    // on a rule-backed declaration does not invalidate the rule set.)
+    CSSStyleDeclaration* engineDecl =
+        styleRule->styleRule()->styleDeclaration();
+    engineDecl->setProperty(String::fromUTF8(name.data(), name.size()),
+                            String::fromUTF8(value.data(), value.size()),
+                            String::fromUTF8(priority.data(), priority.size()));
+    String* combined = engineDecl->cssText();
+    decl->setCssText(combined ? combined : String::emptyString);
+
+    rapidjson::Document out;
+    rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember(
+        "style",
+        buildCSSStyle(styleRule->styleRule()->styleDeclaration(), id, alloc),
+        alloc);
+    cmd.sendResult(result, out);
+}
+
+void CSSDomain::processMessage(CDPCommand& cmd, const std::string& method)
+{
+    static const CDPMethodHandler<CSSDomain> handlers[] = {
+        { "enable", &CSSDomain::handleEnable },
+        { "disable", &CSSDomain::handleDisable },
+        { "getComputedStyleForNode",
+          &CSSDomain::handleGetComputedStyleForNode },
+        { "getInlineStylesForNode", &CSSDomain::handleGetInlineStylesForNode },
+        { "getMatchedStylesForNode",
+          &CSSDomain::handleGetMatchedStylesForNode },
+        { "getStyleSheetText", &CSSDomain::handleGetStyleSheetText },
+        { "createStyleSheet", &CSSDomain::handleCreateStyleSheet },
+        { "addRule", &CSSDomain::handleAddRule },
+        { "setStyleSheetText", &CSSDomain::handleSetStyleSheetText },
+        { "setStyleTexts", &CSSDomain::handleSetStyleTexts },
+        { "setPropertyText", &CSSDomain::handleSetPropertyText },
+    };
+    if (CDPHandlerFn<CSSDomain> handler =
+            findCDPMethodHandler(handlers, method)) {
+        (this->*handler)(cmd, method);
+        return;
+    }
     cmd.sendError(-32601, "'method' wasn't found");
 }
 
