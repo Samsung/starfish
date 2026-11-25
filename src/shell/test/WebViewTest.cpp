@@ -185,3 +185,55 @@ TEST_F(WebViewTest, GetURL)
 } // namespace StarfishShell
 
 #endif
+
+#if defined(STARFISH_SHELL_X11) && defined(STARFISH_ENABLE_WEBGL)
+namespace StarfishShell {
+
+// Destroying one view must leave the GL of the others usable; the views of
+// a process share its default EGL display.
+TEST(WebViewX11Test, WebGLSurvivesAnotherViewDestroy)
+{
+    static const char* draw = R"JS(
+        (function() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl', { antialias: false });
+            if (!gl)
+                return false;
+            gl.clearColor(0, 1, 0, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            const pixel = new Uint8Array(4);
+            gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+            return pixel[0] === 0 && pixel[1] === 255 &&
+                   pixel[2] === 0 && pixel[3] === 255;
+        })()
+    )JS";
+
+    LWE::LWE::Initialize("/tmp/starfish_storage/");
+    // Only for its app loop; each view below creates its own X window.
+    Window* window = Window::create();
+    window->setInitHint(HINT_VISIBLE, 0);
+    window->init("Starfish", 320, 240);
+
+    LWE::WebView* other = LWE::WebView::Create(nullptr, 0, 0, 320, 240, 1,
+                                               "serif", "ko-KR", "Asia/Seoul");
+    LWE::WebView* survivor = LWE::WebView::Create(
+        nullptr, 0, 0, 320, 240, 1, "serif", "ko-KR", "Asia/Seoul");
+    ASSERT_TRUE(other);
+    ASSERT_TRUE(survivor);
+    other->LoadData("<p>other</p>");
+    survivor->LoadData("<p>survivor</p>");
+    window->appLoop()->start(1);
+    EXPECT_EQ("true", other->EvaluateJavaScript(draw));
+    EXPECT_EQ("true", survivor->EvaluateJavaScript(draw));
+
+    other->Destroy();
+    window->appLoop()->start(1);
+    EXPECT_EQ("true", survivor->EvaluateJavaScript(draw));
+
+    survivor->Destroy();
+    delete window;
+    LWE::LWE::Finalize();
+}
+
+} // namespace StarfishShell
+#endif
