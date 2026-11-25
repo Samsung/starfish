@@ -2247,7 +2247,7 @@ static bool isLayoutDamaged(LayoutDamager damager, Length l)
         CSSLength::Kind k;
         if (t == Length::Vw) {
             return damager.m_canViewportWidthDamage;
-        } else if (t == Length::Vh) {
+        } else if (t == Length::Vh || t == Length::Dvh) {
             return damager.m_canViewportHeightDamage;
         } else {
             return damager.m_canViewportWidthDamage ||

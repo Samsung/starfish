@@ -38,6 +38,12 @@ Optional<AnimatedValue*> AnimatedValue::create(
 {
     STARFISH_ASSERT(style != nullptr);
 
+    // Rolling back the animation origin requires the underlying cascade.
+    // Until that is available here, leave this property unanimated.
+    if (property.valueKind() == CSSStyleValuePair::Revert) {
+        return NullOption;
+    }
+
     switch (keyKind) {
     case CSSStyleValuePair::Color:
         if (neededOriginProperty) {

@@ -88,6 +88,17 @@ void ComputedStyleCSSStyleDeclaration::triggerResolveComputedStyleIfNeeds(
 {
     BrowsingContext* browsingContext = m_node->window()->browsingContext();
 
+    // A child document resolves viewport units and media queries against
+    // its iframe's used size, which comes from the embedding layout.
+    for (auto* parent = browsingContext->parentBrowsingContext(); parent;
+         parent = parent->parentBrowsingContext()) {
+        if (parent->needsStyleRecalc() || parent->needsFrameTreeBuild() ||
+            parent->needsLayout()) {
+            layoutIfNeeds();
+            break;
+        }
+    }
+
     if (m_node->needsStyleRecalc() || m_node->needsStyleRecalcForAnimation() ||
         browsingContext->needsStyleRecalcForWholeDocument()) {
         browsingContext->resolveStyleIfNeeds();

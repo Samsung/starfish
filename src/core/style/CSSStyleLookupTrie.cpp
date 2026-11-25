@@ -2834,6 +2834,9 @@ UnitType CSSStyleLookupTrie::lookupUnitType(const char* data, unsigned length)
             if (memcmp(data, "dpi", 3) == 0) {
                 return UnitType::DotsPerInch;
             }
+            if (memcmp(data, "dvh", 3) == 0) {
+                return UnitType::DynamicViewportHeight;
+            }
             break;
         case 'k':
             if (memcmp(data, "khz", 3) == 0) {

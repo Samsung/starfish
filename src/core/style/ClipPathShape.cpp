@@ -560,6 +560,10 @@ static void appendLength(StringBuilder& builder, const Length& length)
         value = length.numberData();
         unit = "vh";
         break;
+    case Length::Dvh:
+        value = length.numberData();
+        unit = "dvh";
+        break;
     case Length::Vmin:
         value = length.numberData();
         unit = "vmin";

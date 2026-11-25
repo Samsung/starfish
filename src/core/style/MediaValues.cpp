@@ -56,6 +56,7 @@ bool computeLengthImpl(double value, UnitType type, uint32_t defaultFontSize,
         result = (value * viewportWidth) / 100.0;
         return true;
     case UnitType::ViewportHeight:
+    case UnitType::DynamicViewportHeight:
         result = (value * viewportHeight) / 100.0;
         return true;
     case UnitType::ViewportMin:

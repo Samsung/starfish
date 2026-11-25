@@ -1,0 +1,60 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Dynamic viewport height sizes a grid and its iframe</title>
+<link rel="help" href="https://www.w3.org/TR/css-values-4/#viewport-relative-lengths">
+<style>
+html, body { margin: 0; }
+body { display: grid; grid-template-rows: auto 1fr; height: 100dvh; }
+nav { height: 40px; }
+main { min-height: 0; }
+iframe { display: block; width: 100%; height: 100%; border: 0; }
+</style>
+<nav>Menu</nav>
+<main>
+  <iframe id="game" srcdoc="
+    <style>
+      body { margin: 0; }
+      #height { height: 100dvh; }
+      #calc { height: calc(50dvh - 10px); }
+    </style>
+    <div id='height'></div>
+    <div id='calc'></div>
+  "></iframe>
+</main>
+<script>
+window.addEventListener('load', () => {
+  const frame = document.getElementById('game');
+  const frameHeight = frame.getBoundingClientRect().height;
+  const inner = frame.contentDocument;
+  const height = inner.getElementById('height');
+  const calc = inner.getElementById('calc');
+
+  console.assert(document.body.getBoundingClientRect().height === innerHeight,
+                 '100dvh gives the grid the full viewport height');
+  console.assert(frameHeight === innerHeight - 40,
+                 'The game iframe fills the remaining grid track');
+  console.assert(height.getBoundingClientRect().height === frameHeight,
+                 'Inside an iframe, 100dvh uses the iframe viewport');
+  console.assert(calc.getBoundingClientRect().height === frameHeight / 2 - 10,
+                 'calc() evaluates dvh as a viewport-relative length');
+
+  height.style.height = '75dvh';
+  console.assert(height.style.height === '75dvh',
+                 'CSSOM preserves the specified dvh unit');
+
+  frame.style.height = '200px';
+  console.assert(frame.contentWindow.getComputedStyle(height).height === '150px',
+                 'Computed style sees the new iframe viewport immediately');
+
+  frame.style.height = '240px';
+  requestAnimationFrame(() => {
+    console.assert(height.getBoundingClientRect().height === 180,
+                   'The length updates when the iframe viewport resizes');
+    console.assert(calc.getBoundingClientRect().height === 110,
+                   'calc() updates when the iframe viewport resizes');
+    if (typeof testEnd === 'function') {
+      testEnd();
+    }
+  });
+});
+</script>

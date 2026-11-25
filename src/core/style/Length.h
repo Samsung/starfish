@@ -48,6 +48,7 @@ public:
         Ch,
         Vw,
         Vh,
+        Dvh,
         Vmin,
         Vmax,
 
@@ -288,7 +289,9 @@ public:
     {
         if (m_type == Vw) {
             return viewportWidth * viewportPercent() / 100;
-        } else if (m_type == Vh) {
+        } else if (m_type == Vh || m_type == Dvh) {
+            // With no retractable browser UI, the dynamic viewport is the
+            // same size as the layout viewport (CSS Values 4).
             return viewportHeight * viewportPercent() / 100;
         } else if (m_type == Vmin) {
             return std::min(viewportWidth, viewportHeight) * viewportPercent() /

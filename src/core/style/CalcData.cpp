@@ -690,32 +690,34 @@ namespace {
             return 0;
         case CSSLength::CM:
             return 1;
-        case CSSLength::EM:
+        case CSSLength::DVH:
             return 2;
-        case CSSLength::EX:
+        case CSSLength::EM:
             return 3;
-        case CSSLength::INCH:
+        case CSSLength::EX:
             return 4;
-        case CSSLength::MM:
+        case CSSLength::INCH:
             return 5;
-        case CSSLength::PC:
+        case CSSLength::MM:
             return 6;
-        case CSSLength::PT:
+        case CSSLength::PC:
             return 7;
-        case CSSLength::PX:
+        case CSSLength::PT:
             return 8;
-        case CSSLength::REM:
+        case CSSLength::PX:
             return 9;
-        case CSSLength::VH:
+        case CSSLength::REM:
             return 10;
-        case CSSLength::VMAX:
+        case CSSLength::VH:
             return 11;
-        case CSSLength::VMIN:
+        case CSSLength::VMAX:
             return 12;
-        case CSSLength::VW:
+        case CSSLength::VMIN:
             return 13;
-        default:
+        case CSSLength::VW:
             return 14;
+        default:
+            return 15;
         }
     }
 

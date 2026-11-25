@@ -41,6 +41,7 @@ public:
         PC,
         VW,
         VH,
+        DVH,
         VMIN,
         VMAX,
         REM,

@@ -173,6 +173,11 @@ public:
             char32_t c2 = str->operator[](2);
 
             switch (c0) {
+            case 'd':
+                if (c1 == 'v' && c2 == 'h') {
+                    return true;
+                }
+                break;
             case 'r':
                 if (c1 == 'e' && c2 == 'm') {
                     return true;

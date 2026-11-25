@@ -1558,6 +1558,8 @@ CSSStyleValuePair CSSStyleDeclaration::lengthToCSSStyleValue(Length len)
             k = CSSLength::VW;
         } else if (t == Length::Vh) {
             k = CSSLength::VH;
+        } else if (t == Length::Dvh) {
+            k = CSSLength::DVH;
         } else if (t == Length::Vmin) {
             k = CSSLength::VMIN;
         } else {
@@ -1596,6 +1598,7 @@ void CSSStyleDeclaration::removeRootPointerValue(const CSSStyleValuePair& v)
 void CSSStyleDeclaration::clear()
 {
     m_cssValues.clear();
+    m_mayRevertInCascade = false;
     m_pointerRooter.clear();
     if (m_cssCustomValues) {
         m_cssCustomValues->clear();
@@ -1612,6 +1615,7 @@ CSSStyleDeclaration* CSSStyleDeclaration::clone(Element* element)
 {
     CSSStyleDeclaration* newStyle = new CSSStyleDeclaration(element);
     newStyle->m_cssValues = m_cssValues;
+    newStyle->m_mayRevertInCascade = m_mayRevertInCascade;
     newStyle->m_pointerRooter = m_pointerRooter;
     if (m_cssCustomValues) {
         newStyle->m_cssCustomValues =
@@ -1795,12 +1799,30 @@ void CSSStyleDeclaration::addValuePair(const CSSStyleValuePair& p)
 void CSSStyleDeclaration::addCSSValuePair(CSSStyleValuePair::KeyKind keyKind,
                                           const CSSStyleValuePair& value)
 {
+    // A var() substitution may produce a CSS-wide keyword. Keep the hint
+    // until this block is cleared, even if a matching value is removed.
+    m_mayRevertInCascade |= value.valueKind() == CSSStyleValuePair::Revert ||
+                            value.hasUnresolvedVarReference();
+
     for (unsigned i = 0; i < m_cssValues.size(); i++) {
         if (m_cssValues[i].keyKind() == keyKind) {
             if (isInlineStyle() || value.flagImportant() == true ||
                 (value.flagImportant() == false &&
                  m_cssValues[i].flagImportant() == false)) {
-                if (!m_cssValues[i].valueEquals(value)) {
+                // A repeated longhand can appear on either side of all.
+                // Preserve the position of the winning declaration.
+                if (m_mayRevertInCascade &&
+                    std::any_of(m_cssValues.begin() + i + 1, m_cssValues.end(),
+                                [](const CSSStyleValuePair& pair) {
+                                    return pair.keyKind() ==
+                                           CSSStyleValuePair::All;
+                                })) {
+                    removeRootPointerValue(m_cssValues[i]);
+                    m_cssValues.erase(m_cssValues.begin() + i);
+                    break;
+                }
+                if (m_cssValues[i].flagImportant() != value.flagImportant() ||
+                    !m_cssValues[i].valueEquals(value)) {
                     removeRootPointerValue(m_cssValues[i]);
                     m_cssValues[i].setValueKind(value.valueKind());
                     m_cssValues[i].setTemporaryValueKind(
@@ -2573,7 +2595,8 @@ String* CSSStyleDeclaration::cssTextAffectedByAllProperty(
         value = String::createASCIIString("inherit");
         break;
     case CSSStyleValuePair::ValueKind::Unset:
-        value = String::createASCIIString("unset");
+    case CSSStyleValuePair::ValueKind::Revert:
+        value = pair.toString();
         break;
     default:
         value = String::emptyString;
@@ -4662,7 +4685,7 @@ static bool isCSSWideKeyword(String* value)
 {
     return value->equals(String::initialString) ||
            value->equals(String::inheritString) ||
-           value->equals(String::unsetString);
+           value->equals(String::unsetString) || value->equals("revert");
 }
 
 // Serialization of a two-longhand shorthand whose longhands may each hold a
@@ -6565,6 +6588,7 @@ StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(
                               ->ownerDocument())
 {
     m_cssValues = src->m_cssValues;
+    m_mayRevertInCascade = src->m_mayRevertInCascade;
     if (src->m_cssCustomValues) {
         m_cssCustomValues =
             new MutablePropertyValueList(*src->m_cssCustomValues);
@@ -6623,6 +6647,7 @@ void StyleRuleCSSStyleDeclaration::setCssText(String* text)
         parser.parseStyleDeclaration(text, decl);
     }
     m_cssValues = decl->cssValues();
+    m_mayRevertInCascade = decl->m_mayRevertInCascade;
     m_pointerRooter = decl->m_pointerRooter;
     // The wrapper is a snapshot of the rule's block (see the constructor), so
     // its custom properties must follow the re-parse as the values above do.

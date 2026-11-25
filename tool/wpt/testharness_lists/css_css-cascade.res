@@ -55,8 +55,8 @@ http://web-platform.test:8000/css/css-cascade/parsing/all-valid.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-cascade/revert-rule-revert-layer.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-cascade/revert-rule-shadow.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-cascade/revert-val-003.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-cascade/revert-val-004.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-cascade/revert-val-005.html
+http://web-platform.test:8000/css/css-cascade/revert-val-004.html
+http://web-platform.test:8000/css/css-cascade/revert-val-005.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-cascade/revert-val-006.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-cascade/revert-val-007.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-cascade/revert-val-008.html

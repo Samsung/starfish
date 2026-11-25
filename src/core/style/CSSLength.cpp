@@ -97,6 +97,11 @@ static CSSLength::Kind computeLengthUnit(T str)
         char32_t c2 = str->operator[](2);
 
         switch (c0) {
+        case 'd':
+            if (c1 == 'v' && c2 == 'h') {
+                return CSSLength::DVH;
+            }
+            break;
         case 'r':
             if (c1 == 'e' && c2 == 'm') {
                 return CSSLength::REM;
@@ -161,6 +166,8 @@ Length CSSLength::toLength() const
         return Length(Length::Vw, m_value);
     } else if (m_kind == VH) {
         return Length(Length::Vh, m_value);
+    } else if (m_kind == DVH) {
+        return Length(Length::Dvh, m_value);
     } else if (m_kind == VMIN) {
         return Length(Length::Vmin, m_value);
     } else if (m_kind == VMAX) {
@@ -207,6 +214,9 @@ String* CSSLength::toString() const
         return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == VH) {
         stdStr.append("vh");
+        return String::fromUTF8(stdStr.data(), stdStr.size());
+    } else if (m_kind == DVH) {
+        stdStr.append("dvh");
         return String::fromUTF8(stdStr.data(), stdStr.size());
     } else if (m_kind == VMIN) {
         stdStr.append("vmin");

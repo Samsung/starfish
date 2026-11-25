@@ -199,6 +199,8 @@ const char* unitTypeToString(UnitType type)
         return "vw";
     case UnitType::ViewportHeight:
         return "vh";
+    case UnitType::DynamicViewportHeight:
+        return "dvh";
     case UnitType::ViewportMin:
         return "vmin";
     case UnitType::ViewportMax:

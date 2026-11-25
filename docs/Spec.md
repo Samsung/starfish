@@ -1897,7 +1897,7 @@ Verified against `src/core/style/CSSStyleLookupTrie.cpp`, `src/core/style/Style.
 
 Verified against `src/core/style/CSSStyleLookupTrie.cpp::lookupUnitType`, `src/core/style/CSSParser.h::parseNonNamedColor`, and runtime probes (`getComputedStyle` + style-rule round-trip).
 
-**Length / size units.** Supported: `px`, `em`, `rem`, `ex`, `ch`, `pt`, `pc`, `cm`, `mm`, `in`, `vw`, `vh`, `vmin`, `vmax`, `%`, `fr` (grid-tracks only). NOT supported: `q`/`Q` (quarter-millimeter) — the trie has no entry for `q`, so the entire declaration is silently dropped (the rule serializes back as empty). New viewport units `svw`/`lvw`/`dvw`/`svh`/… and container units (`cqw`, `cqi`, `cqb`, …) are likewise absent.
+**Length / size units.** Supported: `px`, `em`, `rem`, `ex`, `ch`, `pt`, `pc`, `cm`, `mm`, `in`, `vw`, `vh`, `dvh`, `vmin`, `vmax`, `%`, `fr` (grid tracks only). Each `dvh` is 1% of the document's viewport height. Starfish has no retractable browser UI, so it resolves to the same length as `vh`. The other small, large, and dynamic viewport units, container units, and `q`/`Q` are unsupported.
 
 **Angles.** Parsing accepts `deg`, `rad`, `turn`, `grad` (`CSSStyleLookupTrie` returns the right `UnitType`). However, `getComputedStyle(el).transform` always returns `"none"` regardless of the rotate angle — i.e. the layout side does not synthesize the matrix at computed-style read time. The underlying rule is preserved (visible via `cssRules[i].cssText`), and rendering uses it; only the JS-visible computed value is missing.
 
@@ -2050,7 +2050,7 @@ The CSS section above does not enumerate at-rules. Implementation status:
 
 | Category | Supported | Not supported |
 |----------|-----------|---------------|
-| Length | `px`, `em`, `rem`, `ex`, `ch`, `pt`, `pc`, `cm`, `mm`, `in`, `vw`, `vh`, `vmin`, `vmax`, `%`, `fr` (grid only) | `q`/`Q`, container-relative units (`cqw`/`cqi`/`cqb`/...), small/large/dynamic viewport units (`svw`/`lvw`/`dvw`/`svh`/...) |
+| Length | `px`, `em`, `rem`, `ex`, `ch`, `pt`, `pc`, `cm`, `mm`, `in`, `vw`, `vh`, `dvh`, `vmin`, `vmax`, `%`, `fr` (grid only) | `q`/`Q`, container-relative units (`cqw`/`cqi`/`cqb`/...), the other small/large/dynamic viewport units (`svw`/`lvw`/`dvw`/`svh`/...) |
 | Angle | `deg`, `rad`, `turn`, `grad` (parsed; rules retained) | — but `getComputedStyle.transform` always returns `"none"` (the computed-style serializer is missing for transforms; rendering still works) |
 | Time | `s`, `ms` | — |
 | Resolution | `dpi`, `dpcm`, `dppx` (work in `@media`) | — |
@@ -2837,10 +2837,10 @@ LWE has **zero** support for CSS Paged Media:
 
 | Construct | Status |
 |-----------|--------|
-| `all: initial` / `inherit` / `unset` / `revert` (the CSS Cascade `all` shorthand) | **Never applies.** `Style.cpp::updateValueAll` is a TODO stub that returns `false` for every input — declarations like `all: unset` are silently dropped. |
+| `all` shorthand | `all: revert` rolls back author declarations for all properties except `direction`, `unicode-bidi`, and custom properties. |
 | Per-property `<prop>: initial` | Works at the cascade level — the property reverts to its initial value. |
 | Per-property `<prop>: inherit` | Works for inheritable properties (and at the cascade level for non-inheritable). |
-| Per-property `<prop>: unset` / `revert` / `revert-layer` | Behavior is partial — `unset` is interpreted as either `initial` or `inherit` per spec for known properties, but `revert` and `revert-layer` are NOT understood by `applyProperty` and may fall back silently. |
+| Per-property `<prop>: unset` / `revert` / `revert-layer` | `unset` resolves to the inherited or initial value. In style rules and inline styles, a winning `revert` (including `all: revert`) rolls back the author origin to the UA declaration, inheritance, or the initial value. Rollback in custom properties, animation keyframes, and `revert-layer` are not supported. |
 
 ### CSS Houdini — runtime caveats
 
@@ -2856,7 +2856,7 @@ CSS Houdini support is **essentially absent**. Only a cosmetic Typed-OM façade 
 | `CSSStyleValue.parse(prop, cssText)` | **🔥 Crashes the engine** — generated binding asserts `result != nullptr` and the C++ stub returns `nullptr` (`CSSStyleValue.cpp:53`); SIGABRT on call. **Do NOT call.** |
 | `CSSStyleValue.parseAll(...)` | Returns empty array (safe). |
 | `CSS.escape(ident)` | **`undefined`** (declared `[Unimplemented]`). Use a polyfill or manual `\` escaping. |
-| `CSS.supports(prop, value)` / `CSS.supports(condition)` | Both forms evaluate the declaration through the `@supports` parser (`CSSParser::parseSupportCondition`): a declaration is supported iff it parses to a non-empty `cssText`. The two-argument form used to return `false` for every valid declaration because it handed a bare `prop:value` (no parentheses) to the condition parser; it now wraps it as `(prop: value)`. Values the engine drops at parse time (unsupported color functions, `revert`, ...) still report `false`, which is the correct answer. |
+| `CSS.supports(prop, value)` / `CSS.supports(condition)` | Both forms evaluate the declaration through the `@supports` parser (`CSSParser::parseSupportCondition`): a declaration is supported iff it parses to a non-empty `cssText`. The two-argument form used to return `false` for every valid declaration because it handed a bare `prop:value` (no parentheses) to the condition parser; it now wraps it as `(prop: value)`. Values the engine drops at parse time (unsupported color functions, `revert-layer`, ...) still report `false`, which is the correct answer. |
 
 ### CSS Image functions — runtime caveats
 
@@ -3161,7 +3161,7 @@ rules cascade before their parent rule per the spec.
 | `!important` on a normal property | Honored (`setFlagImportant(true)` on the value pair). |
 | `!important` on a CSS custom property (`--x: 1 !important;`) | **Silently dropped** — `setCustomProperty` has no priority parameter; `getPropertyPriority('--x')` always returns `""`. (Already noted under Custom Properties.) |
 | Computed-style `unset` reduction | **Partial.** `unset` is applied as either `inherit` or `initial` per the property's inheritance attribute by `applyProperty`. |
-| Computed-style `revert` / `revert-layer` reduction | **Not implemented** — falls through `applyProperty`'s `default:` and may behave like `unset`. |
+| Computed-style `revert-layer` reduction | **Not implemented.** |
 | `@import` cascade ordering | `@import` rules are parsed and inlined; resulting cascade is in source order. **Cyclic `@import` detection is partial** — a stylesheet that imports itself triggers an infinite-load attempt that is bounded by the network layer's redirect/depth limit. |
 
 ### CSSOM — additional details

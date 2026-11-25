@@ -176,6 +176,11 @@ public:
         return m_cssValues;
     }
 
+    bool mayRevertInCascade() const
+    {
+        return m_mayRevertInCascade;
+    }
+
     Optional<MutablePropertyValueList*> cssCustomValues()
     {
         return m_cssCustomValues;
@@ -479,6 +484,7 @@ protected:
                             CSSStyleValuePair::KeyKind keyKind);
     void removeUnitRepeatStyle(CSSStyleValuePair::KeyKind keyKind);
 
+    bool m_mayRevertInCascade = false;
     GCAtomicVector<CSSStyleValuePair> m_cssValues;
     Optional<MutablePropertyValueList*> m_cssCustomValues;
     GCVector<void*> m_pointerRooter;

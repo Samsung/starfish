@@ -1507,6 +1507,13 @@ Optional<LayoutUnit> GridFormattingContext::definiteContainerHeight()
         return Optional<LayoutUnit>(
             LayoutUnit(m_container->style()->height().fixed()));
     }
+
+    const Length& height = m_container->style()->height();
+    if (!height.isFixed() && height.isDefinite(false)) {
+        return Optional<LayoutUnit>(
+            m_container->contentHeightAfterApplyingBoxSizing(
+                height.specifiedValue(0, m_container)));
+    }
     // css-sizing-4 5.1: an auto height the preferred aspect ratio derives
     // from the width is known before the rows are sized.
     double ratio = m_container->preferredAspectRatio();
@@ -1524,7 +1531,14 @@ void GridFormattingContext::applyImplicitTrackSizing()
 
     GCVector<GridTrack*> autoRows;
     Optional<LayoutUnit> definiteHeight = definiteContainerHeight();
-    if (definiteHeight) {
+    // Flexible rows consume free space before auto tracks can stretch.
+    bool hasFlexibleRows = std::any_of(
+        m_gridTemplateRows.begin(), m_gridTemplateRows.end(),
+        [](const GridTrack& track) {
+            return track.isFlexibleLength() ||
+                   (track.isMinMax() && track.max().isFlexibleLength());
+        });
+    if (definiteHeight && !hasFlexibleRows) {
         double containerHeight = definiteHeight.value().toDouble();
         double availableHeight = containerHeight;
         size_t autoRowsNum = 0;

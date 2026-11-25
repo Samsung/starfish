@@ -31,8 +31,8 @@ http://web-platform.test:8000/css/css-cascade/initial-color-background-001.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-cascade/revert-layer-013.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-cascade/revert-layer-014.html
 http://web-platform.test:8000/css/css-cascade/revert-layer-015.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-cascade/revert-val-001.html
-# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-cascade/revert-val-002.html
+http://web-platform.test:8000/css/css-cascade/revert-val-001.html
+http://web-platform.test:8000/css/css-cascade/revert-val-002.html
 http://web-platform.test:8000/css/css-cascade/scope-featureless.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-cascade/scope-part.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/css/css-cascade/scope-pseudo-element.html

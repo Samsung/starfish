@@ -1206,6 +1206,7 @@ tests/assertion/shadowdom/style_ordinary_rule_after_first_resolution.html
 tests/assertion/shadowdom/slot_unassign_stale_style.html
 tests/assertion/shadowdom/nested_host_promotion.html
 tests/assertion/css/var-calc-four-sided-shorthand.html
+tests/assertion/css/dynamic-viewport-height.html
 tests/assertion/shadowdom/slot_outside_shadow_tree.html
 tests/assertion/shadowdom/slot_in_rendering_tree.html
 #tests/assertion/web-animations/element_animate_01.html // please update this test after add an AnimationPlaybackEvent.

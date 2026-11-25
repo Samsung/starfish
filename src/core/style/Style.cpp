@@ -26,6 +26,7 @@
  */
 
 #include <SkMatrix.h>
+#include <bitset>
 
 #include "StarfishConfig.h"
 
@@ -682,6 +683,8 @@ bool CSSStyleValuePair::updateValueCommon(const CSSTokenVector& tokens)
         m_valueKind = CSSStyleValuePair::ValueKind::Initial;
     } else if (compareCString("unset", value)) {
         m_valueKind = CSSStyleValuePair::ValueKind::Unset;
+    } else if (tokens[0].equals("revert")) {
+        m_valueKind = CSSStyleValuePair::ValueKind::Revert;
     } else {
         return false;
     }
@@ -1182,6 +1185,7 @@ bool CSSStyleValuePair::valueEquals(const CSSStyleValuePair& src) const
     case Initial:
     case Inherit:
     case Unset:
+    case Revert:
     case Auto:
     case None:
     case Normal:
@@ -1637,6 +1641,8 @@ String* CSSStyleValuePair::toString() const
         return String::inheritString;
     case CSSStyleValuePair::ValueKind::Unset:
         return String::unsetString;
+    case CSSStyleValuePair::ValueKind::Revert:
+        return String::createASCIIString("revert");
     case CSSStyleValuePair::ValueKind::Length:
         return cssLengthValue().toString();
     case CSSStyleValuePair::ValueKind::CalcValueKind:
@@ -3004,6 +3010,13 @@ void* StyleResolveContext::allocateComputedStyle()
     }
 }
 
+static bool isAffectedByAll(CSSStyleValuePair::KeyKind key)
+{
+    using Key = CSSStyleValuePair::KeyKind;
+    return key != Key::Unknown && key != Key::All && key != Key::Direction &&
+           key != Key::UnicodeBidi && key != Key::CustomProperty;
+}
+
 void StyleResolver::applyAllProperty(Element* element,
                                      CSSStyleValuePair::ValueKind valueKind,
                                      ResourceURL* origin, ComputedStyle*& style,
@@ -3017,10 +3030,7 @@ void StyleResolver::applyAllProperty(Element* element,
          i < CSSStyleValuePair::KeyKind::KeyKindSize; i++) {
         CSSStyleValuePair::KeyKind keyKind =
             static_cast<CSSStyleValuePair::KeyKind>(i);
-        if (keyKind != CSSStyleValuePair::KeyKind::All &&
-            keyKind != CSSStyleValuePair::KeyKind::Direction &&
-            keyKind != CSSStyleValuePair::KeyKind::UnicodeBidi &&
-            keyKind != CSSStyleValuePair::KeyKind::CustomProperty) {
+        if (isAffectedByAll(keyKind)) {
             CSSStyleValuePair p;
             p.setKeyKind(keyKind);
             p.setValueKind(valueKind);
@@ -3785,12 +3795,22 @@ CSSStyleDeclaration* StyleResolver::resolveVarValue(
 void StyleResolver::apply(Element* element,
                           const GCAtomicVector<CSSStyleValuePair>& cssValues,
                           ResourceURL* origin, ComputedStyle* style,
-                          ComputedStyle* parentStyle, bool isImportant)
+                          ComputedStyle* parentStyle, bool isImportant,
+                          CascadeDeclarations* declarations)
 {
     STARFISH_ASSERT(element);
     STARFISH_ASSERT(origin);
     STARFISH_ASSERT(style);
     STARFISH_ASSERT(parentStyle);
+
+    auto applyOrCollect = [&](const CSSStyleValuePair& value) {
+        if (declarations) {
+            declarations->emplace_back(value, origin);
+        } else {
+            applyProperty(element, value, origin, style, parentStyle,
+                          isImportant);
+        }
+    };
 
     for (const auto& cssValue : cssValues) {
         if (isImportant != cssValue.flagImportant()) {
@@ -3804,12 +3824,10 @@ void StyleResolver::apply(Element* element,
                                 cssValue.flagImportant());
             for (const auto& resolvedCssValues :
                  resolvedDeclaration->cssValues()) {
-                applyProperty(element, resolvedCssValues, origin, style,
-                              parentStyle, isImportant);
+                applyOrCollect(resolvedCssValues);
             }
         } else {
-            applyProperty(element, cssValue, origin, style, parentStyle,
-                          isImportant);
+            applyOrCollect(cssValue);
         }
     }
 }
@@ -3823,6 +3841,15 @@ void StyleResolver::applyProperty(Element* element,
     STARFISH_ASSERT(origin);
     STARFISH_ASSERT(style);
     STARFISH_ASSERT(parentStyle);
+
+    // Author-origin revert is resolved before application. In the UA origin
+    // there is no earlier origin to roll back to (CSS Cascade 5).
+    if (newCssValue.valueKind() == CSSStyleValuePair::Revert) {
+        auto unset = newCssValue;
+        unset.setValueKind(CSSStyleValuePair::Unset);
+        applyProperty(element, unset, origin, style, parentStyle, isImportant);
+        return;
+    }
 
     // A declaration that wins the cascade for a color property supersedes a
     // light-dark() that an earlier one deferred for the same property.
@@ -4566,14 +4593,6 @@ void StyleResolver::applyProperty(Element* element,
             break;
         case CSSStyleValuePair::ValueKind::Initial:
         case CSSStyleValuePair::ValueKind::Unset:
-            style->setScrollMarkerGroup(
-                ScrollMarkerGroupValue::NoneScrollMarkerGroupValue);
-            break;
-        case CSSStyleValuePair::ValueKind::KeywordValueKind:
-            // 'revert' support is scoped to round-tripping the CSS-wide
-            // keyword through declarations; in the author origin it resolves
-            // to the initial value.
-            STARFISH_ASSERT(newCssValue.keywordValue()->equals("revert"));
             style->setScrollMarkerGroup(
                 ScrollMarkerGroupValue::NoneScrollMarkerGroupValue);
             break;
@@ -8715,6 +8734,34 @@ void sortVector(Iter begin, Iter end, Func matchingRule)
     std::stable_sort(begin, end, matchingRule);
 }
 
+static CSSStyleValuePair::KeyKind physicalCascadeKey(
+    CSSStyleValuePair::KeyKind key, DirectionValue direction)
+{
+    using Key = CSSStyleValuePair::KeyKind;
+    // The supported flow-relative sides use horizontal writing mode. They
+    // belong to the same cascade as their corresponding physical sides.
+    bool rtl = direction == DirectionValue::RtlDirectionValue;
+    switch (key) {
+#define MAP_SIDES(Prefix, Suffix)                                            \
+    case Key::Prefix##BlockStart##Suffix:                                    \
+        return Key::Prefix##Top##Suffix;                                     \
+    case Key::Prefix##BlockEnd##Suffix:                                      \
+        return Key::Prefix##Bottom##Suffix;                                  \
+    case Key::Prefix##InlineStart##Suffix:                                   \
+        return rtl ? Key::Prefix##Right##Suffix : Key::Prefix##Left##Suffix; \
+    case Key::Prefix##InlineEnd##Suffix:                                     \
+        return rtl ? Key::Prefix##Left##Suffix : Key::Prefix##Right##Suffix;
+        MAP_SIDES(Margin, )
+        MAP_SIDES(Padding, )
+        MAP_SIDES(Border, Color)
+        MAP_SIDES(Border, Style)
+        MAP_SIDES(Border, Width)
+#undef MAP_SIDES
+    default:
+        return key;
+    }
+}
+
 void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
                                   ComputedStyle* ret, ComputedStyle* parent,
                                   PseudoElementType pseudoElementType)
@@ -8952,55 +8999,119 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
         }
     }
 
-    // Apply presentation attribute's style
-    {
-        CSSStyleValuePairVectorHolder cssValues;
-        element->styleForPresentationAttribute(cssValues, matchedRules,
-                                               cssCustomValues());
-        apply(element, cssValues.mutableData(),
-              element->document()->documentURI(), ret, parent, false);
-    }
+    CSSStyleValuePairVectorHolder presentationValues;
+    element->styleForPresentationAttribute(presentationValues, matchedRules,
+                                           cssCustomValues());
 
-    // we need to re-compute values here again since "Apply presentation
-    // attribute's style part" can modify matchedRules
-    auto authorSheetBegin = &matchedRules[authorSheetBeginIndex];
-    begin = &matchedRules[0];
+    // Presentation attribute processing can modify matchedRules.
+    auto authorBegin = matchedRules.data() + authorSheetBeginIndex;
     end = matchedRules.data() + matchedRules.size();
+    auto inlineStyle = pseudoElementType == PseudoElementNone
+                           ? element->inlineStyleWithoutCreation()
+                           : nullptr;
 
-    // Apply non-important author-rules
-    {
-        auto iter = authorSheetBegin;
-        while (iter != end) {
+    bool mayRevert = inlineStyle && inlineStyle->mayRevertInCascade();
+    for (auto iter = authorBegin; !mayRevert && iter != end; ++iter) {
+        mayRevert = iter->first->styleDeclaration()->mayRevertInCascade();
+    }
+
+    CascadeDeclarations declarations;
+    auto* collect = mayRevert ? &declarations : nullptr;
+    apply(element, presentationValues.mutableData(),
+          element->document()->documentURI(), ret, parent, false, collect);
+    for (bool important : { false, true }) {
+        for (auto iter = authorBegin; iter != end; ++iter) {
             STARFISH_ASSERT(!iter->first->isUARule());
             apply(element, iter->first->styleDeclaration()->m_cssValues,
-                  iter->second, ret, parent, false);
-            iter++;
+                  iter->second, ret, parent, important, collect);
+        }
+        if (inlineStyle) {
+            apply(element, inlineStyle->m_cssValues,
+                  element->document()->baseURL(), ret, parent, important,
+                  collect);
         }
     }
 
-    // inline style
-    if (pseudoElementType == PseudoElementNone &&
-        element->inlineStyleWithoutCreation()) {
-        apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
-              element->document()->baseURL(), ret, parent, false);
+    if (!mayRevert) {
+        return;
     }
 
-    // Apply important author-rules
-    {
-        auto iter = authorSheetBegin;
-        while (iter != end) {
-            STARFISH_ASSERT(!iter->first->isUARule());
-            apply(element, iter->first->styleDeclaration()->m_cssValues,
-                  iter->second, ret, parent, true);
-            iter++;
+    using Key = CSSStyleValuePair::KeyKind;
+    using Value = CSSStyleValuePair::ValueKind;
+    auto direction = ret->direction();
+    for (auto iter = declarations.rbegin(); iter != declarations.rend();
+         ++iter) {
+        const auto& value = iter->first;
+        if (value.keyKind() != Key::Direction) {
+            continue;
+        }
+        switch (value.valueKind()) {
+        case Value::DirectionValueKind:
+            direction = value.directionValue();
+            break;
+        case Value::Initial:
+            direction = DirectionValue::LtrDirectionValue;
+            break;
+        case Value::Inherit:
+        case Value::Unset:
+            direction = parent->direction();
+            break;
+        default:
+            break;
+        }
+        break;
+    }
+
+    // https://www.w3.org/TR/css-cascade-5/#revert
+    // A winning author revert excludes that origin's normal and important
+    // declarations, as well as its presentation hints.
+    // The UA result (or inherited/initial value) is already on ret.
+    std::bitset<Key::KeyKindSize> seen;
+    std::bitset<Key::KeyKindSize> reverted;
+    bool seenAll = false;
+    for (auto iter = declarations.rbegin(); iter != declarations.rend();
+         ++iter) {
+        const auto& value = iter->first;
+        auto key = physicalCascadeKey(value.keyKind(), direction);
+        if (key == Key::All) {
+            if (!seenAll && value.valueKind() == Value::Revert) {
+                for (size_t index = 0; index < Key::KeyKindSize; ++index) {
+                    if (!seen[index] &&
+                        isAffectedByAll(static_cast<Key>(index))) {
+                        reverted.set(index);
+                    }
+                }
+            }
+            seenAll = true;
+        } else if (!seen[key] && !(seenAll && isAffectedByAll(key))) {
+            seen.set(key);
+            if (value.valueKind() == Value::Revert) {
+                reverted.set(key);
+            }
         }
     }
 
-    // inline style
-    if (pseudoElementType == PseudoElementNone &&
-        element->inlineStyleWithoutCreation()) {
-        apply(element, element->inlineStyleWithoutCreation()->m_cssValues,
-              element->document()->baseURL(), ret, parent, true);
+    for (const auto& entry : declarations) {
+        const auto& value = entry.first;
+        auto key = physicalCascadeKey(value.keyKind(), direction);
+        if (value.valueKind() == Value::Revert || reverted[key]) {
+            continue;
+        }
+        if (key == Key::All && reverted.any()) {
+            auto longhand = value;
+            for (size_t index = 0; index < Key::KeyKindSize; ++index) {
+                auto longhandKey = static_cast<Key>(index);
+                if (isAffectedByAll(longhandKey) &&
+                    !reverted[physicalCascadeKey(longhandKey, direction)]) {
+                    longhand.setKeyKind(longhandKey);
+                    applyProperty(element, longhand, entry.second, ret, parent,
+                                  value.flagImportant());
+                }
+            }
+        } else {
+            applyProperty(element, value, entry.second, ret, parent,
+                          value.flagImportant());
+        }
     }
 }
 
@@ -17176,10 +17287,6 @@ bool CSSStyleValuePair::updateValueScrollMarkerGroup(
     } else if (value.equals("after")) {
         m_value.m_scrollMarkerGroup =
             ScrollMarkerGroupValue::AfterScrollMarkerGroupValue;
-    } else if (value.equals("revert") && tokens.size() == 1) {
-        // Round-trip the CSS-wide keyword as a keyword value; applyProperty
-        // resolves it to the initial value.
-        setKeywordValue(String::fromUTF8("revert"));
     } else {
         return false;
     }

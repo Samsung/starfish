@@ -283,6 +283,8 @@ String* Length::toString() const
             snprintf(temp, sizeof(temp), "%.1fvw", viewportPercent());
         } else if (m_type == Vh) {
             snprintf(temp, sizeof(temp), "%.1fvh", viewportPercent());
+        } else if (m_type == Dvh) {
+            snprintf(temp, sizeof(temp), "%.1fdvh", viewportPercent());
         } else if (m_type == Vmin) {
             snprintf(temp, sizeof(temp), "%.1fvmin", viewportPercent());
         } else if (m_type == Vmax) {

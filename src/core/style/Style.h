@@ -87,6 +87,7 @@ enum UnitType ENSURE_ENUM_UNSIGNED {
     Picas,
     ViewportWidth,
     ViewportHeight,
+    DynamicViewportHeight,
     ViewportMin,
     ViewportMax,
     Rems,
@@ -1178,6 +1179,7 @@ public:
         Initial,
         Inherit,
         Unset,
+        Revert,
         Length,
         Percentage,
         Auto,
@@ -3925,10 +3927,14 @@ protected:
     size_t nextRuleSetOrder();
     void resetNextRuleSetOrder();
 
+    using CascadeDeclarations =
+        GCVector<std::pair<CSSStyleValuePair, ResourceURL*>>;
+
     void apply(Element* element,
                const GCAtomicVector<CSSStyleValuePair>& cssValues,
                ResourceURL* origin, ComputedStyle* style,
-               ComputedStyle* parentStyle, bool isImportant = false);
+               ComputedStyle* parentStyle, bool isImportant = false,
+               CascadeDeclarations* declarations = nullptr);
 
     void applyProperty(Element* element, const CSSStyleValuePair& cssValues,
                        ResourceURL* origin, ComputedStyle* style,
