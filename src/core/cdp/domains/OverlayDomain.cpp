@@ -53,10 +53,7 @@ void OverlayDomain::processMessage(CDPCommand& cmd, const std::string& method)
         // Record the requested inspect mode (set->state round-trips). Headless
         // has no pointer hit-testing, so no Overlay.inspectNodeRequested is
         // emitted; the highlightConfig is ignored (no visual overlay).
-        if (cmd.params() && cmd.params()->HasMember("mode") &&
-            (*cmd.params())["mode"].IsString()) {
-            s->overlayInspectMode = (*cmd.params())["mode"].GetString();
-        }
+        s->overlayInspectMode = paramString(cmd, "mode", s->overlayInspectMode);
         cmd.sendResultEmpty();
         return;
     }
@@ -68,18 +65,10 @@ void OverlayDomain::processMessage(CDPCommand& cmd, const std::string& method)
         // logic: getBoundingClientRect() runs layout if needed and yields
         // CSS-px, viewport-relative coordinates -- the space CDP clients
         // expect.
-        NodeRegistry* reg = m_dispatcher->nodeRegistry();
-        int nodeId = 0;
-        if (cmd.params() && cmd.params()->HasMember("nodeId") &&
-            (*cmd.params())["nodeId"].IsInt()) {
-            nodeId = (*cmd.params())["nodeId"].GetInt();
-        }
-        Node* node = reg->lookup(nodeId);
-        if (!node || !node->isElement()) {
-            cmd.sendError(-32000, "Could not find node with given id");
+        Element* el = elementForNodeIdParam(m_dispatcher, cmd);
+        if (!el) {
             return;
         }
-        Element* el = node->asElement();
         DOMRect* rect = el->getBoundingClientRect();
         double x = rect->x();
         double y = rect->y();
@@ -89,48 +78,27 @@ void OverlayDomain::processMessage(CDPCommand& cmd, const std::string& method)
         rapidjson::Document outd;
         rapidjson::Document::AllocatorType& alloc = outd.GetAllocator();
 
-        // Clockwise quad [x1,y1, x2,y2, x3,y3, x4,y4] from a box rect, matching
-        // DOM.getBoxModel.
-        auto makeQuad = [&alloc](double qx, double qy, double qw,
-                                 double qh) -> rapidjson::Value {
-            rapidjson::Value q(rapidjson::kArrayType);
-            q.PushBack(qx, alloc);
-            q.PushBack(qy, alloc);
-            q.PushBack(qx + qw, alloc);
-            q.PushBack(qy, alloc);
-            q.PushBack(qx + qw, alloc);
-            q.PushBack(qy + qh, alloc);
-            q.PushBack(qx, alloc);
-            q.PushBack(qy + qh, alloc);
-            return q;
-        };
-
         rapidjson::Value highlight(rapidjson::kObjectType);
         // content/padding/border/margin: MVP uses the border-box rect for all
         // four, same as DOM.getBoxModel (no per-edge inset breakdown).
-        highlight.AddMember("content", makeQuad(x, y, w, h), alloc);
-        highlight.AddMember("padding", makeQuad(x, y, w, h), alloc);
-        highlight.AddMember("border", makeQuad(x, y, w, h), alloc);
-        highlight.AddMember("margin", makeQuad(x, y, w, h), alloc);
+        highlight.AddMember("content", cdpQuad(x, y, w, h, alloc), alloc);
+        highlight.AddMember("padding", cdpQuad(x, y, w, h, alloc), alloc);
+        highlight.AddMember("border", cdpQuad(x, y, w, h, alloc), alloc);
+        highlight.AddMember("margin", cdpQuad(x, y, w, h, alloc), alloc);
 
         // elementInfo: tagName / className / node dimensions, the node metadata
         // DevTools shows in the highlight tooltip.
         rapidjson::Value elementInfo(rapidjson::kObjectType);
-        String* nodeName = node->nodeName();
+        String* nodeName = el->nodeName();
         std::string tagName =
             nodeName ? nodeName->toUTF8NonGCString() : std::string();
-        elementInfo.AddMember(
-            "tagName", rapidjson::Value(tagName.c_str(), tagName.size(), alloc),
-            alloc);
+        addStringMember(elementInfo, "tagName", tagName, alloc);
         std::string className;
         Optional<String*> cls = el->getAttribute(String::fromUTF8("class", 5));
         if (cls.hasValue() && cls.value()) {
             className = cls.value()->toUTF8NonGCString();
         }
-        elementInfo.AddMember(
-            "className",
-            rapidjson::Value(className.c_str(), className.size(), alloc),
-            alloc);
+        addStringMember(elementInfo, "className", className, alloc);
         elementInfo.AddMember("idValue", "", alloc);
         elementInfo.AddMember("nodeWidth", (int)(w + 0.5), alloc);
         elementInfo.AddMember("nodeHeight", (int)(h + 0.5), alloc);

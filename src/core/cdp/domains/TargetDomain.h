@@ -50,6 +50,7 @@ public:
     void reset();
 
 private:
+    void closeSpawnedTarget(TargetContext* victim);
     void handleSetDiscoverTargets(CDPCommand& cmd, const std::string& method);
     void handleSetAutoAttach(CDPCommand& cmd, const std::string& method);
     void handleGetTargets(CDPCommand& cmd, const std::string& method);

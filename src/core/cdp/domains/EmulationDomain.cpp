@@ -36,24 +36,6 @@
 
 namespace Starfish {
 
-static double paramNumber(CDPCommand& cmd, const char* name, double def)
-{
-    if (cmd.params() && cmd.params()->HasMember(name) &&
-        (*cmd.params())[name].IsNumber()) {
-        return (*cmd.params())[name].GetDouble();
-    }
-    return def;
-}
-
-static std::string paramString(CDPCommand& cmd, const char* name)
-{
-    if (cmd.params() && cmd.params()->HasMember(name) &&
-        (*cmd.params())[name].IsString()) {
-        return (*cmd.params())[name].GetString();
-    }
-    return std::string();
-}
-
 // Apply a CSS-pixel viewport (width/height) and device pixel ratio to the
 // WebView. The renderer holds *physical* pixels; WebView::resize divides those
 // by the DPR to derive the logical Window size (which backs innerWidth/Height).
@@ -231,10 +213,7 @@ void EmulationDomain::handleSetScriptExecutionDisabled(CDPCommand& cmd,
     // override survives navigation through). Inspector Runtime.evaluate
     // keeps working since it consults isScriptingEnabledIgnoringCDP.
     bool value = false;
-    if (cmd.params() && cmd.params()->HasMember("value") &&
-        (*cmd.params())["value"].IsBool()) {
-        value = (*cmd.params())["value"].GetBool();
-    }
+    value = paramBool(cmd, "value", value);
     wv->setScriptExecutionDisabledByCDP(value);
     cmd.sendResultEmpty();
 }

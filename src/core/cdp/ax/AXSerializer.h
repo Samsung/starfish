@@ -94,6 +94,8 @@ private:
     void addIgnoredReasons(rapidjson::Value& out, AXNode* node);
     rapidjson::Value relatedNodes(Element* element, const std::string& idRefs,
                                   bool includeText);
+    void addProperty(rapidjson::Value& properties, const char* name,
+                     const char* type, rapidjson::Value& typedValue);
     // name/type and the const char* value overload reference static strings.
     void addBooleanProperty(rapidjson::Value& properties, const char* name,
                             const char* type, bool value);

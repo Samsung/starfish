@@ -174,8 +174,7 @@ Optional<Document*> AccessibilityDomain::documentFor(CDPCommand& cmd)
 {
     Optional<BrowsingContext*> context =
         m_dispatcher->webView()->mainBrowsingContext();
-    if (cmd.params() && cmd.params()->HasMember("frameId") &&
-        (*cmd.params())["frameId"].IsString()) {
+    if (hasStringParam(cmd, "frameId")) {
         context = m_dispatcher->page()->browsingContextForFrameId(
             (*cmd.params())["frameId"].GetString());
     }
@@ -229,10 +228,7 @@ void AccessibilityDomain::handleGetFullAXTree(CDPCommand& cmd,
     }
 
     int depth = -1; // unlimited
-    if (cmd.params() && cmd.params()->HasMember("depth") &&
-        (*cmd.params())["depth"].IsInt()) {
-        depth = (*cmd.params())["depth"].GetInt();
-    }
+    depth = paramInt(cmd, "depth", depth);
 
     std::unique_ptr<AXTree> tree = buildTree(document.value());
     rapidjson::Document out;
@@ -449,8 +445,7 @@ void AccessibilityDomain::handleGetChildAXNodes(CDPCommand& cmd,
         cmd.sendError(-32000, "Accessibility has not been enabled.");
         return;
     }
-    if (!cmd.params() || !cmd.params()->HasMember("id") ||
-        !(*cmd.params())["id"].IsString()) {
+    if (!hasStringParam(cmd, "id")) {
         cmd.sendError(-32602, "id is required");
         return;
     }

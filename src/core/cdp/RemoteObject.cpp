@@ -221,6 +221,19 @@ void serializeRemoteObject(ScriptBindingInstance* sbi, RemoteObjectStore* store,
     }
 }
 
+ScriptWrappable* wrappableForObjectId(RemoteObjectStore* store,
+                                      const char* objectId)
+{
+    if (!objectId || strncmp(objectId, "OBJ-", 4) != 0) {
+        return nullptr;
+    }
+    Escargot::ObjectRef* obj = store->lookup(atoi(objectId + 4));
+    if (!obj || !obj->extraData()) {
+        return nullptr;
+    }
+    return (ScriptWrappable*)obj->extraData();
+}
+
 } // namespace Starfish
 
 #endif

@@ -45,15 +45,6 @@
 
 namespace Starfish {
 
-static int paramNodeId(CDPCommand& cmd)
-{
-    if (cmd.params() && cmd.params()->HasMember("nodeId") &&
-        (*cmd.params())["nodeId"].IsInt()) {
-        return (*cmd.params())["nodeId"].GetInt();
-    }
-    return 0;
-}
-
 // Whitelist of CSS properties reported for getComputedStyleForNode. A computed
 // declaration resolves each property lazily (updateValue) on access and has no
 // up-front enumeration, so a fixed property set is queried. Covers the layout/
@@ -128,15 +119,6 @@ static const char* kComputedProperties[] = {
     "transform-origin",
 };
 
-static std::string paramString(CDPCommand& cmd, const char* key)
-{
-    if (cmd.params() && cmd.params()->HasMember(key) &&
-        (*cmd.params())[key].IsString()) {
-        return (*cmd.params())[key].GetString();
-    }
-    return std::string();
-}
-
 // Resolves the main document for this session via the WebView's main browsing
 // context (matches getStyleSheetText).
 static Document* mainDocument(CDPDispatcher* dispatcher)
@@ -196,26 +178,17 @@ static rapidjson::Value buildCSSStyle(CSSStyleDeclaration* decl,
             String* valS = decl->getPropertyValue(nameS);
             std::string val = valS ? valS->toUTF8NonGCString() : std::string();
             rapidjson::Value entry(rapidjson::kObjectType);
-            entry.AddMember("name",
-                            rapidjson::Value(name.c_str(), name.size(), alloc),
-                            alloc);
-            entry.AddMember("value",
-                            rapidjson::Value(val.c_str(), val.size(), alloc),
-                            alloc);
+            addStringMember(entry, "name", name, alloc);
+            addStringMember(entry, "value", val, alloc);
             cssProps.PushBack(entry, alloc);
         }
     }
     style.AddMember("cssProperties", cssProps, alloc);
     style.AddMember("shorthandEntries", rapidjson::Value(rapidjson::kArrayType),
                     alloc);
-    style.AddMember("cssText",
-                    rapidjson::Value(cssText.c_str(), cssText.size(), alloc),
-                    alloc);
+    addStringMember(style, "cssText", cssText, alloc);
     if (!styleSheetId.empty()) {
-        style.AddMember(
-            "styleSheetId",
-            rapidjson::Value(styleSheetId.c_str(), styleSheetId.size(), alloc),
-            alloc);
+        addStringMember(style, "styleSheetId", styleSheetId, alloc);
     }
     return style;
 }
@@ -233,18 +206,13 @@ static rapidjson::Value buildCSSRule(StyleRule* sr,
     rapidjson::Value selectorList(rapidjson::kObjectType);
     rapidjson::Value selectors(rapidjson::kArrayType);
     rapidjson::Value selEntry(rapidjson::kObjectType);
-    selEntry.AddMember("text", rapidjson::Value(sel.c_str(), sel.size(), alloc),
-                       alloc);
+    addStringMember(selEntry, "text", sel, alloc);
     selectors.PushBack(selEntry, alloc);
     selectorList.AddMember("selectors", selectors, alloc);
-    selectorList.AddMember(
-        "text", rapidjson::Value(sel.c_str(), sel.size(), alloc), alloc);
+    addStringMember(selectorList, "text", sel, alloc);
     rule.AddMember("selectorList", selectorList, alloc);
     rule.AddMember("origin", "regular", alloc);
-    rule.AddMember(
-        "styleSheetId",
-        rapidjson::Value(styleSheetId.c_str(), styleSheetId.size(), alloc),
-        alloc);
+    addStringMember(rule, "styleSheetId", styleSheetId, alloc);
     rule.AddMember("style",
                    buildCSSStyle(sr->styleDeclaration(), styleSheetId, alloc),
                    alloc);
@@ -270,14 +238,11 @@ void CSSDomain::handleDisable(CDPCommand& cmd, const std::string&)
 void CSSDomain::handleGetComputedStyleForNode(CDPCommand& cmd,
                                               const std::string&)
 {
-    NodeRegistry* reg = m_dispatcher->nodeRegistry();
-
-    Node* node = reg->lookup(paramNodeId(cmd));
-    if (!node || !node->isElement()) {
-        cmd.sendError(-32000, "Could not find node with given id");
+    Element* element = elementForNodeIdParam(m_dispatcher, cmd);
+    if (!element) {
         return;
     }
-    CSSStyleDeclaration* style = node->asElement()->getComputedStyle();
+    CSSStyleDeclaration* style = element->getComputedStyle();
 
     rapidjson::Document out;
     rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
@@ -296,8 +261,7 @@ void CSSDomain::handleGetComputedStyleForNode(CDPCommand& cmd,
         rapidjson::Value entry(rapidjson::kObjectType);
         entry.AddMember("name", rapidjson::Value(name, strlen(name), alloc),
                         alloc);
-        entry.AddMember("value", rapidjson::Value(v.c_str(), v.size(), alloc),
-                        alloc);
+        addStringMember(entry, "value", v, alloc);
         props.PushBack(entry, alloc);
     }
     result.AddMember("computedStyle", props, alloc);
@@ -307,14 +271,10 @@ void CSSDomain::handleGetComputedStyleForNode(CDPCommand& cmd,
 void CSSDomain::handleGetInlineStylesForNode(CDPCommand& cmd,
                                              const std::string&)
 {
-    NodeRegistry* reg = m_dispatcher->nodeRegistry();
-
-    Node* node = reg->lookup(paramNodeId(cmd));
-    if (!node || !node->isElement()) {
-        cmd.sendError(-32000, "Could not find node with given id");
+    Element* el = elementForNodeIdParam(m_dispatcher, cmd);
+    if (!el) {
         return;
     }
-    Element* el = node->asElement();
     InlineCSSStyleDeclaration* inl = el->inlineStyleWithoutCreation();
 
     rapidjson::Document out;
@@ -338,21 +298,15 @@ void CSSDomain::handleGetInlineStylesForNode(CDPCommand& cmd,
             String* valS = inl->getPropertyValue(nameS);
             std::string val = valS ? valS->toUTF8NonGCString() : std::string();
             rapidjson::Value entry(rapidjson::kObjectType);
-            entry.AddMember("name",
-                            rapidjson::Value(name.c_str(), name.size(), alloc),
-                            alloc);
-            entry.AddMember("value",
-                            rapidjson::Value(val.c_str(), val.size(), alloc),
-                            alloc);
+            addStringMember(entry, "name", name, alloc);
+            addStringMember(entry, "value", val, alloc);
             cssProps.PushBack(entry, alloc);
         }
     }
     inlineStyle.AddMember("cssProperties", cssProps, alloc);
     inlineStyle.AddMember("shorthandEntries",
                           rapidjson::Value(rapidjson::kArrayType), alloc);
-    inlineStyle.AddMember(
-        "cssText", rapidjson::Value(cssText.c_str(), cssText.size(), alloc),
-        alloc);
+    addStringMember(inlineStyle, "cssText", cssText, alloc);
     result.AddMember("inlineStyle", inlineStyle, alloc);
     cmd.sendResult(result, out);
 }
@@ -360,14 +314,10 @@ void CSSDomain::handleGetInlineStylesForNode(CDPCommand& cmd,
 void CSSDomain::handleGetMatchedStylesForNode(CDPCommand& cmd,
                                               const std::string&)
 {
-    NodeRegistry* reg = m_dispatcher->nodeRegistry();
-
-    Node* node = reg->lookup(paramNodeId(cmd));
-    if (!node || !node->isElement()) {
-        cmd.sendError(-32000, "Could not find node with given id");
+    Element* el = elementForNodeIdParam(m_dispatcher, cmd);
+    if (!el) {
         return;
     }
-    Element* el = node->asElement();
     Document* doc = el->document();
 
     rapidjson::Document out;
@@ -409,31 +359,7 @@ void CSSDomain::handleGetMatchedStylesForNode(CDPCommand& cmd,
                 if (!isMatch) {
                     continue;
                 }
-                std::string sel = selText->toUTF8NonGCString();
-
-                rapidjson::Value rule(rapidjson::kObjectType);
-                // selectorList
-                rapidjson::Value selectorList(rapidjson::kObjectType);
-                rapidjson::Value selectors(rapidjson::kArrayType);
-                rapidjson::Value selEntry(rapidjson::kObjectType);
-                selEntry.AddMember(
-                    "text", rapidjson::Value(sel.c_str(), sel.size(), alloc),
-                    alloc);
-                selectors.PushBack(selEntry, alloc);
-                selectorList.AddMember("selectors", selectors, alloc);
-                selectorList.AddMember(
-                    "text", rapidjson::Value(sel.c_str(), sel.size(), alloc),
-                    alloc);
-                rule.AddMember("selectorList", selectorList, alloc);
-                rule.AddMember("origin", "regular", alloc);
-                rule.AddMember(
-                    "styleSheetId",
-                    rapidjson::Value(sheetId.c_str(), sheetId.size(), alloc),
-                    alloc);
-                rule.AddMember(
-                    "style",
-                    buildCSSStyle(sr->styleDeclaration(), sheetId, alloc),
-                    alloc);
+                rapidjson::Value rule = buildCSSRule(sr, sheetId, alloc);
 
                 rapidjson::Value matching(rapidjson::kArrayType);
                 matching.PushBack(0, alloc);
@@ -494,8 +420,7 @@ void CSSDomain::handleGetStyleSheetText(CDPCommand& cmd, const std::string&)
     rapidjson::Document out;
     rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember("text", rapidjson::Value(text.c_str(), text.size(), alloc),
-                     alloc);
+    addStringMember(result, "text", text, alloc);
     cmd.sendResult(result, out);
 }
 
@@ -546,9 +471,7 @@ void CSSDomain::handleCreateStyleSheet(CDPCommand& cmd, const std::string&)
     rapidjson::Document out;
     rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember("styleSheetId",
-                     rapidjson::Value(sheetId.c_str(), sheetId.size(), alloc),
-                     alloc);
+    addStringMember(result, "styleSheetId", sheetId, alloc);
     cmd.sendResult(result, out);
 }
 
@@ -700,10 +623,7 @@ void CSSDomain::handleSetPropertyText(CDPCommand& cmd,
     std::string value = paramString(cmd, "value");
     std::string priority = paramString(cmd, "priority");
     int ruleIndex = 0;
-    if (cmd.params() && cmd.params()->HasMember("ruleIndex") &&
-        (*cmd.params())["ruleIndex"].IsInt()) {
-        ruleIndex = (*cmd.params())["ruleIndex"].GetInt();
-    }
+    ruleIndex = paramInt(cmd, "ruleIndex", ruleIndex);
     Document* doc = mainDocument(m_dispatcher);
     CSSStyleSheet* sheet = resolveSheet(doc, id);
     if (!sheet) {

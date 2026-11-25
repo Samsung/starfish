@@ -43,10 +43,7 @@ void CDPCommand::emit(rapidjson::Document& doc)
 {
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     if (!m_sessionId.empty()) {
-        doc.AddMember(
-            "sessionId",
-            rapidjson::Value(m_sessionId.c_str(), m_sessionId.size(), alloc),
-            alloc);
+        addStringMember(doc, "sessionId", m_sessionId, alloc);
     }
     rapidjson::StringBuffer buf;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buf);
@@ -69,14 +66,8 @@ void CDPCommand::sendResult(rapidjson::Value& result, rapidjson::Document& doc)
 void CDPCommand::sendResultEmpty()
 {
     rapidjson::Document doc;
-    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-    doc.SetObject();
-    if (m_id.hasValue()) {
-        doc.AddMember("id", (int64_t)m_id.value(), alloc);
-    }
     rapidjson::Value empty(rapidjson::kObjectType);
-    doc.AddMember("result", empty, alloc);
-    emit(doc);
+    sendResult(empty, doc);
 }
 
 void CDPCommand::sendError(int code, const char* message)
@@ -102,6 +93,63 @@ void CDPCommand::sendEvent(const char* method, rapidjson::Value& params,
     doc.AddMember("method", rapidjson::Value(method, alloc), alloc);
     doc.AddMember("params", params, alloc);
     emit(doc);
+}
+
+rapidjson::Value cdpQuad(double x, double y, double width, double height,
+                         rapidjson::Document::AllocatorType& alloc)
+{
+    rapidjson::Value q(rapidjson::kArrayType);
+    q.PushBack(x, alloc);
+    q.PushBack(y, alloc);
+    q.PushBack(x + width, alloc);
+    q.PushBack(y, alloc);
+    q.PushBack(x + width, alloc);
+    q.PushBack(y + height, alloc);
+    q.PushBack(x, alloc);
+    q.PushBack(y + height, alloc);
+    return q;
+}
+
+bool hasStringParam(CDPCommand& cmd, const char* name)
+{
+    return cmd.params() && cmd.params()->HasMember(name) &&
+           (*cmd.params())[name].IsString();
+}
+
+std::string paramString(CDPCommand& cmd, const char* name,
+                        const std::string& def)
+{
+    if (hasStringParam(cmd, name)) {
+        return (*cmd.params())[name].GetString();
+    }
+    return def;
+}
+
+bool paramBool(CDPCommand& cmd, const char* name, bool def)
+{
+    if (cmd.params() && cmd.params()->HasMember(name) &&
+        (*cmd.params())[name].IsBool()) {
+        return (*cmd.params())[name].GetBool();
+    }
+    return def;
+}
+
+double paramNumber(CDPCommand& cmd, const char* name, double def)
+{
+    if (cmd.params() && cmd.params()->HasMember(name) &&
+        (*cmd.params())[name].IsNumber()) {
+        return (*cmd.params())[name].GetDouble();
+    }
+    return def;
+}
+
+int paramInt(CDPCommand& cmd, const char* name, int def)
+{
+    if (cmd.params() && cmd.params()->HasMember(name) &&
+        (*cmd.params())[name].IsInt()) {
+        return (*cmd.params())[name].GetInt();
+    }
+    return def;
 }
 
 } // namespace Starfish

@@ -41,18 +41,6 @@ namespace Starfish {
 
 namespace {
 
-    // Host component of an origin/url string (e.g. "http://127.0.0.1:8770" ->
-    // "127.0.0.1"). Empty input / no host yields "".
-    static std::string hostOf(const std::string& url)
-    {
-        if (url.empty()) {
-            return std::string();
-        }
-        ResourceURL* r = new ResourceURL(url.c_str(), url.size());
-        String* h = r->hostname();
-        return h ? h->toUTF8NonGCString() : std::string();
-    }
-
     // Serialized origin of the routed page ("" if no document / opaque origin).
     static std::string currentOrigin(WebView* wv)
     {
@@ -67,15 +55,6 @@ namespace {
         }
         String* s = o->serialize();
         return s ? s->toUTF8NonGCString() : std::string();
-    }
-
-    static std::string paramStr(CDPCommand& cmd, const char* name)
-    {
-        if (cmd.params() && cmd.params()->HasMember(name) &&
-            (*cmd.params())[name].IsString()) {
-            return (*cmd.params())[name].GetString();
-        }
-        return std::string();
     }
 
     // Does storageTypes (CDP comma-separated list, e.g.
@@ -160,7 +139,7 @@ void StorageDomain::processMessage(CDPCommand& cmd, const std::string& method)
 
     if (method == "setCookies") {
         WebView* wv = m_dispatcher->webView();
-        std::string curHost = hostOf(currentOrigin(wv));
+        std::string curHost = urlHost(currentOrigin(wv));
         if (cmd.params() && cmd.params()->HasMember("cookies")) {
             if (!NetworkDomain::writeCookieArray((*cmd.params())["cookies"],
                                                  curHost, std::string())) {
@@ -179,15 +158,15 @@ void StorageDomain::processMessage(CDPCommand& cmd, const std::string& method)
     }
 
     if (method == "clearDataForOrigin") {
-        std::string origin = paramStr(cmd, "origin");
-        std::string storageTypes = paramStr(cmd, "storageTypes");
+        std::string origin = paramString(cmd, "origin");
+        std::string storageTypes = paramString(cmd, "storageTypes");
         if (origin.empty() || storageTypes.empty()) {
             cmd.sendError(-32602, "'origin' and 'storageTypes' are required");
             return;
         }
         WebView* wv = m_dispatcher->webView();
         if (wantsType(storageTypes, "cookies")) {
-            NetworkDomain::clearCookiesForHost(hostOf(origin));
+            NetworkDomain::clearCookiesForHost(urlHost(origin));
         }
         if (wantsType(storageTypes, "local_storage")) {
             clearStorageForOrigin(wv, origin, /*local=*/true);
@@ -207,9 +186,7 @@ void StorageDomain::processMessage(CDPCommand& cmd, const std::string& method)
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("storageKey",
-                         rapidjson::Value(origin.c_str(), origin.size(), alloc),
-                         alloc);
+        addStringMember(result, "storageKey", origin, alloc);
         cmd.sendResult(result, doc);
         return;
     }

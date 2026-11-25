@@ -41,24 +41,6 @@ using namespace LWE;
 
 namespace Starfish {
 
-static std::string paramString(CDPCommand& cmd, const char* name)
-{
-    if (cmd.params() && cmd.params()->HasMember(name) &&
-        (*cmd.params())[name].IsString()) {
-        return (*cmd.params())[name].GetString();
-    }
-    return std::string();
-}
-
-static double paramNumber(CDPCommand& cmd, const char* name, double def)
-{
-    if (cmd.params() && cmd.params()->HasMember(name) &&
-        (*cmd.params())[name].IsNumber()) {
-        return (*cmd.params())[name].GetDouble();
-    }
-    return def;
-}
-
 // CDP mouse button name -> Starfish button / buttons-mask.
 static MouseButtonValue cdpButton(const std::string& b)
 {

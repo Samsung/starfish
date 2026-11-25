@@ -35,7 +35,6 @@
 namespace Starfish {
 
 // Recursively count nodes in a Node subtree (the node itself plus descendants).
-// Mirrors the same counting the Performance domain's getMetrics performs.
 static size_t countNodes(Node* node)
 {
     if (!node) {
@@ -51,7 +50,7 @@ static size_t countNodes(Node* node)
 // Sample the live DOM: the document count (main frame plus loaded child frames)
 // and the total DOM node count across those documents. This is the same live
 // sampling Performance.getMetrics reports for "Documents" / "Nodes".
-static void sampleDOM(WebView* wv, size_t& documents, size_t& nodes)
+void sampleDOMCounters(WebView* wv, size_t& documents, size_t& nodes)
 {
     size_t childFrames = 0;
     size_t nodeCount = 0;
@@ -77,7 +76,7 @@ void MemoryDomain::processMessage(CDPCommand& cmd, const std::string& method)
         WebView* wv = m_dispatcher->webView();
         size_t documents = 0;
         size_t nodes = 0;
-        sampleDOM(wv, documents, nodes);
+        sampleDOMCounters(wv, documents, nodes);
 
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
@@ -95,7 +94,7 @@ void MemoryDomain::processMessage(CDPCommand& cmd, const std::string& method)
         WebView* wv = m_dispatcher->webView();
         size_t documents = 0;
         size_t nodes = 0;
-        sampleDOM(wv, documents, nodes);
+        sampleDOMCounters(wv, documents, nodes);
 
         struct Counter {
             const char* name;

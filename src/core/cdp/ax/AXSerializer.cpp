@@ -70,28 +70,9 @@ namespace {
         "", "text", "search", "email", "url", "tel", "password", "number",
     };
 
-    std::string tagOf(Element* element)
-    {
-        std::string tag = element->localName()
-                              ? element->localName()->toUTF8NonGCString()
-                              : std::string();
-        for (char& c : tag) {
-            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-        }
-        return tag;
-    }
-
-    std::string lowered(std::string text)
-    {
-        for (char& c : text) {
-            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-        }
-        return text;
-    }
-
     std::string ariaToken(Element* element, const char* attribute)
     {
-        return lowered(axCollapseWhitespace(axAttribute(element, attribute)));
+        return axLowered(axCollapseWhitespace(axAttribute(element, attribute)));
     }
 
     bool isTrueToken(Element* element, const char* attribute)
@@ -280,7 +261,7 @@ namespace {
             !axHasAttribute(element, "contenteditable")) {
             return false;
         }
-        std::string value = lowered(axAttribute(element, "contenteditable"));
+        std::string value = axLowered(axAttribute(element, "contenteditable"));
         return value.empty() || value == "true" || value == "plaintext-only";
     }
 
@@ -300,7 +281,7 @@ namespace {
                 continue;
             }
             std::string value =
-                lowered(axAttribute(currentElement, "contenteditable"));
+                axLowered(axAttribute(currentElement, "contenteditable"));
             if (value.empty() || value == "true") {
                 return EditableKind::RichText;
             }
@@ -343,55 +324,48 @@ rapidjson::Value AXSerializer::stringValue(const std::string& text)
     return rapidjson::Value(text.c_str(), text.size(), *m_allocator);
 }
 
-void AXSerializer::addBooleanProperty(rapidjson::Value& properties,
-                                      const char* name, const char* type,
-                                      bool boolValue)
+// Appends { name, value: { type, value } } to properties.
+void AXSerializer::addProperty(rapidjson::Value& properties, const char* name,
+                               const char* type, rapidjson::Value& typedValue)
 {
     rapidjson::Value property(rapidjson::kObjectType);
     property.AddMember("name", rapidjson::StringRef(name), *m_allocator);
     rapidjson::Value value(rapidjson::kObjectType);
     value.AddMember("type", rapidjson::StringRef(type), *m_allocator);
-    value.AddMember("value", boolValue, *m_allocator);
+    value.AddMember("value", typedValue, *m_allocator);
     property.AddMember("value", value, *m_allocator);
     properties.PushBack(property, *m_allocator);
+}
+
+void AXSerializer::addBooleanProperty(rapidjson::Value& properties,
+                                      const char* name, const char* type,
+                                      bool boolValue)
+{
+    rapidjson::Value value(boolValue);
+    addProperty(properties, name, type, value);
 }
 
 void AXSerializer::addIntegerProperty(rapidjson::Value& properties,
                                       const char* name, int integerValue)
 {
-    rapidjson::Value property(rapidjson::kObjectType);
-    property.AddMember("name", rapidjson::StringRef(name), *m_allocator);
-    rapidjson::Value value(rapidjson::kObjectType);
-    value.AddMember("type", "integer", *m_allocator);
-    value.AddMember("value", integerValue, *m_allocator);
-    property.AddMember("value", value, *m_allocator);
-    properties.PushBack(property, *m_allocator);
+    rapidjson::Value value(integerValue);
+    addProperty(properties, name, "integer", value);
 }
 
 void AXSerializer::addStringProperty(rapidjson::Value& properties,
                                      const char* name, const char* type,
                                      const char* text)
 {
-    rapidjson::Value property(rapidjson::kObjectType);
-    property.AddMember("name", rapidjson::StringRef(name), *m_allocator);
-    rapidjson::Value value(rapidjson::kObjectType);
-    value.AddMember("type", rapidjson::StringRef(type), *m_allocator);
-    value.AddMember("value", rapidjson::StringRef(text), *m_allocator);
-    property.AddMember("value", value, *m_allocator);
-    properties.PushBack(property, *m_allocator);
+    rapidjson::Value value(rapidjson::StringRef(text));
+    addProperty(properties, name, type, value);
 }
 
 void AXSerializer::addStringProperty(rapidjson::Value& properties,
                                      const char* name, const char* type,
                                      const std::string& text)
 {
-    rapidjson::Value property(rapidjson::kObjectType);
-    property.AddMember("name", rapidjson::StringRef(name), *m_allocator);
-    rapidjson::Value value(rapidjson::kObjectType);
-    value.AddMember("type", rapidjson::StringRef(type), *m_allocator);
-    value.AddMember("value", stringValue(text), *m_allocator);
-    property.AddMember("value", value, *m_allocator);
-    properties.PushBack(property, *m_allocator);
+    rapidjson::Value value(text.c_str(), text.size(), *m_allocator);
+    addProperty(properties, name, type, value);
 }
 
 void AXSerializer::addRole(rapidjson::Value& out, const std::string& role)
@@ -756,7 +730,7 @@ void AXSerializer::addMarkerGroupProperties(rapidjson::Value& properties,
 void AXSerializer::addElementProperties(rapidjson::Value& properties,
                                         AXNode* node, Element* element)
 {
-    const std::string tag = tagOf(element);
+    const std::string tag = axTagOf(element);
     const std::string& role = node->role();
     HTMLTextEditable* textEditable =
         element->isHTMLTextEditable() ? element->asHTMLTextEditable() : nullptr;
@@ -810,7 +784,7 @@ void AXSerializer::addInvalidProperty(rapidjson::Value& properties,
                                       Element* element, const std::string& tag,
                                       const std::string& role)
 {
-    const std::string invalid = lowered(axAttribute(element, "aria-invalid"));
+    const std::string invalid = axLowered(axAttribute(element, "aria-invalid"));
     if (!isUnsetToken(invalid)) {
         if (invalid == "false") {
             addStringProperty(properties, "invalid", "token", "false");
@@ -830,12 +804,13 @@ void AXSerializer::addInvalidProperty(rapidjson::Value& properties,
 void AXSerializer::addLiveRegionProperties(rapidjson::Value& properties,
                                            Element* element)
 {
-    const std::string live = lowered(axAttribute(element, "aria-live"));
+    const std::string live = axLowered(axAttribute(element, "aria-live"));
     if (live == "polite" || live == "assertive") {
         addStringProperty(properties, "live", "token", live);
-        const std::string atomic = lowered(axAttribute(element, "aria-atomic"));
+        const std::string atomic =
+            axLowered(axAttribute(element, "aria-atomic"));
         addBooleanProperty(properties, "atomic", "boolean", atomic == "true");
-        std::string relevant = lowered(axAttribute(element, "aria-relevant"));
+        std::string relevant = axLowered(axAttribute(element, "aria-relevant"));
         if (relevant.empty()) {
             relevant = "additions text";
         }
@@ -993,7 +968,7 @@ void AXSerializer::addWidgetStates(rapidjson::Value& properties, AXNode* node,
     } else if (tag == "select") {
         addBooleanProperty(properties, "expanded", "booleanOrUndefined", false);
     } else if (tag == "summary" && element->parentElement() &&
-               tagOf(element->parentElement()) == "details") {
+               axTagOf(element->parentElement()) == "details") {
         // The open state of the details element decides it.
         addBooleanProperty(properties, "expanded", "booleanOrUndefined",
                            axHasAttribute(element->parentElement(), "open"));
@@ -1164,7 +1139,7 @@ static std::string formControlValue(Element* element, const std::string& tag)
 
     std::string type;
     if (tag == "input") {
-        type = lowered(axAttribute(element, "type"));
+        type = axLowered(axAttribute(element, "type"));
         bool isTextEntry = false;
         for (const char* textEntryType : kTextEntryInputTypes) {
             if (type == textEntryType) {
@@ -1204,9 +1179,9 @@ void AXSerializer::addDescriptionAndValue(rapidjson::Value& out, AXNode* node)
     if (!describedBy.empty()) {
         description = axTextFromIdRefs(element, describedBy);
     }
-    std::string tag = tagOf(element);
-    std::string type =
-        tag == "input" ? lowered(axAttribute(element, "type")) : std::string();
+    std::string tag = axTagOf(element);
+    std::string type = tag == "input" ? axLowered(axAttribute(element, "type"))
+                                      : std::string();
     bool isTextButton = type == "button" || type == "submit" || type == "reset";
     bool hasTitle = axHasAttribute(element, "title");
     std::string nameAttribute;
@@ -1259,8 +1234,8 @@ void AXSerializer::addDescriptionAndValue(rapidjson::Value& out, AXNode* node)
         controlValue = formControlValue(element, tag);
         // Chrome reports the value of <input type="number"> as a number.
         // Every other control keeps the string form.
-        numberValue =
-            tag == "input" && lowered(axAttribute(element, "type")) == "number";
+        numberValue = tag == "input" &&
+                      axLowered(axAttribute(element, "type")) == "number";
     } else if (axHasAttribute(element, "aria-valuetext")) {
         controlValue = axAttribute(element, "aria-valuetext");
     } else if (axHasAttribute(element, "aria-valuenow")) {

@@ -283,6 +283,41 @@ TargetContext* CDPDispatcher::contextForSession(const std::string& sessionId)
     return nullptr;
 }
 
+CDPDispatcher* cdpDispatcherForDocument(Document* document)
+{
+    if (!document) {
+        return nullptr;
+    }
+    BrowsingContext* context = document->browsingContext();
+    if (!context || !context->webView()) {
+        return nullptr;
+    }
+    CDPServer* server = context->webView()->cdpServer();
+    return server ? server->dispatcher() : nullptr;
+}
+
+TargetContext* cdpTargetForDocument(Document* document,
+                                    CDPDispatcher*& dispatcher)
+{
+    dispatcher = cdpDispatcherForDocument(document);
+    if (!dispatcher) {
+        return nullptr;
+    }
+    TargetContext* target =
+        dispatcher->contextForWebView(document->browsingContext()->webView());
+    return target && target->session ? target : nullptr;
+}
+
+Element* elementForNodeIdParam(CDPDispatcher* dispatcher, CDPCommand& cmd)
+{
+    Node* node = dispatcher->nodeRegistry()->lookup(paramNodeId(cmd));
+    if (!node || !node->isElement()) {
+        cmd.sendError(-32000, "Could not find node with given id");
+        return nullptr;
+    }
+    return node->asElement();
+}
+
 TargetContext* CDPDispatcher::contextForWebView(WebView* wv)
 {
     for (TargetContext* ctx : m_contexts) {
@@ -556,10 +591,7 @@ void CDPDispatcher::routeIO(CDPCommand& cmd, const std::string& method)
     CDPSession* s = session();
     if (method == "read") {
         std::string handle;
-        if (cmd.params() && cmd.params()->HasMember("handle") &&
-            (*cmd.params())["handle"].IsString()) {
-            handle = (*cmd.params())["handle"].GetString();
-        }
+        handle = paramString(cmd, "handle", handle);
         auto it = s->ioStreams.find(handle);
         if (it == s->ioStreams.end()) {
             cmd.sendError(-32602, "Invalid stream handle");
@@ -579,18 +611,14 @@ void CDPDispatcher::routeIO(CDPCommand& cmd, const std::string& method)
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
         result.AddMember("base64Encoded", true, alloc);
-        result.AddMember(
-            "data", rapidjson::Value(b64.c_str(), b64.size(), alloc), alloc);
+        addStringMember(result, "data", b64, alloc);
         result.AddMember("eof", eof, alloc);
         cmd.sendResult(result, doc);
         return;
     }
     if (method == "close") {
         std::string handle;
-        if (cmd.params() && cmd.params()->HasMember("handle") &&
-            (*cmd.params())["handle"].IsString()) {
-            handle = (*cmd.params())["handle"].GetString();
-        }
+        handle = paramString(cmd, "handle", handle);
         s->ioStreams.erase(handle);
         cmd.sendResultEmpty();
         return;
@@ -1044,9 +1072,7 @@ void CDPDispatcher::routeDebugger(CDPCommand& cmd, const std::string& method)
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember("breakpointId",
-                         rapidjson::Value(bpId.c_str(), bpId.size(), alloc),
-                         alloc);
+        addStringMember(result, "breakpointId", bpId, alloc);
         result.AddMember("locations", rapidjson::Value(rapidjson::kArrayType),
                          alloc);
         cmd.sendResult(result, doc);
@@ -1066,10 +1092,7 @@ void CDPDispatcher::routeDebugger(CDPCommand& cmd, const std::string& method)
             rapidjson::Document doc;
             rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
             rapidjson::Value result(rapidjson::kObjectType);
-            result.AddMember(
-                "scriptSource",
-                rapidjson::Value(it->second.c_str(), it->second.size(), alloc),
-                alloc);
+            addStringMember(result, "scriptSource", it->second, alloc);
             cmd.sendResult(result, doc);
         }
     } else if (method == "getPossibleBreakpoints") {
@@ -1496,8 +1519,7 @@ void CDPDispatcher::routeIndexedDB(CDPCommand& cmd, const std::string& method)
         rapidjson::Value result(rapidjson::kObjectType);
         rapidjson::Value db(rapidjson::kObjectType);
         const char* dbName = "";
-        if (cmd.params() && cmd.params()->HasMember("databaseName") &&
-            (*cmd.params())["databaseName"].IsString()) {
+        if (hasStringParam(cmd, "databaseName")) {
             dbName = (*cmd.params())["databaseName"].GetString();
         }
         db.AddMember("name", rapidjson::Value(dbName, alloc), alloc);
@@ -1705,8 +1727,7 @@ void CDPDispatcher::routeSystemInfo(CDPCommand& cmd, const std::string& method)
             os = std::string(uts.sysname) + " " + uts.release + " " +
                  uts.machine;
         }
-        result.AddMember("os", rapidjson::Value(os.c_str(), os.size(), alloc),
-                         alloc);
+        addStringMember(result, "os", os, alloc);
         cmd.sendResult(result, doc);
     } else if (method == "getProcessInfo") {
         rapidjson::Document doc;
@@ -1760,10 +1781,7 @@ void CDPDispatcher::routeAudits(CDPCommand& cmd, const std::string& method)
         cmd.sendResultEmpty();
     } else if (method == "getEncodedResponse") {
         std::string requestId;
-        if (cmd.params() && cmd.params()->HasMember("requestId") &&
-            (*cmd.params())["requestId"].IsString()) {
-            requestId = (*cmd.params())["requestId"].GetString();
-        }
+        requestId = paramString(cmd, "requestId", requestId);
         CDPSession* s = session();
         auto it = s->networkBodies.find(requestId);
         size_t originalSize =
@@ -1849,13 +1867,7 @@ void CDPDispatcher::emitConsoleForWebView(WebView* webView, const char* level,
     // Route console output to the TargetContext (session) that owns the WebView
     // the console call originated from, so each tab's console reaches its own
     // CDP session (puppeteer page.on('console')).
-    TargetContext* ctx = nullptr;
-    for (TargetContext* c : m_contexts) {
-        if (c->webView == webView) {
-            ctx = c;
-            break;
-        }
-    }
+    TargetContext* ctx = contextForWebView(webView);
     if (!ctx) {
         return;
     }
@@ -1899,8 +1911,7 @@ void CDPDispatcher::emitConsoleForWebView(WebView* webView, const char* level,
         rapidjson::Value entry(rapidjson::kObjectType);
         entry.AddMember("source", "console-api", alloc);
         entry.AddMember("level", rapidjson::Value(logLevel, alloc), alloc);
-        entry.AddMember(
-            "text", rapidjson::Value(text.c_str(), text.size(), alloc), alloc);
+        addStringMember(entry, "text", text, alloc);
         entry.AddMember("timestamp", ts, alloc);
         entry.AddMember("url", "", alloc);
         params.AddMember("entry", entry, alloc);
@@ -1936,9 +1947,7 @@ void CDPDispatcher::emitConsoleForWebView(WebView* webView, const char* level,
             // calls): a single string arg holding the concatenated text.
             rapidjson::Value arg(rapidjson::kObjectType);
             arg.AddMember("type", "string", alloc);
-            arg.AddMember("value",
-                          rapidjson::Value(text.c_str(), text.size(), alloc),
-                          alloc);
+            addStringMember(arg, "value", text, alloc);
             args.PushBack(arg, alloc);
         }
         params.AddMember("args", args, alloc);
@@ -1953,13 +1962,7 @@ void CDPDispatcher::emitBindingCalled(WebView* webView, const std::string& name,
 {
     // Route to the TargetContext (session) owning the WebView the binding call
     // originated from, mirroring emitConsoleForWebView.
-    TargetContext* ctx = nullptr;
-    for (TargetContext* c : m_contexts) {
-        if (c->webView == webView) {
-            ctx = c;
-            break;
-        }
-    }
+    TargetContext* ctx = contextForWebView(webView);
     if (!ctx) {
         return;
     }
@@ -1971,11 +1974,8 @@ void CDPDispatcher::emitBindingCalled(WebView* webView, const std::string& name,
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value params(rapidjson::kObjectType);
-    params.AddMember("name", rapidjson::Value(name.c_str(), name.size(), alloc),
-                     alloc);
-    params.AddMember("payload",
-                     rapidjson::Value(payload.c_str(), payload.size(), alloc),
-                     alloc);
+    addStringMember(params, "name", name, alloc);
+    addStringMember(params, "payload", payload, alloc);
     params.AddMember("executionContextId", (int)session->executionContextId,
                      alloc);
     CDPCommand evt(this, Optional<int64_t>(), session->sessionId, nullptr);
@@ -1985,13 +1985,7 @@ void CDPDispatcher::emitBindingCalled(WebView* webView, const std::string& name,
 void CDPDispatcher::emitChildFrameLoaded(WebView* webView)
 {
     // Route to the TargetContext owning the WebView the child frame belongs to.
-    TargetContext* ctx = nullptr;
-    for (TargetContext* c : m_contexts) {
-        if (c->webView == webView) {
-            ctx = c;
-            break;
-        }
-    }
+    TargetContext* ctx = contextForWebView(webView);
     if (!ctx) {
         return;
     }
@@ -2019,13 +2013,7 @@ void CDPDispatcher::emitJavaScriptDialogOpening(
     // Route to the TargetContext (session) owning the WebView the dialog
     // originated from, mirroring emitConsoleForWebView. Gated on Page.enable so
     // a non-attached/non-page client doesn't receive the event.
-    TargetContext* ctx = nullptr;
-    for (TargetContext* c : m_contexts) {
-        if (c->webView == webView) {
-            ctx = c;
-            break;
-        }
-    }
+    TargetContext* ctx = contextForWebView(webView);
     if (!ctx) {
         return;
     }
@@ -2037,19 +2025,13 @@ void CDPDispatcher::emitJavaScriptDialogOpening(
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value params(rapidjson::kObjectType);
-    params.AddMember("url", rapidjson::Value(url.c_str(), url.size(), alloc),
-                     alloc);
-    params.AddMember("message",
-                     rapidjson::Value(message.c_str(), message.size(), alloc),
-                     alloc);
+    addStringMember(params, "url", url, alloc);
+    addStringMember(params, "message", message, alloc);
     params.AddMember("type", rapidjson::Value(type, alloc), alloc);
     // hasBrowserHandler:false tells the client no native UI will block; the
     // page has already proceeded with the default value (single-thread MVP).
     params.AddMember("hasBrowserHandler", false, alloc);
-    params.AddMember(
-        "defaultPrompt",
-        rapidjson::Value(defaultPrompt.c_str(), defaultPrompt.size(), alloc),
-        alloc);
+    addStringMember(params, "defaultPrompt", defaultPrompt, alloc);
     CDPCommand evt(this, Optional<int64_t>(), session->sessionId, nullptr);
     evt.sendEvent("Page.javascriptDialogOpening", params, doc);
 }

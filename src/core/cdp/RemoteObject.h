@@ -30,6 +30,7 @@ class ValueRef;
 namespace Starfish {
 
 class ScriptBindingInstance;
+class ScriptWrappable;
 
 // objectId handle table for object-typed RemoteObjects. GC: inherited so the
 // held ObjectRef* are tracked. Main-thread only.
@@ -46,6 +47,11 @@ private:
     GCUnorderedMap<int, Escargot::ObjectRef*> m_idToObj;
     int m_next;
 };
+
+// The DOM object an "OBJ-<n>" handle wraps, or nullptr when the handle is
+// missing or wraps something else.
+ScriptWrappable* wrappableForObjectId(RemoteObjectStore* store,
+                                      const char* objectId);
 
 // ValueRef* -> CDP RemoteObject JSON.
 void serializeRemoteObject(ScriptBindingInstance* sbi, RemoteObjectStore* store,

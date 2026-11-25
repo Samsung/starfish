@@ -48,20 +48,6 @@ namespace {
         return s ? s->toUTF8NonGCString() : std::string();
     }
 
-    std::string lowered(std::string text)
-    {
-        for (char& c : text) {
-            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-        }
-        return text;
-    }
-
-    std::string tagOf(Element* element)
-    {
-        return element->localName() ? lowered(toUTF8(element->localName()))
-                                    : std::string();
-    }
-
     bool onlyWhitespace(const std::string& text)
     {
         for (char c : text) {
@@ -132,7 +118,7 @@ namespace {
             return true;
         }
         return tag == "input" &&
-               isTextEntryInputType(lowered(axAttribute(element, "type")));
+               isTextEntryInputType(axLowered(axAttribute(element, "type")));
     }
 
     bool isTextField(const std::string& role)
@@ -144,7 +130,7 @@ namespace {
     bool isLabelable(Element* element, const std::string& tag)
     {
         if (tag == "input") {
-            return lowered(axAttribute(element, "type")) != "hidden";
+            return axLowered(axAttribute(element, "type")) != "hidden";
         }
         return tag == "button" || tag == "meter" || tag == "output" ||
                tag == "progress" || tag == "select" || tag == "textarea";
@@ -192,7 +178,7 @@ namespace {
         if (tag == "html" || tag == "body" || tag == "option") {
             return false;
         }
-        return lowered(axAttribute(element, "aria-hidden")) == "true";
+        return axLowered(axAttribute(element, "aria-hidden")) == "true";
     }
 
     bool isHiddenViaStyle(Element* element)
@@ -212,7 +198,7 @@ namespace {
         for (Node* node = element; node && node->isElement();
              node = node->parentNode()) {
             Element* current = node->asElement();
-            if (isAriaHiddenElement(current, tagOf(current))) {
+            if (isAriaHiddenElement(current, axTagOf(current))) {
                 return false;
             }
         }
@@ -299,7 +285,7 @@ namespace {
                                           const std::string& role)
         {
             m_topRole = role;
-            std::string tag = tagOf(element);
+            std::string tag = axTagOf(element);
             std::vector<AXNameSource> list;
             m_visited.insert(element);
             if (isHiddenForTextAlternative(element, tag, nullptr)) {
@@ -361,14 +347,14 @@ namespace {
         {
             std::vector<Element*> labels;
             Document* document = control->document();
-            if (!document || !isLabelable(control, tagOf(control))) {
+            if (!document || !isLabelable(control, axTagOf(control))) {
                 return labels;
             }
 
             Element* wrapping = nullptr;
             for (Element* parent = control->parentElement(); parent;
                  parent = parent->parentElement()) {
-                if (tagOf(parent) == "label" &&
+                if (axTagOf(parent) == "label" &&
                     !axHasAttribute(parent, "for") &&
                     firstLabelableDescendant(parent) == control) {
                     wrapping = parent;
@@ -393,7 +379,7 @@ namespace {
                     labels.push_back(candidate);
                     return;
                 }
-                if (tagOf(candidate) == "label" &&
+                if (axTagOf(candidate) == "label" &&
                     axAttribute(candidate, "for") == id &&
                     document->getElementById(
                         String::fromUTF8(id.data(), id.size())) == control) {
@@ -412,7 +398,7 @@ namespace {
                     return;
                 }
                 Element* candidate = node->asElement();
-                if (isLabelable(candidate, tagOf(candidate))) {
+                if (isLabelable(candidate, axTagOf(candidate))) {
                     found = candidate;
                 }
             });
@@ -616,7 +602,7 @@ namespace {
                                   std::vector<AXNameSource>& list, bool& found)
         {
             std::string type = tag == "input"
-                                   ? lowered(axAttribute(element, "type"))
+                                   ? axLowered(axAttribute(element, "type"))
                                    : std::string();
 
             if (isOptionWithOneTextChild(element, tag)) {
@@ -728,7 +714,7 @@ namespace {
             AXNameSource source(found, "", kTypeContents);
             std::string text;
             std::string type = tag == "input"
-                                   ? lowered(axAttribute(element, "type"))
+                                   ? axLowered(axAttribute(element, "type"))
                                    : std::string();
             if (tag == "input" &&
                 (type == "button" || type == "submit" || type == "reset")) {
@@ -768,7 +754,7 @@ namespace {
             for (Node* child = element->firstChild(); child;
                  child = child->nextSibling()) {
                 if (child->isElement() &&
-                    tagOf(child->asElement()) == "title") {
+                    axTagOf(child->asElement()) == "title") {
                     Optional<String*> content = child->textContent();
                     return axCollapseWhitespace(content.hasValue()
                                                     ? toUTF8(content.value())
@@ -887,7 +873,7 @@ namespace {
         {
             TextResult result;
             std::string type = tag == "input"
-                                   ? lowered(axAttribute(element, "type"))
+                                   ? axLowered(axAttribute(element, "type"))
                                    : std::string();
 
             if (tag == "option") {
@@ -978,7 +964,7 @@ namespace {
                 Element* childElement =
                     child->isElement() ? child->asElement() : nullptr;
                 std::string childTag =
-                    childElement ? tagOf(childElement) : std::string();
+                    childElement ? axTagOf(childElement) : std::string();
                 if (childElement && isHiddenForTextAlternative(
                                         childElement, childTag, labelRoot)) {
                     continue;
@@ -1026,7 +1012,7 @@ namespace {
                 return false;
             }
             Element* element = node->asElement();
-            return isControlRole(axRoleForElement(element, tagOf(element)));
+            return isControlRole(axRoleForElement(element, axTagOf(element)));
         }
 
         bool shouldInsertSpace(Node* previous, Node* next, NameFrom lastFrom,
@@ -1052,7 +1038,7 @@ namespace {
                 return textNodeAlternative(node);
             }
             Element* element = node->asElement();
-            std::string tag = tagOf(element);
+            std::string tag = axTagOf(element);
             std::string role =
                 recursive ? axRoleForElement(element, tag) : m_topRole;
             TextResult result;
@@ -1174,6 +1160,21 @@ namespace {
 
 } // namespace
 
+std::string axLowered(std::string text)
+{
+    for (char& c : text) {
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    }
+    return text;
+}
+
+std::string axTagOf(Element* element)
+{
+    return element->localName()
+               ? axLowered(element->localName()->toUTF8NonGCString())
+               : std::string();
+}
+
 std::string axCollapseWhitespace(const std::string& text)
 {
     std::string out;
@@ -1219,7 +1220,7 @@ bool axHasAnyAriaAttribute(Element* element)
         if (!name) {
             continue;
         }
-        std::string local = lowered(name->toUTF8NonGCString());
+        std::string local = axLowered(name->toUTF8NonGCString());
         if (local.compare(0, 5, "aria-") == 0) {
             return true;
         }

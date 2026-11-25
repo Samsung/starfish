@@ -91,6 +91,8 @@ public:
     // Runtime.executionContextCreated for any not yet announced. Called after a
     // top-level navigation completes (layout has run, so child contexts exist).
     void discoverChildFrames(const std::string& sessionId);
+    // Emit Runtime.executionContextCreated for the (new) default context.
+    void emitExecutionContextCreated(const std::string& sessionId);
 
     // Ensure a ChildFrame record (frameId + contextId) exists for every live
     // child iframe, without emitting any events. Used by getFrameTree so the
@@ -162,8 +164,9 @@ private:
     // Emit Page.lifecycleEvent {frameId, loaderId, name, timestamp} for the
     // current frame/loader when lifecycle events are enabled.
     void emitLifecycle(const std::string& sessionId, const char* name);
-    // Emit Runtime.executionContextCreated for the (new) default context.
-    void emitExecutionContextCreated(const std::string& sessionId);
+    // A fresh loaderId with frameStartedLoading and the "init" lifecycle
+    // event, as every new document begins.
+    void startNewLoader(const std::string& sessionId);
     // Emit Runtime.executionContextCreated for one isolated world (re-used by
     // createIsolatedWorld and by navigate to re-announce existing worlds).
     void emitIsolatedWorldCreated(const std::string& sessionId,

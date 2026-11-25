@@ -27,6 +27,12 @@ namespace Starfish {
 
 class CDPDispatcher;
 class CDPCommand;
+class WebView;
+
+// The live document count (the main frame plus loaded child frames) and the
+// DOM node count across those documents. Memory.getDOMCounters and
+// Performance.getMetrics both report it.
+void sampleDOMCounters(WebView* wv, size_t& documents, size_t& nodes);
 
 // Memory domain. getDOMCounters / getDOMCountersForLeakDetection report the
 // live DOM node count and document/frame count (the same live sampling the

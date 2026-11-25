@@ -70,38 +70,11 @@ BrowsingContext* RuntimeDomain::targetBrowsingContext(WebView* wv,
 void RuntimeDomain::handleEnable(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
-    WebView* wv = m_dispatcher->webView();
 
     s->runtimeEnabled = true;
     cmd.sendResultEmpty();
 
-    // Emit Runtime.executionContextCreated.
-    std::string origin;
-    BrowsingContext* bc = wv->mainBrowsingContext();
-    if (bc && bc->document() && bc->document()->origin()) {
-        origin = bc->document()->origin()->toUTF8NonGCString();
-    }
-
-    rapidjson::Document doc;
-    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-    rapidjson::Value params(rapidjson::kObjectType);
-    rapidjson::Value context(rapidjson::kObjectType);
-    context.AddMember("id", (int)s->executionContextId, alloc);
-    context.AddMember("origin",
-                      rapidjson::Value(origin.c_str(), origin.size(), alloc),
-                      alloc);
-    context.AddMember("name", "", alloc);
-    context.AddMember("uniqueId", "1", alloc);
-    rapidjson::Value auxData(rapidjson::kObjectType);
-    auxData.AddMember("isDefault", true, alloc);
-    auxData.AddMember("type", "default", alloc);
-    auxData.AddMember(
-        "frameId",
-        rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc), alloc);
-    context.AddMember("auxData", auxData, alloc);
-    params.AddMember("context", context, alloc);
-    CDPCommand evt(m_dispatcher, Optional<int64_t>(), cmd.sessionId(), nullptr);
-    evt.sendEvent("Runtime.executionContextCreated", params, doc);
+    m_dispatcher->page()->emitExecutionContextCreated(cmd.sessionId());
 
     // Announce any already-present child iframe frames + their contexts.
     // (When connecting to an already-loaded page there is no navigate, so
@@ -147,22 +120,13 @@ void RuntimeDomain::handleEvaluate(CDPCommand& cmd, const std::string&)
 {
     WebView* wv = m_dispatcher->webView();
 
-    if (!cmd.params() || !cmd.params()->HasMember("expression") ||
-        !(*cmd.params())["expression"].IsString()) {
+    if (!hasStringParam(cmd, "expression")) {
         cmd.sendError(-32602, "'expression' is required");
         return;
     }
     const rapidjson::Value& expression = (*cmd.params())["expression"];
-    bool returnByValue = false;
-    if (cmd.params()->HasMember("returnByValue") &&
-        (*cmd.params())["returnByValue"].IsBool()) {
-        returnByValue = (*cmd.params())["returnByValue"].GetBool();
-    }
-    bool awaitPromise = false;
-    if (cmd.params()->HasMember("awaitPromise") &&
-        (*cmd.params())["awaitPromise"].IsBool()) {
-        awaitPromise = (*cmd.params())["awaitPromise"].GetBool();
-    }
+    bool returnByValue = paramBool(cmd, "returnByValue", false);
+    bool awaitPromise = paramBool(cmd, "awaitPromise", false);
     std::string source(expression.GetString(), expression.GetStringLength());
     BrowsingContext* bc = targetBrowsingContext(wv, cmd, "contextId");
     evaluateSource(wv, bc, source, returnByValue, awaitPromise, cmd);
@@ -180,10 +144,7 @@ void RuntimeDomain::handleCallFunctionOn(CDPCommand& cmd, const std::string&)
     WebView* wv = m_dispatcher->webView();
 
     std::string fnSource;
-    if (cmd.params() && cmd.params()->HasMember("functionDeclaration") &&
-        (*cmd.params())["functionDeclaration"].IsString()) {
-        fnSource = (*cmd.params())["functionDeclaration"].GetString();
-    }
+    fnSource = paramString(cmd, "functionDeclaration", fnSource);
     BrowsingContext* bc = targetBrowsingContext(wv, cmd, "executionContextId");
     callFunctionOn(wv, bc, cmd);
     m_dispatcher->page()->sweepDetachedFrames(cmd.sessionId());
@@ -251,8 +212,7 @@ void RuntimeDomain::handleQueryObjects(CDPCommand& cmd, const std::string&)
 
 void RuntimeDomain::handleReleaseObject(CDPCommand& cmd, const std::string&)
 {
-    if (cmd.params() && cmd.params()->HasMember("objectId") &&
-        (*cmd.params())["objectId"].IsString()) {
+    if (hasStringParam(cmd, "objectId")) {
         std::string oid = (*cmd.params())["objectId"].GetString();
         if (oid.rfind("OBJ-", 0) == 0) {
             int id = atoi(oid.c_str() + 4);
@@ -267,8 +227,7 @@ void RuntimeDomain::handleAddBinding(CDPCommand& cmd, const std::string&)
     CDPSession* s = m_dispatcher->session();
     WebView* wv = m_dispatcher->webView();
 
-    if (!cmd.params() || !cmd.params()->HasMember("name") ||
-        !(*cmd.params())["name"].IsString()) {
+    if (!hasStringParam(cmd, "name")) {
         cmd.sendError(-32602, "'name' is required");
         return;
     }
@@ -292,8 +251,7 @@ void RuntimeDomain::handleRemoveBinding(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
 
-    if (cmd.params() && cmd.params()->HasMember("name") &&
-        (*cmd.params())["name"].IsString()) {
+    if (hasStringParam(cmd, "name")) {
         std::string name = (*cmd.params())["name"].GetString();
         auto& v = s->bindings;
         for (auto it = v.begin(); it != v.end(); ++it) {
@@ -519,6 +477,40 @@ static ValueRef* settlePromiseIfNeeded(WebView* wv, ContextRef* ctx,
     return value;
 }
 
+// The script binding of bc when it can run script, or nullptr after replying
+// that there is no scripting context.
+static ScriptBindingInstance* scriptingInstance(BrowsingContext* bc,
+                                                CDPCommand& cmd)
+{
+    if (!bc || !bc->scriptBindingInstance() ||
+        !bc->scriptBindingInstance()->isScriptingEnabledIgnoringCDP()) {
+        cmd.sendError(-32000, "No scripting context");
+        return nullptr;
+    }
+    return bc->scriptBindingInstance();
+}
+
+// Adds exceptionDetails with the message and position. A thrown value also
+// becomes its exception RemoteObject.
+static void addExceptionDetails(rapidjson::Value& result,
+                                const std::string& text, int lineNumber,
+                                int columnNumber, ScriptBindingInstance* sbi,
+                                RemoteObjectStore* store, ValueRef* thrown,
+                                rapidjson::Document::AllocatorType& alloc)
+{
+    rapidjson::Value ex(rapidjson::kObjectType);
+    ex.AddMember("exceptionId", 1, alloc);
+    addStringMember(ex, "text", text, alloc);
+    ex.AddMember("lineNumber", lineNumber, alloc);
+    ex.AddMember("columnNumber", columnNumber, alloc);
+    if (thrown) {
+        rapidjson::Value exObj(rapidjson::kObjectType);
+        serializeRemoteObject(sbi, store, thrown, false, exObj, alloc);
+        ex.AddMember("exception", exObj, alloc);
+    }
+    result.AddMember("exceptionDetails", ex, alloc);
+}
+
 // Fill `result` for a settled value. A rejected value also gets
 // exceptionDetails, and returnByValue is ignored for it.
 // The synchronous paths and the deferred Promise path all use this.
@@ -539,16 +531,7 @@ static void buildSettledResult(ScriptBindingInstance* sbi,
     result.AddMember("result", remote, alloc);
     std::string text = settled->toStringWithoutException(sbi->scriptContext())
                            ->toStdUTF8String();
-    rapidjson::Value ex(rapidjson::kObjectType);
-    ex.AddMember("exceptionId", 1, alloc);
-    ex.AddMember("text", rapidjson::Value(text.c_str(), text.size(), alloc),
-                 alloc);
-    ex.AddMember("lineNumber", 0, alloc);
-    ex.AddMember("columnNumber", 0, alloc);
-    rapidjson::Value exObj(rapidjson::kObjectType);
-    serializeRemoteObject(sbi, store, settled, false, exObj, alloc);
-    ex.AddMember("exception", exObj, alloc);
-    result.AddMember("exceptionDetails", ex, alloc);
+    addExceptionDetails(result, text, 0, 0, sbi, store, settled, alloc);
 }
 
 // Chrome sends this error when the page navigates or closes while a
@@ -748,32 +731,21 @@ struct CallData {
 void RuntimeDomain::callFunctionOn(WebView* wv, BrowsingContext* bc,
                                    CDPCommand& cmd)
 {
-    if (!cmd.params() || !cmd.params()->HasMember("functionDeclaration") ||
-        !(*cmd.params())["functionDeclaration"].IsString()) {
+    if (!hasStringParam(cmd, "functionDeclaration")) {
         cmd.sendError(-32602, "'functionDeclaration' is required");
         return;
     }
 
-    if (!bc || !bc->scriptBindingInstance() ||
-        !bc->scriptBindingInstance()->isScriptingEnabledIgnoringCDP()) {
-        cmd.sendError(-32000, "No scripting context");
+    ScriptBindingInstance* sbi = scriptingInstance(bc, cmd);
+    if (!sbi) {
         return;
     }
-    ScriptBindingInstance* sbi = bc->scriptBindingInstance();
     ContextRef* ctx = sbi->scriptContext();
     RemoteObjectStore* store = m_dispatcher->remoteObjectStore();
 
     std::string fn = (*cmd.params())["functionDeclaration"].GetString();
-    bool returnByValue = false;
-    if (cmd.params()->HasMember("returnByValue") &&
-        (*cmd.params())["returnByValue"].IsBool()) {
-        returnByValue = (*cmd.params())["returnByValue"].GetBool();
-    }
-    bool awaitPromise = false;
-    if (cmd.params()->HasMember("awaitPromise") &&
-        (*cmd.params())["awaitPromise"].IsBool()) {
-        awaitPromise = (*cmd.params())["awaitPromise"].GetBool();
-    }
+    bool returnByValue = paramBool(cmd, "returnByValue", false);
+    bool awaitPromise = paramBool(cmd, "awaitPromise", false);
 
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
@@ -866,16 +838,7 @@ void RuntimeDomain::callFunctionOn(WebView* wv, BrowsingContext* bc,
         result.AddMember("result", remote, alloc);
         std::string text =
             errorValue->toStringWithoutException(ctx)->toStdUTF8String();
-        rapidjson::Value ex(rapidjson::kObjectType);
-        ex.AddMember("exceptionId", 1, alloc);
-        ex.AddMember("text", rapidjson::Value(text.c_str(), text.size(), alloc),
-                     alloc);
-        ex.AddMember("lineNumber", 0, alloc);
-        ex.AddMember("columnNumber", 0, alloc);
-        rapidjson::Value exObj(rapidjson::kObjectType);
-        serializeRemoteObject(sbi, store, errorValue, false, exObj, alloc);
-        ex.AddMember("exception", exObj, alloc);
-        result.AddMember("exceptionDetails", ex, alloc);
+        addExceptionDetails(result, text, 0, 0, sbi, store, errorValue, alloc);
         cmd.sendResult(result, doc);
         return;
     }
@@ -895,29 +858,23 @@ void RuntimeDomain::callFunctionOn(WebView* wv, BrowsingContext* bc,
 void RuntimeDomain::compileScript(WebView* wv, BrowsingContext* bc,
                                   CDPCommand& cmd)
 {
-    if (!cmd.params() || !cmd.params()->HasMember("expression") ||
-        !(*cmd.params())["expression"].IsString()) {
+    if (!hasStringParam(cmd, "expression")) {
         cmd.sendError(-32602, "'expression' is required");
         return;
     }
     std::string expr = (*cmd.params())["expression"].GetString();
-    bool persist = false;
-    if (cmd.params()->HasMember("persistScript") &&
-        (*cmd.params())["persistScript"].IsBool()) {
-        persist = (*cmd.params())["persistScript"].GetBool();
-    }
+    bool persist = paramBool(cmd, "persistScript", false);
     std::string sourceURL;
     if (cmd.params()->HasMember("sourceURL") &&
         (*cmd.params())["sourceURL"].IsString()) {
         sourceURL = (*cmd.params())["sourceURL"].GetString();
     }
 
-    if (!bc || !bc->scriptBindingInstance() ||
-        !bc->scriptBindingInstance()->isScriptingEnabledIgnoringCDP()) {
-        cmd.sendError(-32000, "No scripting context");
+    ScriptBindingInstance* sbi = scriptingInstance(bc, cmd);
+    if (!sbi) {
         return;
     }
-    ContextRef* ctx = bc->scriptBindingInstance()->scriptContext();
+    ContextRef* ctx = sbi->scriptContext();
 
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
@@ -935,13 +892,8 @@ void RuntimeDomain::compileScript(WebView* wv, BrowsingContext* bc,
         std::string msg = parsed.parseErrorMessage
                               ? parsed.parseErrorMessage->toStdUTF8String()
                               : "SyntaxError";
-        rapidjson::Value ex(rapidjson::kObjectType);
-        ex.AddMember("exceptionId", 1, alloc);
-        ex.AddMember("text", rapidjson::Value(msg.c_str(), msg.size(), alloc),
-                     alloc);
-        ex.AddMember("lineNumber", 0, alloc);
-        ex.AddMember("columnNumber", 0, alloc);
-        result.AddMember("exceptionDetails", ex, alloc);
+        addExceptionDetails(result, msg, 0, 0, nullptr, nullptr, nullptr,
+                            alloc);
         cmd.sendResult(result, doc);
         return;
     }
@@ -953,17 +905,14 @@ void RuntimeDomain::compileScript(WebView* wv, BrowsingContext* bc,
         std::string scriptId =
             "script-" + std::to_string(++s->compiledScriptCounter);
         s->compiledScripts[scriptId] = expr;
-        result.AddMember(
-            "scriptId",
-            rapidjson::Value(scriptId.c_str(), scriptId.size(), alloc), alloc);
+        addStringMember(result, "scriptId", scriptId, alloc);
     }
     cmd.sendResult(result, doc);
 }
 
 void RuntimeDomain::runScript(WebView* wv, BrowsingContext* bc, CDPCommand& cmd)
 {
-    if (!cmd.params() || !cmd.params()->HasMember("scriptId") ||
-        !(*cmd.params())["scriptId"].IsString()) {
+    if (!hasStringParam(cmd, "scriptId")) {
         cmd.sendError(-32602, "'scriptId' is required");
         return;
     }
@@ -975,16 +924,8 @@ void RuntimeDomain::runScript(WebView* wv, BrowsingContext* bc, CDPCommand& cmd)
         return;
     }
 
-    bool returnByValue = false;
-    if (cmd.params()->HasMember("returnByValue") &&
-        (*cmd.params())["returnByValue"].IsBool()) {
-        returnByValue = (*cmd.params())["returnByValue"].GetBool();
-    }
-    bool awaitPromise = false;
-    if (cmd.params()->HasMember("awaitPromise") &&
-        (*cmd.params())["awaitPromise"].IsBool()) {
-        awaitPromise = (*cmd.params())["awaitPromise"].GetBool();
-    }
+    bool returnByValue = paramBool(cmd, "returnByValue", false);
+    bool awaitPromise = paramBool(cmd, "awaitPromise", false);
 
     // Evaluate the persisted source, serializing the result exactly like
     // Runtime.evaluate.
@@ -1025,18 +966,15 @@ void RuntimeDomain::maybeNotifyDocumentRewrite(WebView* wv,
 void RuntimeDomain::getProperties(WebView* wv, BrowsingContext* bc,
                                   CDPCommand& cmd)
 {
-    if (!cmd.params() || !cmd.params()->HasMember("objectId") ||
-        !(*cmd.params())["objectId"].IsString()) {
+    if (!hasStringParam(cmd, "objectId")) {
         cmd.sendError(-32602, "'objectId' is required");
         return;
     }
 
-    if (!bc || !bc->scriptBindingInstance() ||
-        !bc->scriptBindingInstance()->isScriptingEnabledIgnoringCDP()) {
-        cmd.sendError(-32000, "No scripting context");
+    ScriptBindingInstance* sbi = scriptingInstance(bc, cmd);
+    if (!sbi) {
         return;
     }
-    ScriptBindingInstance* sbi = bc->scriptBindingInstance();
     ContextRef* ctx = sbi->scriptContext();
     RemoteObjectStore* store = m_dispatcher->remoteObjectStore();
 
@@ -1092,9 +1030,7 @@ void RuntimeDomain::getProperties(WebView* wv, BrowsingContext* bc,
     rapidjson::Value arr(rapidjson::kArrayType);
     for (size_t i = 0; i < names.size(); i++) {
         rapidjson::Value prop(rapidjson::kObjectType);
-        prop.AddMember(
-            "name", rapidjson::Value(names[i].c_str(), names[i].size(), alloc),
-            alloc);
+        addStringMember(prop, "name", names[i], alloc);
         rapidjson::Value rv(rapidjson::kObjectType);
         serializeRemoteObject(sbi, store, values[i], false, rv, alloc);
         prop.AddMember("value", rv, alloc);
@@ -1117,12 +1053,11 @@ struct LexicalNamesData {
 void RuntimeDomain::globalLexicalScopeNames(WebView* wv, CDPCommand& cmd)
 {
     BrowsingContext* bc = targetBrowsingContext(wv, cmd, "executionContextId");
-    if (!bc || !bc->scriptBindingInstance() ||
-        !bc->scriptBindingInstance()->isScriptingEnabledIgnoringCDP()) {
-        cmd.sendError(-32000, "No scripting context");
+    ScriptBindingInstance* sbi = scriptingInstance(bc, cmd);
+    if (!sbi) {
         return;
     }
-    ContextRef* ctx = bc->scriptBindingInstance()->scriptContext();
+    ContextRef* ctx = sbi->scriptContext();
 
     // Approximation: Escargot's public API exposes no accessor for the global
     // lexical environment record, so we enumerate the global object's own
@@ -1206,14 +1141,8 @@ void RuntimeDomain::evaluateSource(WebView* wv, BrowsingContext* bc,
             remote.SetObject();
             remote.AddMember("type", "undefined", alloc);
             result.AddMember("result", remote, alloc);
-            rapidjson::Value ex(rapidjson::kObjectType);
-            ex.AddMember("exceptionId", 1, alloc);
-            ex.AddMember("text",
-                         rapidjson::Value(msg.c_str(), msg.size(), alloc),
-                         alloc);
-            ex.AddMember("lineNumber", 0, alloc);
-            ex.AddMember("columnNumber", 0, alloc);
-            result.AddMember("exceptionDetails", ex, alloc);
+            addExceptionDetails(result, msg, 0, 0, nullptr, nullptr, nullptr,
+                                alloc);
             cmd.sendResult(result, doc);
             return;
         }
@@ -1244,18 +1173,9 @@ void RuntimeDomain::evaluateSource(WebView* wv, BrowsingContext* bc,
                 lineNumber = (int)sbresult.stackTrace[last].loc.line;
                 columnNumber = (int)sbresult.stackTrace[last].loc.column;
             }
-            rapidjson::Value ex(rapidjson::kObjectType);
-            ex.AddMember("exceptionId", 1, alloc);
-            ex.AddMember("text",
-                         rapidjson::Value(text.c_str(), text.size(), alloc),
-                         alloc);
-            ex.AddMember("lineNumber", lineNumber, alloc);
-            ex.AddMember("columnNumber", columnNumber, alloc);
-            rapidjson::Value exObj(rapidjson::kObjectType);
-            serializeRemoteObject(sbi, m_dispatcher->remoteObjectStore(),
-                                  errorValue, false, exObj, alloc);
-            ex.AddMember("exception", exObj, alloc);
-            result.AddMember("exceptionDetails", ex, alloc);
+            addExceptionDetails(result, text, lineNumber, columnNumber, sbi,
+                                m_dispatcher->remoteObjectStore(), errorValue,
+                                alloc);
             cmd.sendResult(result, doc);
             return;
         }

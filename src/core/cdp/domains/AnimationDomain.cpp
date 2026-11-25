@@ -148,12 +148,8 @@ void AnimationDomain::emitAnimationStarted(WebView* webView,
     source.AddMember("easing", "linear", alloc);
 
     rapidjson::Value animation(rapidjson::kObjectType);
-    animation.AddMember("id", rapidjson::Value(id.c_str(), id.size(), alloc),
-                        alloc);
-    animation.AddMember(
-        "name",
-        rapidjson::Value(animationName.c_str(), animationName.size(), alloc),
-        alloc);
+    addStringMember(animation, "id", id, alloc);
+    addStringMember(animation, "name", animationName, alloc);
     animation.AddMember("pausedState", false, alloc);
     animation.AddMember("playState", "running", alloc);
     animation.AddMember("playbackRate", session->animationPlaybackRate, alloc);
@@ -167,8 +163,7 @@ void AnimationDomain::emitAnimationStarted(WebView* webView,
     // Animation.animationCreated carries only the id.
     {
         rapidjson::Value created(rapidjson::kObjectType);
-        created.AddMember("id", rapidjson::Value(id.c_str(), id.size(), alloc),
-                          alloc);
+        addStringMember(created, "id", id, alloc);
         CDPCommand evt(m_dispatcher, Optional<int64_t>(), session->sessionId,
                        nullptr);
         evt.sendEvent("Animation.animationCreated", created, doc);

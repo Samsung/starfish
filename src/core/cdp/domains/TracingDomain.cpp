@@ -89,10 +89,7 @@ void TracingDomain::processMessage(CDPCommand& cmd, const std::string& method)
         // transferMode defaults to "ReportEvents" per CDP; puppeteer's
         // page.tracing.start() passes "ReturnAsStream".
         std::string transferMode = "ReportEvents";
-        if (cmd.params() && cmd.params()->HasMember("transferMode") &&
-            (*cmd.params())["transferMode"].IsString()) {
-            transferMode = (*cmd.params())["transferMode"].GetString();
-        }
+        transferMode = paramString(cmd, "transferMode", transferMode);
         s->tracingActive = true;
         s->tracingTransferMode = transferMode;
         s->tracingStartTickUs = (uint64_t)longTickCount();
@@ -187,10 +184,7 @@ void TracingDomain::processMessage(CDPCommand& cmd, const std::string& method)
             rapidjson::Document cdoc;
             rapidjson::Document::AllocatorType& calloc = cdoc.GetAllocator();
             rapidjson::Value cparams(rapidjson::kObjectType);
-            cparams.AddMember(
-                "stream",
-                rapidjson::Value(handle.c_str(), handle.size(), calloc),
-                calloc);
+            addStringMember(cparams, "stream", handle, calloc);
             // dataFormat/traceFormat: the stream holds JSON.
             cparams.AddMember("dataFormat", "json", calloc);
             cparams.AddMember("traceFormat", "json", calloc);

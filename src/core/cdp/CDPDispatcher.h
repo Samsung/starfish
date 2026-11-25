@@ -34,6 +34,8 @@ class ValueRef;
 namespace Starfish {
 
 class WebView;
+class Document;
+class Element;
 class CDPServer;
 class CDPSession;
 class CDPCommand;
@@ -317,6 +319,17 @@ private:
     TracingDomain* m_tracing;
     OverlayDomain* m_overlay;
 };
+
+// The dispatcher of the client attached to the page of document, or nullptr
+// when no client is attached (the common case).
+CDPDispatcher* cdpDispatcherForDocument(Document* document);
+// The target of the page of document while it has a session, or nullptr.
+// dispatcher is set as cdpDispatcherForDocument sets it.
+TargetContext* cdpTargetForDocument(Document* document,
+                                    CDPDispatcher*& dispatcher);
+// The element the nodeId parameter of cmd names in the current target, or
+// nullptr after replying that there is no such node.
+Element* elementForNodeIdParam(CDPDispatcher* dispatcher, CDPCommand& cmd);
 
 } // namespace Starfish
 

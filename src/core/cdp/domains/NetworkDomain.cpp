@@ -54,6 +54,16 @@
 
 namespace Starfish {
 
+std::string urlHost(const std::string& url)
+{
+    if (url.empty()) {
+        return std::string();
+    }
+    ResourceURL* r = new ResourceURL(url.c_str(), url.size());
+    String* h = r->hostname();
+    return h ? h->toUTF8NonGCString() : std::string();
+}
+
 namespace {
 
     // One entry from curl's cookie jar, in the form CDP reports cookies.
@@ -186,36 +196,10 @@ namespace {
         extra.sourceScheme = e.sourceScheme;
     }
 
-    static std::string paramStr(CDPCommand& cmd, const char* name)
-    {
-        if (cmd.params() && cmd.params()->HasMember(name) &&
-            (*cmd.params())[name].IsString()) {
-            return (*cmd.params())[name].GetString();
-        }
-        return std::string();
-    }
-
-    static bool paramBool(CDPCommand& cmd, const char* name, bool def)
-    {
-        if (cmd.params() && cmd.params()->HasMember(name) &&
-            (*cmd.params())[name].IsBool()) {
-            return (*cmd.params())[name].GetBool();
-        }
-        return def;
-    }
-
     static bool hasNumber(CDPCommand& cmd, const char* name)
     {
         return cmd.params() && cmd.params()->HasMember(name) &&
                (*cmd.params())[name].IsNumber();
-    }
-
-    static double paramNum(CDPCommand& cmd, const char* name, double def)
-    {
-        if (hasNumber(cmd, name)) {
-            return (*cmd.params())[name].GetDouble();
-        }
-        return def;
     }
 
     static std::string currentUrl(WebView* wv)
@@ -227,16 +211,6 @@ namespace {
             }
         }
         return std::string();
-    }
-
-    static std::string urlHost(const std::string& url)
-    {
-        if (url.empty()) {
-            return std::string();
-        }
-        ResourceURL* r = new ResourceURL(url.c_str(), url.size());
-        String* h = r->hostname();
-        return h ? h->toUTF8NonGCString() : std::string();
     }
 
     static std::string urlPath(const std::string& url)
@@ -330,18 +304,11 @@ namespace {
                                 const CookieEntry& e)
     {
         rapidjson::Value c(rapidjson::kObjectType);
-        c.AddMember("name",
-                    rapidjson::Value(e.name.c_str(), e.name.size(), alloc),
-                    alloc);
-        c.AddMember("value",
-                    rapidjson::Value(e.value.c_str(), e.value.size(), alloc),
-                    alloc);
-        c.AddMember("domain",
-                    rapidjson::Value(e.domain.c_str(), e.domain.size(), alloc),
-                    alloc);
+        addStringMember(c, "name", e.name, alloc);
+        addStringMember(c, "value", e.value, alloc);
+        addStringMember(c, "domain", e.domain, alloc);
         std::string path = e.path.empty() ? "/" : e.path;
-        c.AddMember("path", rapidjson::Value(path.c_str(), path.size(), alloc),
-                    alloc);
+        addStringMember(c, "path", path, alloc);
         bool session = (e.expires == 0);
         c.AddMember("expires", session ? -1.0 : (double)e.expires, alloc);
         c.AddMember("size", (int)(e.name.size() + e.value.size()), alloc);
@@ -356,10 +323,7 @@ namespace {
         std::string key = cookieExtraKey(e.domain, path, e.name);
         auto it = g_cookieExtra.find(key);
         if (it != g_cookieExtra.end()) {
-            c.AddMember("priority",
-                        rapidjson::Value(it->second.priority.c_str(),
-                                         it->second.priority.size(), alloc),
-                        alloc);
+            addStringMember(c, "priority", it->second.priority, alloc);
             // sourcePort=0 means "unspecified": report the default port for
             // the source scheme (443 for Secure, 80 for NonSecure).
             int port = it->second.sourcePort;
@@ -367,10 +331,7 @@ namespace {
                 port = (it->second.sourceScheme == "Secure") ? 443 : 80;
             }
             c.AddMember("sourcePort", port, alloc);
-            c.AddMember("sourceScheme",
-                        rapidjson::Value(it->second.sourceScheme.c_str(),
-                                         it->second.sourceScheme.size(), alloc),
-                        alloc);
+            addStringMember(c, "sourceScheme", it->second.sourceScheme, alloc);
         } else {
             c.AddMember("priority", "Medium", alloc);
             // The cookie came from a real HTTP response, so the jar is all
@@ -380,8 +341,7 @@ namespace {
             // reported with the default one.
             c.AddMember("sourcePort", e.secure ? 443 : 80, alloc);
             std::string ss = e.secure ? "Secure" : "NonSecure";
-            c.AddMember("sourceScheme",
-                        rapidjson::Value(ss.c_str(), ss.size(), alloc), alloc);
+            addStringMember(c, "sourceScheme", ss, alloc);
         }
         arr.PushBack(c, alloc);
     }
@@ -392,9 +352,9 @@ namespace {
     static void resolveTarget(CDPCommand& cmd, WebView* wv, std::string& domain,
                               std::string& path)
     {
-        std::string url = paramStr(cmd, "url");
-        std::string d = paramStr(cmd, "domain");
-        std::string p = paramStr(cmd, "path");
+        std::string url = paramString(cmd, "url");
+        std::string d = paramString(cmd, "domain");
+        std::string p = paramString(cmd, "path");
 
         if (!d.empty()) {
             domain = d;
@@ -660,24 +620,13 @@ std::string NetworkDomain::onResourceWillBeSent(WebView* wv, Resource* res,
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value params(rapidjson::kObjectType);
-    params.AddMember(
-        "requestId",
-        rapidjson::Value(requestId.c_str(), requestId.size(), alloc), alloc);
-    params.AddMember(
-        "loaderId",
-        rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
-        alloc);
-    params.AddMember(
-        "frameId",
-        rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc), alloc);
-    params.AddMember("documentURL",
-                     rapidjson::Value(url.c_str(), url.size(), alloc), alloc);
+    addStringMember(params, "requestId", requestId, alloc);
+    addStringMember(params, "loaderId", s->loaderId, alloc);
+    addStringMember(params, "frameId", s->frameId, alloc);
+    addStringMember(params, "documentURL", url, alloc);
     rapidjson::Value request(rapidjson::kObjectType);
-    request.AddMember("url", rapidjson::Value(url.c_str(), url.size(), alloc),
-                      alloc);
-    request.AddMember("method",
-                      rapidjson::Value(method.c_str(), method.size(), alloc),
-                      alloc);
+    addStringMember(request, "url", url, alloc);
+    addStringMember(request, "method", method, alloc);
     // Real request headers (includes any setExtraHTTPHeaders injected earlier).
     rapidjson::Value headers(rapidjson::kObjectType);
     if (res->resourceRequest()) {
@@ -694,9 +643,7 @@ std::string NetworkDomain::onResourceWillBeSent(WebView* wv, Resource* res,
     // (postData + hasPostData), matching Chrome's requestWillBeSent.
     if (!postData.empty()) {
         s->networkRequestPostData[requestId] = postData;
-        request.AddMember(
-            "postData",
-            rapidjson::Value(postData.c_str(), postData.size(), alloc), alloc);
+        addStringMember(request, "postData", postData, alloc);
         request.AddMember("hasPostData", true, alloc);
     }
     request.AddMember("initialPriority",
@@ -754,22 +701,14 @@ void NetworkDomain::onResourceResponse(WebView* wv,
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value params(rapidjson::kObjectType);
-    params.AddMember(
-        "requestId",
-        rapidjson::Value(requestId.c_str(), requestId.size(), alloc), alloc);
-    params.AddMember(
-        "loaderId",
-        rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
-        alloc);
-    params.AddMember(
-        "frameId",
-        rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc), alloc);
+    addStringMember(params, "requestId", requestId, alloc);
+    addStringMember(params, "loaderId", s->loaderId, alloc);
+    addStringMember(params, "frameId", s->frameId, alloc);
     params.AddMember("timestamp", ts, alloc);
     const char* rtype = isDocument ? "Document" : resourceTypeFromMime(mime);
     params.AddMember("type", rapidjson::Value(rtype, alloc), alloc);
     rapidjson::Value response(rapidjson::kObjectType);
-    response.AddMember("url", rapidjson::Value(url.c_str(), url.size(), alloc),
-                       alloc);
+    addStringMember(response, "url", url, alloc);
     response.AddMember("status", status, alloc);
     response.AddMember("statusText",
                        rapidjson::Value(statusText(status), alloc), alloc);
@@ -782,8 +721,7 @@ void NetworkDomain::onResourceResponse(WebView* wv,
             alloc);
     }
     response.AddMember("headers", headers, alloc);
-    response.AddMember(
-        "mimeType", rapidjson::Value(mime.c_str(), mime.size(), alloc), alloc);
+    addStringMember(response, "mimeType", mime, alloc);
     response.AddMember("connectionReused", false, alloc);
     response.AddMember("connectionId", 0, alloc);
     response.AddMember("fromDiskCache", false, alloc);
@@ -850,9 +788,7 @@ void NetworkDomain::onResourceFinished(WebView* wv,
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value params(rapidjson::kObjectType);
-    params.AddMember(
-        "requestId",
-        rapidjson::Value(requestId.c_str(), requestId.size(), alloc), alloc);
+    addStringMember(params, "requestId", requestId, alloc);
     params.AddMember("timestamp", ts, alloc);
     params.AddMember("encodedDataLength", (double)len, alloc);
     CDPCommand evt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
@@ -866,29 +802,7 @@ void NetworkDomain::onResourceFinished(WebView* wv,
 
 void NetworkDomain::onResourceFailed(WebView* wv, const std::string& requestId)
 {
-    CDPSession* s = sessionForWebView(wv);
-    if (!s || !s->networkEnabled || requestId.empty()) {
-        return;
-    }
-    const std::string& sessionId = s->sessionId;
-    double ts = (double)longTickCount();
-    rapidjson::Document doc;
-    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-    rapidjson::Value params(rapidjson::kObjectType);
-    params.AddMember(
-        "requestId",
-        rapidjson::Value(requestId.c_str(), requestId.size(), alloc), alloc);
-    params.AddMember("timestamp", ts, alloc);
-    params.AddMember("type", "Other", alloc);
-    params.AddMember("errorText", "net::ERR_FAILED", alloc);
-    params.AddMember("canceled", false, alloc);
-    CDPCommand evt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
-    evt.sendEvent("Network.loadingFailed", params, doc);
-
-    if (s->networkInFlight > 0) {
-        --s->networkInFlight;
-    }
-    scheduleNetworkIdleCheck(wv);
+    emitLoadingFailed(wv, requestId, "net::ERR_FAILED");
 }
 
 bool NetworkDomain::shouldBlockUrl(CDPSession* s, const std::string& url,
@@ -943,14 +857,10 @@ void NetworkDomain::emitLoadingFailed(WebView* wv, const std::string& requestId,
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value params(rapidjson::kObjectType);
-    params.AddMember(
-        "requestId",
-        rapidjson::Value(requestId.c_str(), requestId.size(), alloc), alloc);
+    addStringMember(params, "requestId", requestId, alloc);
     params.AddMember("timestamp", ts, alloc);
     params.AddMember("type", "Other", alloc);
-    params.AddMember(
-        "errorText",
-        rapidjson::Value(errorText.c_str(), errorText.size(), alloc), alloc);
+    addStringMember(params, "errorText", errorText, alloc);
     params.AddMember("canceled", false, alloc);
     CDPCommand evt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
     evt.sendEvent("Network.loadingFailed", params, doc);
@@ -1002,14 +912,8 @@ namespace {
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value params(rapidjson::kObjectType);
-        params.AddMember(
-            "frameId",
-            rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc),
-            alloc);
-        params.AddMember(
-            "loaderId",
-            rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
-            alloc);
+        addStringMember(params, "frameId", s->frameId, alloc);
+        addStringMember(params, "loaderId", s->loaderId, alloc);
         params.AddMember("name", rapidjson::Value(name, alloc), alloc);
         params.AddMember("timestamp", (double)longTickCount(), alloc);
         CDPCommand evt(dispatcher, Optional<int64_t>(), sessionId, nullptr);
@@ -1138,8 +1042,8 @@ void NetworkDomain::handleSetCookie(CDPCommand& cmd, const std::string&)
 {
     WebView* wv = m_dispatcher->webView();
     CookieEntry e;
-    e.name = paramStr(cmd, "name");
-    e.value = paramStr(cmd, "value");
+    e.name = paramString(cmd, "name");
+    e.value = paramString(cmd, "value");
     std::string domain, path;
     resolveTarget(cmd, wv, domain, path);
     e.domain = domain;
@@ -1147,10 +1051,9 @@ void NetworkDomain::handleSetCookie(CDPCommand& cmd, const std::string&)
     e.secure = paramBool(cmd, "secure", false);
     e.httpOnly = paramBool(cmd, "httpOnly", false);
     e.expires =
-        hasNumber(cmd, "expires") ? (int64_t)paramNum(cmd, "expires", 0) : 0;
+        hasNumber(cmd, "expires") ? (int64_t)paramNumber(cmd, "expires", 0) : 0;
     // Chrome-specific fields.
-    if (cmd.params() && cmd.params()->HasMember("priority") &&
-        (*cmd.params())["priority"].IsString()) {
+    if (hasStringParam(cmd, "priority")) {
         std::string p = (*cmd.params())["priority"].GetString();
         if (p == "VeryLow" || p == "Low" || p == "Medium" || p == "High" ||
             p == "VeryHigh") {
@@ -1159,12 +1062,8 @@ void NetworkDomain::handleSetCookie(CDPCommand& cmd, const std::string&)
             e.priority = "Medium";
         }
     }
-    if (cmd.params() && cmd.params()->HasMember("sourcePort") &&
-        (*cmd.params())["sourcePort"].IsInt()) {
-        e.sourcePort = (*cmd.params())["sourcePort"].GetInt();
-    }
-    if (cmd.params() && cmd.params()->HasMember("sourceScheme") &&
-        (*cmd.params())["sourceScheme"].IsString()) {
+    e.sourcePort = paramInt(cmd, "sourcePort", e.sourcePort);
+    if (hasStringParam(cmd, "sourceScheme")) {
         std::string sch = (*cmd.params())["sourceScheme"].GetString();
         if (sch == "Unset" || sch == "Secure" || sch == "NonSecure") {
             e.sourceScheme = sch;
@@ -1246,7 +1145,7 @@ void NetworkDomain::handleGetCookies(CDPCommand& cmd, const std::string& method)
 void NetworkDomain::handleDeleteCookies(CDPCommand& cmd, const std::string&)
 {
     WebView* wv = m_dispatcher->webView();
-    std::string name = paramStr(cmd, "name");
+    std::string name = paramString(cmd, "name");
     std::string domain, path;
     resolveTarget(cmd, wv, domain, path);
 
@@ -1276,7 +1175,7 @@ void NetworkDomain::handleGetResponseBody(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
 
-    std::string requestId = paramStr(cmd, "requestId");
+    std::string requestId = paramString(cmd, "requestId");
     if (requestId.empty()) {
         cmd.sendError(-32000,
                       "No data found for resource with given identifier");
@@ -1300,8 +1199,7 @@ void NetworkDomain::handleGetResponseBody(CDPCommand& cmd, const std::string&)
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "body", rapidjson::Value(body.c_str(), body.size(), alloc), alloc);
+        addStringMember(result, "body", body, alloc);
         result.AddMember("base64Encoded", b64, alloc);
         cmd.sendResult(result, doc);
         return;
@@ -1327,8 +1225,7 @@ void NetworkDomain::handleGetResponseBody(CDPCommand& cmd, const std::string&)
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember("body", rapidjson::Value(body.c_str(), body.size(), alloc),
-                     alloc);
+    addStringMember(result, "body", body, alloc);
     result.AddMember("base64Encoded", false, alloc);
     cmd.sendResult(result, doc);
 }
@@ -1338,8 +1235,8 @@ void NetworkDomain::handleSearchInResponseBody(CDPCommand& cmd,
 {
     CDPSession* s = m_dispatcher->session();
 
-    std::string requestId = paramStr(cmd, "requestId");
-    std::string query = paramStr(cmd, "query");
+    std::string requestId = paramString(cmd, "requestId");
+    std::string query = paramString(cmd, "query");
     bool caseSensitive = paramBool(cmd, "caseSensitive", false);
     bool isRegex = paramBool(cmd, "isRegex", false);
 
@@ -1407,9 +1304,7 @@ void NetworkDomain::handleSearchInResponseBody(CDPCommand& cmd,
             if (hit) {
                 rapidjson::Value m(rapidjson::kObjectType);
                 m.AddMember("lineNumber", lineNumber, alloc);
-                m.AddMember("lineContent",
-                            rapidjson::Value(line.c_str(), line.size(), alloc),
-                            alloc);
+                addStringMember(m, "lineContent", line, alloc);
                 matches.PushBack(m, alloc);
             }
 
@@ -1430,7 +1325,7 @@ void NetworkDomain::handleGetRequestPostData(CDPCommand& cmd,
 {
     CDPSession* s = m_dispatcher->session();
 
-    std::string requestId = paramStr(cmd, "requestId");
+    std::string requestId = paramString(cmd, "requestId");
     auto it = s->networkRequestPostData.find(requestId);
     if (requestId.empty() || it == s->networkRequestPostData.end()) {
         // Chrome errors when the request had no body. Mirror that so
@@ -1441,9 +1336,7 @@ void NetworkDomain::handleGetRequestPostData(CDPCommand& cmd,
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember(
-        "postData",
-        rapidjson::Value(it->second.c_str(), it->second.size(), alloc), alloc);
+    addStringMember(result, "postData", it->second, alloc);
     cmd.sendResult(result, doc);
 }
 
@@ -1477,9 +1370,9 @@ void NetworkDomain::handleEmulateNetworkConditions(CDPCommand& cmd,
     // latency/throughput are stored for completeness but not enforced --
     // no throttling is implemented in this engine.
     s->networkOffline = paramBool(cmd, "offline", false);
-    s->networkLatency = paramNum(cmd, "latency", 0);
-    s->networkDownloadThroughput = paramNum(cmd, "downloadThroughput", -1);
-    s->networkUploadThroughput = paramNum(cmd, "uploadThroughput", -1);
+    s->networkLatency = paramNumber(cmd, "latency", 0);
+    s->networkDownloadThroughput = paramNumber(cmd, "downloadThroughput", -1);
+    s->networkUploadThroughput = paramNumber(cmd, "uploadThroughput", -1);
     cmd.sendResultEmpty();
 }
 
@@ -1566,7 +1459,7 @@ void NetworkDomain::handleSetUserAgentOverride(CDPCommand& cmd,
     // Set the per-WebView custom user agent; navigator.userAgent and real
     // outgoing request User-Agent headers read this. Empty userAgent clears
     // the override (falls back to the built-in UA).
-    std::string ua = paramStr(cmd, "userAgent");
+    std::string ua = paramString(cmd, "userAgent");
     WebView* wv = m_dispatcher->webView();
     if (wv) {
         wv->setCustomUserAgentString(String::fromUTF8(ua.c_str(), ua.size()));
@@ -1645,24 +1538,12 @@ void NetworkDomain::emitNavigationRequest(const std::string& sessionId,
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value params(rapidjson::kObjectType);
-        params.AddMember(
-            "requestId",
-            rapidjson::Value(requestId.c_str(), requestId.size(), alloc),
-            alloc);
-        params.AddMember(
-            "loaderId",
-            rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
-            alloc);
-        params.AddMember(
-            "frameId",
-            rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc),
-            alloc);
-        params.AddMember("documentURL",
-                         rapidjson::Value(url.c_str(), url.size(), alloc),
-                         alloc);
+        addStringMember(params, "requestId", requestId, alloc);
+        addStringMember(params, "loaderId", s->loaderId, alloc);
+        addStringMember(params, "frameId", s->frameId, alloc);
+        addStringMember(params, "documentURL", url, alloc);
         rapidjson::Value request(rapidjson::kObjectType);
-        request.AddMember(
-            "url", rapidjson::Value(url.c_str(), url.size(), alloc), alloc);
+        addStringMember(request, "url", url, alloc);
         request.AddMember("method", "GET", alloc);
         request.AddMember("headers", rapidjson::Value(rapidjson::kObjectType),
                           alloc);
@@ -1698,23 +1579,13 @@ void NetworkDomain::emitNavigationResponse(const std::string& sessionId,
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value params(rapidjson::kObjectType);
-        params.AddMember(
-            "requestId",
-            rapidjson::Value(requestId.c_str(), requestId.size(), alloc),
-            alloc);
-        params.AddMember(
-            "loaderId",
-            rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
-            alloc);
-        params.AddMember(
-            "frameId",
-            rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc),
-            alloc);
+        addStringMember(params, "requestId", requestId, alloc);
+        addStringMember(params, "loaderId", s->loaderId, alloc);
+        addStringMember(params, "frameId", s->frameId, alloc);
         params.AddMember("timestamp", ts, alloc);
         params.AddMember("type", "Document", alloc);
         rapidjson::Value response(rapidjson::kObjectType);
-        response.AddMember(
-            "url", rapidjson::Value(url.c_str(), url.size(), alloc), alloc);
+        addStringMember(response, "url", url, alloc);
         response.AddMember("status", 200, alloc);
         response.AddMember("statusText", "OK", alloc);
         response.AddMember("headers", rapidjson::Value(rapidjson::kObjectType),
@@ -1737,10 +1608,7 @@ void NetworkDomain::emitNavigationResponse(const std::string& sessionId,
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value params(rapidjson::kObjectType);
-        params.AddMember(
-            "requestId",
-            rapidjson::Value(requestId.c_str(), requestId.size(), alloc),
-            alloc);
+        addStringMember(params, "requestId", requestId, alloc);
         params.AddMember("timestamp", ts, alloc);
         params.AddMember("encodedDataLength", 0, alloc);
         CDPCommand evt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);

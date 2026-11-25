@@ -43,19 +43,11 @@ namespace {
         return value.value()->toUTF8NonGCString();
     }
 
-    std::string lowered(std::string text)
-    {
-        for (char& c : text) {
-            c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-        }
-        return text;
-    }
-
     // role takes a token list; the first token the user agent understands wins.
     std::string firstRoleToken(Element* element)
     {
         std::string role =
-            lowered(axCollapseWhitespace(attributeOf(element, "role")));
+            axLowered(axCollapseWhitespace(attributeOf(element, "role")));
         size_t space = role.find(' ');
         return space == std::string::npos ? role : role.substr(0, space);
     }
@@ -74,7 +66,7 @@ bool axIsPresentationalListItem(Element* element)
     if (!parent || !parent->localName()) {
         return false;
     }
-    std::string parentTag = lowered(parent->localName()->toUTF8NonGCString());
+    std::string parentTag = axLowered(parent->localName()->toUTF8NonGCString());
     if (parentTag != "ul" && parentTag != "ol" && parentTag != "menu") {
         return false;
     }
@@ -134,7 +126,7 @@ static const char* fixedRoleForTag(const std::string& tag)
 
 static std::string inputRole(Element* element)
 {
-    std::string type = lowered(attributeOf(element, "type"));
+    std::string type = axLowered(attributeOf(element, "type"));
     if (type == "checkbox") {
         return "checkbox";
     }

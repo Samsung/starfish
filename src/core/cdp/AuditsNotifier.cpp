@@ -312,20 +312,9 @@ namespace {
 
 void notifyAuditsDocumentLoaded(Document* document)
 {
-    if (!document) {
-        return;
-    }
-    BrowsingContext* context = document->browsingContext();
-    if (!context || !context->webView()) {
-        return;
-    }
-    CDPServer* server = context->webView()->cdpServer();
-    if (!server || !server->dispatcher()) {
-        return;
-    }
-    CDPDispatcher* dispatcher = server->dispatcher();
-    TargetContext* target = dispatcher->contextForWebView(context->webView());
-    if (!target || !target->session) {
+    CDPDispatcher* dispatcher = nullptr;
+    TargetContext* target = cdpTargetForDocument(document, dispatcher);
+    if (!target) {
         return;
     }
 
@@ -346,18 +335,10 @@ void notifyAuditsDocumentLoaded(Document* document)
 
 void notifyAuditsSelectClosedByInput(Element* select)
 {
-    Document* document = select->document();
-    BrowsingContext* context = document->browsingContext();
-    if (!context || !context->webView()) {
-        return;
-    }
-    CDPServer* server = context->webView()->cdpServer();
-    if (!server || !server->dispatcher()) {
-        return;
-    }
+    CDPDispatcher* dispatcher = nullptr;
     TargetContext* target =
-        server->dispatcher()->contextForWebView(context->webView());
-    if (!target || !target->session) {
+        cdpTargetForDocument(select->document(), dispatcher);
+    if (!target) {
         return;
     }
     target->session->auditsClosedSelects.push_back(select);

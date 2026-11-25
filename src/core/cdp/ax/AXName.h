@@ -92,6 +92,10 @@ std::string axTextFromIdRefs(Element* element, const std::string& idRefs);
 // One attribute of an element, collapsed. Empty when the attribute is
 // absent.
 std::string axAttribute(Element* element, const char* name);
+// ASCII lower case.
+std::string axLowered(std::string text);
+// The lower-case local name of element.
+std::string axTagOf(Element* element);
 bool axHasAttribute(Element* element, const char* name);
 
 // Whether the element carries any aria-* attribute. An author who wrote one

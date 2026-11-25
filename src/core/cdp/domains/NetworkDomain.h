@@ -35,6 +35,10 @@ class WebView;
 class Resource;
 class ResourceRequest;
 
+// The host of an origin or URL string ("http://127.0.0.1:8770" ->
+// "127.0.0.1"), or "" when there is none.
+std::string urlHost(const std::string& url);
+
 class NetworkDomain : public CDPDomain {
 public:
     NetworkDomain(CDPDispatcher* d)

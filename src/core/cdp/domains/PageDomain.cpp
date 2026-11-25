@@ -502,19 +502,11 @@ static void buildFrame(CDPSession* s, WebView* wv, rapidjson::Value& frame,
     std::string url = currentUrl(wv);
     std::string origin = currentOrigin(wv);
     frame.SetObject();
-    frame.AddMember(
-        "id", rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc),
-        alloc);
-    frame.AddMember(
-        "loaderId",
-        rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
-        alloc);
-    frame.AddMember("url", rapidjson::Value(url.c_str(), url.size(), alloc),
-                    alloc);
+    addStringMember(frame, "id", s->frameId, alloc);
+    addStringMember(frame, "loaderId", s->loaderId, alloc);
+    addStringMember(frame, "url", url, alloc);
     frame.AddMember("domainAndRegistry", "", alloc);
-    frame.AddMember("securityOrigin",
-                    rapidjson::Value(origin.c_str(), origin.size(), alloc),
-                    alloc);
+    addStringMember(frame, "securityOrigin", origin, alloc);
     frame.AddMember("mimeType", "text/html", alloc);
     frame.AddMember("secureContextType", "InsecureScheme", alloc);
     frame.AddMember("crossOriginIsolatedContextType", "NotIsolated", alloc);
@@ -531,45 +523,48 @@ void PageDomain::emitLifecycle(const std::string& sessionId, const char* name)
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value params(rapidjson::kObjectType);
-    params.AddMember(
-        "frameId",
-        rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc), alloc);
-    params.AddMember(
-        "loaderId",
-        rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
-        alloc);
+    addStringMember(params, "frameId", s->frameId, alloc);
+    addStringMember(params, "loaderId", s->loaderId, alloc);
     params.AddMember("name", rapidjson::Value(name, alloc), alloc);
     params.AddMember("timestamp", (double)longTickCount(), alloc);
     CDPCommand evt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
     evt.sendEvent("Page.lifecycleEvent", params, doc);
 }
 
-void PageDomain::emitExecutionContextCreated(const std::string& sessionId)
+// Runtime.executionContextCreated for a context with the origin of the main
+// document: the default one of a frame, or an isolated world.
+static void sendExecutionContextCreated(
+    CDPDispatcher* dispatcher, const std::string& sessionId, uint32_t contextId,
+    const std::string& name, const std::string& uniqueId, bool isDefault,
+    const std::string& frameId)
 {
-    CDPSession* s = m_dispatcher->session();
-    WebView* wv = m_dispatcher->webView();
-    std::string origin = currentOrigin(wv);
+    std::string origin = currentOrigin(dispatcher->webView());
 
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value params(rapidjson::kObjectType);
     rapidjson::Value context(rapidjson::kObjectType);
-    context.AddMember("id", (int)s->executionContextId, alloc);
-    context.AddMember("origin",
-                      rapidjson::Value(origin.c_str(), origin.size(), alloc),
-                      alloc);
-    context.AddMember("name", "", alloc);
-    context.AddMember("uniqueId", "1", alloc);
+    context.AddMember("id", (int)contextId, alloc);
+    addStringMember(context, "origin", origin, alloc);
+    addStringMember(context, "name", name, alloc);
+    addStringMember(context, "uniqueId", uniqueId, alloc);
     rapidjson::Value auxData(rapidjson::kObjectType);
-    auxData.AddMember("isDefault", true, alloc);
-    auxData.AddMember("type", "default", alloc);
-    auxData.AddMember(
-        "frameId",
-        rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc), alloc);
+    auxData.AddMember("isDefault", isDefault, alloc);
+    auxData.AddMember("type",
+                      rapidjson::StringRef(isDefault ? "default" : "isolated"),
+                      alloc);
+    addStringMember(auxData, "frameId", frameId, alloc);
     context.AddMember("auxData", auxData, alloc);
     params.AddMember("context", context, alloc);
-    CDPCommand evt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
+    CDPCommand evt(dispatcher, Optional<int64_t>(), sessionId, nullptr);
     evt.sendEvent("Runtime.executionContextCreated", params, doc);
+}
+
+void PageDomain::emitExecutionContextCreated(const std::string& sessionId)
+{
+    CDPSession* s = m_dispatcher->session();
+    sendExecutionContextCreated(m_dispatcher, sessionId, s->executionContextId,
+                                std::string(), "1", true, s->frameId);
 }
 
 void PageDomain::emitIsolatedWorldCreated(const std::string& sessionId,
@@ -578,34 +573,8 @@ void PageDomain::emitIsolatedWorldCreated(const std::string& sessionId,
                                           const std::string& uniqueId,
                                           const std::string& frameId)
 {
-    CDPSession* s = m_dispatcher->session();
-    WebView* wv = m_dispatcher->webView();
-    std::string origin = currentOrigin(wv);
-
-    rapidjson::Document doc;
-    rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-    rapidjson::Value params(rapidjson::kObjectType);
-    rapidjson::Value context(rapidjson::kObjectType);
-    context.AddMember("id", (int)contextId, alloc);
-    context.AddMember("origin",
-                      rapidjson::Value(origin.c_str(), origin.size(), alloc),
-                      alloc);
-    context.AddMember(
-        "name", rapidjson::Value(worldName.c_str(), worldName.size(), alloc),
-        alloc);
-    context.AddMember(
-        "uniqueId", rapidjson::Value(uniqueId.c_str(), uniqueId.size(), alloc),
-        alloc);
-    rapidjson::Value auxData(rapidjson::kObjectType);
-    auxData.AddMember("isDefault", false, alloc);
-    auxData.AddMember("type", "isolated", alloc);
-    auxData.AddMember("frameId",
-                      rapidjson::Value(frameId.c_str(), frameId.size(), alloc),
-                      alloc);
-    context.AddMember("auxData", auxData, alloc);
-    params.AddMember("context", context, alloc);
-    CDPCommand evt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
-    evt.sendEvent("Runtime.executionContextCreated", params, doc);
+    sendExecutionContextCreated(m_dispatcher, sessionId, contextId, worldName,
+                                uniqueId, false, frameId);
 }
 
 // A BrowsingContext discovered in the frame tree, with its ordinal path (the
@@ -694,6 +663,63 @@ static std::string contextOrigin(BrowsingContext* bc)
         return bc->document()->origin()->toUTF8NonGCString();
     }
     return "";
+}
+
+// Adds the childFrames of the frame at parentPath to dst, each with its own
+// children nested. withResources gives every child the empty resources list
+// of Page.getResourceTree.
+static void addChildFrameTree(CDPSession* s,
+                              const std::vector<DiscoveredFrame>& frames,
+                              const std::vector<uint32_t>& parentPath,
+                              const std::string& parentFrameId,
+                              bool withResources, rapidjson::Value& dst,
+                              rapidjson::Document::AllocatorType& alloc)
+{
+    rapidjson::Value childFrames(rapidjson::kArrayType);
+    bool any = false;
+    for (const DiscoveredFrame& df : frames) {
+        if (df.parentPath != parentPath) {
+            continue;
+        }
+        ChildFrame* cf = nullptr;
+        for (ChildFrame& existing : s->childFrames) {
+            if (existing.path == df.path) {
+                cf = &existing;
+                break;
+            }
+        }
+        if (!cf) {
+            continue;
+        }
+        any = true;
+        std::string curl = contextUrl(df.bc);
+        std::string corigin = contextOrigin(df.bc);
+        rapidjson::Value childTree(rapidjson::kObjectType);
+        rapidjson::Value cframe(rapidjson::kObjectType);
+        addStringMember(cframe, "id", cf->frameId, alloc);
+        addStringMember(cframe, "parentId", parentFrameId, alloc);
+        addStringMember(cframe, "loaderId", s->loaderId, alloc);
+        addStringMember(cframe, "url", curl, alloc);
+        cframe.AddMember("domainAndRegistry", "", alloc);
+        addStringMember(cframe, "securityOrigin", corigin, alloc);
+        cframe.AddMember("mimeType", "text/html", alloc);
+        cframe.AddMember("secureContextType", "InsecureScheme", alloc);
+        cframe.AddMember("crossOriginIsolatedContextType", "NotIsolated",
+                         alloc);
+        rapidjson::Value feats(rapidjson::kArrayType);
+        cframe.AddMember("gatedAPIFeatures", feats, alloc);
+        childTree.AddMember("frame", cframe, alloc);
+        if (withResources) {
+            rapidjson::Value cres(rapidjson::kArrayType);
+            childTree.AddMember("resources", cres, alloc);
+        }
+        addChildFrameTree(s, frames, df.path, cf->frameId, withResources,
+                          childTree, alloc);
+        childFrames.PushBack(childTree, alloc);
+    }
+    if (any) {
+        dst.AddMember("childFrames", childFrames, alloc);
+    }
 }
 
 // Look up a frameId for a given ordinal path: the main frame's id for an empty
@@ -793,8 +819,7 @@ void PageDomain::sweepDetachedFrames(const std::string& sessionId)
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value params(rapidjson::kObjectType);
-        params.AddMember("frameId",
-                         rapidjson::Value(id.c_str(), id.size(), alloc), alloc);
+        addStringMember(params, "frameId", id, alloc);
         params.AddMember("reason", "remove", alloc);
         CDPCommand evt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
         evt.sendEvent("Page.frameDetached", params, doc);
@@ -845,14 +870,8 @@ void PageDomain::discoverChildFrames(const std::string& sessionId)
             rapidjson::Document doc;
             rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
             rapidjson::Value params(rapidjson::kObjectType);
-            params.AddMember("frameId",
-                             rapidjson::Value(cf->frameId.c_str(),
-                                              cf->frameId.size(), alloc),
-                             alloc);
-            params.AddMember("parentFrameId",
-                             rapidjson::Value(parentFrameId.c_str(),
-                                              parentFrameId.size(), alloc),
-                             alloc);
+            addStringMember(params, "frameId", cf->frameId, alloc);
+            addStringMember(params, "parentFrameId", parentFrameId, alloc);
             CDPCommand evt(m_dispatcher, Optional<int64_t>(), sessionId,
                            nullptr);
             evt.sendEvent("Page.frameAttached", params, doc);
@@ -862,27 +881,12 @@ void PageDomain::discoverChildFrames(const std::string& sessionId)
             rapidjson::Document::AllocatorType& nalloc = ndoc.GetAllocator();
             rapidjson::Value nparams(rapidjson::kObjectType);
             rapidjson::Value frame(rapidjson::kObjectType);
-            frame.AddMember("id",
-                            rapidjson::Value(cf->frameId.c_str(),
-                                             cf->frameId.size(), nalloc),
-                            nalloc);
-            frame.AddMember("parentId",
-                            rapidjson::Value(parentFrameId.c_str(),
-                                             parentFrameId.size(), nalloc),
-                            nalloc);
-            frame.AddMember("loaderId",
-                            rapidjson::Value(s->loaderId.c_str(),
-                                             s->loaderId.size(), nalloc),
-                            nalloc);
-            frame.AddMember(
-                "url",
-                rapidjson::Value(childUrl.c_str(), childUrl.size(), nalloc),
-                nalloc);
+            addStringMember(frame, "id", cf->frameId, nalloc);
+            addStringMember(frame, "parentId", parentFrameId, nalloc);
+            addStringMember(frame, "loaderId", s->loaderId, nalloc);
+            addStringMember(frame, "url", childUrl, nalloc);
             frame.AddMember("domainAndRegistry", "", nalloc);
-            frame.AddMember("securityOrigin",
-                            rapidjson::Value(childOrigin.c_str(),
-                                             childOrigin.size(), nalloc),
-                            nalloc);
+            addStringMember(frame, "securityOrigin", childOrigin, nalloc);
             frame.AddMember("mimeType", "text/html", nalloc);
             frame.AddMember("secureContextType", "InsecureScheme", nalloc);
             frame.AddMember("crossOriginIsolatedContextType", "NotIsolated",
@@ -902,23 +906,14 @@ void PageDomain::discoverChildFrames(const std::string& sessionId)
             rapidjson::Value params(rapidjson::kObjectType);
             rapidjson::Value context(rapidjson::kObjectType);
             context.AddMember("id", (int)cf->contextId, alloc);
-            context.AddMember("origin",
-                              rapidjson::Value(childOrigin.c_str(),
-                                               childOrigin.size(), alloc),
-                              alloc);
+            addStringMember(context, "origin", childOrigin, alloc);
             context.AddMember("name", "", alloc);
             std::string uniqueId = "child-" + std::to_string(cf->contextId);
-            context.AddMember(
-                "uniqueId",
-                rapidjson::Value(uniqueId.c_str(), uniqueId.size(), alloc),
-                alloc);
+            addStringMember(context, "uniqueId", uniqueId, alloc);
             rapidjson::Value auxData(rapidjson::kObjectType);
             auxData.AddMember("isDefault", true, alloc);
             auxData.AddMember("type", "default", alloc);
-            auxData.AddMember("frameId",
-                              rapidjson::Value(cf->frameId.c_str(),
-                                               cf->frameId.size(), alloc),
-                              alloc);
+            addStringMember(auxData, "frameId", cf->frameId, alloc);
             context.AddMember("auxData", auxData, alloc);
             params.AddMember("context", context, alloc);
             CDPCommand evt(m_dispatcher, Optional<int64_t>(), sessionId,
@@ -1026,8 +1021,7 @@ void PageDomain::emitScreencastFrame(WebView* wv, const std::string& sessionId,
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value params(rapidjson::kObjectType);
-    params.AddMember("data", rapidjson::Value(b64.c_str(), b64.size(), alloc),
-                     alloc);
+    addStringMember(params, "data", b64, alloc);
 
     // ScreencastFrameMetadata: device size + scroll/scale. Single active page
     // with no pinch-zoom, so pageScaleFactor=1 and scrollOffset=0; deviceWidth/
@@ -1091,15 +1085,10 @@ void PageDomain::stopScreencast(CDPSession* s, WebView* wv)
     s->screencastAcked = true;
 }
 
-void PageDomain::beginNavigation(const std::string& sessionId,
-                                 const std::string& url)
+// The CDP signalling every new document starts with.
+void PageDomain::startNewLoader(const std::string& sessionId)
 {
     CDPSession* s = m_dispatcher->session();
-    const std::string& fid = s->frameId;
-
-    // New document: drop the previous document's resource list (the wire
-    // records for the old page are no longer part of this frame's tree).
-    s->resources.clear();
 
     // Reset real in-flight networkidle tracking for the new document: zero the
     // counter, clear the per-navigation idle-emitted guards, and cancel any
@@ -1116,13 +1105,26 @@ void PageDomain::beginNavigation(const std::string& sessionId,
         rapidjson::Document d;
         rapidjson::Document::AllocatorType& a = d.GetAllocator();
         rapidjson::Value p(rapidjson::kObjectType);
-        p.AddMember("frameId", rapidjson::Value(fid.c_str(), fid.size(), a), a);
+        addStringMember(p, "frameId", s->frameId, a);
         CDPCommand e(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
         e.sendEvent("Page.frameStartedLoading", p, d);
     }
 
-    // lifecycleEvent name:"init" sets frame._loaderId to the new loaderId.
+    // lifecycleEvent name:"init" sets frame._loaderId to the new loaderId and
+    // clears the accumulated lifecycle set.
     emitLifecycle(sessionId, "init");
+}
+
+void PageDomain::beginNavigation(const std::string& sessionId,
+                                 const std::string& url)
+{
+    CDPSession* s = m_dispatcher->session();
+
+    // New document: drop the previous document's resource list (the wire
+    // records for the old page are no longer part of this frame's tree).
+    s->resources.clear();
+
+    startNewLoader(sessionId);
 
     // Network events for the top-level document load.
     //
@@ -1300,9 +1302,7 @@ void PageDomain::finishNavigation(const std::string& sessionId)
         rapidjson::Document sdoc;
         rapidjson::Document::AllocatorType& salloc = sdoc.GetAllocator();
         rapidjson::Value sparams(rapidjson::kObjectType);
-        sparams.AddMember("frameId",
-                          rapidjson::Value(fid.c_str(), fid.size(), salloc),
-                          salloc);
+        addStringMember(sparams, "frameId", fid, salloc);
         CDPCommand sevt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
         sevt.sendEvent("Page.frameStoppedLoading", sparams, sdoc);
     }
@@ -1331,14 +1331,8 @@ void PageDomain::completeDeferredNavigation(const std::string& sessionId,
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "frameId",
-            rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc),
-            alloc);
-        result.AddMember(
-            "loaderId",
-            rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
-            alloc);
+        addStringMember(result, "frameId", s->frameId, alloc);
+        addStringMember(result, "loaderId", s->loaderId, alloc);
         CDPCommand navCmd(m_dispatcher, s->pendingFetchNav.navigateCmdId,
                           sessionId, nullptr);
         navCmd.sendResult(result, doc);
@@ -1359,16 +1353,10 @@ void PageDomain::failDeferredNavigation(const std::string& sessionId,
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value params(rapidjson::kObjectType);
-        params.AddMember(
-            "requestId",
-            rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
-            alloc);
+        addStringMember(params, "requestId", s->loaderId, alloc);
         params.AddMember("timestamp", (double)longTickCount(), alloc);
         params.AddMember("type", "Document", alloc);
-        params.AddMember(
-            "errorText",
-            rapidjson::Value(errorText.c_str(), errorText.size(), alloc),
-            alloc);
+        addStringMember(params, "errorText", errorText, alloc);
         params.AddMember("canceled", false, alloc);
         CDPCommand evt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
         evt.sendEvent("Network.loadingFailed", params, doc);
@@ -1380,10 +1368,7 @@ void PageDomain::failDeferredNavigation(const std::string& sessionId,
         rapidjson::Document sdoc;
         rapidjson::Document::AllocatorType& salloc = sdoc.GetAllocator();
         rapidjson::Value sparams(rapidjson::kObjectType);
-        sparams.AddMember(
-            "frameId",
-            rapidjson::Value(s->frameId.c_str(), s->frameId.size(), salloc),
-            salloc);
+        addStringMember(sparams, "frameId", s->frameId, salloc);
         CDPCommand sevt(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
         sevt.sendEvent("Page.frameStoppedLoading", sparams, sdoc);
     }
@@ -1393,18 +1378,9 @@ void PageDomain::failDeferredNavigation(const std::string& sessionId,
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "frameId",
-            rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc),
-            alloc);
-        result.AddMember(
-            "loaderId",
-            rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
-            alloc);
-        result.AddMember(
-            "errorText",
-            rapidjson::Value(errorText.c_str(), errorText.size(), alloc),
-            alloc);
+        addStringMember(result, "frameId", s->frameId, alloc);
+        addStringMember(result, "loaderId", s->loaderId, alloc);
+        addStringMember(result, "errorText", errorText, alloc);
         CDPCommand navCmd(m_dispatcher, s->pendingFetchNav.navigateCmdId,
                           sessionId, nullptr);
         navCmd.sendResult(result, doc);
@@ -1431,8 +1407,6 @@ void PageDomain::setDocumentContentFromHtml(const std::string& sessionId,
 
 void PageDomain::notifyDocumentRewritten(const std::string& sessionId)
 {
-    CDPSession* s = m_dispatcher->session();
-
     // The engine already swapped the document in place (document.open/write/
     // close ran synchronously during the Runtime.evaluate that triggered this).
     // Reproduce the pre-document CDP signalling that beginNavigation would do
@@ -1440,29 +1414,9 @@ void PageDomain::notifyDocumentRewritten(const std::string& sessionId)
     // network request -- so puppeteer's LifecycleWatcher observes a fresh
     // loader.
 
-    // Reset real in-flight networkidle tracking for the new document.
-    m_dispatcher->network()->resetNetworkIdle(m_dispatcher->webView());
-
-    // New document => fresh loaderId (LifecycleWatcher keys "init" on the
-    // loader changing, then resolves setContent once "load" fires for it).
-    s->loaderId = "LID-" + std::to_string(++s->loaderCounter) + "000000";
-
-    if (s->pageEnabled) {
-        rapidjson::Document d;
-        rapidjson::Document::AllocatorType& a = d.GetAllocator();
-        rapidjson::Value p(rapidjson::kObjectType);
-        p.AddMember("frameId",
-                    rapidjson::Value(s->frameId.c_str(), s->frameId.size(), a),
-                    a);
-        CDPCommand e(m_dispatcher, Optional<int64_t>(), sessionId, nullptr);
-        e.sendEvent("Page.frameStartedLoading", p, d);
-    }
-
-    // "init" sets puppeteer's frame._loaderId to the new loaderId and clears
-    // the accumulated lifecycle set, so the subsequent DOMContentLoaded/load
-    // (emitted by finishNavigation) complete the setContent watcher.
-    emitLifecycle(sessionId, "init");
-
+    // The subsequent DOMContentLoaded/load (emitted by finishNavigation)
+    // complete the setContent watcher.
+    startNewLoader(sessionId);
     finishNavigation(sessionId);
 }
 
@@ -1495,9 +1449,7 @@ void PageDomain::navigate(CDPCommand& cmd, const std::string& urlString,
                 rapidjson::Document doc;
                 auto& alloc = doc.GetAllocator();
                 rapidjson::Value params(rapidjson::kObjectType);
-                params.AddMember(
-                    "frameId", rapidjson::Value(fid.c_str(), fid.size(), alloc),
-                    alloc);
+                addStringMember(params, "frameId", fid, alloc);
                 CDPCommand event(m_dispatcher, Optional<int64_t>(), sid,
                                  nullptr);
                 event.sendEvent("Page.frameStoppedLoading", params, doc);
@@ -1506,17 +1458,9 @@ void PageDomain::navigate(CDPCommand& cmd, const std::string& urlString,
                 rapidjson::Document doc;
                 auto& alloc = doc.GetAllocator();
                 rapidjson::Value result(rapidjson::kObjectType);
-                result.AddMember(
-                    "frameId", rapidjson::Value(fid.c_str(), fid.size(), alloc),
-                    alloc);
-                result.AddMember("loaderId",
-                                 rapidjson::Value(s->loaderId.c_str(),
-                                                  s->loaderId.size(), alloc),
-                                 alloc);
-                result.AddMember("errorText",
-                                 rapidjson::Value(navBlockError.c_str(),
-                                                  navBlockError.size(), alloc),
-                                 alloc);
+                addStringMember(result, "frameId", fid, alloc);
+                addStringMember(result, "loaderId", s->loaderId, alloc);
+                addStringMember(result, "errorText", navBlockError, alloc);
                 cmd.sendResult(result, doc);
             }
             return;
@@ -1540,12 +1484,8 @@ void PageDomain::navigate(CDPCommand& cmd, const std::string& urlString,
         rapidjson::Document doc;
         auto& alloc = doc.GetAllocator();
         rapidjson::Value result(rapidjson::kObjectType);
-        result.AddMember(
-            "frameId", rapidjson::Value(fid.c_str(), fid.size(), alloc), alloc);
-        result.AddMember(
-            "loaderId",
-            rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
-            alloc);
+        addStringMember(result, "frameId", fid, alloc);
+        addStringMember(result, "loaderId", s->loaderId, alloc);
         cmd.sendResult(result, doc);
     }
     if (s->waitingForDebugger) {
@@ -1621,76 +1561,8 @@ void PageDomain::handleGetFrameTree(CDPCommand& cmd, const std::string&)
         std::vector<DiscoveredFrame> frames;
         collectChildContexts(wv, frames);
 
-        // Recursively assemble the childFrames array for the frame at
-        // `parentPath` (empty == main). Returns nullptr placeholder via the
-        // out-param pattern: builds into `dst`.
-        std::function<void(const std::vector<uint32_t>&, const std::string&,
-                           rapidjson::Value&)>
-            buildChildTree = [&](const std::vector<uint32_t>& parentPath,
-                                 const std::string& parentFrameId,
-                                 rapidjson::Value& dst) {
-                rapidjson::Value childFrames(rapidjson::kArrayType);
-                bool any = false;
-                for (const DiscoveredFrame& df : frames) {
-                    if (df.parentPath != parentPath) {
-                        continue;
-                    }
-                    ChildFrame* cf = nullptr;
-                    for (ChildFrame& existing : s->childFrames) {
-                        if (existing.path == df.path) {
-                            cf = &existing;
-                            break;
-                        }
-                    }
-                    if (!cf) {
-                        continue;
-                    }
-                    any = true;
-                    std::string curl = contextUrl(df.bc);
-                    std::string corigin = contextOrigin(df.bc);
-                    rapidjson::Value childTree(rapidjson::kObjectType);
-                    rapidjson::Value cframe(rapidjson::kObjectType);
-                    cframe.AddMember("id",
-                                     rapidjson::Value(cf->frameId.c_str(),
-                                                      cf->frameId.size(),
-                                                      alloc),
-                                     alloc);
-                    cframe.AddMember("parentId",
-                                     rapidjson::Value(parentFrameId.c_str(),
-                                                      parentFrameId.size(),
-                                                      alloc),
-                                     alloc);
-                    cframe.AddMember("loaderId",
-                                     rapidjson::Value(s->loaderId.c_str(),
-                                                      s->loaderId.size(),
-                                                      alloc),
-                                     alloc);
-                    cframe.AddMember(
-                        "url",
-                        rapidjson::Value(curl.c_str(), curl.size(), alloc),
-                        alloc);
-                    cframe.AddMember("domainAndRegistry", "", alloc);
-                    cframe.AddMember("securityOrigin",
-                                     rapidjson::Value(corigin.c_str(),
-                                                      corigin.size(), alloc),
-                                     alloc);
-                    cframe.AddMember("mimeType", "text/html", alloc);
-                    cframe.AddMember("secureContextType", "InsecureScheme",
-                                     alloc);
-                    cframe.AddMember("crossOriginIsolatedContextType",
-                                     "NotIsolated", alloc);
-                    rapidjson::Value feats(rapidjson::kArrayType);
-                    cframe.AddMember("gatedAPIFeatures", feats, alloc);
-                    childTree.AddMember("frame", cframe, alloc);
-                    // Recurse: this frame's own childFrames.
-                    buildChildTree(df.path, cf->frameId, childTree);
-                    childFrames.PushBack(childTree, alloc);
-                }
-                if (any) {
-                    dst.AddMember("childFrames", childFrames, alloc);
-                }
-            };
-        buildChildTree(std::vector<uint32_t>(), s->frameId, frameTree);
+        addChildFrameTree(s, frames, std::vector<uint32_t>(), s->frameId, false,
+                          frameTree, alloc);
     }
     result.AddMember("frameTree", frameTree, alloc);
     cmd.sendResult(result, doc);
@@ -1702,18 +1574,14 @@ void PageDomain::handleSetLifecycleEventsEnabled(CDPCommand& cmd,
     CDPSession* s = m_dispatcher->session();
 
     bool enabled = false;
-    if (cmd.params() && cmd.params()->HasMember("enabled") &&
-        (*cmd.params())["enabled"].IsBool()) {
-        enabled = (*cmd.params())["enabled"].GetBool();
-    }
+    enabled = paramBool(cmd, "enabled", enabled);
     s->lifecycleEventsEnabled = enabled;
     cmd.sendResultEmpty();
 }
 
 void PageDomain::handleNavigate(CDPCommand& cmd, const std::string&)
 {
-    if (!cmd.params() || !cmd.params()->HasMember("url") ||
-        !(*cmd.params())["url"].IsString()) {
+    if (!hasStringParam(cmd, "url")) {
         cmd.sendError(-32602, "'url' is required");
         return;
     }
@@ -1725,8 +1593,7 @@ void PageDomain::handleSetDocumentContent(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
 
-    if (!cmd.params() || !cmd.params()->HasMember("html") ||
-        !(*cmd.params())["html"].IsString()) {
+    if (!hasStringParam(cmd, "html")) {
         cmd.sendError(-32602, "'html' is required");
         return;
     }
@@ -1798,14 +1665,9 @@ void PageDomain::handleGetNavigationHistory(CDPCommand& cmd, const std::string&)
 
         rapidjson::Value entry(rapidjson::kObjectType);
         entry.AddMember("id", (int)i, alloc);
-        entry.AddMember("url", rapidjson::Value(url.c_str(), url.size(), alloc),
-                        alloc);
-        entry.AddMember("userTypedURL",
-                        rapidjson::Value(url.c_str(), url.size(), alloc),
-                        alloc);
-        entry.AddMember("title",
-                        rapidjson::Value(title.c_str(), title.size(), alloc),
-                        alloc);
+        addStringMember(entry, "url", url, alloc);
+        addStringMember(entry, "userTypedURL", url, alloc);
+        addStringMember(entry, "title", title, alloc);
         entry.AddMember("transitionType", "typed", alloc);
         entries.PushBack(entry, alloc);
     }
@@ -1953,10 +1815,7 @@ void PageDomain::handleAddScriptToEvaluateOnNewDocument(CDPCommand& cmd,
     CDPSession* s = m_dispatcher->session();
 
     std::string source;
-    if (cmd.params() && cmd.params()->HasMember("source") &&
-        (*cmd.params())["source"].IsString()) {
-        source = (*cmd.params())["source"].GetString();
-    }
+    source = paramString(cmd, "source", source);
     std::string identifier =
         "SCRIPT-" + std::to_string(++s->evaluateOnNewDocumentCounter);
     s->evaluateOnNewDocumentScripts.push_back({ identifier, source });
@@ -1965,8 +1824,7 @@ void PageDomain::handleAddScriptToEvaluateOnNewDocument(CDPCommand& cmd,
     // auto-creates for each new document (puppeteer's utility world).
     // Record it so child frames get an isolated-world context bound to
     // them.
-    if (cmd.params() && cmd.params()->HasMember("worldName") &&
-        (*cmd.params())["worldName"].IsString()) {
+    if (hasStringParam(cmd, "worldName")) {
         std::string wn = (*cmd.params())["worldName"].GetString();
         if (!wn.empty()) {
             bool known = false;
@@ -1985,9 +1843,7 @@ void PageDomain::handleAddScriptToEvaluateOnNewDocument(CDPCommand& cmd,
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember(
-        "identifier",
-        rapidjson::Value(identifier.c_str(), identifier.size(), alloc), alloc);
+    addStringMember(result, "identifier", identifier, alloc);
     cmd.sendResult(result, doc);
 }
 
@@ -1996,8 +1852,7 @@ void PageDomain::handleRemoveScriptToEvaluateOnNewDocument(CDPCommand& cmd,
 {
     CDPSession* s = m_dispatcher->session();
 
-    if (cmd.params() && cmd.params()->HasMember("identifier") &&
-        (*cmd.params())["identifier"].IsString()) {
+    if (hasStringParam(cmd, "identifier")) {
         std::string id = (*cmd.params())["identifier"].GetString();
         auto& v = s->evaluateOnNewDocumentScripts;
         for (auto it = v.begin(); it != v.end(); ++it) {
@@ -2018,10 +1873,7 @@ void PageDomain::handleCaptureScreenshot(CDPCommand& cmd, const std::string&)
     // format: png (default) | jpeg. quality: jpeg only. clip: optional
     // {x,y,width,height,scale}. Returns { data: <base64> }.
     std::string format = "png";
-    if (cmd.params() && cmd.params()->HasMember("format") &&
-        (*cmd.params())["format"].IsString()) {
-        format = (*cmd.params())["format"].GetString();
-    }
+    format = paramString(cmd, "format", format);
 
     // Viewport in device pixels.
     float dpr = wv->screenInfo().devicePixelRatio;
@@ -2103,8 +1955,7 @@ void PageDomain::handleCaptureScreenshot(CDPCommand& cmd, const std::string&)
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember("data", rapidjson::Value(b64.c_str(), b64.size(), alloc),
-                     alloc);
+    addStringMember(result, "data", b64, alloc);
     cmd.sendResult(result, doc);
 }
 
@@ -2119,14 +1970,8 @@ void PageDomain::handleStartScreencast(CDPCommand& cmd, const std::string&)
     // falls back to PNG where libjpeg is absent (same as
     // captureScreenshot), and maxWidth/maxHeight are not applied to the raw
     // framebuffer readback in this MVP.
-    if (cmd.params() && cmd.params()->HasMember("format") &&
-        (*cmd.params())["format"].IsString()) {
-        s->screencastFormat = (*cmd.params())["format"].GetString();
-    }
-    if (cmd.params() && cmd.params()->HasMember("quality") &&
-        (*cmd.params())["quality"].IsInt()) {
-        s->screencastQuality = (*cmd.params())["quality"].GetInt();
-    }
+    s->screencastFormat = paramString(cmd, "format", s->screencastFormat);
+    s->screencastQuality = paramInt(cmd, "quality", s->screencastQuality);
     if (cmd.params() && cmd.params()->HasMember("everyNthFrame") &&
         (*cmd.params())["everyNthFrame"].IsInt()) {
         int n = (*cmd.params())["everyNthFrame"].GetInt();
@@ -2249,10 +2094,7 @@ void PageDomain::handlePrintToPDF(CDPCommand& cmd, const std::string&)
     // return a stream handle; the client drains it via IO.read/IO.close.
     // Otherwise (default "ReturnAsBase64") return the data inline.
     std::string transferMode = "ReturnAsBase64";
-    if (cmd.params() && cmd.params()->HasMember("transferMode") &&
-        (*cmd.params())["transferMode"].IsString()) {
-        transferMode = (*cmd.params())["transferMode"].GetString();
-    }
+    transferMode = paramString(cmd, "transferMode", transferMode);
 
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
@@ -2264,15 +2106,12 @@ void PageDomain::handlePrintToPDF(CDPCommand& cmd, const std::string&)
         IOStream stream;
         stream.data = std::move(pdf);
         s->ioStreams[handle] = std::move(stream);
-        result.AddMember("stream",
-                         rapidjson::Value(handle.c_str(), handle.size(), alloc),
-                         alloc);
+        addStringMember(result, "stream", handle, alloc);
         // CDP also includes an empty data field in stream mode.
         result.AddMember("data", "", alloc);
     } else {
         std::string b64 = cdpBase64Encode(pdf.data(), pdf.size());
-        result.AddMember(
-            "data", rapidjson::Value(b64.c_str(), b64.size(), alloc), alloc);
+        addStringMember(result, "data", b64, alloc);
     }
     cmd.sendResult(result, doc);
 }
@@ -2287,10 +2126,7 @@ void PageDomain::handleCreateIsolatedWorld(CDPCommand& cmd, const std::string&)
     // underlying Escargot context (no real isolation).
     uint32_t ctxId = s->nextIsolatedContextId++;
     std::string worldName;
-    if (cmd.params() && cmd.params()->HasMember("worldName") &&
-        (*cmd.params())["worldName"].IsString()) {
-        worldName = (*cmd.params())["worldName"].GetString();
-    }
+    worldName = paramString(cmd, "worldName", worldName);
     std::string uniqueId = "world-" + std::to_string(ctxId);
 
     // The world is created for a specific frame (puppeteer passes frameId).
@@ -2300,8 +2136,7 @@ void PageDomain::handleCreateIsolatedWorld(CDPCommand& cmd, const std::string&)
     std::string frameId = s->frameId;
     bool isChild = false;
     std::vector<uint32_t> childPath;
-    if (cmd.params() && cmd.params()->HasMember("frameId") &&
-        (*cmd.params())["frameId"].IsString()) {
+    if (hasStringParam(cmd, "frameId")) {
         std::string reqFrame = (*cmd.params())["frameId"].GetString();
         ensureChildFrameRecords();
         for (const ChildFrame& cf : s->childFrames) {
@@ -2348,15 +2183,9 @@ void PageDomain::handleHandleJavaScriptDialog(CDPCommand& cmd,
     // the value the page already received. We still emit
     // Page.javascriptDialogClosed so clients (puppeteer Dialog) settle.
     bool accept = false;
-    if (cmd.params() && cmd.params()->HasMember("accept") &&
-        (*cmd.params())["accept"].IsBool()) {
-        accept = (*cmd.params())["accept"].GetBool();
-    }
+    accept = paramBool(cmd, "accept", accept);
     std::string userInput;
-    if (cmd.params() && cmd.params()->HasMember("promptText") &&
-        (*cmd.params())["promptText"].IsString()) {
-        userInput = (*cmd.params())["promptText"].GetString();
-    }
+    userInput = paramString(cmd, "promptText", userInput);
     cmd.sendResultEmpty();
 
     if (s->pageEnabled) {
@@ -2364,10 +2193,7 @@ void PageDomain::handleHandleJavaScriptDialog(CDPCommand& cmd,
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value params(rapidjson::kObjectType);
         params.AddMember("result", accept, alloc);
-        params.AddMember(
-            "userInput",
-            rapidjson::Value(userInput.c_str(), userInput.size(), alloc),
-            alloc);
+        addStringMember(params, "userInput", userInput, alloc);
         CDPCommand evt(m_dispatcher, Optional<int64_t>(), cmd.sessionId(),
                        nullptr);
         evt.sendEvent("Page.javascriptDialogClosed", params, doc);
@@ -2385,10 +2211,7 @@ void PageDomain::handleCaptureSnapshot(CDPCommand& cmd, const std::string&)
     // subresource (text bodies inline, binary bodies base64). Returns {
     // data }.
     std::string format = "mhtml";
-    if (cmd.params() && cmd.params()->HasMember("format") &&
-        (*cmd.params())["format"].IsString()) {
-        format = (*cmd.params())["format"].GetString();
-    }
+    format = paramString(cmd, "format", format);
     if (format != "mhtml") {
         cmd.sendError(-32602, "Unsupported snapshot format");
         return;
@@ -2483,8 +2306,7 @@ void PageDomain::handleCaptureSnapshot(CDPCommand& cmd, const std::string&)
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember(
-        "data", rapidjson::Value(mhtml.c_str(), mhtml.size(), alloc), alloc);
+    addStringMember(result, "data", mhtml, alloc);
     cmd.sendResult(result, doc);
 }
 
@@ -2512,15 +2334,9 @@ void PageDomain::handleGetResourceTree(CDPCommand& cmd, const std::string&)
             continue; // the document is the frame itself, not a subresource
         }
         rapidjson::Value res(rapidjson::kObjectType);
-        res.AddMember(
-            "url", rapidjson::Value(r.url.c_str(), r.url.size(), alloc), alloc);
-        res.AddMember("type",
-                      rapidjson::Value(r.type.c_str(), r.type.size(), alloc),
-                      alloc);
-        res.AddMember(
-            "mimeType",
-            rapidjson::Value(r.mimeType.c_str(), r.mimeType.size(), alloc),
-            alloc);
+        addStringMember(res, "url", r.url, alloc);
+        addStringMember(res, "type", r.type, alloc);
+        addStringMember(res, "mimeType", r.mimeType, alloc);
         resources.PushBack(res, alloc);
     }
     frameTree.AddMember("resources", resources, alloc);
@@ -2531,69 +2347,8 @@ void PageDomain::handleGetResourceTree(CDPCommand& cmd, const std::string&)
     std::vector<DiscoveredFrame> frames;
     collectChildContexts(wv, frames);
 
-    std::function<void(const std::vector<uint32_t>&, const std::string&,
-                       rapidjson::Value&)>
-        buildResTree = [&](const std::vector<uint32_t>& parentPath,
-                           const std::string& parentFrameId,
-                           rapidjson::Value& dst) {
-            rapidjson::Value childFrames(rapidjson::kArrayType);
-            bool any = false;
-            for (const DiscoveredFrame& df : frames) {
-                if (df.parentPath != parentPath) {
-                    continue;
-                }
-                ChildFrame* cf = nullptr;
-                for (ChildFrame& existing : s->childFrames) {
-                    if (existing.path == df.path) {
-                        cf = &existing;
-                        break;
-                    }
-                }
-                if (!cf) {
-                    continue;
-                }
-                any = true;
-                std::string curl = contextUrl(df.bc);
-                std::string corigin = contextOrigin(df.bc);
-                rapidjson::Value childTree(rapidjson::kObjectType);
-                rapidjson::Value cframe(rapidjson::kObjectType);
-                cframe.AddMember("id",
-                                 rapidjson::Value(cf->frameId.c_str(),
-                                                  cf->frameId.size(), alloc),
-                                 alloc);
-                cframe.AddMember("parentId",
-                                 rapidjson::Value(parentFrameId.c_str(),
-                                                  parentFrameId.size(), alloc),
-                                 alloc);
-                cframe.AddMember("loaderId",
-                                 rapidjson::Value(s->loaderId.c_str(),
-                                                  s->loaderId.size(), alloc),
-                                 alloc);
-                cframe.AddMember(
-                    "url", rapidjson::Value(curl.c_str(), curl.size(), alloc),
-                    alloc);
-                cframe.AddMember("domainAndRegistry", "", alloc);
-                cframe.AddMember(
-                    "securityOrigin",
-                    rapidjson::Value(corigin.c_str(), corigin.size(), alloc),
-                    alloc);
-                cframe.AddMember("mimeType", "text/html", alloc);
-                cframe.AddMember("secureContextType", "InsecureScheme", alloc);
-                cframe.AddMember("crossOriginIsolatedContextType",
-                                 "NotIsolated", alloc);
-                rapidjson::Value feats(rapidjson::kArrayType);
-                cframe.AddMember("gatedAPIFeatures", feats, alloc);
-                childTree.AddMember("frame", cframe, alloc);
-                rapidjson::Value cres(rapidjson::kArrayType);
-                childTree.AddMember("resources", cres, alloc);
-                buildResTree(df.path, cf->frameId, childTree);
-                childFrames.PushBack(childTree, alloc);
-            }
-            if (any) {
-                dst.AddMember("childFrames", childFrames, alloc);
-            }
-        };
-    buildResTree(std::vector<uint32_t>(), s->frameId, frameTree);
+    addChildFrameTree(s, frames, std::vector<uint32_t>(), s->frameId, true,
+                      frameTree, alloc);
 
     result.AddMember("frameTree", frameTree, alloc);
     cmd.sendResult(result, doc);
@@ -2609,10 +2364,7 @@ void PageDomain::handleGetResourceContent(CDPCommand& cmd, const std::string&)
     // network body (base64 for binary). frameId is accepted but only the
     // main frame's resources are tracked.
     std::string url;
-    if (cmd.params() && cmd.params()->HasMember("url") &&
-        (*cmd.params())["url"].IsString()) {
-        url = (*cmd.params())["url"].GetString();
-    }
+    url = paramString(cmd, "url", url);
     if (url.empty()) {
         cmd.sendError(-32602, "'url' is required");
         return;
@@ -2665,9 +2417,7 @@ void PageDomain::handleGetResourceContent(CDPCommand& cmd, const std::string&)
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember("content",
-                     rapidjson::Value(content.c_str(), content.size(), alloc),
-                     alloc);
+    addStringMember(result, "content", content, alloc);
     result.AddMember("base64Encoded", base64Encoded, alloc);
     cmd.sendResult(result, doc);
 }
@@ -2686,8 +2436,7 @@ void PageDomain::handleGetAppManifest(CDPCommand& cmd, const std::string&)
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember("url", rapidjson::Value(url.c_str(), url.size(), alloc),
-                     alloc);
+    addStringMember(result, "url", url, alloc);
 
     // Attach the manifest body if it was captured for this URL.
     if (!url.empty()) {
@@ -2702,10 +2451,7 @@ void PageDomain::handleGetAppManifest(CDPCommand& cmd, const std::string&)
             auto fit = s->networkBodyBase64.find(it->requestId);
             bool b64 = fit != s->networkBodyBase64.end() && fit->second;
             if (!b64) {
-                result.AddMember("data",
-                                 rapidjson::Value(bit->second.c_str(),
-                                                  bit->second.size(), alloc),
-                                 alloc);
+                addStringMember(result, "data", bit->second, alloc);
             }
             break;
         }

@@ -41,43 +41,21 @@ void notifyAXNodeChanged(Node* node)
     if (!node) {
         return;
     }
-    Document* document = node->document();
-    if (!document) {
+    CDPDispatcher* dispatcher = cdpDispatcherForDocument(node->document());
+    if (!dispatcher) {
         return;
     }
-    BrowsingContext* context = document->browsingContext();
-    if (!context || !context->webView()) {
-        return;
-    }
-    // A page with no client attached has no server, which is the common
-    // case and the reason this check comes before anything else.
-    CDPServer* server = context->webView()->cdpServer();
-    if (!server || !server->dispatcher()) {
-        return;
-    }
-    server->dispatcher()->accessibility()->markNodeDirty(node);
+    dispatcher->accessibility()->markNodeDirty(node);
 }
 
 void notifyAXLoadComplete(Document* document)
 {
-    if (!document) {
+    CDPDispatcher* dispatcher = nullptr;
+    TargetContext* target = cdpTargetForDocument(document, dispatcher);
+    if (!target) {
         return;
     }
-    BrowsingContext* context = document->browsingContext();
-    if (!context || !context->webView()) {
-        return;
-    }
-    CDPServer* server = context->webView()->cdpServer();
-    if (!server || !server->dispatcher()) {
-        return;
-    }
-    TargetContext* target =
-        server->dispatcher()->contextForWebView(context->webView());
-    if (!target || !target->session) {
-        return;
-    }
-    server->dispatcher()->accessibility()->emitLoadComplete(
-        target->session->sessionId);
+    dispatcher->accessibility()->emitLoadComplete(target->session->sessionId);
 }
 
 } // namespace Starfish

@@ -113,24 +113,13 @@ static void buildTargetInfo(CDPSession* s, WebView* wv, bool attached,
     std::string title =
         s->waitingForDebugger || s->targetType == "tab" ? "" : targetTitle(wv);
     out.SetObject();
-    out.AddMember(
-        "targetId",
-        rapidjson::Value(s->targetId.c_str(), s->targetId.size(), alloc),
-        alloc);
-    out.AddMember(
-        "type",
-        rapidjson::Value(s->targetType.c_str(), s->targetType.size(), alloc),
-        alloc);
-    out.AddMember("title", rapidjson::Value(title.c_str(), title.size(), alloc),
-                  alloc);
-    out.AddMember("url", rapidjson::Value(url.c_str(), url.size(), alloc),
-                  alloc);
+    addStringMember(out, "targetId", s->targetId, alloc);
+    addStringMember(out, "type", s->targetType, alloc);
+    addStringMember(out, "title", title, alloc);
+    addStringMember(out, "url", url, alloc);
     out.AddMember("attached", attached, alloc);
     out.AddMember("canAccessOpener", false, alloc);
-    out.AddMember("browserContextId",
-                  rapidjson::Value(s->browserContextId.c_str(),
-                                   s->browserContextId.size(), alloc),
-                  alloc);
+    addStringMember(out, "browserContextId", s->browserContextId, alloc);
 }
 
 static bool filterAllows(const rapidjson::Value* filter, const char* type)
@@ -261,10 +250,7 @@ void TargetDomain::handleSetDiscoverTargets(CDPCommand& cmd, const std::string&)
     WebView* wv = m_dispatcher->webView();
 
     bool discover = false;
-    if (cmd.params() && cmd.params()->HasMember("discover") &&
-        (*cmd.params())["discover"].IsBool()) {
-        discover = (*cmd.params())["discover"].GetBool();
-    }
+    discover = paramBool(cmd, "discover", discover);
     subscription(cmd.sessionId()).discover = discover;
     cmd.sendResultEmpty();
 
@@ -290,10 +276,7 @@ void TargetDomain::handleSetAutoAttach(CDPCommand& cmd, const std::string&)
     if (cmd.sessionId().empty() ||
         cmd.sessionId() == m_dispatcher->browserSessionId()) {
         bool flatten = false;
-        if (cmd.params() && cmd.params()->HasMember("flatten") &&
-            (*cmd.params())["flatten"].IsBool()) {
-            flatten = (*cmd.params())["flatten"].GetBool();
-        }
+        flatten = paramBool(cmd, "flatten", flatten);
         if (!flatten) {
             cmd.sendError(-32602,
                           "Only flatten protocol is supported with browser "
@@ -332,20 +315,14 @@ void TargetDomain::handleSetAutoAttach(CDPCommand& cmd, const std::string&)
     }
 
     bool autoAttach = false;
-    if (cmd.params() && cmd.params()->HasMember("autoAttach") &&
-        (*cmd.params())["autoAttach"].IsBool()) {
-        autoAttach = (*cmd.params())["autoAttach"].GetBool();
-    }
+    autoAttach = paramBool(cmd, "autoAttach", autoAttach);
     Subscription& subscriber = subscription(cmd.sessionId());
     subscriber.autoAttach = autoAttach;
     subscriber.allowPage = allowPage;
     subscriber.allowTab = allowTab;
 
     bool waitForDebugger = false;
-    if (cmd.params() && cmd.params()->HasMember("waitForDebuggerOnStart") &&
-        (*cmd.params())["waitForDebuggerOnStart"].IsBool()) {
-        waitForDebugger = (*cmd.params())["waitForDebuggerOnStart"].GetBool();
-    }
+    waitForDebugger = paramBool(cmd, "waitForDebuggerOnStart", waitForDebugger);
     subscriber.waitForDebugger = waitForDebugger;
 
     // Browser-scope auto-attach announces the existing page once, before
@@ -370,10 +347,7 @@ void TargetDomain::handleSetAutoAttach(CDPCommand& cmd, const std::string&)
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value params(rapidjson::kObjectType);
-        params.AddMember(
-            "sessionId",
-            rapidjson::Value(s->sessionId.c_str(), s->sessionId.size(), alloc),
-            alloc);
+        addStringMember(params, "sessionId", s->sessionId, alloc);
         rapidjson::Value ti(rapidjson::kObjectType);
         buildTargetInfo(s, wv, true, ti, alloc);
         params.AddMember("targetInfo", ti, alloc);
@@ -436,8 +410,7 @@ void TargetDomain::handleCreateBrowserContext(CDPCommand& cmd,
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember("browserContextId",
-                     rapidjson::Value(bid.c_str(), bid.size(), alloc), alloc);
+    addStringMember(result, "browserContextId", bid, alloc);
     cmd.sendResult(result, doc);
 }
 
@@ -445,10 +418,7 @@ void TargetDomain::handleDisposeBrowserContext(CDPCommand& cmd,
                                                const std::string&)
 {
     std::string bid;
-    if (cmd.params() && cmd.params()->HasMember("browserContextId") &&
-        (*cmd.params())["browserContextId"].IsString()) {
-        bid = (*cmd.params())["browserContextId"].GetString();
-    }
+    bid = paramString(cmd, "browserContextId", bid);
     CDPSession* init = m_dispatcher->initialContext()->session;
 
     // Close every spawned target associated with this browser context.
@@ -461,41 +431,7 @@ void TargetDomain::handleDisposeBrowserContext(CDPCommand& cmd,
         }
     }
     for (TargetContext* victim : victims) {
-        std::string vsid = victim->session->sessionId;
-        std::string vtid = victim->session->targetId;
-        WebView* vwv = victim->webView;
-        bool owns = victim->ownsWebView;
-
-        {
-            rapidjson::Document doc;
-            rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-            rapidjson::Value params(rapidjson::kObjectType);
-            params.AddMember("sessionId",
-                             rapidjson::Value(vsid.c_str(), vsid.size(), alloc),
-                             alloc);
-            params.AddMember("targetId",
-                             rapidjson::Value(vtid.c_str(), vtid.size(), alloc),
-                             alloc);
-            CDPCommand evt(m_dispatcher, Optional<int64_t>(), std::string(),
-                           nullptr);
-            evt.sendEvent("Target.detachedFromTarget", params, doc);
-        }
-        {
-            rapidjson::Document doc;
-            rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-            rapidjson::Value params(rapidjson::kObjectType);
-            params.AddMember("targetId",
-                             rapidjson::Value(vtid.c_str(), vtid.size(), alloc),
-                             alloc);
-            CDPCommand evt(m_dispatcher, Optional<int64_t>(), std::string(),
-                           nullptr);
-            evt.sendEvent("Target.targetDestroyed", params, doc);
-        }
-
-        m_dispatcher->destroyContext(victim);
-        if (owns && vwv) {
-            vwv->destroy();
-        }
+        closeSpawnedTarget(victim);
     }
 
     // Remove the context id from the tracked list.
@@ -530,8 +466,7 @@ void TargetDomain::handleAttachToTarget(CDPCommand& cmd, const std::string&)
 
     // Keep flattened commands on the requested target's WebView.
     TargetContext* targetCtx = m_dispatcher->currentContext();
-    if (cmd.params() && cmd.params()->HasMember("targetId") &&
-        (*cmd.params())["targetId"].IsString()) {
+    if (hasStringParam(cmd, "targetId")) {
         const char* targetId = (*cmd.params())["targetId"].GetString();
         for (TargetContext* ctx : m_dispatcher->contexts()) {
             if (ctx->session->targetId == targetId) {
@@ -554,11 +489,7 @@ void TargetDomain::handleAttachToTarget(CDPCommand& cmd, const std::string&)
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value params(rapidjson::kObjectType);
-        params.AddMember("sessionId",
-                         rapidjson::Value(targetSession->sessionId.c_str(),
-                                          targetSession->sessionId.size(),
-                                          alloc),
-                         alloc);
+        addStringMember(params, "sessionId", targetSession->sessionId, alloc);
         rapidjson::Value ti(rapidjson::kObjectType);
         buildTargetInfo(targetSession, targetCtx->webView, true, ti, alloc);
         params.AddMember("targetInfo", ti, alloc);
@@ -571,10 +502,7 @@ void TargetDomain::handleAttachToTarget(CDPCommand& cmd, const std::string&)
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember("sessionId",
-                     rapidjson::Value(targetSession->sessionId.c_str(),
-                                      targetSession->sessionId.size(), alloc),
-                     alloc);
+    addStringMember(result, "sessionId", targetSession->sessionId, alloc);
     cmd.sendResult(result, doc);
 }
 
@@ -596,8 +524,7 @@ void TargetDomain::handleAttachToBrowserTarget(CDPCommand& cmd,
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember("sessionId",
-                     rapidjson::Value(bsid.c_str(), bsid.size(), alloc), alloc);
+    addStringMember(result, "sessionId", bsid, alloc);
     cmd.sendResult(result, doc);
 }
 
@@ -646,8 +573,7 @@ void TargetDomain::handleCreateTarget(CDPCommand& cmd, const std::string&)
     // Optional initial url ("about:blank" if omitted). Puppeteer's
     // newPage() passes "about:blank" and then navigates via Page.navigate.
     std::string url = "about:blank";
-    if (cmd.params() && cmd.params()->HasMember("url") &&
-        (*cmd.params())["url"].IsString()) {
+    if (hasStringParam(cmd, "url")) {
         const char* u = (*cmd.params())["url"].GetString();
         if (u && *u) {
             url = u;
@@ -667,8 +593,7 @@ void TargetDomain::handleCreateTarget(CDPCommand& cmd, const std::string&)
     // Associate the target with the requested browser context if given,
     // else with the default (initial session's) context.
     nctx->session->browserContextId = init->browserContextId;
-    if (cmd.params() && cmd.params()->HasMember("browserContextId") &&
-        (*cmd.params())["browserContextId"].IsString()) {
+    if (hasStringParam(cmd, "browserContextId")) {
         const char* bc = (*cmd.params())["browserContextId"].GetString();
         if (bc && *bc) {
             nctx->session->browserContextId = bc;
@@ -738,10 +663,7 @@ void TargetDomain::handleCreateTarget(CDPCommand& cmd, const std::string&)
             rapidjson::Document doc;
             auto& alloc = doc.GetAllocator();
             rapidjson::Value params(rapidjson::kObjectType);
-            params.AddMember("sessionId",
-                             rapidjson::Value(ns->sessionId.c_str(),
-                                              ns->sessionId.size(), alloc),
-                             alloc);
+            addStringMember(params, "sessionId", ns->sessionId, alloc);
             rapidjson::Value info(rapidjson::kObjectType);
             buildTargetInfo(ns, nwv, ns->attached, info, alloc);
             params.AddMember("targetInfo", info, alloc);
@@ -755,20 +677,49 @@ void TargetDomain::handleCreateTarget(CDPCommand& cmd, const std::string&)
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember(
-        "targetId",
-        rapidjson::Value(ns->targetId.c_str(), ns->targetId.size(), alloc),
-        alloc);
+    addStringMember(result, "targetId", ns->targetId, alloc);
     cmd.sendResult(result, doc);
+}
+
+// Announces detachedFromTarget and targetDestroyed for a spawned target,
+// then tears it down.
+void TargetDomain::closeSpawnedTarget(TargetContext* victim)
+{
+    std::string vsid = victim->session->sessionId;
+    std::string vtid = victim->session->targetId;
+    WebView* vwv = victim->webView;
+    bool owns = victim->ownsWebView;
+
+    {
+        rapidjson::Document doc;
+        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+        rapidjson::Value params(rapidjson::kObjectType);
+        addStringMember(params, "sessionId", vsid, alloc);
+        addStringMember(params, "targetId", vtid, alloc);
+        CDPCommand evt(m_dispatcher, Optional<int64_t>(), std::string(),
+                       nullptr);
+        evt.sendEvent("Target.detachedFromTarget", params, doc);
+    }
+    {
+        rapidjson::Document doc;
+        rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
+        rapidjson::Value params(rapidjson::kObjectType);
+        addStringMember(params, "targetId", vtid, alloc);
+        CDPCommand evt(m_dispatcher, Optional<int64_t>(), std::string(),
+                       nullptr);
+        evt.sendEvent("Target.targetDestroyed", params, doc);
+    }
+
+    m_dispatcher->destroyContext(victim);
+    if (owns && vwv) {
+        vwv->destroy();
+    }
 }
 
 void TargetDomain::handleCloseTarget(CDPCommand& cmd, const std::string&)
 {
     std::string tid;
-    if (cmd.params() && cmd.params()->HasMember("targetId") &&
-        (*cmd.params())["targetId"].IsString()) {
-        tid = (*cmd.params())["targetId"].GetString();
-    }
+    tid = paramString(cmd, "targetId", tid);
     // Find and tear down the matching spawned target (never the initial).
     TargetContext* victim = nullptr;
     for (TargetContext* ctx : m_dispatcher->contexts()) {
@@ -779,42 +730,7 @@ void TargetDomain::handleCloseTarget(CDPCommand& cmd, const std::string&)
         }
     }
     if (victim) {
-        std::string vsid = victim->session->sessionId;
-        std::string vtid = victim->session->targetId;
-        WebView* vwv = victim->webView;
-        bool owns = victim->ownsWebView;
-
-        // detachedFromTarget + targetDestroyed before teardown.
-        {
-            rapidjson::Document doc;
-            rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-            rapidjson::Value params(rapidjson::kObjectType);
-            params.AddMember("sessionId",
-                             rapidjson::Value(vsid.c_str(), vsid.size(), alloc),
-                             alloc);
-            params.AddMember("targetId",
-                             rapidjson::Value(vtid.c_str(), vtid.size(), alloc),
-                             alloc);
-            CDPCommand evt(m_dispatcher, Optional<int64_t>(), std::string(),
-                           nullptr);
-            evt.sendEvent("Target.detachedFromTarget", params, doc);
-        }
-        {
-            rapidjson::Document doc;
-            rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
-            rapidjson::Value params(rapidjson::kObjectType);
-            params.AddMember("targetId",
-                             rapidjson::Value(vtid.c_str(), vtid.size(), alloc),
-                             alloc);
-            CDPCommand evt(m_dispatcher, Optional<int64_t>(), std::string(),
-                           nullptr);
-            evt.sendEvent("Target.targetDestroyed", params, doc);
-        }
-
-        m_dispatcher->destroyContext(victim);
-        if (owns && vwv) {
-            vwv->destroy();
-        }
+        closeSpawnedTarget(victim);
     }
 
     rapidjson::Document doc;
@@ -844,13 +760,8 @@ void TargetDomain::handleDetachFromTarget(CDPCommand& cmd, const std::string&)
         rapidjson::Document doc;
         rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
         rapidjson::Value params(rapidjson::kObjectType);
-        params.AddMember("sessionId",
-                         rapidjson::Value(sid.c_str(), sid.size(), alloc),
-                         alloc);
-        params.AddMember(
-            "targetId",
-            rapidjson::Value(s->targetId.c_str(), s->targetId.size(), alloc),
-            alloc);
+        addStringMember(params, "sessionId", sid, alloc);
+        addStringMember(params, "targetId", s->targetId, alloc);
         CDPCommand evt(m_dispatcher, Optional<int64_t>(), cmd.sessionId(),
                        nullptr);
         evt.sendEvent("Target.detachedFromTarget", params, doc);

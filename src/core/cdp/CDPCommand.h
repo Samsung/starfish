@@ -73,6 +73,35 @@ private:
     rapidjson::Value* m_params;
 };
 
+// Adds name: value, copying value into the document. Only a string literal
+// can be the name: the member keeps a reference to it.
+template <size_t N>
+void addStringMember(rapidjson::Value& object, const char (&name)[N],
+                     const std::string& value,
+                     rapidjson::Document::AllocatorType& alloc)
+{
+    object.AddMember(rapidjson::StringRef(name),
+                     rapidjson::Value(value.c_str(), value.size(), alloc),
+                     alloc);
+}
+
+// The clockwise quad [x1,y1, x2,y2, x3,y3, x4,y4] of a box.
+rapidjson::Value cdpQuad(double x, double y, double width, double height,
+                         rapidjson::Document::AllocatorType& alloc);
+
+// Typed reads of a command parameter. A parameter that is missing or of
+// another type gives the default.
+bool hasStringParam(CDPCommand& cmd, const char* name);
+std::string paramString(CDPCommand& cmd, const char* name,
+                        const std::string& def = std::string());
+bool paramBool(CDPCommand& cmd, const char* name, bool def);
+double paramNumber(CDPCommand& cmd, const char* name, double def);
+int paramInt(CDPCommand& cmd, const char* name, int def);
+inline int paramNodeId(CDPCommand& cmd)
+{
+    return paramInt(cmd, "nodeId", 0);
+}
+
 } // namespace Starfish
 
 #endif

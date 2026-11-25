@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_CDP)
 
 #include "StarfishConfig.h"
+#include <algorithm>
 #include "Starfish.h"
 #include "DOMDomain.h"
 #include "../CDPDispatcher.h"
@@ -65,16 +66,47 @@ static Document* mainDocument(WebView* wv)
 // nullptr if the handle is missing or is not a node.
 static Node* nodeFromObjectId(CDPDispatcher* disp, const char* oid)
 {
-    if (!oid || strncmp(oid, "OBJ-", 4) != 0) {
+    ScriptWrappable* w = wrappableForObjectId(disp->remoteObjectStore(), oid);
+    return w && w->isNode() ? w->asNode() : nullptr;
+}
+
+// Pushes the children of node so that popping visits them in document order.
+static void pushChildrenInReverse(Node* node, std::vector<Node*>& stack)
+{
+    size_t first = stack.size();
+    for (Node* c = node->firstChild(); c; c = c->nextSibling()) {
+        stack.push_back(c);
+    }
+    std::reverse(stack.begin() + first, stack.end());
+}
+
+// The node a command names: by objectId (an ElementHandle) first, then by
+// backendNodeId when the command accepts one, then by nodeId.
+static Node* nodeFromParams(CDPDispatcher* disp, CDPCommand& cmd,
+                            bool acceptBackendNodeId)
+{
+    if (hasStringParam(cmd, "objectId")) {
+        return nodeFromObjectId(disp, (*cmd.params())["objectId"].GetString());
+    }
+    NodeRegistry* reg = disp->nodeRegistry();
+    if (acceptBackendNodeId && cmd.params() &&
+        cmd.params()->HasMember("backendNodeId") &&
+        (*cmd.params())["backendNodeId"].IsInt()) {
+        return reg->lookup((*cmd.params())["backendNodeId"].GetInt());
+    }
+    return reg->lookup(paramNodeId(cmd));
+}
+
+// nodeFromParams for a command that needs an element. Replies that there is
+// no such node and returns nullptr otherwise.
+static Element* elementFromParams(CDPDispatcher* disp, CDPCommand& cmd)
+{
+    Node* node = nodeFromParams(disp, cmd, false);
+    if (!node || !node->isElement()) {
+        cmd.sendError(-32000, "Could not find node with given id");
         return nullptr;
     }
-    int id = atoi(oid + 4);
-    Escargot::ObjectRef* obj = disp->remoteObjectStore()->lookup(id);
-    if (!obj || !obj->extraData()) {
-        return nullptr;
-    }
-    ScriptWrappable* w = (ScriptWrappable*)obj->extraData();
-    return w->isNode() ? w->asNode() : nullptr;
+    return node->asElement();
 }
 
 // The parent the DOM domain reports. A shadow root reports its host, and a
@@ -147,15 +179,6 @@ static int pushNodePathToFrontend(CDPDispatcher* dispatcher, CDPCommand& cmd,
     return reg->getOrCreate(node);
 }
 
-static int paramNodeId(CDPCommand& cmd)
-{
-    if (cmd.params() && cmd.params()->HasMember("nodeId") &&
-        (*cmd.params())["nodeId"].IsInt()) {
-        return (*cmd.params())["nodeId"].GetInt();
-    }
-    return 0;
-}
-
 void DOMDomain::handleEnable(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
@@ -183,10 +206,7 @@ void DOMDomain::handleGetDocument(CDPCommand& cmd, const std::string&)
         return;
     }
     int depth = 3;
-    if (cmd.params() && cmd.params()->HasMember("depth") &&
-        (*cmd.params())["depth"].IsInt()) {
-        depth = (*cmd.params())["depth"].GetInt();
-    }
+    depth = paramInt(cmd, "depth", depth);
     rapidjson::Document out;
     rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
@@ -207,10 +227,7 @@ void DOMDomain::handleRequestChildNodes(CDPCommand& cmd, const std::string&)
         return;
     }
     int depth = 1;
-    if (cmd.params() && cmd.params()->HasMember("depth") &&
-        (*cmd.params())["depth"].IsInt()) {
-        depth = (*cmd.params())["depth"].GetInt();
-    }
+    depth = paramInt(cmd, "depth", depth);
     cmd.sendResultEmpty();
     sendChildNodes(m_dispatcher, cmd, reg, node, depth);
 }
@@ -221,8 +238,7 @@ void DOMDomain::handleQuerySelector(CDPCommand& cmd, const std::string&)
 
     int nodeId = paramNodeId(cmd);
     Node* node = reg->lookup(nodeId);
-    if (!node || !cmd.params() || !cmd.params()->HasMember("selector") ||
-        !(*cmd.params())["selector"].IsString()) {
+    if (!node || !hasStringParam(cmd, "selector")) {
         cmd.sendError(-32000, "Could not find node with given id");
         return;
     }
@@ -243,8 +259,7 @@ void DOMDomain::handleQuerySelectorAll(CDPCommand& cmd, const std::string&)
 
     int nodeId = paramNodeId(cmd);
     Node* node = reg->lookup(nodeId);
-    if (!node || !cmd.params() || !cmd.params()->HasMember("selector") ||
-        !(*cmd.params())["selector"].IsString()) {
+    if (!node || !hasStringParam(cmd, "selector")) {
         cmd.sendError(-32000, "Could not find node with given id");
         return;
     }
@@ -278,27 +293,13 @@ void DOMDomain::handleDescribeNode(CDPCommand& cmd, const std::string&)
     CDPSession* s = m_dispatcher->session();
     NodeRegistry* reg = m_dispatcher->nodeRegistry();
 
-    // Accept objectId, backendNodeId, or nodeId.
-    Node* node = nullptr;
-    if (cmd.params() && cmd.params()->HasMember("objectId") &&
-        (*cmd.params())["objectId"].IsString()) {
-        node = nodeFromObjectId(m_dispatcher,
-                                (*cmd.params())["objectId"].GetString());
-    } else if (cmd.params() && cmd.params()->HasMember("backendNodeId") &&
-               (*cmd.params())["backendNodeId"].IsInt()) {
-        node = reg->lookup((*cmd.params())["backendNodeId"].GetInt());
-    } else {
-        node = reg->lookup(paramNodeId(cmd));
-    }
+    Node* node = nodeFromParams(m_dispatcher, cmd, true);
     if (!node) {
         cmd.sendError(-32000, "Could not find node with given id");
         return;
     }
     int depth = 0;
-    if (cmd.params() && cmd.params()->HasMember("depth") &&
-        (*cmd.params())["depth"].IsInt()) {
-        depth = (*cmd.params())["depth"].GetInt();
-    }
+    depth = paramInt(cmd, "depth", depth);
     rapidjson::Document out;
     rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
@@ -314,10 +315,7 @@ void DOMDomain::handleDescribeNode(CDPCommand& cmd, const std::string&)
                 m_dispatcher->page()->frameIdForBrowsingContext(
                     context.value());
             if (!frameId.empty()) {
-                n.AddMember(
-                    "frameId",
-                    rapidjson::Value(frameId.c_str(), frameId.size(), alloc),
-                    alloc);
+                addStringMember(n, "frameId", frameId, alloc);
             }
         }
     }
@@ -327,101 +325,61 @@ void DOMDomain::handleDescribeNode(CDPCommand& cmd, const std::string&)
 
 void DOMDomain::handleGetOuterHTML(CDPCommand& cmd, const std::string&)
 {
-    NodeRegistry* reg = m_dispatcher->nodeRegistry();
-
-    // Accept either objectId (ElementHandle) or nodeId.
-    Node* node = nullptr;
-    if (cmd.params() && cmd.params()->HasMember("objectId") &&
-        (*cmd.params())["objectId"].IsString()) {
-        node = nodeFromObjectId(m_dispatcher,
-                                (*cmd.params())["objectId"].GetString());
-    } else {
-        node = reg->lookup(paramNodeId(cmd));
-    }
-    if (!node || !node->isElement()) {
-        cmd.sendError(-32000, "Could not find node with given id");
+    Element* element = elementFromParams(m_dispatcher, cmd);
+    if (!element) {
         return;
     }
-    String* html = node->asElement()->outerHTML();
+    String* html = element->outerHTML();
     std::string s = html ? html->toUTF8NonGCString() : std::string();
     rapidjson::Document out;
     rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember("outerHTML", rapidjson::Value(s.c_str(), s.size(), alloc),
-                     alloc);
+    addStringMember(result, "outerHTML", s, alloc);
     cmd.sendResult(result, out);
 }
 
 void DOMDomain::handleSetOuterHTML(CDPCommand& cmd, const std::string&)
 {
-    NodeRegistry* reg = m_dispatcher->nodeRegistry();
-
-    int nodeId = paramNodeId(cmd);
-    Node* node = reg->lookup(nodeId);
-    if (!node || !node->isElement() || !cmd.params() ||
-        !cmd.params()->HasMember("outerHTML") ||
-        !(*cmd.params())["outerHTML"].IsString()) {
+    Element* element = elementForNodeIdParam(m_dispatcher, cmd);
+    if (!element) {
+        return;
+    }
+    if (!hasStringParam(cmd, "outerHTML")) {
         cmd.sendError(-32000, "Could not find node with given id");
         return;
     }
     const char* outer = (*cmd.params())["outerHTML"].GetString();
-    node->asElement()->setOuterHTML(String::fromUTF8(outer, strlen(outer)));
+    element->setOuterHTML(String::fromUTF8(outer, strlen(outer)));
     cmd.sendResultEmpty();
 }
 
 void DOMDomain::handleFocus(CDPCommand& cmd, const std::string&)
 {
-    NodeRegistry* reg = m_dispatcher->nodeRegistry();
-
-    // Accept either objectId (ElementHandle) or nodeId.
-    Node* node = nullptr;
-    if (cmd.params() && cmd.params()->HasMember("objectId") &&
-        (*cmd.params())["objectId"].IsString()) {
-        node = nodeFromObjectId(m_dispatcher,
-                                (*cmd.params())["objectId"].GetString());
-    } else {
-        node = reg->lookup(paramNodeId(cmd));
-    }
-    if (!node || !node->isElement()) {
-        cmd.sendError(-32000, "Could not find node with given id");
+    Element* element = elementFromParams(m_dispatcher, cmd);
+    if (!element) {
         return;
     }
-    node->asElement()->focus();
+    element->focus();
     cmd.sendResultEmpty();
 }
 
 void DOMDomain::handleScrollIntoViewIfNeeded(CDPCommand& cmd,
                                              const std::string&)
 {
-    NodeRegistry* reg = m_dispatcher->nodeRegistry();
-
-    // Accept either objectId (ElementHandle) or nodeId.
-    Node* node = nullptr;
-    if (cmd.params() && cmd.params()->HasMember("objectId") &&
-        (*cmd.params())["objectId"].IsString()) {
-        node = nodeFromObjectId(m_dispatcher,
-                                (*cmd.params())["objectId"].GetString());
-    } else {
-        node = reg->lookup(paramNodeId(cmd));
-    }
-    if (!node || !node->isElement()) {
-        cmd.sendError(-32000, "Could not find node with given id");
+    Element* element = elementFromParams(m_dispatcher, cmd);
+    if (!element) {
         return;
     }
-    node->asElement()->scrollIntoViewIfNeeded();
+    element->scrollIntoViewIfNeeded();
     cmd.sendResultEmpty();
 }
 
 void DOMDomain::handleGetAttributes(CDPCommand& cmd, const std::string&)
 {
-    NodeRegistry* reg = m_dispatcher->nodeRegistry();
-
-    Node* node = reg->lookup(paramNodeId(cmd));
-    if (!node || !node->isElement()) {
-        cmd.sendError(-32000, "Could not find node with given id");
+    Element* el = elementForNodeIdParam(m_dispatcher, cmd);
+    if (!el) {
         return;
     }
-    Element* el = node->asElement();
     rapidjson::Document out;
     rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
@@ -441,22 +399,19 @@ void DOMDomain::handleGetAttributes(CDPCommand& cmd, const std::string&)
 
 void DOMDomain::handleSetAttributeValue(CDPCommand& cmd, const std::string&)
 {
-    NodeRegistry* reg = m_dispatcher->nodeRegistry();
-
     int nodeId = paramNodeId(cmd);
-    Node* node = reg->lookup(nodeId);
-    if (!node || !node->isElement() || !cmd.params() ||
-        !cmd.params()->HasMember("name") ||
-        !(*cmd.params())["name"].IsString() ||
-        !cmd.params()->HasMember("value") ||
-        !(*cmd.params())["value"].IsString()) {
+    Element* element = elementForNodeIdParam(m_dispatcher, cmd);
+    if (!element) {
+        return;
+    }
+    if (!hasStringParam(cmd, "name") || !hasStringParam(cmd, "value")) {
         cmd.sendError(-32000, "Could not find node with given id");
         return;
     }
     const char* name = (*cmd.params())["name"].GetString();
     const char* value = (*cmd.params())["value"].GetString();
-    node->asElement()->setAttribute(String::fromUTF8(name, strlen(name)),
-                                    String::fromUTF8(value, strlen(value)));
+    element->setAttribute(String::fromUTF8(name, strlen(name)),
+                          String::fromUTF8(value, strlen(value)));
     cmd.sendResultEmpty();
 
     // Emit DOM.attributeModified.
@@ -474,18 +429,17 @@ void DOMDomain::handleSetAttributeValue(CDPCommand& cmd, const std::string&)
 
 void DOMDomain::handleRemoveAttribute(CDPCommand& cmd, const std::string&)
 {
-    NodeRegistry* reg = m_dispatcher->nodeRegistry();
-
     int nodeId = paramNodeId(cmd);
-    Node* node = reg->lookup(nodeId);
-    if (!node || !node->isElement() || !cmd.params() ||
-        !cmd.params()->HasMember("name") ||
-        !(*cmd.params())["name"].IsString()) {
+    Element* element = elementForNodeIdParam(m_dispatcher, cmd);
+    if (!element) {
+        return;
+    }
+    if (!hasStringParam(cmd, "name")) {
         cmd.sendError(-32000, "Could not find node with given id");
         return;
     }
     const char* name = (*cmd.params())["name"].GetString();
-    node->asElement()->removeAttribute(String::fromUTF8(name, strlen(name)));
+    element->removeAttribute(String::fromUTF8(name, strlen(name)));
     cmd.sendResultEmpty();
 
     // Emit DOM.attributeRemoved.
@@ -505,9 +459,7 @@ void DOMDomain::handleSetNodeValue(CDPCommand& cmd, const std::string&)
 
     int nodeId = paramNodeId(cmd);
     Node* node = reg->lookup(nodeId);
-    if (!node || !node->isCharacterData() || !cmd.params() ||
-        !cmd.params()->HasMember("value") ||
-        !(*cmd.params())["value"].IsString()) {
+    if (!node || !node->isCharacterData() || !hasStringParam(cmd, "value")) {
         cmd.sendError(-32000, "Could not find node with given id");
         return;
     }
@@ -587,20 +539,7 @@ void DOMDomain::handleResolveNode(CDPCommand& cmd, const std::string&)
 
 void DOMDomain::handleSetFileInputFiles(CDPCommand& cmd, const std::string&)
 {
-    NodeRegistry* reg = m_dispatcher->nodeRegistry();
-
-    // Accept objectId (ElementHandle), backendNodeId or nodeId.
-    Node* node = nullptr;
-    if (cmd.params() && cmd.params()->HasMember("objectId") &&
-        (*cmd.params())["objectId"].IsString()) {
-        node = nodeFromObjectId(m_dispatcher,
-                                (*cmd.params())["objectId"].GetString());
-    } else if (cmd.params() && cmd.params()->HasMember("backendNodeId") &&
-               (*cmd.params())["backendNodeId"].IsInt()) {
-        node = reg->lookup((*cmd.params())["backendNodeId"].GetInt());
-    } else {
-        node = reg->lookup(paramNodeId(cmd));
-    }
+    Node* node = nodeFromParams(m_dispatcher, cmd, true);
     if (!node || !node->isElement() ||
         !node->asElement()->isHTMLInputElement()) {
         cmd.sendError(-32000, "Node is not a file input element");
@@ -670,25 +609,14 @@ void DOMDomain::handleSetFileInputFiles(CDPCommand& cmd, const std::string&)
 
 void DOMDomain::handleGetBoxModel(CDPCommand& cmd, const std::string& method)
 {
-    NodeRegistry* reg = m_dispatcher->nodeRegistry();
-
-    // Accept either objectId (ElementHandle) or nodeId.
-    Node* node = nullptr;
-    if (cmd.params() && cmd.params()->HasMember("objectId") &&
-        (*cmd.params())["objectId"].IsString()) {
-        node = nodeFromObjectId(m_dispatcher,
-                                (*cmd.params())["objectId"].GetString());
-    } else {
-        node = reg->lookup(paramNodeId(cmd));
-    }
-    if (!node || !node->isElement()) {
-        cmd.sendError(-32000, "Could not find node with given id");
+    Element* element = elementFromParams(m_dispatcher, cmd);
+    if (!element) {
         return;
     }
     // getBoundingClientRect() runs layout if needed and returns CSS-px
     // coordinates (layout px, no devicePixelRatio applied) relative to the
     // viewport -- exactly the coordinate space CDP clients expect.
-    DOMRect* rect = node->asElement()->getBoundingClientRect();
+    DOMRect* rect = element->getBoundingClientRect();
     double x = rect->x();
     double y = rect->y();
     double w = rect->width();
@@ -698,25 +626,10 @@ void DOMDomain::handleGetBoxModel(CDPCommand& cmd, const std::string& method)
     rapidjson::Document::AllocatorType& alloc = outd.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
 
-    // Build a clockwise quad [x1,y1, x2,y2, x3,y3, x4,y4] from a box rect.
-    auto makeQuad = [&alloc](double qx, double qy, double qw,
-                             double qh) -> rapidjson::Value {
-        rapidjson::Value q(rapidjson::kArrayType);
-        q.PushBack(qx, alloc);
-        q.PushBack(qy, alloc);
-        q.PushBack(qx + qw, alloc);
-        q.PushBack(qy, alloc);
-        q.PushBack(qx + qw, alloc);
-        q.PushBack(qy + qh, alloc);
-        q.PushBack(qx, alloc);
-        q.PushBack(qy + qh, alloc);
-        return q;
-    };
-
     if (method == "getContentQuads") {
         rapidjson::Value quads(rapidjson::kArrayType);
         if (w > 0 || h > 0) {
-            quads.PushBack(makeQuad(x, y, w, h), alloc);
+            quads.PushBack(cdpQuad(x, y, w, h, alloc), alloc);
         }
         result.AddMember("quads", quads, alloc);
     } else {
@@ -724,10 +637,10 @@ void DOMDomain::handleGetBoxModel(CDPCommand& cmd, const std::string& method)
         // border-box rect from getBoundingClientRect(). Width/height are
         // the border-box dimensions, which is what CDP reports.
         rapidjson::Value model(rapidjson::kObjectType);
-        model.AddMember("content", makeQuad(x, y, w, h), alloc);
-        model.AddMember("padding", makeQuad(x, y, w, h), alloc);
-        model.AddMember("border", makeQuad(x, y, w, h), alloc);
-        model.AddMember("margin", makeQuad(x, y, w, h), alloc);
+        model.AddMember("content", cdpQuad(x, y, w, h, alloc), alloc);
+        model.AddMember("padding", cdpQuad(x, y, w, h, alloc), alloc);
+        model.AddMember("border", cdpQuad(x, y, w, h, alloc), alloc);
+        model.AddMember("margin", cdpQuad(x, y, w, h, alloc), alloc);
         model.AddMember("width", (int)(w + 0.5), alloc);
         model.AddMember("height", (int)(h + 0.5), alloc);
         result.AddMember("model", model, alloc);
@@ -775,8 +688,7 @@ void DOMDomain::handlePerformSearch(CDPCommand& cmd, const std::string&)
     NodeRegistry* reg = m_dispatcher->nodeRegistry();
 
     Document* doc = mainDocument(wv);
-    if (!doc || !cmd.params() || !cmd.params()->HasMember("query") ||
-        !(*cmd.params())["query"].IsString()) {
+    if (!doc || !hasStringParam(cmd, "query")) {
         cmd.sendError(-32602, "query is required");
         return;
     }
@@ -839,14 +751,7 @@ void DOMDomain::handlePerformSearch(CDPCommand& cmd, const std::string&)
                 if (nodeMatchesSearchText(n, needle, xpathTag)) {
                     matches.push_back(n);
                 }
-                // Push children so they are visited in document order.
-                std::vector<Node*> kids;
-                for (Node* c = n->firstChild(); c; c = c->nextSibling()) {
-                    kids.push_back(c);
-                }
-                for (size_t i = kids.size(); i-- > 0;) {
-                    stack.push_back(kids[i]);
-                }
+                pushChildrenInReverse(n, stack);
             }
         }
     }
@@ -863,9 +768,7 @@ void DOMDomain::handlePerformSearch(CDPCommand& cmd, const std::string&)
     rapidjson::Document out;
     rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
-    result.AddMember("searchId",
-                     rapidjson::Value(searchId.c_str(), searchId.size(), alloc),
-                     alloc);
+    addStringMember(result, "searchId", searchId, alloc);
     result.AddMember("resultCount", (int)ids.size(), alloc);
     cmd.sendResult(result, out);
 }
@@ -874,8 +777,7 @@ void DOMDomain::handleGetSearchResults(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
 
-    if (!cmd.params() || !cmd.params()->HasMember("searchId") ||
-        !(*cmd.params())["searchId"].IsString()) {
+    if (!hasStringParam(cmd, "searchId")) {
         cmd.sendError(-32602, "searchId is required");
         return;
     }
@@ -915,8 +817,7 @@ void DOMDomain::handleDiscardSearchResults(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
 
-    if (!cmd.params() || !cmd.params()->HasMember("searchId") ||
-        !(*cmd.params())["searchId"].IsString()) {
+    if (!hasStringParam(cmd, "searchId")) {
         cmd.sendError(-32602, "searchId is required");
         return;
     }
@@ -968,13 +869,7 @@ void DOMDomain::handleCollectClassNamesFromSubtree(CDPCommand& cmd,
                 }
             }
         }
-        std::vector<Node*> kids;
-        for (Node* c = n->firstChild(); c; c = c->nextSibling()) {
-            kids.push_back(c);
-        }
-        for (size_t i = kids.size(); i-- > 0;) {
-            stack.push_back(kids[i]);
-        }
+        pushChildrenInReverse(n, stack);
     }
     rapidjson::Document out;
     rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
@@ -1020,9 +915,7 @@ void DOMDomain::handleGetNodeForLocation(CDPCommand& cmd, const std::string&)
     result.AddMember("backendNodeId", backendNodeId, alloc);
     // nodeId and backendNodeId share one id space in this registry.
     result.AddMember("nodeId", backendNodeId, alloc);
-    result.AddMember(
-        "frameId",
-        rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc), alloc);
+    addStringMember(result, "frameId", s->frameId, alloc);
     cmd.sendResult(result, out);
 }
 
@@ -1033,10 +926,7 @@ void DOMDomain::handleCopyTo(CDPCommand& cmd, const std::string& method)
     int nodeId = paramNodeId(cmd);
     Node* node = reg->lookup(nodeId);
     int targetId = 0;
-    if (cmd.params() && cmd.params()->HasMember("targetNodeId") &&
-        (*cmd.params())["targetNodeId"].IsInt()) {
-        targetId = (*cmd.params())["targetNodeId"].GetInt();
-    }
+    targetId = paramInt(cmd, "targetNodeId", targetId);
     Node* target = reg->lookup(targetId);
     if (!node || !target) {
         cmd.sendError(-32000, "Could not find node with given id");
@@ -1103,13 +993,7 @@ void DOMDomain::handleGetFlattenedDocument(CDPCommand& cmd, const std::string&)
         rapidjson::Value sn(rapidjson::kObjectType);
         reg->serializeNode(n, 0, sn, alloc);
         nodes.PushBack(sn, alloc);
-        std::vector<Node*> kids;
-        for (Node* c = n->firstChild(); c; c = c->nextSibling()) {
-            kids.push_back(c);
-        }
-        for (size_t i = kids.size(); i-- > 0;) {
-            stack.push_back(kids[i]);
-        }
+        pushChildrenInReverse(n, stack);
     }
     result.AddMember("nodes", nodes, alloc);
     cmd.sendResult(result, out);
@@ -1121,9 +1005,7 @@ void DOMDomain::handleSetNodeName(CDPCommand& cmd, const std::string&)
 
     int nodeId = paramNodeId(cmd);
     Node* node = reg->lookup(nodeId);
-    if (!node || !node->isElement() || !cmd.params() ||
-        !cmd.params()->HasMember("name") ||
-        !(*cmd.params())["name"].IsString()) {
+    if (!node || !node->isElement() || !hasStringParam(cmd, "name")) {
         cmd.sendError(-32000, "Could not find node with given id");
         return;
     }
@@ -1178,8 +1060,7 @@ void DOMDomain::handleRequestNode(CDPCommand& cmd, const std::string&)
     NodeRegistry* reg = m_dispatcher->nodeRegistry();
 
     Node* node = nullptr;
-    if (cmd.params() && cmd.params()->HasMember("objectId") &&
-        (*cmd.params())["objectId"].IsString()) {
+    if (hasStringParam(cmd, "objectId")) {
         node = nodeFromObjectId(m_dispatcher,
                                 (*cmd.params())["objectId"].GetString());
     }

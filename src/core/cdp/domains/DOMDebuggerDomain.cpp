@@ -43,16 +43,8 @@ namespace Starfish {
 static EventTarget* eventTargetFromObjectId(CDPDispatcher* disp,
                                             const char* oid)
 {
-    if (!oid || strncmp(oid, "OBJ-", 4) != 0) {
-        return nullptr;
-    }
-    int id = atoi(oid + 4);
-    Escargot::ObjectRef* obj = disp->remoteObjectStore()->lookup(id);
-    if (!obj || !obj->extraData()) {
-        return nullptr;
-    }
-    ScriptWrappable* w = (ScriptWrappable*)obj->extraData();
-    return w->isEventTarget() ? w->asEventTarget() : nullptr;
+    ScriptWrappable* w = wrappableForObjectId(disp->remoteObjectStore(), oid);
+    return w && w->isEventTarget() ? w->asEventTarget() : nullptr;
 }
 
 void DOMDebuggerDomain::processMessage(CDPCommand& cmd,
@@ -60,8 +52,7 @@ void DOMDebuggerDomain::processMessage(CDPCommand& cmd,
 {
     if (method == "getEventListeners") {
         const char* oid = nullptr;
-        if (cmd.params() && cmd.params()->HasMember("objectId") &&
-            (*cmd.params())["objectId"].IsString()) {
+        if (hasStringParam(cmd, "objectId")) {
             oid = (*cmd.params())["objectId"].GetString();
         }
         EventTarget* target = eventTargetFromObjectId(m_dispatcher, oid);
@@ -91,10 +82,7 @@ void DOMDebuggerDomain::processMessage(CDPCommand& cmd,
                         continue;
                     }
                     rapidjson::Value entryObj(rapidjson::kObjectType);
-                    entryObj.AddMember("type",
-                                       rapidjson::Value(typeStr.c_str(),
-                                                        typeStr.size(), alloc),
-                                       alloc);
+                    addStringMember(entryObj, "type", typeStr, alloc);
                     entryObj.AddMember("useCapture", l->capture(), alloc);
                     // starfish does not track the passive/once listener
                     // options; report false (CDP fields are required booleans).

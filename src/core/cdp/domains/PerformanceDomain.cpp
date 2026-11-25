@@ -22,6 +22,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "PerformanceDomain.h"
+#include "MemoryDomain.h"
 #include "../CDPDispatcher.h"
 #include "../CDPCommand.h"
 #include "../CDPSession.h"
@@ -34,19 +35,6 @@
 #include <gc.h>
 
 namespace Starfish {
-
-// Recursively count nodes in a Node subtree (the node itself plus descendants).
-static size_t countNodes(Node* node)
-{
-    if (!node) {
-        return 0;
-    }
-    size_t n = 1;
-    for (Node* c = node->firstChild(); c; c = c->nextSibling()) {
-        n += countNodes(c);
-    }
-    return n;
-}
 
 void PerformanceDomain::processMessage(CDPCommand& cmd,
                                        const std::string& method)
@@ -74,22 +62,11 @@ void PerformanceDomain::processMessage(CDPCommand& cmd,
 
         // Frame/document count: the main frame plus its direct child
         // BrowsingContexts that have loaded a document.
-        size_t childFrames = 0;
+        size_t documentCount = 0;
         size_t nodeCount = 0;
-        BrowsingContext* main = wv ? wv->mainBrowsingContext() : nullptr;
-        if (main) {
-            if (main->document()) {
-                nodeCount += countNodes(main->document());
-            }
-            main->iterateChildContext([&](BrowsingContext* child) {
-                if (child && child->document()) {
-                    childFrames++;
-                    nodeCount += countNodes(child->document());
-                }
-            });
-        }
-        double documents = 1.0 + (double)childFrames;
-        double frames = 1.0 + (double)childFrames;
+        sampleDOMCounters(wv, documentCount, nodeCount);
+        double documents = (double)documentCount;
+        double frames = (double)documentCount;
 
         // GC heap: total committed heap vs. used (committed minus free).
         size_t heapTotal = GC_get_heap_size();

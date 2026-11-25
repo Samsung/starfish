@@ -36,15 +36,6 @@ namespace Starfish {
 
 namespace {
 
-    static std::string paramStr(CDPCommand& cmd, const char* name)
-    {
-        if (cmd.params() && cmd.params()->HasMember(name) &&
-            (*cmd.params())[name].IsString()) {
-            return (*cmd.params())[name].GetString();
-        }
-        return std::string();
-    }
-
     // Pull a mime type out of a Fetch.fulfillRequest responseHeaders array, if
     // the client supplied a Content-Type. Case-insensitive header name match.
     static std::string mimeFromHeaders(CDPCommand& cmd)
@@ -85,24 +76,16 @@ std::string FetchDomain::emitNavigationPaused(const std::string& sessionId,
     rapidjson::Document doc;
     rapidjson::Document::AllocatorType& alloc = doc.GetAllocator();
     rapidjson::Value params(rapidjson::kObjectType);
-    params.AddMember(
-        "requestId",
-        rapidjson::Value(requestId.c_str(), requestId.size(), alloc), alloc);
+    addStringMember(params, "requestId", requestId, alloc);
     // networkId ties this pause to the Network.requestWillBeSent already
     // emitted for the navigation (== loaderId), so puppeteer maps it to the nav
     // request.
-    params.AddMember(
-        "networkId",
-        rapidjson::Value(s->loaderId.c_str(), s->loaderId.size(), alloc),
-        alloc);
-    params.AddMember(
-        "frameId",
-        rapidjson::Value(s->frameId.c_str(), s->frameId.size(), alloc), alloc);
+    addStringMember(params, "networkId", s->loaderId, alloc);
+    addStringMember(params, "frameId", s->frameId, alloc);
     params.AddMember("resourceType", "Document", alloc);
 
     rapidjson::Value request(rapidjson::kObjectType);
-    request.AddMember("url", rapidjson::Value(url.c_str(), url.size(), alloc),
-                      alloc);
+    addStringMember(request, "url", url, alloc);
     request.AddMember("method", "GET", alloc);
     request.AddMember("headers", rapidjson::Value(rapidjson::kObjectType),
                       alloc);
@@ -143,12 +126,12 @@ void FetchDomain::handleContinueRequest(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
 
-    std::string requestId = paramStr(cmd, "requestId");
+    std::string requestId = paramString(cmd, "requestId");
     cmd.sendResultEmpty();
     if (s->pendingFetchNav.active &&
         s->pendingFetchNav.requestId == requestId) {
         // continueRequest may override the URL; honor it if present.
-        std::string overrideUrl = paramStr(cmd, "url");
+        std::string overrideUrl = paramString(cmd, "url");
         std::string sid = s->pendingFetchNav.sessionId;
         std::string navUrl = s->pendingFetchNav.url;
         std::string target = overrideUrl.empty() ? navUrl : overrideUrl;
@@ -160,14 +143,14 @@ void FetchDomain::handleFulfillRequest(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
 
-    std::string requestId = paramStr(cmd, "requestId");
+    std::string requestId = paramString(cmd, "requestId");
     cmd.sendResultEmpty();
     if (s->pendingFetchNav.active &&
         s->pendingFetchNav.requestId == requestId) {
         // body is base64-encoded per the CDP spec. data: URLs accept
         // base64 directly, so forward it unchanged (the document loader
         // renders the data: URL) with the client's Content-Type.
-        std::string rawBody = paramStr(cmd, "body");
+        std::string rawBody = paramString(cmd, "body");
         std::string mt = mimeFromHeaders(cmd);
         if (mt.empty()) {
             mt = "text/html";
@@ -182,12 +165,9 @@ void FetchDomain::handleFailRequest(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
 
-    std::string requestId = paramStr(cmd, "requestId");
+    std::string requestId = paramString(cmd, "requestId");
     std::string errorReason;
-    if (cmd.params() && cmd.params()->HasMember("errorReason") &&
-        (*cmd.params())["errorReason"].IsString()) {
-        errorReason = (*cmd.params())["errorReason"].GetString();
-    }
+    errorReason = paramString(cmd, "errorReason", errorReason);
     cmd.sendResultEmpty();
     if (s->pendingFetchNav.active &&
         s->pendingFetchNav.requestId == requestId) {
