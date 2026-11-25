@@ -132,7 +132,7 @@ http://web-platform.test:8000/css/css-values/calc-serialization.html
 http://web-platform.test:8000/css/css-values/line-break-ch-unit.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/minmax-angle-computed.html
 http://web-platform.test:8000/css/css-values/minmax-angle-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/minmax-angle-serialize.html
+http://web-platform.test:8000/css/css-values/minmax-angle-serialize.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/minmax-integer-computed.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-values/minmax-length-computed.html
 # [auto-fail:NO_COMPLETION] http://web-platform.test:8000/css/css-values/minmax-length-invalid.html
@@ -148,7 +148,7 @@ http://web-platform.test:8000/css/css-values/minmax-percentage-invalid.html
 http://web-platform.test:8000/css/css-values/minmax-percentage-serialize.html
 http://web-platform.test:8000/css/css-values/minmax-time-computed.html
 http://web-platform.test:8000/css/css-values/minmax-time-invalid.html
-# [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/minmax-time-serialize.html
+http://web-platform.test:8000/css/css-values/minmax-time-serialize.html
 http://web-platform.test:8000/css/css-values/percentage-without-context.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/position/position-computed.tentative.html
 # [auto-fail:SUBTESTS_FAILED] http://web-platform.test:8000/css/css-values/position/position-invalid.tentative.html

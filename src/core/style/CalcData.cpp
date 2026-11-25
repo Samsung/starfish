@@ -60,9 +60,12 @@ String* CalcValue::toString()
     } else if (m_type.isLength()) {
         return m_data.m_lengthData.toString();
     } else if (m_type.isAngle()) {
-        return m_data.m_angleData.toString();
+        // CSS Values 4 simplifies dimensions to their canonical units.
+        return CSSAngle(CSSAngle::DEG, m_data.m_angleData.toDegreeValue())
+            .toString();
     } else if (m_type.isTime()) {
-        return m_data.m_timeData.toString();
+        return CSSTime(CSSTime::S, m_data.m_timeData.toTimeValue() / 1000.0)
+            .toString();
     } else if (m_type.isPercentage()) {
         StringBuilder builder;
         // CSS Values 4 serializes a zero percentage without a sign.
