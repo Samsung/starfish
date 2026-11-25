@@ -82,6 +82,96 @@ bool axIsPresentationalListItem(Element* element)
     return !role.empty() && role != "list" && role != "directory";
 }
 
+// The implicit role of elements whose role does not depend on attributes or
+// context, or nullptr.
+static const char* fixedRoleForTag(const std::string& tag)
+{
+    static const struct {
+        const char* tag;
+        const char* role;
+    } roles[] = {
+        { "button", "button" },
+        { "iframe", "Iframe" },
+        { "h1", "heading" },
+        { "h2", "heading" },
+        { "h3", "heading" },
+        { "h4", "heading" },
+        { "h5", "heading" },
+        { "h6", "heading" },
+        { "img", "image" },
+        { "svg", "image" },
+        { "textarea", "textbox" },
+        { "select", "combobox" },
+        { "option", "option" },
+        { "nav", "navigation" },
+        { "main", "main" },
+        { "article", "article" },
+        { "section", "region" },
+        { "header", "banner" },
+        { "footer", "contentinfo" },
+        { "aside", "complementary" },
+        { "dialog", "dialog" },
+        { "ul", "list" },
+        { "ol", "list" },
+        { "p", "paragraph" },
+        { "figure", "figure" },
+        { "figcaption", "caption" },
+        { "table", "table" },
+        { "tr", "row" },
+        { "td", "cell" },
+        { "th", "columnheader" },
+        { "form", "form" },
+        { "canvas", "canvas" },
+        { "label", "LabelText" },
+    };
+    for (const auto& entry : roles) {
+        if (tag == entry.tag) {
+            return entry.role;
+        }
+    }
+    return nullptr;
+}
+
+static std::string inputRole(Element* element)
+{
+    std::string type = lowered(attributeOf(element, "type"));
+    if (type == "checkbox") {
+        return "checkbox";
+    }
+    if (type == "radio") {
+        return "radio";
+    }
+    if (type == "button" || type == "submit" || type == "reset" ||
+        type == "image") {
+        return "button";
+    }
+    if (type == "range") {
+        return "slider";
+    }
+    if (type == "number") {
+        return "spinbutton";
+    }
+    if (type == "hidden") {
+        return std::string();
+    }
+    // text, search, email, url, tel, password, "" ...
+    return "textbox";
+}
+
+static std::string summaryRole(Element* element)
+{
+    // Only the summary of a details element is a disclosure widget.
+    // A details element with a name belongs to an exclusive group.
+    Element* parent = element->parentElement();
+    if (parent && parent->localName() &&
+        parent->localName()->toUTF8NonGCString() == "details") {
+        return attributeOf(parent, "name").empty()
+                   ? "DisclosureTriangle"
+                   : "DisclosureTriangleGrouped";
+    }
+    return "generic";
+}
+
 std::string axRoleForElement(Element* element, const std::string& tag)
 {
     std::string explicitRole = firstRoleToken(element);
@@ -96,130 +186,21 @@ std::string axRoleForElement(Element* element, const std::string& tag)
         return explicitRole;
     }
 
-    if (tag == "button") {
-        return "button";
-    }
-    if (tag == "iframe") {
-        return "Iframe";
+    if (const char* role = fixedRoleForTag(tag)) {
+        return role;
     }
     if (tag == "a") {
         return element->hasAttribute(String::fromUTF8("href", 4)) ? "link"
                                                                   : "generic";
     }
-    if (tag == "h1" || tag == "h2" || tag == "h3" || tag == "h4" ||
-        tag == "h5" || tag == "h6") {
-        return "heading";
-    }
-    if (tag == "img") {
-        return "image";
-    }
-    if (tag == "svg") {
-        return "image";
-    }
     if (tag == "input") {
-        std::string type = lowered(attributeOf(element, "type"));
-        if (type == "checkbox") {
-            return "checkbox";
-        }
-        if (type == "radio") {
-            return "radio";
-        }
-        if (type == "button" || type == "submit" || type == "reset" ||
-            type == "image") {
-            return "button";
-        }
-        if (type == "range") {
-            return "slider";
-        }
-        if (type == "number") {
-            return "spinbutton";
-        }
-        if (type == "hidden") {
-            return std::string();
-        }
-        // text, search, email, url, tel, password, "" ...
-        return "textbox";
-    }
-    if (tag == "textarea") {
-        return "textbox";
-    }
-    if (tag == "select") {
-        return "combobox";
-    }
-    if (tag == "option") {
-        return "option";
-    }
-    if (tag == "nav") {
-        return "navigation";
-    }
-    if (tag == "main") {
-        return "main";
-    }
-    if (tag == "article") {
-        return "article";
-    }
-    if (tag == "section") {
-        return "region";
-    }
-    if (tag == "header") {
-        return "banner";
-    }
-    if (tag == "footer") {
-        return "contentinfo";
-    }
-    if (tag == "aside") {
-        return "complementary";
-    }
-    if (tag == "dialog") {
-        return "dialog";
-    }
-    if (tag == "ul" || tag == "ol") {
-        return "list";
+        return inputRole(element);
     }
     if (tag == "li") {
         return axIsPresentationalListItem(element) ? std::string() : "listitem";
     }
-    if (tag == "p") {
-        return "paragraph";
-    }
-    if (tag == "figure") {
-        return "figure";
-    }
-    if (tag == "figcaption") {
-        return "caption";
-    }
-    if (tag == "table") {
-        return "table";
-    }
-    if (tag == "tr") {
-        return "row";
-    }
-    if (tag == "td") {
-        return "cell";
-    }
-    if (tag == "th") {
-        return "columnheader";
-    }
-    if (tag == "form") {
-        return "form";
-    }
-    if (tag == "canvas") {
-        return "canvas";
-    }
-    if (tag == "label") {
-        return "LabelText";
-    }
     if (tag == "summary") {
-        // Only the summary of a details element is a disclosure widget.
-        // A details element with a name belongs to an exclusive group.
-        Element* parent = element->parentElement();
-        if (parent && parent->localName() &&
-            parent->localName()->toUTF8NonGCString() == "details") {
-            return attributeOf(parent, "name").empty()
-                       ? "DisclosureTriangle"
-                       : "DisclosureTriangleGrouped";
-        }
-        return "generic";
+        return summaryRole(element);
     }
     return "generic";
 }

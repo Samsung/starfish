@@ -627,62 +627,19 @@ void AXSerializer::addDocumentName(rapidjson::Value& out, AXNode* node)
     out.AddMember("name", name, *m_allocator);
 }
 
-void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
+// Chromium honors aria-readonly only for some roles.
+// It ignores aria-readonly on an editing host.
+// A cell or header needs a grid or treegrid ancestor.
+// The native readonly attribute wins over aria-readonly.
+// Otherwise aria-readonly can turn the state on or off.
+static bool hasReadonlyRestriction(AXNode* node, Element* element,
+                                   const std::string& role,
+                                   HTMLTextEditable* textEditable,
+                                   bool editingHost)
 {
-    rapidjson::Value properties(rapidjson::kArrayType);
-
-    if (node->kind() == AXNodeKind::Root) {
-        addBooleanProperty(properties, "focusable", "booleanOrUndefined", true);
-        Document* document = node->domNode()->asDocument();
-        std::string address = document->urlString()
-                                  ? document->urlString()->toUTF8NonGCString()
-                                  : std::string();
-        addStringProperty(properties, "url", "string", address);
-        out.AddMember("properties", properties, *m_allocator);
-        return;
-    }
-
-    Element* element = node->element();
-    if (!element) {
-        // The synthesized marker group of a tabs-mode scroller has no DOM
-        // element; the scroll container it controls is the only property
-        // Chromium reports for it (AXRelation::kControls).
-        if (node->kind() == AXNodeKind::ScrollMarkerGroup &&
-            node->controlsTarget()) {
-            rapidjson::Value related(rapidjson::kArrayType);
-            rapidjson::Value item(rapidjson::kObjectType);
-            item.AddMember("backendDOMNodeId",
-                           m_registry->getOrCreate(node->controlsTarget()),
-                           *m_allocator);
-            related.PushBack(item, *m_allocator);
-            rapidjson::Value property(rapidjson::kObjectType);
-            property.AddMember("name", "controls", *m_allocator);
-            rapidjson::Value value(rapidjson::kObjectType);
-            value.AddMember("type", "idrefList", *m_allocator);
-            value.AddMember("relatedNodes", related, *m_allocator);
-            property.AddMember("value", value, *m_allocator);
-            properties.PushBack(property, *m_allocator);
-        }
-        out.AddMember("properties", properties, *m_allocator);
-        return;
-    }
-
-    const std::string tag = tagOf(element);
-    const std::string& role = node->role();
-    HTMLTextEditable* textEditable =
-        element->isHTMLTextEditable() ? element->asHTMLTextEditable() : nullptr;
-
-    const bool ariaDisabled = isTrueToken(element, "aria-disabled");
-    const bool nativeDisabled =
-        element->isHTMLFormControl() && element->isDisabledFormControl();
     const bool nativeReadonly = textEditable &&
                                 textEditable->isEditableType() &&
                                 textEditable->readonly();
-    const bool editingHost = isEditingHost(element);
-
-    // Chromium honors aria-readonly only for some roles.
-    // It ignores aria-readonly on an editing host.
-    // A cell or header needs a grid or treegrid ancestor.
     bool supportsAriaReadonly = false;
     if (!editingHost) {
         if (roleSupportsAriaReadonly(role)) {
@@ -691,105 +648,19 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
             supportsAriaReadonly = isInsideGrid(node);
         }
     }
-    // The native readonly attribute wins over aria-readonly.
-    // Otherwise aria-readonly can turn the state on or off.
     bool readonlyRestriction = nativeReadonly;
     const std::string ariaReadonlyToken = ariaToken(element, "aria-readonly");
     if (!nativeReadonly && supportsAriaReadonly &&
         (ariaReadonlyToken == "true" || ariaReadonlyToken == "false")) {
         readonlyRestriction = ariaReadonlyToken == "true";
     }
-    const bool disabledRestriction = nativeDisabled || ariaDisabled;
-    const bool unrestricted = !disabledRestriction && !readonlyRestriction;
+    return readonlyRestriction;
+}
 
-    // FillGlobalStates. AXTree owns hidden/hiddenRoot and exposes those states
-    // as ignored reasons. Do not walk the DOM ancestors again here.
-    if (disabledRestriction) {
-        addBooleanProperty(properties, "disabled", "boolean", true);
-    }
-
-    // An empty value and "undefined" mean the attribute is not set.
-    // The spelling and grammar values count as true on a text field only.
-    // Without the attribute, a listed form control reports its validity.
-    // Starfish has no ValidityState, so such a control always reports false.
-    const std::string invalid = lowered(axAttribute(element, "aria-invalid"));
-    if (!isUnsetToken(invalid)) {
-        if (invalid == "false") {
-            addStringProperty(properties, "invalid", "token", "false");
-        } else if (invalid != "grammar" && invalid != "spelling") {
-            addStringProperty(properties, "invalid", "token", "true");
-        } else if (role == "textbox") {
-            addStringProperty(properties, "invalid", "token", "true");
-        }
-    } else if (isListedFormControl(tag)) {
-        addStringProperty(properties, "invalid", "token", "false");
-    }
-
-    // Chromium's FillLiveRegionProperties: an element that opted into
-    // aria-live reports the live state, and atomic and relevant report
-    // their defaults unless the author set them.
-    const std::string live = lowered(axAttribute(element, "aria-live"));
-    if (live == "polite" || live == "assertive") {
-        addStringProperty(properties, "live", "token", live);
-        const std::string atomic = lowered(axAttribute(element, "aria-atomic"));
-        addBooleanProperty(properties, "atomic", "boolean", atomic == "true");
-        std::string relevant = lowered(axAttribute(element, "aria-relevant"));
-        if (relevant.empty()) {
-            relevant = "additions text";
-        }
-        addStringProperty(properties, "relevant", "tokenList", relevant);
-    }
-
-    const bool nativeDialogIsOpen = element->isHTMLDialogElement() &&
-                                    element->asHTMLDialogElement()->open();
-    // A scroll container that actually overflows is reachable by scrolling,
-    // which makes it a focus candidate the way Chromium's scroller
-    // containers are. Only auto/scroll overflow counts: a plain overflow
-    // hidden or visible box is not a scroll container.
-    const bool overflowIsScroller =
-        element->appliedOverflowX() == OverflowValue::AutoOverflow ||
-        element->appliedOverflowX() == OverflowValue::ScrollOverflow ||
-        element->appliedOverflowY() == OverflowValue::AutoOverflow ||
-        element->appliedOverflowY() == OverflowValue::ScrollOverflow;
-    const bool scrollable = overflowIsScroller && element->frame() &&
-                            element->frame()->isFrameBox() &&
-                            (element->scrollWidth() > element->clientWidth() ||
-                             element->scrollHeight() > element->clientHeight());
-    const bool focusableCandidate =
-        scrollable || axHasAttribute(element, "tabindex") || tag == "input" ||
-        tag == "button" || tag == "select" || tag == "textarea" ||
-        tag == "option" || editingHost || nativeDialogIsOpen ||
-        role == "DisclosureTriangle" || role == "DisclosureTriangleGrouped" ||
-        (tag == "a" && axHasAttribute(element, "href"));
-    if (focusableCandidate && !nativeDisabled) {
-        addBooleanProperty(properties, "focusable", "booleanOrUndefined", true);
-    }
-
-    if (element->document()->browsingContext()->focusedNode() == element) {
-        addBooleanProperty(properties, "focused", "booleanOrUndefined", true);
-    }
-
-    // The editable state does not depend on disabled or readonly.
-    // It is true for a text control and for content inside an editing host.
-    EditableKind editableKind = editableKindFromAttribute(element);
-    if (editableKind == EditableKind::None && textEditable &&
-        textEditable->isEditableType()) {
-        editableKind = EditableKind::PlainText;
-    }
-    if (editableKind != EditableKind::None) {
-        addStringProperty(properties, "editable", "token",
-                          editableKind == EditableKind::RichText ? "richtext"
-                                                                 : "plaintext");
-    }
-
-    // The settable state depends on the role and on the restriction.
-    // It does not depend on editable content.
-    if (roleCanSetValue(role) && unrestricted) {
-        addBooleanProperty(properties, "settable", "booleanOrUndefined", true);
-    }
-
-    // FillWidgetProperties.
-    // The level comes from aria-level when the attribute has a value.
+// The level comes from aria-level when the attribute has a value.
+static int axLevel(AXNode* node, Element* element, const std::string& tag,
+                   const std::string& role)
+{
     const std::string levelText = axAttribute(element, "aria-level");
     const bool hasAriaLevel = roleAllowsLevel(role) && !levelText.empty();
     const int ariaLevel = hasAriaLevel ? ariaLevelValue(levelText) : 0;
@@ -830,10 +701,207 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
             }
         }
     }
+    return level;
+}
+
+void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
+{
+    rapidjson::Value properties(rapidjson::kArrayType);
+
+    if (node->kind() == AXNodeKind::Root) {
+        addRootProperties(properties, node);
+    } else if (Element* element = node->element()) {
+        addElementProperties(properties, node, element);
+    } else {
+        addMarkerGroupProperties(properties, node);
+    }
+    out.AddMember("properties", properties, *m_allocator);
+}
+
+void AXSerializer::addRootProperties(rapidjson::Value& properties, AXNode* node)
+{
+    addBooleanProperty(properties, "focusable", "booleanOrUndefined", true);
+    Document* document = node->domNode()->asDocument();
+    std::string address = document->urlString()
+                              ? document->urlString()->toUTF8NonGCString()
+                              : std::string();
+    addStringProperty(properties, "url", "string", address);
+}
+
+void AXSerializer::addMarkerGroupProperties(rapidjson::Value& properties,
+                                            AXNode* node)
+{
+    // The synthesized marker group of a tabs-mode scroller has no DOM
+    // element; the scroll container it controls is the only property
+    // Chromium reports for it (AXRelation::kControls).
+    if (node->kind() == AXNodeKind::ScrollMarkerGroup &&
+        node->controlsTarget()) {
+        rapidjson::Value related(rapidjson::kArrayType);
+        rapidjson::Value item(rapidjson::kObjectType);
+        item.AddMember("backendDOMNodeId",
+                       m_registry->getOrCreate(node->controlsTarget()),
+                       *m_allocator);
+        related.PushBack(item, *m_allocator);
+        rapidjson::Value property(rapidjson::kObjectType);
+        property.AddMember("name", "controls", *m_allocator);
+        rapidjson::Value value(rapidjson::kObjectType);
+        value.AddMember("type", "idrefList", *m_allocator);
+        value.AddMember("relatedNodes", related, *m_allocator);
+        property.AddMember("value", value, *m_allocator);
+        properties.PushBack(property, *m_allocator);
+    }
+}
+
+// The order of the groups below is the order Chromium reports the
+// properties in.
+void AXSerializer::addElementProperties(rapidjson::Value& properties,
+                                        AXNode* node, Element* element)
+{
+    const std::string tag = tagOf(element);
+    const std::string& role = node->role();
+    HTMLTextEditable* textEditable =
+        element->isHTMLTextEditable() ? element->asHTMLTextEditable() : nullptr;
+
+    const bool ariaDisabled = isTrueToken(element, "aria-disabled");
+    const bool nativeDisabled =
+        element->isHTMLFormControl() && element->isDisabledFormControl();
+    const bool editingHost = isEditingHost(element);
+    const bool readonlyRestriction =
+        hasReadonlyRestriction(node, element, role, textEditable, editingHost);
+    const bool disabledRestriction = nativeDisabled || ariaDisabled;
+    const bool unrestricted = !disabledRestriction && !readonlyRestriction;
+
+    // FillGlobalStates. AXTree owns hidden/hiddenRoot and exposes those states
+    // as ignored reasons. Do not walk the DOM ancestors again here.
+    if (disabledRestriction) {
+        addBooleanProperty(properties, "disabled", "boolean", true);
+    }
+    addInvalidProperty(properties, element, tag, role);
+    addLiveRegionProperties(properties, element);
+    addFocusProperties(properties, element, tag, role, editingHost,
+                       nativeDisabled);
+    addEditableProperty(properties, element, textEditable);
+
+    // The settable state depends on the role and on the restriction.
+    // It does not depend on editable content.
+    if (roleCanSetValue(role) && unrestricted) {
+        addBooleanProperty(properties, "settable", "booleanOrUndefined", true);
+    }
+
+    // FillWidgetProperties.
+    const int level = axLevel(node, element, tag, role);
     if (level > 0) {
         addIntegerProperty(properties, "level", level);
     }
+    addWidgetProperties(properties, element, tag, role, editingHost,
+                        readonlyRestriction && !disabledRestriction);
 
+    // FillWidgetStates. Native mutable state wins over content attributes.
+    addCheckedProperty(properties, element, role);
+    addWidgetStates(properties, node, element, tag, role);
+
+    addRelationProperties(properties, node, element, tag, role);
+}
+
+// An empty value and "undefined" mean the attribute is not set.
+// The spelling and grammar values count as true on a text field only.
+// Without the attribute, a listed form control reports its validity.
+// Starfish has no ValidityState, so such a control always reports false.
+void AXSerializer::addInvalidProperty(rapidjson::Value& properties,
+                                      Element* element, const std::string& tag,
+                                      const std::string& role)
+{
+    const std::string invalid = lowered(axAttribute(element, "aria-invalid"));
+    if (!isUnsetToken(invalid)) {
+        if (invalid == "false") {
+            addStringProperty(properties, "invalid", "token", "false");
+        } else if (invalid != "grammar" && invalid != "spelling") {
+            addStringProperty(properties, "invalid", "token", "true");
+        } else if (role == "textbox") {
+            addStringProperty(properties, "invalid", "token", "true");
+        }
+    } else if (isListedFormControl(tag)) {
+        addStringProperty(properties, "invalid", "token", "false");
+    }
+}
+
+// Chromium's FillLiveRegionProperties: an element that opted into
+// aria-live reports the live state, and atomic and relevant report
+// their defaults unless the author set them.
+void AXSerializer::addLiveRegionProperties(rapidjson::Value& properties,
+                                           Element* element)
+{
+    const std::string live = lowered(axAttribute(element, "aria-live"));
+    if (live == "polite" || live == "assertive") {
+        addStringProperty(properties, "live", "token", live);
+        const std::string atomic = lowered(axAttribute(element, "aria-atomic"));
+        addBooleanProperty(properties, "atomic", "boolean", atomic == "true");
+        std::string relevant = lowered(axAttribute(element, "aria-relevant"));
+        if (relevant.empty()) {
+            relevant = "additions text";
+        }
+        addStringProperty(properties, "relevant", "tokenList", relevant);
+    }
+}
+
+void AXSerializer::addFocusProperties(rapidjson::Value& properties,
+                                      Element* element, const std::string& tag,
+                                      const std::string& role, bool editingHost,
+                                      bool nativeDisabled)
+{
+    const bool nativeDialogIsOpen = element->isHTMLDialogElement() &&
+                                    element->asHTMLDialogElement()->open();
+    // A scroll container that actually overflows is reachable by scrolling,
+    // which makes it a focus candidate the way Chromium's scroller
+    // containers are. Only auto/scroll overflow counts: a plain overflow
+    // hidden or visible box is not a scroll container.
+    const bool overflowIsScroller =
+        element->appliedOverflowX() == OverflowValue::AutoOverflow ||
+        element->appliedOverflowX() == OverflowValue::ScrollOverflow ||
+        element->appliedOverflowY() == OverflowValue::AutoOverflow ||
+        element->appliedOverflowY() == OverflowValue::ScrollOverflow;
+    const bool scrollable = overflowIsScroller && element->frame() &&
+                            element->frame()->isFrameBox() &&
+                            (element->scrollWidth() > element->clientWidth() ||
+                             element->scrollHeight() > element->clientHeight());
+    const bool focusableCandidate =
+        scrollable || axHasAttribute(element, "tabindex") || tag == "input" ||
+        tag == "button" || tag == "select" || tag == "textarea" ||
+        tag == "option" || editingHost || nativeDialogIsOpen ||
+        role == "DisclosureTriangle" || role == "DisclosureTriangleGrouped" ||
+        (tag == "a" && axHasAttribute(element, "href"));
+    if (focusableCandidate && !nativeDisabled) {
+        addBooleanProperty(properties, "focusable", "booleanOrUndefined", true);
+    }
+
+    if (element->document()->browsingContext()->focusedNode() == element) {
+        addBooleanProperty(properties, "focused", "booleanOrUndefined", true);
+    }
+}
+
+// The editable state does not depend on disabled or readonly.
+// It is true for a text control and for content inside an editing host.
+void AXSerializer::addEditableProperty(rapidjson::Value& properties,
+                                       Element* element,
+                                       HTMLTextEditable* textEditable)
+{
+    EditableKind editableKind = editableKindFromAttribute(element);
+    if (editableKind == EditableKind::None && textEditable &&
+        textEditable->isEditableType()) {
+        editableKind = EditableKind::PlainText;
+    }
+    if (editableKind != EditableKind::None) {
+        addStringProperty(properties, "editable", "token",
+                          editableKind == EditableKind::RichText ? "richtext"
+                                                                 : "plaintext");
+    }
+}
+
+void AXSerializer::addWidgetProperties(rapidjson::Value& properties,
+                                       Element* element, const std::string& tag,
+                                       const std::string& role,
+                                       bool editingHost, bool readonly)
+{
     if (roleAllowsMultiselectable(role)) {
         addBooleanProperty(properties, "multiselectable", "boolean",
                            isTrueToken(element, "aria-multiselectable"));
@@ -870,8 +938,7 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
     }
 
     if (roleAllowsReadonly(role)) {
-        addBooleanProperty(properties, "readonly", "boolean",
-                           readonlyRestriction && !disabledRestriction);
+        addBooleanProperty(properties, "readonly", "boolean", readonly);
     }
 
     if (roleAllowsRequired(role) && tag != "select") {
@@ -880,8 +947,11 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
                               isTrueToken(element, "aria-required");
         addBooleanProperty(properties, "required", "boolean", required);
     }
+}
 
-    // FillWidgetStates. Native mutable state wins over content attributes.
+void AXSerializer::addCheckedProperty(rapidjson::Value& properties,
+                                      Element* element, const std::string& role)
+{
     const std::string checkedToken = ariaToken(element, "aria-checked");
     const bool conditionallyCheckable =
         (role == "option" || role == "treeitem") && !isUnsetToken(checkedToken);
@@ -904,7 +974,12 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
         }
         addStringProperty(properties, "checked", "tristate", checked);
     }
+}
 
+void AXSerializer::addWidgetStates(rapidjson::Value& properties, AXNode* node,
+                                   Element* element, const std::string& tag,
+                                   const std::string& role)
+{
     // A drop down select opens a menu.
     if (tag == "select" && role == "combobox") {
         addStringProperty(properties, "hasPopup", "token", "menu");
@@ -950,7 +1025,13 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
         }
         addBooleanProperty(properties, "modal", "boolean", modal);
     }
+}
 
+void AXSerializer::addRelationProperties(rapidjson::Value& properties,
+                                         AXNode* node, Element* element,
+                                         const std::string& tag,
+                                         const std::string& role)
+{
     struct Relation {
         const char* attribute;
         const char* property;
@@ -1051,8 +1132,6 @@ void AXSerializer::addProperties(rapidjson::Value& out, AXNode* node)
         property.AddMember("value", value, *m_allocator);
         properties.PushBack(property, *m_allocator);
     }
-
-    out.AddMember("properties", properties, *m_allocator);
 }
 
 // The attribute of the source that gave the name. It is empty when the

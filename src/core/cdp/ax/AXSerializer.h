@@ -28,6 +28,7 @@ namespace Starfish {
 
 class AXNode;
 class Element;
+class HTMLTextEditable;
 class Node;
 class NodeRegistry;
 class PageDomain;
@@ -65,6 +66,30 @@ private:
     void addNameWithSources(rapidjson::Value& out, AXNode* node);
     void addDocumentName(rapidjson::Value& out, AXNode* node);
     void addProperties(rapidjson::Value& out, AXNode* node);
+    void addRootProperties(rapidjson::Value& properties, AXNode* node);
+    void addMarkerGroupProperties(rapidjson::Value& properties, AXNode* node);
+    void addElementProperties(rapidjson::Value& properties, AXNode* node,
+                              Element* element);
+    void addInvalidProperty(rapidjson::Value& properties, Element* element,
+                            const std::string& tag, const std::string& role);
+    void addLiveRegionProperties(rapidjson::Value& properties,
+                                 Element* element);
+    void addFocusProperties(rapidjson::Value& properties, Element* element,
+                            const std::string& tag, const std::string& role,
+                            bool editingHost, bool nativeDisabled);
+    void addEditableProperty(rapidjson::Value& properties, Element* element,
+                             HTMLTextEditable* textEditable);
+    void addWidgetProperties(rapidjson::Value& properties, Element* element,
+                             const std::string& tag, const std::string& role,
+                             bool editingHost, bool readonly);
+    void addCheckedProperty(rapidjson::Value& properties, Element* element,
+                            const std::string& role);
+    void addWidgetStates(rapidjson::Value& properties, AXNode* node,
+                         Element* element, const std::string& tag,
+                         const std::string& role);
+    void addRelationProperties(rapidjson::Value& properties, AXNode* node,
+                               Element* element, const std::string& tag,
+                               const std::string& role);
     void addDescriptionAndValue(rapidjson::Value& out, AXNode* node);
     void addIgnoredReasons(rapidjson::Value& out, AXNode* node);
     rapidjson::Value relatedNodes(Element* element, const std::string& idRefs,
