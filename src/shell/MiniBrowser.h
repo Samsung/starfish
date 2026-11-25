@@ -157,8 +157,6 @@ public:
 
     void runConsole();
 
-    void runCrashTestThread();
-
 private:
     bool createWindow(const InitOption& initOption);
 
@@ -167,8 +165,6 @@ private:
     std::string storageDir();
 
     std::string m_storageDirOverride;
-
-    InitOption m_initOption;
 
     bool m_isMouseLbuttonDown = false;
 

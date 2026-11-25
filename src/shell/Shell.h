@@ -23,7 +23,6 @@
 #include <string>
 #include <cstdint>
 
-#include "PlatformIntegrationData.h"
 #include "MiniBrowser.h"
 
 namespace StarfishShell {
