@@ -29,7 +29,7 @@
 #include "../NodeRegistry.h"
 #include "../RemoteObject.h"
 #include "../TargetContext.h"
-#include "../AXChangeNotifier.h"
+#include "AXChangeNotifier.h"
 #include "../ax/AXSerializer.h"
 #include "../ax/AXTree.h"
 #include "binding/ScriptWrappable.h"

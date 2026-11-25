@@ -48,7 +48,7 @@
 #include "core/dom/UIEvent.h"
 #include "core/dom/Scrolling.h"
 #if defined(STARFISH_ENABLE_CDP)
-#include "core/cdp/AXChangeNotifier.h"
+#include "core/cdp/domains/AXChangeNotifier.h"
 #endif
 #include "core/dom/svg/SVGElement.h"
 #include "core/layout/Frame.h"

@@ -117,7 +117,7 @@
 #include "platform/loader/ImageResource.h"
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 #if defined(STARFISH_ENABLE_CDP)
-#include "core/cdp/AXChangeNotifier.h"
+#include "core/cdp/domains/AXChangeNotifier.h"
 #include "core/cdp/domains/TargetDomain.h"
 #endif
 

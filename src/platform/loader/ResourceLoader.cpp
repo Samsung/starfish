@@ -40,7 +40,7 @@
 #if defined(STARFISH_ENABLE_CDP)
 #include "core/cdp/CDPServer.h"
 #include "core/cdp/CDPDispatcher.h"
-#include "core/cdp/AXChangeNotifier.h"
+#include "core/cdp/domains/AXChangeNotifier.h"
 #include "core/cdp/AuditsNotifier.h"
 #endif
 

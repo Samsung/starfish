@@ -29,7 +29,7 @@
     defined(STARFISH_ENABLE_A11Y_TOUCH_EXPLORATION)
 #include "core/modules/tts/A11yLiveRegion.h"
 #if defined(STARFISH_ENABLE_CDP)
-#include "core/cdp/AXChangeNotifier.h"
+#include "core/cdp/domains/AXChangeNotifier.h"
 #endif
 #endif
 
