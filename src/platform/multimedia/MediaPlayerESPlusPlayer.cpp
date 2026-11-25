@@ -1078,22 +1078,29 @@ void MediaPlayerESPlusPlayer::handleReadyToPrepare(StreamType type)
     }
 }
 
+// Off the main thread, queues run with this player on the main thread and
+// returns true. On the main thread, returns false.
+bool MediaPlayerESPlusPlayer::deferToMainThread(void (*run)(size_t, void*))
+{
+    if (isMainThread()) {
+        return false;
+    }
+    m_container->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        m_container->window(), run, this);
+    return true;
+}
+
 void MediaPlayerESPlusPlayer::handlePrepared(bool success)
 {
-    if (isMainThread() == false) {
-        MessageLoop* msgLoop = m_container->webView()->messageLoop();
-        // Pass success via the pointer-tag-free route: retry on main thread
-        // by re-reading m_foundError (set below before the hop on failure).
-        if (!success) {
-            m_foundError = true;
-        }
-        msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->window(),
-            [](size_t, void* data) {
-                MediaPlayerESPlusPlayer* self = (MediaPlayerESPlusPlayer*)data;
-                self->handlePrepared(self->m_foundError == false);
-            },
-            this);
+    // Pass success via the pointer-tag-free route: retry on main thread
+    // by re-reading m_foundError (set here before the hop on failure).
+    if (isMainThread() == false && !success) {
+        m_foundError = true;
+    }
+    if (deferToMainThread([](size_t, void* data) {
+            MediaPlayerESPlusPlayer* self = (MediaPlayerESPlusPlayer*)data;
+            self->handlePrepared(self->m_foundError == false);
+        })) {
         return;
     }
 
@@ -1165,22 +1172,17 @@ void MediaPlayerESPlusPlayer::handleReadyToSeek(StreamType type,
 
 void MediaPlayerESPlusPlayer::handleSeeked(bool success)
 {
-    if (isMainThread() == false) {
-        MessageLoop* msgLoop = m_container->webView()->messageLoop();
-        // Same success-passing route as handlePrepared: the idler carries only
-        // `this`, so a failure is recorded in m_foundError before the hop and
-        // success is re-derived from it on the main thread. Without the store
-        // a cross-thread handleSeeked(false) would arrive as success=true.
-        if (!success) {
-            m_foundError = true;
-        }
-        msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->window(),
-            [](size_t, void* data) {
-                MediaPlayerESPlusPlayer* self = (MediaPlayerESPlusPlayer*)data;
-                self->handleSeeked(self->m_foundError == false);
-            },
-            this);
+    // Same success-passing route as handlePrepared: the idler carries only
+    // `this`, so a failure is recorded in m_foundError before the hop and
+    // success is re-derived from it on the main thread. Without the store
+    // a cross-thread handleSeeked(false) would arrive as success=true.
+    if (isMainThread() == false && !success) {
+        m_foundError = true;
+    }
+    if (deferToMainThread([](size_t, void* data) {
+            MediaPlayerESPlusPlayer* self = (MediaPlayerESPlusPlayer*)data;
+            self->handleSeeked(self->m_foundError == false);
+        })) {
         return;
     }
     STARFISH_LOG_INFO("ESPP: handleSeeked success:%d target:%lf pending:%lf",
@@ -1219,15 +1221,9 @@ void MediaPlayerESPlusPlayer::handleSeeked(bool success)
 
 void MediaPlayerESPlusPlayer::handleEnded()
 {
-    if (isMainThread() == false) {
-        MessageLoop* msgLoop = m_container->webView()->messageLoop();
-        msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->window(),
-            [](size_t, void* data) {
-                MediaPlayerESPlusPlayer* self = (MediaPlayerESPlusPlayer*)data;
-                self->handleEnded();
-            },
-            this);
+    if (deferToMainThread([](size_t, void* data) {
+            ((MediaPlayerESPlusPlayer*)data)->handleEnded();
+        })) {
         return;
     }
     STARFISH_LOG_INFO("ESPP: handleEnded (loop:%d)", (int)m_isLooping);
@@ -1247,15 +1243,9 @@ void MediaPlayerESPlusPlayer::handleEnded()
 void MediaPlayerESPlusPlayer::handlePlayerError()
 {
     m_foundError = true;
-    if (isMainThread() == false) {
-        MessageLoop* msgLoop = m_container->webView()->messageLoop();
-        msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->window(),
-            [](size_t, void* data) {
-                MediaPlayerESPlusPlayer* self = (MediaPlayerESPlusPlayer*)data;
-                self->handlePlayerError();
-            },
-            this);
+    if (deferToMainThread([](size_t, void* data) {
+            ((MediaPlayerESPlusPlayer*)data)->handlePlayerError();
+        })) {
         return;
     }
     PLAYER_LOGE("ESPP: handlePlayerError");

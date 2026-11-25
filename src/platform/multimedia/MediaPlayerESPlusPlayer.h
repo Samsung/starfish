@@ -192,6 +192,7 @@ private:
     // threads; handlers that touch the DOM hop to the main thread via
     // message-loop idlers.
     void handleReadyToPrepare(StreamType type);
+    bool deferToMainThread(void (*run)(size_t, void*));
     void handlePrepared(bool success);
     void handleReadyToSeek(StreamType type, uint64_t timeMs);
     void handleSeeked(bool success);

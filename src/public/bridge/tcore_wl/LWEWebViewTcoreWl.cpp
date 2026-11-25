@@ -44,6 +44,65 @@
 
 namespace {
 
+// The LWE key for a tizen-core key name.
+::LWE::KeyValue keyValueFromKeyname(const char* keyname)
+{
+    static const struct {
+        const char* name;
+        ::LWE::KeyValue key;
+    } namedKeys[] = {
+        { "Left", ::LWE::ArrowLeftKey },
+        { "Up", ::LWE::ArrowUpKey },
+        { "Right", ::LWE::ArrowRightKey },
+        { "Down", ::LWE::ArrowDownKey },
+        { "Return", ::LWE::EnterKey },
+        { "Escape", ::LWE::EscapeKey },
+        { "BackSpace", ::LWE::BackspaceKey },
+        { "Tab", ::LWE::TabKey },
+        { "Delete", ::LWE::DeleteKey },
+        { "Home", ::LWE::HomeKey },
+        { "End", ::LWE::EndKey },
+        { "Page_Up", ::LWE::PageUpKey },
+        { "Page_Down", ::LWE::PageDownKey },
+        { "Insert", ::LWE::InsertKey },
+    };
+    if (!keyname) {
+        return ::LWE::UnidentifiedKey;
+    }
+    for (const auto& entry : namedKeys) {
+        if (strcmp(keyname, entry.name) == 0) {
+            return entry.key;
+        }
+    }
+    if (strlen(keyname) == 1) {
+        unsigned char c = keyname[0];
+        if (c >= 'A' && c <= 'Z') {
+            return static_cast<::LWE::KeyValue>(static_cast<int>(::LWE::AKey) +
+                                                (c - 'A'));
+        }
+        if (c >= 'a' && c <= 'z') {
+            return static_cast<::LWE::KeyValue>(
+                static_cast<int>(::LWE::LowerAKey) + (c - 'a'));
+        }
+        if (c >= '0' && c <= '9') {
+            return static_cast<::LWE::KeyValue>(
+                static_cast<int>(::LWE::Digit0Key) + (c - '0'));
+        }
+        if (c == ' ') {
+            return ::LWE::SpaceKey;
+        }
+        return static_cast<::LWE::KeyValue>(c);
+    }
+    if (strncmp(keyname, "F", 1) == 0 && strlen(keyname) <= 3) {
+        int fnum = atoi(keyname + 1);
+        if (fnum >= 1 && fnum <= 12) {
+            return static_cast<::LWE::KeyValue>(static_cast<int>(::LWE::F1Key) +
+                                                (fnum - 1));
+        }
+    }
+    return ::LWE::UnidentifiedKey;
+}
+
 bool createEGLDisplay(EGLDisplay& display, EGLConfig& config,
                       tizen_core_wl_native_display_h wlDisplay)
 {
@@ -543,6 +602,19 @@ public:
         }
     }
 
+    // Whether the event came from a device that registered as a touch
+    // screen.
+    bool isTouchEvent(tizen_core_wl_event_input_base_h inputEvent)
+    {
+        char* devId = nullptr;
+        tizen_core_wl_event_input_base_get_device_identifier(inputEvent,
+                                                             &devId);
+        bool isTouch = devId && m_touchDeviceIds.count(devId) > 0;
+        if (devId)
+            free(devId);
+        return isTouch;
+    }
+
     static void eventCallback(void* event,
                               tizen_core_wl_event_type_e event_type,
                               void* user_data)
@@ -605,64 +677,8 @@ public:
                 tizen_core_wl_event_key_get_keycode(inputEvent, &keycode);
                 tizen_core_wl_event_key_get_modifiers(inputEvent, &modifiers);
 
-                ::LWE::KeyValue keyValue = ::LWE::UnidentifiedKey;
-                if (keyname) {
-                    if (strcmp(keyname, "Left") == 0) {
-                        keyValue = ::LWE::ArrowLeftKey;
-                    } else if (strcmp(keyname, "Up") == 0) {
-                        keyValue = ::LWE::ArrowUpKey;
-                    } else if (strcmp(keyname, "Right") == 0) {
-                        keyValue = ::LWE::ArrowRightKey;
-                    } else if (strcmp(keyname, "Down") == 0) {
-                        keyValue = ::LWE::ArrowDownKey;
-                    } else if (strcmp(keyname, "Return") == 0) {
-                        keyValue = ::LWE::EnterKey;
-                    } else if (strcmp(keyname, "Escape") == 0) {
-                        keyValue = ::LWE::EscapeKey;
-                    } else if (strcmp(keyname, "BackSpace") == 0) {
-                        keyValue = ::LWE::BackspaceKey;
-                    } else if (strcmp(keyname, "Tab") == 0) {
-                        keyValue = ::LWE::TabKey;
-                    } else if (strcmp(keyname, "Delete") == 0) {
-                        keyValue = ::LWE::DeleteKey;
-                    } else if (strcmp(keyname, "Home") == 0) {
-                        keyValue = ::LWE::HomeKey;
-                    } else if (strcmp(keyname, "End") == 0) {
-                        keyValue = ::LWE::EndKey;
-                    } else if (strcmp(keyname, "Page_Up") == 0) {
-                        keyValue = ::LWE::PageUpKey;
-                    } else if (strcmp(keyname, "Page_Down") == 0) {
-                        keyValue = ::LWE::PageDownKey;
-                    } else if (strcmp(keyname, "Insert") == 0) {
-                        keyValue = ::LWE::InsertKey;
-                    } else if (strlen(keyname) == 1) {
-                        unsigned char c = keyname[0];
-                        if (c >= 'A' && c <= 'Z') {
-                            keyValue = static_cast<::LWE::KeyValue>(
-                                static_cast<int>(::LWE::AKey) + (c - 'A'));
-                        } else if (c >= 'a' && c <= 'z') {
-                            keyValue = static_cast<::LWE::KeyValue>(
-                                static_cast<int>(::LWE::LowerAKey) + (c - 'a'));
-                        } else if (c >= '0' && c <= '9') {
-                            keyValue = static_cast<::LWE::KeyValue>(
-                                static_cast<int>(::LWE::Digit0Key) + (c - '0'));
-                        } else if (c == ' ') {
-                            keyValue = ::LWE::SpaceKey;
-                        } else {
-                            keyValue = static_cast<::LWE::KeyValue>(c);
-                        }
-                    } else if (strncmp(keyname, "F", 1) == 0 &&
-                               strlen(keyname) <= 3) {
-                        int fnum = atoi(keyname + 1);
-                        if (fnum >= 1 && fnum <= 12) {
-                            keyValue = static_cast<::LWE::KeyValue>(
-                                static_cast<int>(::LWE::F1Key) + (fnum - 1));
-                        }
-                    } else {
-                        keyValue = ::LWE::UnidentifiedKey;
-                    }
-                    free(keyname);
-                }
+                ::LWE::KeyValue keyValue = keyValueFromKeyname(keyname);
+                free(keyname);
 
                 win->m_keyCallback(static_cast<int>(keyValue), 1);
             }
@@ -677,64 +693,8 @@ public:
                 tizen_core_wl_event_key_get_keyname(inputEvent, &keyname);
                 tizen_core_wl_event_key_get_keycode(inputEvent, &keycode);
 
-                ::LWE::KeyValue keyValue = ::LWE::UnidentifiedKey;
-                if (keyname) {
-                    if (strcmp(keyname, "Left") == 0) {
-                        keyValue = ::LWE::ArrowLeftKey;
-                    } else if (strcmp(keyname, "Up") == 0) {
-                        keyValue = ::LWE::ArrowUpKey;
-                    } else if (strcmp(keyname, "Right") == 0) {
-                        keyValue = ::LWE::ArrowRightKey;
-                    } else if (strcmp(keyname, "Down") == 0) {
-                        keyValue = ::LWE::ArrowDownKey;
-                    } else if (strcmp(keyname, "Return") == 0) {
-                        keyValue = ::LWE::EnterKey;
-                    } else if (strcmp(keyname, "Escape") == 0) {
-                        keyValue = ::LWE::EscapeKey;
-                    } else if (strcmp(keyname, "BackSpace") == 0) {
-                        keyValue = ::LWE::BackspaceKey;
-                    } else if (strcmp(keyname, "Tab") == 0) {
-                        keyValue = ::LWE::TabKey;
-                    } else if (strcmp(keyname, "Delete") == 0) {
-                        keyValue = ::LWE::DeleteKey;
-                    } else if (strcmp(keyname, "Home") == 0) {
-                        keyValue = ::LWE::HomeKey;
-                    } else if (strcmp(keyname, "End") == 0) {
-                        keyValue = ::LWE::EndKey;
-                    } else if (strcmp(keyname, "Page_Up") == 0) {
-                        keyValue = ::LWE::PageUpKey;
-                    } else if (strcmp(keyname, "Page_Down") == 0) {
-                        keyValue = ::LWE::PageDownKey;
-                    } else if (strcmp(keyname, "Insert") == 0) {
-                        keyValue = ::LWE::InsertKey;
-                    } else if (strlen(keyname) == 1) {
-                        unsigned char c = keyname[0];
-                        if (c >= 'A' && c <= 'Z') {
-                            keyValue = static_cast<::LWE::KeyValue>(
-                                static_cast<int>(::LWE::AKey) + (c - 'A'));
-                        } else if (c >= 'a' && c <= 'z') {
-                            keyValue = static_cast<::LWE::KeyValue>(
-                                static_cast<int>(::LWE::LowerAKey) + (c - 'a'));
-                        } else if (c >= '0' && c <= '9') {
-                            keyValue = static_cast<::LWE::KeyValue>(
-                                static_cast<int>(::LWE::Digit0Key) + (c - '0'));
-                        } else if (c == ' ') {
-                            keyValue = ::LWE::SpaceKey;
-                        } else {
-                            keyValue = static_cast<::LWE::KeyValue>(c);
-                        }
-                    } else if (strncmp(keyname, "F", 1) == 0 &&
-                               strlen(keyname) <= 3) {
-                        int fnum = atoi(keyname + 1);
-                        if (fnum >= 1 && fnum <= 12) {
-                            keyValue = static_cast<::LWE::KeyValue>(
-                                static_cast<int>(::LWE::F1Key) + (fnum - 1));
-                        }
-                    } else {
-                        keyValue = ::LWE::UnidentifiedKey;
-                    }
-                    free(keyname);
-                }
+                ::LWE::KeyValue keyValue = keyValueFromKeyname(keyname);
+                free(keyname);
 
                 win->m_keyCallback(static_cast<int>(keyValue), 0);
             }
@@ -771,34 +731,9 @@ public:
             break;
         }
 
-        case TIZEN_CORE_WL_EVENT_MOUSE_BUTTON_DOWN: {
-            tizen_core_wl_event_input_base_h inputEvent =
-                (tizen_core_wl_event_input_base_h)event;
-            int x = 0, y = 0;
-            tizen_core_wl_event_mouse_button_get_position(inputEvent, &x, &y);
-            win->m_mouseX = x;
-            win->m_mouseY = y;
-
-            char* devId = nullptr;
-            tizen_core_wl_event_input_base_get_device_identifier(inputEvent,
-                                                                 &devId);
-            bool isTouch = devId && win->m_touchDeviceIds.count(devId) > 0;
-            if (devId)
-                free(devId);
-
-            if (isTouch) {
-                float pts[2] = { (float)x, (float)y };
-                int ids[1] = { 0 };
-                win->m_webContainer->DispatchTouchStartEvent(pts, ids, 1);
-                win->m_isMouseLbuttonDown = true;
-                win->m_isTouchDown = true;
-            } else if (win->m_mouseButtonCallback) {
-                win->m_mouseButtonCallback(1, x, y);
-            }
-            break;
-        }
-
+        case TIZEN_CORE_WL_EVENT_MOUSE_BUTTON_DOWN:
         case TIZEN_CORE_WL_EVENT_MOUSE_BUTTON_UP: {
+            bool pressed = event_type == TIZEN_CORE_WL_EVENT_MOUSE_BUTTON_DOWN;
             tizen_core_wl_event_input_base_h inputEvent =
                 (tizen_core_wl_event_input_base_h)event;
             int x = 0, y = 0;
@@ -806,21 +741,18 @@ public:
             win->m_mouseX = x;
             win->m_mouseY = y;
 
-            char* devId = nullptr;
-            tizen_core_wl_event_input_base_get_device_identifier(inputEvent,
-                                                                 &devId);
-            bool isTouch = devId && win->m_touchDeviceIds.count(devId) > 0;
-            if (devId)
-                free(devId);
-
-            if (isTouch) {
+            if (win->isTouchEvent(inputEvent)) {
                 float pts[2] = { (float)x, (float)y };
                 int ids[1] = { 0 };
-                win->m_webContainer->DispatchTouchEndEvent(pts, ids, 1);
-                win->m_isMouseLbuttonDown = false;
-                win->m_isTouchDown = false;
+                if (pressed) {
+                    win->m_webContainer->DispatchTouchStartEvent(pts, ids, 1);
+                } else {
+                    win->m_webContainer->DispatchTouchEndEvent(pts, ids, 1);
+                }
+                win->m_isMouseLbuttonDown = pressed;
+                win->m_isTouchDown = pressed;
             } else if (win->m_mouseButtonCallback) {
-                win->m_mouseButtonCallback(0, x, y);
+                win->m_mouseButtonCallback(pressed ? 1 : 0, x, y);
             }
             break;
         }
@@ -831,12 +763,7 @@ public:
             int x = 0, y = 0;
             tizen_core_wl_event_mouse_move_get_position(inputEvent, &x, &y);
 
-            char* devId = nullptr;
-            tizen_core_wl_event_input_base_get_device_identifier(inputEvent,
-                                                                 &devId);
-            bool isTouch = devId && win->m_touchDeviceIds.count(devId) > 0;
-            if (devId)
-                free(devId);
+            bool isTouch = win->isTouchEvent(inputEvent);
 
             if (isTouch && win->m_isMouseLbuttonDown) {
                 float pts[2] = { (float)x, (float)y };
