@@ -513,6 +513,7 @@ public:
     FFmpegMediaPacket* takePooledFramePacketLocked(int width, int height);
     void releaseFramePacketLocked(FFmpegMediaPacket* packet);
     void freeFramePacketLocked(FFmpegMediaPacket* packet);
+    void dropDecodedVideoFramesLocked();
     void flushFramePoolLocked(int newWidth, int newHeight);
 
     SwsContext* m_swsCtx;

@@ -1595,6 +1595,22 @@ void MediaPlayerFFmpeg::seek(double time)
     seekOperation((int)(time * 1000.0));
 }
 
+// Frees the decoded video frames waiting to be shown. The caller holds
+// m_decodedVideoFrameMutex.
+void MediaPlayerFFmpeg::dropDecodedVideoFramesLocked()
+{
+    if (m_lastDecodedVideoPacket != nullptr) {
+        freeFramePacketLocked(m_lastDecodedVideoPacket);
+        m_lastDecodedVideoPacket = nullptr;
+    }
+    for (auto& entry : m_decodedVideoQueue) {
+        if (entry.packet != nullptr) {
+            freeFramePacketLocked(entry.packet);
+        }
+    }
+    m_decodedVideoQueue.clear();
+}
+
 void MediaPlayerFFmpeg::seekOperation(int timeInMS)
 {
     PLAYER_LOGI("MediaPlayerFFmpeg::seekOperation() (time: %d)", timeInMS);
@@ -1643,16 +1659,7 @@ void MediaPlayerFFmpeg::seekOperation(int timeInMS)
         // Drop decoded video frames queued for the old position.
         {
             Locker<Mutex> l(*m_decodedVideoFrameMutex);
-            if (m_lastDecodedVideoPacket != nullptr) {
-                freeFramePacketLocked(m_lastDecodedVideoPacket);
-                m_lastDecodedVideoPacket = nullptr;
-            }
-            for (auto& entry : m_decodedVideoQueue) {
-                if (entry.packet != nullptr) {
-                    freeFramePacketLocked(entry.packet);
-                }
-            }
-            m_decodedVideoQueue.clear();
+            dropDecodedVideoFramesLocked();
         }
         // Drop pending audio so no stale pre-seek samples play out.
         {
@@ -2270,16 +2277,7 @@ void MediaPlayerFFmpeg::dispose()
     }
     {
         Locker<Mutex> l(*m_decodedVideoFrameMutex);
-        if (m_lastDecodedVideoPacket != nullptr) {
-            freeFramePacketLocked(m_lastDecodedVideoPacket);
-            m_lastDecodedVideoPacket = nullptr;
-        }
-        for (auto& entry : m_decodedVideoQueue) {
-            if (entry.packet != nullptr) {
-                freeFramePacketLocked(entry.packet);
-            }
-        }
-        m_decodedVideoQueue.clear();
+        dropDecodedVideoFramesLocked();
         flushFramePoolLocked(0, 0);
     }
     if (m_swsCtx != nullptr) {
