@@ -1,0 +1,45 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A non-callable object stored as an event handler</title>
+<link rel="help" href="https://webidl.spec.whatwg.org/#invoke-a-callback-function">
+<link rel="help" href="https://html.spec.whatwg.org/multipage/webappapis.html#the-event-handler-processing-algorithm">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[event-handler-non-callable-object] " + document.title);
+  };
+}
+</script>
+<body>
+<div id="target"></div>
+<script>
+// EventHandler is [LegacyTreatNonObjectAsNull]: a non-callable object is
+// stored, and invoking it returns undefined, so dispatching a cancelable
+// event through it neither throws nor cancels the event.
+var target = document.getElementById("target");
+var calls = 0;
+var handler = {handleEvent: function () { calls++; }};
+target.onclick = handler;
+console.assert(target.onclick === handler, "a non-callable object is stored");
+
+var listenerRan = false;
+target.addEventListener("click", function () { listenerRan = true; });
+var notCanceled = target.dispatchEvent(
+    new MouseEvent("click", {cancelable: true, bubbles: true}));
+console.assert(notCanceled, "the event is not canceled");
+console.assert(calls === 0, "handleEvent is not called for an event handler");
+console.assert(listenerRan, "later listeners still run");
+
+target.onclick = {};
+target.click();
+console.assert(true, "click() through an empty object handler returns");
+testEnd();
+</script>
+</body>

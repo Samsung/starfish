@@ -89,7 +89,10 @@ ScriptValue EventListener::call(Event* event)
         }
 
         // Call
-        ScriptValue value;
+        // A non-callable object stored in an event handler attribute is
+        // invoked as returning undefined
+        // (https://webidl.spec.whatwg.org/#invoke-a-callback-function).
+        ScriptValue value = scriptUndefined();
         if (isCallableScriptValue(listenerFunc)) {
             value = callScriptFunction(event->scriptBindingInstance(),
                                        listenerFunc, argv, argc,
