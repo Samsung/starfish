@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>MP4 boxes with a 64-bit largesize</title>
+<title>MP4 boxes with a 64-bit largesize, and skipped meta boxes</title>
 <link rel="help" href="https://w3c.github.io/mse-byte-stream-format-isobmff/">
 <script>
 if (typeof testEnd !== "function") {
@@ -48,6 +48,22 @@ function withLargeSize(bytes, type) {
   throw new Error("no " + type + " box");
 }
 
+// Inserts a top-level meta box (an empty FullBox) before the moov box.
+function withMetaBeforeMoov(bytes) {
+  var view = new DataView(bytes.buffer);
+  for (var pos = 0; pos + 8 <= bytes.length; pos += view.getUint32(pos)) {
+    if (String.fromCharCode.apply(null, bytes.subarray(pos + 4, pos + 8)) !== "moov") {
+      continue;
+    }
+    var out = new Uint8Array(bytes.length + 12);
+    out.set(bytes.subarray(0, pos));
+    out.set([0, 0, 0, 12, 0x6d, 0x65, 0x74, 0x61, 0, 0, 0, 0], pos);
+    out.set(bytes.subarray(pos), pos + 12);
+    return out;
+  }
+  throw new Error("no moov box");
+}
+
 function once(target, type) {
   return new Promise(function (resolve) {
     target.addEventListener(type, function handler(e) {
@@ -85,6 +101,11 @@ fetch(MP4_AUDIO.url).then(function (r) {
   var bytes = new Uint8Array(data);
   return appendAndCheck(withLargeSize(bytes, "free"), "largesize free").then(function () {
     return appendAndCheck(withLargeSize(bytes, "moov"), "largesize moov");
+  }).then(function () {
+    return appendAndCheck(withMetaBeforeMoov(bytes), "meta before moov");
+  }).then(function () {
+    var withMeta = withMetaBeforeMoov(bytes);
+    return appendAndCheck(withLargeSize(withMeta, "meta"), "largesize meta before moov");
   });
 }).catch(function (e) {
   console.assert(false, "unexpected rejection: " + e);

@@ -268,7 +268,7 @@ static bool parseMP4(DemuxerSource* source, bool findPacket,
 
         uint32_t typeInt = MP4_PARSER_DEFINE_TYPE_STRING(type);
         if (typeInt == MP4_PARSER_DEFINE_TYPE_STRING("meta")) {
-            source->onSeek(orgLength, DemuxerSource::SeekWhenceCurrent);
+            source->onSeek(dataLength, DemuxerSource::SeekWhenceCurrent);
             continue;
         }
 
