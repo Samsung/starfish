@@ -24,6 +24,7 @@
 #include "NetworkSharedResourceManager.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
+#include "core/modules/threading/Semaphore.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "platform/loader/ResourceURL.h"
@@ -788,7 +789,7 @@ void NetworkSharedResourceManager::clearCookies()
 void* NetworkSharedResourceManager::curlMultiWorker(void* data)
 {
     CurlMultiData* d = (CurlMultiData*)data;
-    std::vector<Mutex*> remainedRequest;
+    std::vector<Semaphore*> remainedRequest;
 
     CURLM* curlMultiHandle = curl_multi_init();
 #ifndef CURLPIPE_MULTIPLEX
@@ -808,7 +809,7 @@ void* NetworkSharedResourceManager::curlMultiWorker(void* data)
                 STARFISH_ASSERT(error == CURLE_OK);
                 curl_multi_add_handle(curlMultiHandle,
                                       d->m_pendingRequests[0]->m_curl);
-                remainedRequest.push_back(d->m_pendingRequests[0]->m_mutex);
+                remainedRequest.push_back(d->m_pendingRequests[0]->m_done);
                 d->m_pendingRequests.erase(d->m_pendingRequests.begin());
             }
         }
@@ -838,12 +839,12 @@ void* NetworkSharedResourceManager::curlMultiWorker(void* data)
                 CurlMultiRequestData* r;
                 curl_easy_getinfo(msg->easy_handle, CURLINFO_PRIVATE, &r);
                 r->m_result = msg->data.result;
-                Mutex* m = r->m_mutex;
+                Semaphore* done = r->m_done;
                 auto iter = std::find(remainedRequest.begin(),
-                                      remainedRequest.end(), m);
+                                      remainedRequest.end(), done);
                 remainedRequest.erase(iter);
                 curl_multi_remove_handle(curlMultiHandle, msg->easy_handle);
-                m->unlock();
+                done->unlock();
             }
         }
 

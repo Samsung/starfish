@@ -26,7 +26,7 @@
 #include "HTTPUtil.h"
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 #include "platform/network/http/HTTPHeaderMap.h"
-#include "core/modules/threading/Mutex.h"
+#include "core/modules/threading/Semaphore.h"
 #include "core/modules/profiling/Profiling.h"
 
 #include <atomic>
@@ -480,17 +480,14 @@ void HTTPTransaction::registerCurlHandlers()
 void HTTPTransaction::startRequest()
 {
     if (m_curlMultiRequestData) {
-        m_curlMultiRequestData->m_mutex->lock();
-
         m_curlMultiRequestData->m_curl = m_curl;
 
         NetworkSharedResourceManager::getInstance()->appendPendingMultiRequest(
             httpRequest().baseURL(), m_curlMultiRequestData);
 
         // wait until end
-        m_curlMultiRequestData->m_mutex->lock();
+        m_curlMultiRequestData->m_done->lock();
         m_res = m_curlMultiRequestData->m_result;
-        m_curlMultiRequestData->m_mutex->unlock();
     } else {
         m_res = curl_easy_perform(m_curl);
     }

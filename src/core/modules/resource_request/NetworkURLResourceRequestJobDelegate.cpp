@@ -46,6 +46,7 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/threading/Mutex.h"
+#include "core/modules/threading/Semaphore.h"
 #include "core/modules/threading/Locker.h"
 #include "core/page/WebBase.h"
 #include "core/dom/WebOrigin.h"
@@ -81,10 +82,10 @@ NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
     , sizeleftToUpload(0)
     , request(orgRequest)
     , helper(nullptr)
-    , curlMultiRequestData(orgRequest->webBase()->useHttp2() &&
-                                   !orgRequest->isSync()
-                               ? new(NoGC) CurlMultiRequestData(new Mutex())
-                               : nullptr)
+    , curlMultiRequestData(
+          orgRequest->webBase()->useHttp2() && !orgRequest->isSync()
+              ? new(NoGC) CurlMultiRequestData(new Semaphore(0))
+              : nullptr)
     , httpTransaction(HTTPTransaction::create(curlMultiRequestData))
     , responseSpaceReserved(false)
 #ifdef STARFISH_ENABLE_HTTPCACHE

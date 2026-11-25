@@ -29,6 +29,7 @@ class HTTPTransaction;
 class MessageLoop;
 class Mutex;
 class ResourceURL;
+class Semaphore;
 class String;
 class Thread;
 
@@ -39,12 +40,13 @@ struct CurlHandleData {
 
 struct CurlMultiRequestData : public gc {
     CURL* m_curl;
-    Mutex* m_mutex;
+    // Posted by the multi worker once m_result is set.
+    Semaphore* m_done;
     CURLcode m_result;
 
-    CurlMultiRequestData(Mutex* mutex)
+    CurlMultiRequestData(Semaphore* done)
         : m_curl(nullptr)
-        , m_mutex(mutex)
+        , m_done(done)
         , m_result(CURLcode::CURLE_OK)
     {
     }
