@@ -1227,3 +1227,4 @@ tests/assertion/css/background/background-position-mismatched-layers.html
 tests/assertion/css/background/background-position-roundtrip.html
 tests/assertion/css/background/background-none-layers.html
 tests/assertion/event/event-handler-non-callable-object.html
+tests/assertion/canvas/put-image-data-dirty-overflow.html

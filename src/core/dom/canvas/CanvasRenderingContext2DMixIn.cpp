@@ -1714,11 +1714,14 @@ void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
                  imagedata->height());
 }
 
+// The dirty rectangle is int64_t so that the spec's arithmetic on long
+// arguments (dirtyX + dirtyWidth, the absolute magnitude of dirtyWidth)
+// cannot overflow.
 void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
                                                  int32_t dx, int32_t dy,
-                                                 int32_t dirtyX, int32_t dirtyY,
-                                                 int32_t dirtyWidth,
-                                                 int32_t dirtyHeight)
+                                                 int64_t dirtyX, int64_t dirtyY,
+                                                 int64_t dirtyWidth,
+                                                 int64_t dirtyHeight)
 {
     // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-putimagedata
 
@@ -1741,12 +1744,12 @@ void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
 
     if (dirtyWidth < 0) {
         dirtyX += dirtyWidth;
-        dirtyWidth = abs(dirtyWidth);
+        dirtyWidth = -dirtyWidth;
     }
 
     if (dirtyHeight < 0) {
         dirtyY += dirtyHeight;
-        dirtyHeight = abs(dirtyHeight);
+        dirtyHeight = -dirtyHeight;
     }
 
     if (dirtyX < 0) {

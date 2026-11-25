@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>putImageData dirty rectangle at long boundaries</title>
+<link rel="help" href="https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-putimagedata">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[put-image-data-dirty-overflow] " + document.title);
+  };
+}
+</script>
+<body>
+<script>
+// The dirty rectangle arguments are long values, and the algorithm's sums
+// and absolute magnitudes are on mathematical integers, so they must not
+// wrap at 32 bits.
+var MAX = 2147483647;
+var MIN = -2147483648;
+var canvas = document.createElement("canvas");
+canvas.width = 4;
+canvas.height = 1;
+var ctx = canvas.getContext("2d");
+var image = ctx.createImageData(4, 1);
+for (var i = 0; i < image.data.length; i += 4) {
+  image.data[i] = 255;
+  image.data[i + 3] = 255;
+}
+
+function alphas() {
+  var d = ctx.getImageData(0, 0, 4, 1).data;
+  return [d[3], d[7], d[11], d[15]].join();
+}
+
+function check(dirty, expected, label) {
+  ctx.clearRect(0, 0, 4, 1);
+  ctx.putImageData(image, 0, 0, dirty[0], dirty[1], dirty[2], dirty[3]);
+  var got = alphas();
+  console.assert(got === expected, label + ": painted " + got + ", expected " + expected);
+}
+
+check([1, 0, MAX, 1], "0,255,255,255", "dirtyX + dirtyWidth past 2^31 clamps to the image");
+check([0, 0, MAX, MAX], "255,255,255,255", "maximal width and height clamp to the image");
+check([MAX, 0, MIN, 1], "255,255,255,255", "dirtyWidth of -2^31 has magnitude 2^31");
+check([0, 0, MIN, 1], "0,0,0,0", "a rectangle that ends at x = 0 paints nothing");
+check([MIN, 0, -1, 1], "0,0,0,0", "dirtyX + dirtyWidth below -2^31 paints nothing");
+check([0, MIN, 1, -1], "0,0,0,0", "dirtyY + dirtyHeight below -2^31 paints nothing");
+testEnd();
+</script>
+</body>
