@@ -48,11 +48,13 @@ function withLargeSize(bytes, type) {
   throw new Error("no " + type + " box");
 }
 
-// Inserts a top-level meta box (an empty FullBox) before the moov box.
-function withMetaBeforeMoov(bytes) {
+// Inserts a top-level meta box (an empty FullBox) before the first box of
+// the given type. Before a leaf box such as free, overshooting the meta box
+// lands inside that box's payload.
+function withMetaBefore(bytes, type) {
   var view = new DataView(bytes.buffer);
   for (var pos = 0; pos + 8 <= bytes.length; pos += view.getUint32(pos)) {
-    if (String.fromCharCode.apply(null, bytes.subarray(pos + 4, pos + 8)) !== "moov") {
+    if (String.fromCharCode.apply(null, bytes.subarray(pos + 4, pos + 8)) !== type) {
       continue;
     }
     var out = new Uint8Array(bytes.length + 12);
@@ -61,7 +63,7 @@ function withMetaBeforeMoov(bytes) {
     out.set(bytes.subarray(pos), pos + 12);
     return out;
   }
-  throw new Error("no moov box");
+  throw new Error("no " + type + " box");
 }
 
 function once(target, type) {
@@ -102,10 +104,10 @@ fetch(MP4_AUDIO.url).then(function (r) {
   return appendAndCheck(withLargeSize(bytes, "free"), "largesize free").then(function () {
     return appendAndCheck(withLargeSize(bytes, "moov"), "largesize moov");
   }).then(function () {
-    return appendAndCheck(withMetaBeforeMoov(bytes), "meta before moov");
+    return appendAndCheck(withMetaBefore(bytes, "free"), "meta before free");
   }).then(function () {
-    var withMeta = withMetaBeforeMoov(bytes);
-    return appendAndCheck(withLargeSize(withMeta, "meta"), "largesize meta before moov");
+    var withMeta = withMetaBefore(bytes, "free");
+    return appendAndCheck(withLargeSize(withMeta, "meta"), "largesize meta before free");
   });
 }).catch(function (e) {
   console.assert(false, "unexpected rejection: " + e);
