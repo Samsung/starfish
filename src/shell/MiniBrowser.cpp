@@ -163,7 +163,7 @@ void MiniBrowser::parseArgs(int argc, char* argv[],
         } else if (isFlag(arg, "--enable-video-overlay")) {
             settings.videoOverlayEnabled = true;
         } else if (const char* value = valueOf(arg, "--timeout=")) {
-            others.timeout = std::atoi(value);
+            others.timeout = std::atof(value);
         } else if (const char* value = valueOf(arg, "--storage-dir=")) {
             others.storageDir = value;
         } else if (isFlag(arg, "--prefer-isolated-thread")) {

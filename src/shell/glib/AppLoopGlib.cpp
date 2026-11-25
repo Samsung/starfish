@@ -26,6 +26,7 @@
 
 #include "AppLoop.h"
 
+#include <algorithm>
 #include <glib.h>
 #include <glib-unix.h>
 #include <cstdio>
@@ -89,8 +90,10 @@ gboolean AppLoopGlib::onSignal(gpointer data)
 int AppLoopGlib::start(double timeoutInSec)
 {
     if (timeoutInSec) {
-        m_timerID = g_timeout_add_seconds(
-            static_cast<guint>(timeoutInSec),
+        // Millisecond resolution: a timeout below one second must not
+        // truncate to "fire at once".
+        m_timerID = g_timeout_add(
+            std::max<guint>(1, static_cast<guint>(timeoutInSec * 1000)),
             [](gpointer data) -> gboolean {
                 AppLoopGlib* self = static_cast<AppLoopGlib*>(data);
                 self->m_timerID = 0;
