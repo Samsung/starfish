@@ -75,7 +75,7 @@ int Shell::run(int argc, char* argv[])
 {
     if (argc == 1) {
         printUsage();
-        return false;
+        return 1;
     }
 
     std::string argv1 = argv[1];
@@ -114,8 +114,8 @@ int Shell::runCreateDestroyTest(int argc, char* argv[])
     if (argc != 5) {
         printf(
             "Usage: ./Starfish create-destroy-test {repeat-count} {interval} "
-            "{URL}");
-        return false;
+            "{URL}\n");
+        return 1;
     }
 
     int repeatCount = std::atoi(argv[2]);
@@ -129,9 +129,13 @@ int Shell::runCreateDestroyTest(int argc, char* argv[])
     newArgv.push_back(timeout.c_str());
 
     while (repeatCount--) {
-        runMiniBrowser(newArgv.size(), const_cast<char**>(newArgv.data()));
+        int ret =
+            runMiniBrowser(newArgv.size(), const_cast<char**>(newArgv.data()));
+        if (ret != 0) {
+            return ret;
+        }
     }
-    return true;
+    return 0;
 }
 
 int Shell::runMiniBrowser(int argc, char* argv[])
@@ -167,7 +171,7 @@ int Shell::runMiniBrowser(int argc, char* argv[])
     }
     browser->setStorageDirOverride(others.storageDir);
     if (!browser->init(init, initOption)) {
-        return false;
+        return 1;
     }
 
     browser->setSettings(settings);
@@ -360,7 +364,7 @@ int Shell::runReplay(int argc, char* argv[])
         printf(
             "Usage: ./Starfish replay <recording.jsonl> "
             "[--speed=<factor>] [--timeout=<sec>] ...\n");
-        return false;
+        return 1;
     }
 
     float speedFactor = 1.0f;

@@ -45,20 +45,22 @@ TEST(ShellTest, VersionAndHelp)
 {
     EXPECT_EQ(0, runShell({ "Starfish", "--version" }));
     EXPECT_EQ(0, runShell({ "Starfish", "-h" }));
+    // No arguments is a usage error.
+    EXPECT_EQ(1, runShell({ "Starfish" }));
 }
 
 TEST(ShellTest, CreateDestroyTest)
 {
     // Wrong arity prints the usage and reports failure.
-    EXPECT_EQ(0, runShell({ "Starfish", "create-destroy-test", "1" }));
+    EXPECT_EQ(1, runShell({ "Starfish", "create-destroy-test", "1" }));
     // Two full create/run/destroy cycles of one second each.
-    EXPECT_EQ(1, runShell({ "Starfish", "create-destroy-test", "2", "1",
+    EXPECT_EQ(0, runShell({ "Starfish", "create-destroy-test", "2", "1",
                             "about:blank" }));
 }
 
 TEST(ShellTest, ReplayRecording)
 {
-    EXPECT_EQ(0, runShell({ "Starfish", "replay" }));
+    EXPECT_EQ(1, runShell({ "Starfish", "replay" }));
 
     const char* path = "/tmp/starfish_shell_replay_test.jsonl";
     FILE* f = fopen(path, "w");
