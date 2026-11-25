@@ -213,6 +213,61 @@ namespace {
         return !engine.empty() && !socketPath.empty();
     }
 
+    // Runs a command that acts on the page and returns its response.
+    std::string runPageCommand(Session& session, const Request& request)
+    {
+        std::string error;
+        std::string response;
+        std::string data;
+        std::string output;
+        if (request.command == kCommandOpen) {
+            if (request.url.empty()) {
+                response = makeErrorResponse("open requires a URL");
+            } else if (session.open(request.url, output, data, error)) {
+                response = makeOkResponse(output, data);
+            } else {
+                response = makeErrorResponse(error);
+            }
+        } else if (request.command == kCommandSnapshot) {
+            if (session.snapshotInteractive(output, data, error)) {
+                response = makeOkResponse(output, data);
+            } else {
+                response = makeErrorResponse(error);
+            }
+        } else if (request.command == kCommandClick) {
+            int elementRef = 0;
+            if (!parseElementReference(request.selector, elementRef)) {
+                response =
+                    makeErrorResponse("click requires a valid @eN reference");
+            } else if (session.click(elementRef, error)) {
+                response = makeOkResponse();
+            } else {
+                response = makeErrorResponse(
+                    error, session.isStaleRef() ? kStaleRefCode : "");
+            }
+        } else if (request.command == kCommandFill) {
+            int elementRef = 0;
+            if (!parseElementReference(request.selector, elementRef)) {
+                response =
+                    makeErrorResponse("fill requires a valid @eN reference");
+            } else if (session.fill(elementRef, request.text, error)) {
+                response = makeOkResponse();
+            } else {
+                response = makeErrorResponse(
+                    error, session.isStaleRef() ? kStaleRefCode : "");
+            }
+        } else if (request.command == kCommandEval) {
+            if (session.evaluate(request.script, output, data, error)) {
+                response = makeOkResponse(output, data);
+            } else {
+                response = makeErrorResponse(error);
+            }
+        } else {
+            response = makeErrorResponse("unsupported command");
+        }
+        return response;
+    }
+
 } // namespace
 
 int daemonMain(int argc, char* argv[])
@@ -310,54 +365,7 @@ int daemonMain(int argc, char* argv[])
             return 0;
         }
 
-        std::string response;
-        std::string data;
-        std::string output;
-        if (request.command == kCommandOpen) {
-            if (request.url.empty()) {
-                response = makeErrorResponse("open requires a URL");
-            } else if (session.open(request.url, output, data, error)) {
-                response = makeOkResponse(output, data);
-            } else {
-                response = makeErrorResponse(error);
-            }
-        } else if (request.command == kCommandSnapshot) {
-            if (session.snapshotInteractive(output, data, error)) {
-                response = makeOkResponse(output, data);
-            } else {
-                response = makeErrorResponse(error);
-            }
-        } else if (request.command == kCommandClick) {
-            int elementRef = 0;
-            if (!parseElementReference(request.selector, elementRef)) {
-                response =
-                    makeErrorResponse("click requires a valid @eN reference");
-            } else if (session.click(elementRef, error)) {
-                response = makeOkResponse();
-            } else {
-                response = makeErrorResponse(
-                    error, session.isStaleRef() ? kStaleRefCode : "");
-            }
-        } else if (request.command == kCommandFill) {
-            int elementRef = 0;
-            if (!parseElementReference(request.selector, elementRef)) {
-                response =
-                    makeErrorResponse("fill requires a valid @eN reference");
-            } else if (session.fill(elementRef, request.text, error)) {
-                response = makeOkResponse();
-            } else {
-                response = makeErrorResponse(
-                    error, session.isStaleRef() ? kStaleRefCode : "");
-            }
-        } else if (request.command == kCommandEval) {
-            if (session.evaluate(request.script, output, data, error)) {
-                response = makeOkResponse(output, data);
-            } else {
-                response = makeErrorResponse(error);
-            }
-        } else {
-            response = makeErrorResponse("unsupported command");
-        }
+        std::string response = runPageCommand(session, request);
 
         client.setCancelDescriptor(-1);
         writeMessage(connection, response);

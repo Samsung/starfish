@@ -442,6 +442,80 @@ Options, before or after the command:
                            "Unexpected arguments for: " + what);
     }
 
+    // count includes the command word.
+    bool requireArgumentCount(size_t count, size_t minimum, size_t maximum,
+                              const std::string& what, ParseFailure& failure)
+    {
+        if (count < minimum) {
+            failure = missingArguments(what);
+            return false;
+        }
+        if (count > maximum) {
+            failure = unexpectedArguments(what);
+            return false;
+        }
+        return true;
+    }
+
+    // Joins arguments[first] and the rest with spaces so the shell does not
+    // need to quote the text.
+    std::string joinArguments(const std::vector<std::string>& arguments,
+                              size_t first)
+    {
+        std::string text = arguments[first];
+        for (size_t i = first + 1; i < arguments.size(); i++) {
+            text += " ";
+            text += arguments[i];
+        }
+        return text;
+    }
+
+    // arguments[0] is the eval command word.
+    bool makeEvalCommand(const std::vector<std::string>& arguments,
+                         std::string& request, ParseFailure& failure)
+    {
+        const std::string& command = arguments[0];
+        size_t count = arguments.size();
+        auto requireCount = [&](size_t minimum, size_t maximum,
+                                const std::string& what) {
+            return requireArgumentCount(count, minimum, maximum, what, failure);
+        };
+        if (!requireCount(2, count, command)) {
+            return false;
+        }
+
+        std::string script;
+        if (arguments[1] == kOptionStdin) {
+            if (!requireCount(2, 2, command)) {
+                return false;
+            }
+            if (!readStandardInput(script)) {
+                failure = makeFailure(kParseFailureInvalidValue,
+                                      "Could not read standard input");
+                return false;
+            }
+        } else if (arguments[1] == kOptionBase64Short ||
+                   arguments[1] == kOptionBase64) {
+            if (!requireCount(3, 3, command)) {
+                return false;
+            }
+            if (!decodeBase64(arguments[2], script)) {
+                failure = makeFailure(kParseFailureInvalidValue,
+                                      "Invalid base64 script");
+                return false;
+            }
+        } else {
+            script = joinArguments(arguments, 1);
+        }
+        if (!isValidUTF8(script)) {
+            failure = makeFailure(kParseFailureInvalidValue,
+                                  "The script is not valid UTF-8");
+            return false;
+        }
+        request = makeEvalRequest(script);
+        return true;
+    }
+
     // arguments[0] is the command word. On failure, failure says why.
     bool makeCommand(const std::vector<std::string>& arguments,
                      std::string& request, ParseFailure& failure)
@@ -455,15 +529,7 @@ Options, before or after the command:
         size_t count = arguments.size();
         auto requireCount = [&](size_t minimum, size_t maximum,
                                 const std::string& what) {
-            if (count < minimum) {
-                failure = missingArguments(what);
-                return false;
-            }
-            if (count > maximum) {
-                failure = unexpectedArguments(what);
-                return false;
-            }
-            return true;
+            return requireArgumentCount(count, minimum, maximum, what, failure);
         };
 
         if (command == kCommandOpen) {
@@ -502,55 +568,12 @@ Options, before or after the command:
             if (!requireCount(3, count, command)) {
                 return false;
             }
-            // Join remaining args with spaces so the shell does not need
-            // to quote the text.
-            std::string text = arguments[2];
-            for (size_t i = 3; i < count; i++) {
-                text += " ";
-                text += arguments[i];
-            }
-            request = makeFillRequest(arguments[1], text);
+            request =
+                makeFillRequest(arguments[1], joinArguments(arguments, 2));
             return true;
         }
         if (command == kCommandEval) {
-            if (!requireCount(2, count, command)) {
-                return false;
-            }
-
-            std::string script;
-            if (arguments[1] == kOptionStdin) {
-                if (!requireCount(2, 2, command)) {
-                    return false;
-                }
-                if (!readStandardInput(script)) {
-                    failure = makeFailure(kParseFailureInvalidValue,
-                                          "Could not read standard input");
-                    return false;
-                }
-            } else if (arguments[1] == kOptionBase64Short ||
-                       arguments[1] == kOptionBase64) {
-                if (!requireCount(3, 3, command)) {
-                    return false;
-                }
-                if (!decodeBase64(arguments[2], script)) {
-                    failure = makeFailure(kParseFailureInvalidValue,
-                                          "Invalid base64 script");
-                    return false;
-                }
-            } else {
-                script = arguments[1];
-                for (size_t i = 2; i < count; i++) {
-                    script += " ";
-                    script += arguments[i];
-                }
-            }
-            if (!isValidUTF8(script)) {
-                failure = makeFailure(kParseFailureInvalidValue,
-                                      "The script is not valid UTF-8");
-                return false;
-            }
-            request = makeEvalRequest(script);
-            return true;
+            return makeEvalCommand(arguments, request, failure);
         }
 
         failure = makeFailure(kParseFailureUnknownCommand,
