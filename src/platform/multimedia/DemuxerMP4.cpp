@@ -238,20 +238,28 @@ static bool parseMP4(DemuxerSource* source, bool findPacket,
         }
 
         if (length == 1) {
-            dataLength = readBigEndianUnsignedInteger(source, err) - 16;
+            // A 64-bit largesize follows the type (ISO/IEC 14496-12 4.2).
+            uint64_t largeSize =
+                (uint64_t)readBigEndianUnsignedInteger(source, err) << 32;
+            if (err >= 0) {
+                largeSize |= readBigEndianUnsignedInteger(source, err);
+            }
             if (err < 0) {
                 PRINT_STOP_REASON(
-                    "4byte requried to read \"DataLength\" (case 2)");
+                    "8byte requried to read \"DataLength\" (case 2)");
                 source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);
                 break;
             }
+            orgLength = largeSize;
+            dataLength = largeSize - 16;
         } else {
-            dataLength = length - 8;
+            dataLength = (uint64_t)length - 8;
         }
 
-        if (source->onSeek(0, DemuxerSource::SeekWhenceCurrent) +
-                (int64_t)dataLength >
-            maxPos) {
+        // A size smaller than its header wraps dataLength to a huge value,
+        // so compare unsigned against the bytes that are left.
+        int64_t dataPos = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+        if (dataPos > maxPos || dataLength > (uint64_t)(maxPos - dataPos)) {
             PRINT_STOP_REASON("%dbyte requried to read \"Data\"",
                               (int)dataLength);
             source->onSeek(orgPos, DemuxerSource::SeekWhenceSet);

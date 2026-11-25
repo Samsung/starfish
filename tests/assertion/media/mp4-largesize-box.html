@@ -1,0 +1,96 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>MP4 boxes with a 64-bit largesize</title>
+<link rel="help" href="https://w3c.github.io/mse-byte-stream-format-isobmff/">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[mp4-largesize-box] " + document.title);
+  };
+}
+</script>
+<body>
+<script>
+// A box whose 32-bit size is 1 carries its size as a 64-bit largesize after
+// the type (ISO/IEC 14496-12, 4.2). The media file is a copy of
+// web-platform-tests media-source/mp4 (3-Clause BSD).
+var MP4_AUDIO = {url: "resources/test-a-128k-44100Hz-1ch.mp4",
+                 type: 'audio/mp4; codecs="mp4a.40.2"'};
+
+// Rewrites the first top-level box of the given type with a largesize header.
+// Fragment data offsets are relative to their moof, so growing an earlier
+// box by 8 bytes keeps them valid.
+function withLargeSize(bytes, type) {
+  var view = new DataView(bytes.buffer);
+  for (var pos = 0; pos + 8 <= bytes.length; pos += view.getUint32(pos)) {
+    var name = String.fromCharCode.apply(null, bytes.subarray(pos + 4, pos + 8));
+    if (name !== type) {
+      continue;
+    }
+    var size = view.getUint32(pos);
+    var out = new Uint8Array(bytes.length + 8);
+    out.set(bytes.subarray(0, pos));
+    out.set(bytes.subarray(pos + 4, pos + 8), pos + 4);
+    out.set(bytes.subarray(pos + 8), pos + 16);
+    var header = new DataView(out.buffer, pos, 16);
+    header.setUint32(0, 1);
+    header.setUint32(8, 0);
+    header.setUint32(12, size + 8);
+    return out;
+  }
+  throw new Error("no " + type + " box");
+}
+
+function once(target, type) {
+  return new Promise(function (resolve) {
+    target.addEventListener(type, function handler(e) {
+      target.removeEventListener(type, handler);
+      resolve(e);
+    });
+  });
+}
+
+function appendAndCheck(bytes, label) {
+  var audio = document.createElement("audio");
+  audio.muted = true;
+  var source = new MediaSource();
+  var opened = once(source, "sourceopen");
+  audio.src = URL.createObjectURL(source);
+  return opened.then(function () {
+    var buffer = source.addSourceBuffer(MP4_AUDIO.type);
+    var done = once(buffer, "updateend");
+    buffer.appendBuffer(bytes);
+    return done.then(function () {
+      console.assert(buffer.buffered.length === 1 && buffer.buffered.end(0) > 0,
+                     label + ": the segments are buffered");
+      console.assert(source.duration > 0, label + ": duration from the init segment");
+    });
+  });
+}
+
+var deadline = setTimeout(function () {
+  console.assert(false, "the appends finished in time");
+  testEnd();
+}, 20000);
+fetch(MP4_AUDIO.url).then(function (r) {
+  return r.arrayBuffer();
+}).then(function (data) {
+  var bytes = new Uint8Array(data);
+  return appendAndCheck(withLargeSize(bytes, "free"), "largesize free").then(function () {
+    return appendAndCheck(withLargeSize(bytes, "moov"), "largesize moov");
+  });
+}).catch(function (e) {
+  console.assert(false, "unexpected rejection: " + e);
+}).then(function () {
+  clearTimeout(deadline);
+  testEnd();
+});
+</script>
+</body>
