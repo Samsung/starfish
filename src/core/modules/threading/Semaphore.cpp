@@ -20,6 +20,8 @@
 #include "StarfishConfig.h"
 #include "Semaphore.h"
 
+#include <cerrno>
+
 namespace Starfish {
 
 Semaphore::Semaphore(size_t cnt)
@@ -38,7 +40,9 @@ Semaphore::Semaphore(size_t cnt)
 
 void Semaphore::lock()
 {
-    sem_wait(m_semaphore);
+    // Unlike a mutex lock, sem_wait returns early when a signal interrupts it.
+    while (sem_wait(m_semaphore) == -1 && errno == EINTR) {
+    }
 }
 
 void Semaphore::unlock()
