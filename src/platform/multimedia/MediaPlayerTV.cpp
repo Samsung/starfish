@@ -151,7 +151,7 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
         m_lastAbsoluteROIArea = LayoutRect(0, 0, 1, 1);
         player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
 
-#if STARFISH_TIZEN_MAJOR_VERSION >= 11
+#if defined(STARFISH_SHELL_TCORE_WL)
         void* tcoreWaylandHandle =
             m_container->webView()->publicLayerUserDataMap()
                 ["__internalLWEWebViewTcoreWaylandHandle"];

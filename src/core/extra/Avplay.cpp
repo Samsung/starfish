@@ -30,7 +30,7 @@
 #include "core/modules/renderer/Renderer.h"
 #include <EscargotPublic.h>
 
-#if !defined(STARFISH_TIZEN_MAJOR_VERSION) || STARFISH_TIZEN_MAJOR_VERSION < 11
+#if !defined(STARFISH_SHELL_TCORE_WL)
 #include <Elementary.h>
 
 #ifndef STARFISH_SHELL_EFL
@@ -215,7 +215,7 @@ void Avplay::open(String* url)
         printNativePlayerError(ret);
     }
 
-#if STARFISH_TIZEN_MAJOR_VERSION >= 11
+#if defined(STARFISH_SHELL_TCORE_WL)
     void* tcoreWaylandHandle = starfish()->publicLayerUserDataMap()
                                    ["__internalLWEWebViewTcoreWaylandHandle"];
     STARFISH_RELEASE_ASSERT(tcoreWaylandHandle);

@@ -336,6 +336,11 @@ cd starfish
 gbs -c ../gbs-conf/gbs.conf build -A armv7l -P profile.50std  --incremental --include-all
 ```
 
+For RPM builds, `BUILD_TCORE_ENABLE` and `BUILD_EFL_DISABLE` are 0/1 RPM
+macros. Set either to 1 with GBS `--define` to select the tcore Wayland and
+headless shells, including on Tizen 10.1. If both are 0 or absent, Tizen 11
+and later retain the tcore default; older versions use EFL.
+
 GBS/RPM builds (including release CI) use Unix Makefiles and Make on Tizen
 5.0/5.5 to avoid a legacy Ninja process-spawn failure during linking. Other
 Tizen versions use Ninja. Make uses the RPM buildroot's parallel job settings.

@@ -289,7 +289,17 @@ BuildRequires: pkgconfig(capi-location-manager)
 BuildRequires: pkgconfig(tts)
 BuildRequires: libasound-devel
 
-%if 0%{?tizen_version_major} >= 11
+# Keep the existing default when the product does not select a backend.
+%{!?BUILD_EFL_DISABLE:%global BUILD_EFL_DISABLE 0}
+%{!?BUILD_TCORE_ENABLE:%global BUILD_TCORE_ENABLE 0}
+%if "%{BUILD_TCORE_ENABLE}" != "0" && "%{BUILD_TCORE_ENABLE}" != "1"
+%{error:BUILD_TCORE_ENABLE must be 0 or 1}
+%endif
+%if "%{BUILD_EFL_DISABLE}" != "0" && "%{BUILD_EFL_DISABLE}" != "1"
+%{error:BUILD_EFL_DISABLE must be 0 or 1}
+%endif
+
+%if 0%{?tizen_version_major} >= 11 || "%{BUILD_TCORE_ENABLE}" == "1" || "%{BUILD_EFL_DISABLE}" == "1"
 BuildRequires: pkgconfig(tizen-core)
 BuildRequires: pkgconfig(tizen-core-wl)
 BuildRequires: pkgconfig(tizen-core-imf)

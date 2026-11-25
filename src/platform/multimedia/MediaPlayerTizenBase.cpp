@@ -102,7 +102,7 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
         player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
 #if defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
 
-#if STARFISH_TIZEN_MAJOR_VERSION < 11
+#if !defined(STARFISH_SHELL_TCORE_WL)
         void* elmWindowHandle =
             m_container->webView()->publicLayerUserDataMap()
                 ["__internalLWEWebViewEFLNativeWindowEvasObject"];
@@ -117,7 +117,7 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
 
 #else
 
-#if STARFISH_TIZEN_MAJOR_VERSION >= 11
+#if defined(STARFISH_SHELL_TCORE_WL)
         void* tcoreWaylandHandle =
             m_container->webView()->publicLayerUserDataMap()
                 ["__internalLWEWebViewTcoreWaylandHandle"];
