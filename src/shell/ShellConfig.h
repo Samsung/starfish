@@ -25,6 +25,22 @@
 #define SHELL_ENABLE_ELEMENTARY_GL
 #endif
 
+// How MiniBrowser hosts the engine on this shell.
+#if defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11) ||           \
+    defined(STARFISH_SHELL_ECORE_X) || defined(STARFISH_SHELL_ECORE_WL2) || \
+    defined(STARFISH_SHELL_TCORE_WL)
+// A windowed LWE::WebView; --headless swaps in a WebContainer at run time.
+#define SHELL_HOST_WEBVIEW
+#elif defined(STARFISH_SHELL_EFL_HEADLESS) ||   \
+    defined(STARFISH_SHELL_TCORE_HEADLESS) || \
+    defined(STARFISH_SHELL_GLIB_HEADLESS)
+// A WebContainer that never paints.
+#define SHELL_HOST_HEADLESS_WEBCONTAINER
+#elif defined(STARFISH_SHELL_X11_WEBCONTAINER)
+// A WebContainer that renders through the shell's own GL window.
+#define SHELL_HOST_GL_WEBCONTAINER
+#endif
+
 #if defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || \
     defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64)
 #define SHELL_X86_64

@@ -23,6 +23,7 @@
 #include <string>
 #include <cstdint>
 
+#include "ShellConfig.h"
 #include "LWEWebView.h"
 
 namespace LWE {
@@ -35,15 +36,11 @@ namespace StarfishShell {
 class Window;
 class Console;
 
-#if defined(STARFISH_SHELL_EFL_HEADLESS) ||   \
-    defined(STARFISH_SHELL_TCORE_HEADLESS) || \
-    defined(STARFISH_SHELL_GLIB_HEADLESS) ||  \
-    defined(STARFISH_SHELL_X11_WEBCONTAINER)
-typedef LWE::WebContainer* LWEType;
-#elif defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11) ||         \
-    defined(STARFISH_SHELL_ECORE_X) || defined(STARFISH_SHELL_ECORE_WL2) || \
-    defined(STARFISH_SHELL_TCORE_WL)
+#if defined(SHELL_HOST_WEBVIEW)
 typedef LWE::WebView* LWEType;
+#elif defined(SHELL_HOST_HEADLESS_WEBCONTAINER) || \
+    defined(SHELL_HOST_GL_WEBCONTAINER)
+typedef LWE::WebContainer* LWEType;
 #endif
 
 class AppLoop;
@@ -170,9 +167,7 @@ private:
 
     Window* m_window = nullptr;
     LWEType m_lwe = nullptr;
-#if defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11) ||           \
-    defined(STARFISH_SHELL_ECORE_X) || defined(STARFISH_SHELL_ECORE_WL2) || \
-    defined(STARFISH_SHELL_TCORE_WL)
+#if defined(SHELL_HOST_WEBVIEW)
     // Set instead of m_lwe when started with --headless.
     LWE::WebContainer* m_headlessLwe = nullptr;
 #endif

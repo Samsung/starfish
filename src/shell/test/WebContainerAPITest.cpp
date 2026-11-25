@@ -554,9 +554,7 @@ protected:
 };
 
 // A headless shell has no GL to render into the target.
-#if !defined(STARFISH_SHELL_GLIB_HEADLESS) && \
-    !defined(STARFISH_SHELL_EFL_HEADLESS) &&  \
-    !defined(STARFISH_SHELL_TCORE_HEADLESS)
+#if !defined(SHELL_HOST_HEADLESS_WEBCONTAINER)
 TEST_F(WebContainerVariantTest, GLRenderTarget)
 {
     int acquired = 0, released = 0;

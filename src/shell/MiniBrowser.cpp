@@ -43,9 +43,7 @@ enum StarfishStartUpFlag {
 };
 } // namespace
 
-#if defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11) ||           \
-    defined(STARFISH_SHELL_ECORE_X) || defined(STARFISH_SHELL_ECORE_WL2) || \
-    defined(STARFISH_SHELL_TCORE_WL)
+#if defined(SHELL_HOST_WEBVIEW)
 // --headless runs a WebContainer instead of a windowed WebView; both expose
 // the calls made through this.
 #define LWE_CALL(call) (m_headlessLwe ? m_headlessLwe->call : m_lwe->call)
@@ -387,7 +385,7 @@ bool MiniBrowser::createWindow(const InitOption& initOption)
 
 bool MiniBrowser::createLWE(const InitOption& initOption)
 {
-#if defined(STARFISH_SHELL_X11_WEBCONTAINER)
+#if defined(SHELL_HOST_GL_WEBCONTAINER)
     LWE::WebContainer::WebContainerArguments args{
         .width = initOption.geometry.width,
         .height = initOption.geometry.height,
@@ -499,9 +497,7 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
         }
     });
 
-#elif defined(STARFISH_SHELL_EFL) || defined(STARFISH_SHELL_X11) ||         \
-    defined(STARFISH_SHELL_ECORE_X) || defined(STARFISH_SHELL_ECORE_WL2) || \
-    defined(STARFISH_SHELL_TCORE_WL)
+#elif defined(SHELL_HOST_WEBVIEW)
     if (initOption.headless) {
         m_headlessLwe = LWE::WebContainer::CreateHeadless(
             initOption.geometry.width, initOption.geometry.height,
@@ -517,19 +513,15 @@ bool MiniBrowser::createLWE(const InitOption& initOption)
     m_window->setFocusInHandler([this]() { m_lwe->Focus(); });
     m_window->addAutoFitChild(m_lwe->Unwrap());
 #endif
-#elif defined(STARFISH_SHELL_EFL_HEADLESS) || \
-    defined(STARFISH_SHELL_TCORE_HEADLESS) || \
-    defined(STARFISH_SHELL_GLIB_HEADLESS)
+#elif defined(SHELL_HOST_HEADLESS_WEBCONTAINER)
     m_lwe = LWE::WebContainer::CreateHeadless(
         initOption.geometry.width, initOption.geometry.height,
         initOption.scaleFactor, "serif", "ko-KR", "Asia/Seoul");
 #endif
 
-#if defined(STARFISH_ENABLE_TEST) &&             \
-    (defined(STARFISH_SHELL_X11_WEBCONTAINER) || \
-     defined(STARFISH_SHELL_EFL_HEADLESS) ||     \
-     defined(STARFISH_SHELL_TCORE_HEADLESS) ||   \
-     defined(STARFISH_SHELL_GLIB_HEADLESS))
+#if defined(STARFISH_ENABLE_TEST) &&         \
+    (defined(SHELL_HOST_GL_WEBCONTAINER) || \
+     defined(SHELL_HOST_HEADLESS_WEBCONTAINER))
     {
         const char* replayPath = getenv("STARFISH_API_REPLAY");
         if (replayPath && replayPath[0] != '\0') {
