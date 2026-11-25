@@ -1229,3 +1229,4 @@ tests/assertion/css/background/background-none-layers.html
 tests/assertion/event/event-handler-non-callable-object.html
 tests/assertion/canvas/put-image-data-dirty-overflow.html
 tests/assertion/media/mp4-largesize-box.html
+tests/assertion/css/calc-angle-zero-factor.html

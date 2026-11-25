@@ -14043,6 +14043,9 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                                  CSSPropertyParser::AllowPercent);
 
             auto str = parser.parsedString();
+            // A unitless operand is a number even if the enclosing property
+            // accepts a bare zero as an angle.
+            const bool hasUnitSuffix = !str.empty() && isASCIIAlpha(str.back());
             CalcValue val;
             if (parser.consumeIfNext('(')) {
                 CalcData* newData = new CalcData(str);
@@ -14121,8 +14124,9 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                     }
                     isPlus = true;
                 }
-            } else if (isTimeParser && ret.updateValueUnitTime(
-                                           CSSTokenValue(str), parserOption)) {
+            } else if (isTimeParser && hasUnitSuffix &&
+                       ret.updateValueUnitTime(CSSTokenValue(str),
+                                               parserOption)) {
                 if (unitParsed) {
                     return false;
                 }
@@ -14134,8 +14138,9 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                     val.setValue(-1 * ret.timeValue());
                     isPlus = true;
                 }
-            } else if (isAngleParser && ret.updateValueUnitAngle(
-                                            CSSTokenValue(str), parserOption)) {
+            } else if (isAngleParser && hasUnitSuffix &&
+                       ret.updateValueUnitAngle(CSSTokenValue(str),
+                                                parserOption)) {
                 if (unitParsed) {
                     return false;
                 }
@@ -14314,6 +14319,12 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
             parseCalc(parser, data, isLenParser, isAngleParser, isTimeParser,
                       isLineheightParser, isNumberParser, parserOption);
         if (result && parser.isEnd()) {
+            if (isTimeParser || isAngleParser) {
+                CalcValueType type = data->calcValueType();
+                if (!(isTimeParser ? type.isTime() : type.isAngle())) {
+                    return false;
+                }
+            }
             if (!(parserOption & CSSPropertyParser::AllowNegative)) {
                 data->setNonNegative();
             }

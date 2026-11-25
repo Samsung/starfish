@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CSS angle math treats unitless zero as a number</title>
+<link rel="help" href="https://drafts.csswg.org/css-values-4/#calc-type-checking">
+<div id="target"></div>
+<script>
+if (typeof testEnd !== 'function') {
+  let pass = 0, fail = 0;
+  const nativeAssert = console.assert.bind(console);
+  console.assert = (condition, message) => {
+    if (condition) {
+      ++pass;
+    } else {
+      ++fail;
+      nativeAssert(false, message);
+    }
+  };
+  window.testEnd = () => {
+    const verdict = (fail ? 'FAIL' : 'PASS') + ' (' + pass + ' passed, ' + fail + ' failed)';
+    document.title = verdict;
+  };
+}
+
+const target = document.getElementById('target');
+for (const expression of ['45deg * 0', '0 * 45deg']) {
+  target.style.transform = '';
+  target.style.transform = 'rotate(calc(' + expression + '))';
+  const actual = getComputedStyle(target).transform;
+  console.assert(actual === 'matrix(1, 0, 0, 1, 0, 0)', expression + ': ' + actual);
+}
+testEnd();
+</script>
