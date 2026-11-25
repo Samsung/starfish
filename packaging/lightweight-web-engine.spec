@@ -556,9 +556,6 @@ export PYTHONPATH=$PWD/%{binding_install_path}
 
 CXXFLAGS="$CXXFLAGS -DSTARFISH_TIZEN_MAJOR_VERSION=%{tizen_version_major} "
 CXXFLAGS="$CXXFLAGS -DSTARFISH_TIZEN_VERSION_%{tizen_version_major}_%{tizen_version_minor} "
-%if %{lwe_tcore}
-CXXFLAGS="$CXXFLAGS -DSTARFISH_TIZEN_TCORE "
-%endif
 %if 0%{?build_option:1}
 %if "%{build_option}" == "evas_gl_transparent_window"
 CXXFLAGS="$CXXFLAGS -DSTARFISH_ENABLE_TRANSPARENT_WINDOW "
@@ -617,7 +614,7 @@ CFLAGS="$CFLAGS -DNO_UFFDWP_VDB "
 %define features_config -DWORKER='%{enable_worker}' -DSHARED_WORKER='%{enable_sharedworker}' \\\
   -DSERVICE_WORKER='%{enable_serviceworker}' -DTLS_ACCESS_BY_ADDRESS='%{enable_tls_access_by_address}' \\\
   -DWEBRTC='%{enable_webrtc}' -DWEBGL='%{enable_webgl}' -DWEBAUDIO='%{enable_webaudio}' \\\
-  -DENABLE_ESPLUSPLAYER='%{enable_esplusplayer}' -DESCARGOT_FORCE_TLS_DIALECT_GNU2='%{force_tls_dialect_gnu2}'
+  -DENABLE_ESPLUSPLAYER='%{enable_esplusplayer}' -DESCARGOT_FORCE_TLS_DIALECT_GNU2='%{force_tls_dialect_gnu2}' -DTIZEN_TCORE='%{lwe_tcore}'
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 %define out_tizen %{out_folder}/unified_tv/release
