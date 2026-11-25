@@ -289,9 +289,13 @@ BuildRequires: pkgconfig(capi-location-manager)
 BuildRequires: pkgconfig(tts)
 BuildRequires: libasound-devel
 
-# Keep the existing default when the product does not select a backend.
-%{!?BUILD_EFL_DISABLE:%global BUILD_EFL_DISABLE 0}
+# Tizen 11 and later default to tcore when the product does not select it.
+%if 0%{?tizen_version_major} >= 11
+%{!?BUILD_TCORE_ENABLE:%global BUILD_TCORE_ENABLE 1}
+%else
 %{!?BUILD_TCORE_ENABLE:%global BUILD_TCORE_ENABLE 0}
+%endif
+%{!?BUILD_EFL_DISABLE:%global BUILD_EFL_DISABLE 0}
 %if "%{BUILD_TCORE_ENABLE}" != "0" && "%{BUILD_TCORE_ENABLE}" != "1"
 %{error:BUILD_TCORE_ENABLE must be 0 or 1}
 %endif
@@ -299,7 +303,8 @@ BuildRequires: libasound-devel
 %{error:BUILD_EFL_DISABLE must be 0 or 1}
 %endif
 
-%if 0%{?tizen_version_major} >= 11 || "%{BUILD_TCORE_ENABLE}" == "1" || "%{BUILD_EFL_DISABLE}" == "1"
+%if "%{BUILD_TCORE_ENABLE}" == "1" || "%{BUILD_EFL_DISABLE}" == "1"
+%define lwe_tcore 1
 BuildRequires: pkgconfig(tizen-core)
 BuildRequires: pkgconfig(tizen-core-wl)
 BuildRequires: pkgconfig(tizen-core-imf)
@@ -308,6 +313,7 @@ BuildRequires: pkgconfig(tizen-core-imf)
 %define lwe_headless_backend glib_headless
 %define lwe_headless_shell_type tcore_headless
 %else
+%define lwe_tcore 0
 BuildRequires: pkgconfig(evas)
 BuildRequires: pkgconfig(ecore-evas)
 BuildRequires: pkgconfig(elementary)
@@ -550,6 +556,9 @@ export PYTHONPATH=$PWD/%{binding_install_path}
 
 CXXFLAGS="$CXXFLAGS -DSTARFISH_TIZEN_MAJOR_VERSION=%{tizen_version_major} "
 CXXFLAGS="$CXXFLAGS -DSTARFISH_TIZEN_VERSION_%{tizen_version_major}_%{tizen_version_minor} "
+%if %{lwe_tcore}
+CXXFLAGS="$CXXFLAGS -DSTARFISH_TIZEN_TCORE "
+%endif
 %if 0%{?build_option:1}
 %if "%{build_option}" == "evas_gl_transparent_window"
 CXXFLAGS="$CXXFLAGS -DSTARFISH_ENABLE_TRANSPARENT_WINDOW "

@@ -338,8 +338,11 @@ gbs -c ../gbs-conf/gbs.conf build -A armv7l -P profile.50std  --incremental --in
 
 For RPM builds, `BUILD_TCORE_ENABLE` and `BUILD_EFL_DISABLE` are 0/1 RPM
 macros. Set either to 1 with GBS `--define` to select the tcore Wayland and
-headless shells, including on Tizen 10.1. If both are 0 or absent, Tizen 11
-and later retain the tcore default; older versions use EFL.
+headless shells, including on Tizen 10.1. When unspecified,
+`BUILD_TCORE_ENABLE` defaults to 1 on Tizen 11 and later and 0 on older
+versions; `BUILD_EFL_DISABLE` defaults to 0. If both are 0, EFL is selected.
+For direct CMake builds on Tizen, set `-DTIZEN_TCORE=1` to use tcore platform
+handles independently of the shell; it defaults to 0.
 
 GBS/RPM builds (including release CI) use Unix Makefiles and Make on Tizen
 5.0/5.5 to avoid a legacy Ninja process-spawn failure during linking. Other

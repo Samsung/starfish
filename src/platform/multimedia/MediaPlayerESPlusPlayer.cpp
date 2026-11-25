@@ -400,7 +400,7 @@ bool MediaPlayerESPlusPlayer::setupOverlayDisplay()
     m_lastVideoSourceROI = { { 0.0, 0.0, 1.0, 1.0 } };
     esplusplayer_set_display_roi(m_player, 0, 0, 1, 1);
 
-#if defined(STARFISH_SHELL_TCORE_WL)
+#if defined(STARFISH_TIZEN_TCORE)
     void* windowHandle = m_container->webView()->publicLayerUserDataMap()
                              ["__internalLWEWebViewTcoreWaylandHandle"];
     ret = esplusplayer_set_display(m_player, ESPLUSPLAYER_DISPLAY_TYPE_OVERLAY2,
