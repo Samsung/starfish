@@ -827,6 +827,59 @@ namespace {
             return false;
         }
 
+        // The name of an input of type button, submit or reset.
+        TextResult buttonInputText(Element* element, const std::string& type)
+        {
+            TextResult result;
+            result.from = NameFrom::Value;
+            if (axHasAttribute(element, "value")) {
+                result.text = axAttribute(element, "value");
+                return result;
+            }
+            // A button with no value shows a default label. It is the
+            // text the button is drawn with.
+            if (type == "submit") {
+                result.from = NameFrom::Contents;
+                result.text = kSubmitLabel;
+            } else if (type == "reset") {
+                result.from = NameFrom::Contents;
+                result.text = kResetLabel;
+            }
+            return result;
+        }
+
+        // The name of an input of type image.
+        TextResult imageInputText(Element* element)
+        {
+            TextResult result;
+            bool altPresent = axHasAttribute(element, "alt");
+            std::string alt = axAttribute(element, "alt");
+            result.from = altPresent && alt.empty()
+                              ? NameFrom::AttributeExplicitlyEmpty
+                              : NameFrom::Attribute;
+            if (!alt.empty()) {
+                result.text = alt;
+                return result;
+            }
+            result.from = NameFrom::Attribute;
+            if (axHasAttribute(element, "value")) {
+                std::string value = axAttribute(element, "value");
+                if (!value.empty()) {
+                    result.text = value;
+                    return result;
+                }
+            }
+            std::string title = tooltip(element);
+            if (!title.empty()) {
+                result.from = NameFrom::Title;
+                result.text = title;
+                return result;
+            }
+            result.from = NameFrom::Value;
+            result.text = kSubmitLabel;
+            return result;
+        }
+
         // accname 2D: the markup of the element itself.
         TextResult nativeTextAlternative(Element* element,
                                          const std::string& tag,
@@ -861,50 +914,11 @@ namespace {
 
             if (tag == "input" &&
                 (type == "button" || type == "submit" || type == "reset")) {
-                result.from = NameFrom::Value;
-                if (axHasAttribute(element, "value")) {
-                    result.text = axAttribute(element, "value");
-                    return result;
-                }
-                // A button with no value shows a default label. It is the
-                // text the button is drawn with.
-                if (type == "submit") {
-                    result.from = NameFrom::Contents;
-                    result.text = kSubmitLabel;
-                } else if (type == "reset") {
-                    result.from = NameFrom::Contents;
-                    result.text = kResetLabel;
-                }
-                return result;
+                return buttonInputText(element, type);
             }
 
             if (tag == "input" && type == "image") {
-                bool altPresent = axHasAttribute(element, "alt");
-                std::string alt = axAttribute(element, "alt");
-                result.from = altPresent && alt.empty()
-                                  ? NameFrom::AttributeExplicitlyEmpty
-                                  : NameFrom::Attribute;
-                if (!alt.empty()) {
-                    result.text = alt;
-                    return result;
-                }
-                result.from = NameFrom::Attribute;
-                if (axHasAttribute(element, "value")) {
-                    std::string value = axAttribute(element, "value");
-                    if (!value.empty()) {
-                        result.text = value;
-                        return result;
-                    }
-                }
-                std::string title = tooltip(element);
-                if (!title.empty()) {
-                    result.from = NameFrom::Title;
-                    result.text = title;
-                    return result;
-                }
-                result.from = NameFrom::Value;
-                result.text = kSubmitLabel;
-                return result;
+                return imageInputText(element);
             }
 
             if (isTextControl(element, tag)) {
