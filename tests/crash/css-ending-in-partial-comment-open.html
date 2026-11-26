@@ -1,0 +1,27 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>CSS text that ends inside a "&lt;!--" or "--&gt;" token</title>
+<link rel="help" href="https://drafts.csswg.org/css-syntax-3/#consume-token">
+<style>p { color: green } <</style>
+<body>
+<p style="color: green <">style attribute ending in a less-than sign</p>
+<script>
+// "<!--" and "-->" are CDO and CDC tokens. Input that stops after a prefix of
+// one of them must still tokenize to its end; the page passes if parsing every
+// such ending finishes.
+var p = document.querySelector("p");
+["color: green <", "color: green <!", "color: green <!-", "color: green -",
+ "color: green --"].forEach(function (text) {
+  p.style.cssText = text;
+  getComputedStyle(p).color;
+});
+var style = document.createElement("style");
+style.textContent = "p { color: green } <!";
+document.head.appendChild(style);
+CSS.supports("color", "green <");
+onload = function () {
+  document.body.offsetWidth;
+  if (typeof testEnd === "function") testEnd();
+};
+</script>
+</body>

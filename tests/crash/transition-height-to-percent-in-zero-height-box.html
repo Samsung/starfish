@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Height transition to a percentage inside a box of zero height</title>
+<link rel="help" href="https://drafts.csswg.org/css-transitions-1/#starting">
+<style>
+  #container { width: 300px; height: 0; }
+  #box { height: 100px; transition: height 1s, min-height 1s, max-height 1s; background: green; }
+</style>
+<body>
+<div id="container"><div id="box"></div></div>
+<script>
+// The transition starts from a percentage of the containing block's height,
+// which is zero here while its width is not. The page passes if the
+// transitions start without a crash.
+onload = function () {
+  var box = document.getElementById("box");
+  box.offsetWidth;
+  box.style.height = "50%";
+  box.style.minHeight = "10%";
+  box.style.maxHeight = "90%";
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      if (typeof testEnd === "function") testEnd();
+    });
+  });
+};
+</script>
+</body>

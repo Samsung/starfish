@@ -416,10 +416,10 @@ public:
         return -1;
     }
 
-    int peek()
+    int peek(size_t offset = 0)
     {
-        if (LIKELY(m_pos < m_stringBufferData.length)) {
-            return m_stringBufferData.charAt(m_pos);
+        if (LIKELY(m_pos + offset < m_stringBufferData.length)) {
+            return m_stringBufferData.charAt(m_pos + offset);
         }
         return -1;
     }
@@ -785,29 +785,16 @@ public:
             }
         }
 
-        if (c == '<') {
-            if (read() == '!') {
-                if (read() == '-') {
-                    if (read() == '-') {
-                        return CSSToken::createToken(
-                            m_parser, CSSToken::SGML_COMMENT_TYPE);
-                    }
-                    pushback();
-                }
-                pushback();
-            }
-            pushback();
+        // Peek rather than read() and pushback(): read() stays put at the
+        // end of input, so a pushback there would re-read `<` forever.
+        if (c == '<' && peek() == '!' && peek(1) == '-' && peek(2) == '-') {
+            m_pos += 3;
+            return CSSToken::createToken(m_parser, CSSToken::SGML_COMMENT_TYPE);
         }
 
-        if (c == '-') {
-            if (read() == '-') {
-                if (read() == '>') {
-                    return CSSToken::createToken(m_parser,
-                                                 CSSToken::SGML_COMMENT_TYPE);
-                }
-                pushback();
-            }
-            pushback();
+        if (c == '-' && peek() == '-' && peek(1) == '>') {
+            m_pos += 2;
+            return CSSToken::createToken(m_parser, CSSToken::SGML_COMMENT_TYPE);
         }
 
         if (startsWithIdent(c, peek())) {

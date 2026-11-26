@@ -1236,3 +1236,5 @@ tests/assertion/media/mp4-largesize-box.html
 tests/assertion/css/calc-angle-zero-factor.html
 tests/crash/text-shaping-more-glyphs-than-characters.html
 tests/crash/text-shadow-blur-negative-or-huge-width.html
+tests/crash/css-ending-in-partial-comment-open.html
+tests/crash/transition-height-to-percent-in-zero-height-box.html

@@ -518,7 +518,7 @@ void TransitionApplier::applyActiveLengthAnimationTaskForFrameBoxSize(
             Length toValue = newLength;
 
             if (toValue.isPercent() && !fromValue.isPercent()) {
-                if (cb->contentWidth() == 0) {
+                if (contentSizeValueGetter(cb) == 0) {
                     fromValue = Length(Length::Percent, 0);
                 } else if (m_fromStyle->boxSizing() ==
                            BoxSizingValue::BorderBoxBoxSizingValue) {
