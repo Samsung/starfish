@@ -443,6 +443,7 @@ tests/crash/table-intrinsic-min-max-width.html
 tests/pixel/css/border/next-line-dont-show-end-mbp.html
 tests/assertion/event/click.html
 tests/assertion/event/click2.html
+tests/assertion/event/custom-event-detail.html
 tests/assertion/dom/document-all.html
 tests/assertion/page-visibility/visibilitychange_test.html
 tests/pixel/css/position2/left-margin-auto-right-margin-auto-width-fixed.html

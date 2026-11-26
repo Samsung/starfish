@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>CustomEvent detail defaults</title>
+<script>
+function testStart() {
+    const value = {};
+    console.assert(new CustomEvent('test').detail === null);
+    console.assert(new CustomEvent('test', {}).detail === null);
+    console.assert(new CustomEvent('test', null).detail === null);
+    console.assert(new CustomEvent('test', { detail: undefined }).detail === null);
+    console.assert(new CustomEvent('test', { detail: null }).detail === null);
+    console.assert(new CustomEvent('test', { detail: value }).detail === value);
+    const event = document.createEvent('CustomEvent');
+    event.initCustomEvent('test');
+    console.assert(event.detail === null);
+    testEnd();
+}
+</script>

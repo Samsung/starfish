@@ -30,7 +30,7 @@ public:
 
     CustomEventInit()
         : EventInit()
-        , m_detail(nullptr)
+        , m_detail(scriptNull())
     {
     }
     ScriptValue detail() const

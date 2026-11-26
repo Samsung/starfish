@@ -13,6 +13,7 @@ http://web-platform.test:8000/dom/ranges/Range-constructor.html
 # [auto-fail] http://web-platform.test:8000/dom/ranges/Range-cloneRange.html
 http://web-platform.test:8000/dom/ranges/Range-commonAncestorContainer-2.html
 http://web-platform.test:8000/dom/ranges/Range-comparePoint-2.html
+http://web-platform.test:8000/dom/events/CustomEvent.html
 http://web-platform.test:8000/dom/events/Event-dispatch-order.html
 http://web-platform.test:8000/dom/events/Event-dispatch-order-at-target.html
 http://web-platform.test:8000/dom/events/Event-dispatch-listener-order.window.html
