@@ -83,9 +83,7 @@
       "detail": "CrashReportContext.getEntries did not return entries"
     },
     "DOM.describeNode": {
-      "expected": "fail",
-      "category": "failed",
-      "detail": "DOM.describeNode returned {'code': -32000, 'message': 'Could not find node with given id'}"
+      "expected": "pass"
     },
     "DOM.getBoxModel": {
       "expected": "pass"
@@ -105,9 +103,7 @@
       "expected": "pass"
     },
     "DOM.getOuterHTML": {
-      "expected": "fail",
-      "category": "failed",
-      "detail": "DOM.getOuterHTML returned {'code': -32000, 'message': 'Could not find node with given id'}"
+      "expected": "pass"
     },
     "DOM.getTopLayerElements": {
       "expected": "fail",
@@ -115,9 +111,7 @@
       "detail": "DOM.getTopLayerElements returned {'code': -32601, 'message': \"'method' wasn't found\"}"
     },
     "DOM.resolveNode": {
-      "expected": "fail",
-      "category": "failed",
-      "detail": "DOM.resolveNode returned {'code': -32000, 'message': 'Could not find node with given id'}"
+      "expected": "pass"
     },
     "Debugger.enable": {
       "expected": "pass"

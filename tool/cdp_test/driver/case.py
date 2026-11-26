@@ -23,17 +23,14 @@ def label(case):
     return case["method"]
 
 
-def geometry_params(socket):
+def fixture_node_id(socket):
     document = call(socket, 1, "DOM.getDocument", {"depth": 0})
     check_response("DOM.getDocument", document, ("root",))
     root_id = document["result"]["root"]["nodeId"]
     selected = call(socket, 2, "DOM.querySelector",
                     {"nodeId": root_id, "selector": "#schema-geometry"})
     check_response("DOM.querySelector", selected, ("nodeId",))
-    described = call(socket, 3, "DOM.describeNode",
-                     {"nodeId": selected["result"]["nodeId"]})
-    check_response("DOM.describeNode", described, ("node",))
-    return {"backendNodeId": described["result"]["node"]["backendNodeId"]}
+    return selected["result"]["nodeId"]
 
 
 def run(starfish, case, timeout):
@@ -42,8 +39,18 @@ def run(starfish, case, timeout):
         socket = connect(debugger_url(endpoint), timeout)
         try:
             method = case["method"]
-            if method in ("DOM.getBoxModel", "DOM.getContentQuads"):
-                response = call(socket, 4, method, geometry_params(socket))
+            if method in ("DOM.describeNode", "DOM.getOuterHTML",
+                          "DOM.resolveNode", "DOM.getBoxModel",
+                          "DOM.getContentQuads"):
+                node_id = fixture_node_id(socket)
+                params = {"nodeId": node_id}
+                request_id = 3
+                if method in ("DOM.getBoxModel", "DOM.getContentQuads"):
+                    described = call(socket, request_id, "DOM.describeNode", params)
+                    check_response("DOM.describeNode", described, ("node",))
+                    params = {"backendNodeId": described["result"]["node"]["backendNodeId"]}
+                    request_id += 1
+                response = call(socket, request_id, method, params)
             else:
                 response = call(socket, 1, method)
         finally:

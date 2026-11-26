@@ -70,8 +70,8 @@ result.
 
 1. `launcher` starts Starfish and waits for the endpoint to answer.
 2. `client` opens the WebSocket. Most commands are sent without parameters.
-   The two DOM geometry cases first resolve a fixture element and send its
-   `backendNodeId`.
+   DOM node queries that require an identifier resolve a fixture element.
+   The geometry cases use its `backendNodeId`; the others use its `nodeId`.
 3. `case` checks that every field the protocol requires is in the response.
 
 **behavior**, in Node:
