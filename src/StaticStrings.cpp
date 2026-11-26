@@ -50,6 +50,7 @@ StaticStrings::StaticStrings(Starfish* starfish)
     , m_commentLocalName(AtomicString::createAtomicString(starfish, "#comment"))
     , m_true(AtomicString::createAtomicString(starfish, "true"))
     , m_false(AtomicString::createAtomicString(starfish, "false"))
+    , m_asterisk(AtomicString::createAtomicString(starfish, "*"))
 {
 #define DEFINE_HTML_LOCAL_NAMES(name)      \
     m_##name##TagName =                    \

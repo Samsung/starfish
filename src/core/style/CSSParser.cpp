@@ -1093,32 +1093,21 @@ CSSSelectorListItem::RelationType CSSParser::parseCombinator()
     }
 }
 
-String* CSSParser::determineNamespace(String* prefix)
+Optional<AtomicString> CSSParser::determineNamespace(
+    const CSSTokenString& prefix)
 {
-    if (prefix == nullptr) {
-        return String::emptyString;
+    if (!prefix.length()) {
+        return AtomicString::emptyAtomicString();
     }
-    if (prefix->equals(String::emptyString)) {
-        return String::emptyString; // No namespace. If an element/attribute has
-                                    // a namespace, we won't match it.
+    if (prefix.equals("*")) {
+        return starfish()->staticStrings()->m_asterisk;
     }
-    if (prefix->equals("*")) {
-        return String::fromUTF8("*"); // We'll match any namespace.
-    }
-
     if (!m_styleSheet) {
-        // No owning sheet to resolve the prefix against (querySelector(),
-        // Element.matches(), CSS.supports() -- see setStyleSheet()), so a
-        // named prefix can never be declared here == invalid selector.
-        return nullptr;
+        // A named prefix needs a stylesheet with a matching @namespace rule.
+        return {};
     }
-
-    Optional<AtomicString> uri = m_styleSheet->namespaceURIFromPrefix(
-        AtomicString::createAtomicString(starfish(), prefix));
-    if (!uri.hasValue()) {
-        return nullptr; // Undeclared prefix -- invalid selector.
-    }
-    return uri.getValue().string();
+    return m_styleSheet->namespaceURIFromPrefix(
+        prefix.toAtomicString(starfish()));
 }
 
 CSSSelector* CSSParser::getPseudoSelector()
@@ -1923,8 +1912,8 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
         Optional<AtomicString> nsURI;
         bool explicitNamespace = false;
         if (hasPrefix) {
-            String* uri = determineNamespace(prefix.toString());
-            if (!uri) {
+            nsURI = determineNamespace(prefix);
+            if (!nsURI) {
                 // Undeclared prefix -- invalid selector, drop the whole rule
                 // (this is what issue #5041 is about: a selector like
                 // `:not(foo|div)` with an undeclared `foo` must invalidate
@@ -1933,7 +1922,6 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
                 m_failedParsing = true;
                 return;
             }
-            nsURI = AtomicString::createAtomicString(starfish(), uri);
             explicitNamespace = true;
         } else if (m_styleSheet) {
             nsURI = m_styleSheet->defaultNamespaceURI();
@@ -1960,9 +1948,11 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
             // tags like feFlood) and XML type selectors match case-sensitively
             // per Selectors 4 § 3.3 / HTML § 4.16.3. Keep the ASCII-lowercased
             // form only when the parsed name contains uppercase letters.
-            AtomicString localName = elementName.toAtomicString(starfish());
+            AtomicString localName =
+                isStar ? starfish()->staticStrings()->m_asterisk
+                       : elementName.toAtomicString(starfish());
             AtomicString lowercasedLocalName =
-                elementName.toAttrAtomicString(starfish());
+                isStar ? localName : elementName.toAttrAtomicString(starfish());
             QualifiedName qname =
                 explicitNamespace
                     ? QualifiedName(prefix.toAttrAtomicString(starfish()),
@@ -1975,7 +1965,7 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
             selector = getSelector({ CSSSelector::Type::Universal,
                                      CSSSelector::PseudoNone,
                                      CSSSelector::CaseInsensitive,
-                                     elementName.toAtomicString(starfish()) });
+                                     starfish()->staticStrings()->m_asterisk });
         } else {
             AtomicString tagText = elementName.toAtomicString(starfish());
             AtomicString lowercasedText =
@@ -2009,9 +1999,8 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
             Optional<AtomicString> defaultNS =
                 m_styleSheet->defaultNamespaceURI();
             if (defaultNS.hasValue()) {
-                QualifiedName qname(
-                    defaultNS.getValue(),
-                    AtomicString::createAtomicString(starfish(), "*"));
+                QualifiedName qname(defaultNS.getValue(),
+                                    starfish()->staticStrings()->m_asterisk);
                 CSSSelector* selector = new CSSNamespacedTagSelector(qname);
                 selectorList->insert(selectorList->begin(),
                                      CSSSelectorListItem(selector));

@@ -315,6 +315,7 @@ public:
 
     AtomicString m_true;
     AtomicString m_false;
+    AtomicString m_asterisk;
 
 // Pseudo Selectors
 #define DEFINE_PSEUDO_SELECTORS(name, nameLower, ...) \

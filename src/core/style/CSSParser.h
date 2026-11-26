@@ -2346,7 +2346,7 @@ private:
     CSSSelector* getClassSelector();
     CSSSelector* getAttributeSelector();
     CSSSelector* getPseudoSelector();
-    String* determineNamespace(String* prefix);
+    Optional<AtomicString> determineNamespace(const CSSTokenString& prefix);
     void prependTypeSelectorIfNeeded(String* namespacePrefix,
                                      String* elementName,
                                      CSSSelector* compoundSelector);

@@ -984,12 +984,11 @@ static bool checkCORSPreflight(NetworkURLWorkerData* nwd)
         StringUtils::equalsIgnoreCase("POST", requestMethod) ||
         StringUtils::equalsIgnoreCase("HEAD", requestMethod);
 
-    const std::string whildCard = "*";
     for (const auto& method : methods) {
         if (StringUtils::equalsIgnoreCase(requestMethod, method)) {
             hasRequestMethod = true;
         }
-        if (StringUtils::equalsIgnoreCase(whildCard, method)) {
+        if (method == "*") {
             hasWildCard = true;
         }
     }
@@ -1027,7 +1026,7 @@ static bool checkCORSPreflight(NetworkURLWorkerData* nwd)
 
     bool hasWildCardHeaderValue = unsafeNames.size() == 0;
     for (const auto& name : headerNames) {
-        if (StringUtils::equalsIgnoreCase(whildCard, name)) {
+        if (name == "*") {
             hasWildCardHeaderValue = true;
             break;
         }
