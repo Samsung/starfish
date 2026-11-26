@@ -120,7 +120,7 @@ Requires(postun): /sbin/ldconfig
 
 # "prod_tv" enables by default every optional feature its Tizen version can
 # build: WebAssembly and WebGL on every version, Web Audio from Tizen 8 (its
-# decoder needs FFmpeg 5.1 and libswresample, which older platforms lack) and
+# decoder needs FFmpeg 5.1, which older platforms lack) and
 # the esplusplayer MSE backend from Tizen 6.5 (the oldest esplusplayer whose
 # API the backend builds against). Other profiles keep their defaults, and
 # --define 'enable_<feature> {0|1}' overrides any of them.
@@ -384,7 +384,6 @@ BuildRequires: pkgconfig(capi-media-tool)
 %if "%{enable_webaudio}" == "1"
 BuildRequires: pkgconfig(libavcodec)
 BuildRequires: pkgconfig(libavutil)
-BuildRequires: pkgconfig(libswresample)
 %endif
 
 %if 0%{?need_esplusplayer_pkg} == 1

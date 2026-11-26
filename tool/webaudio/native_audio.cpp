@@ -3,11 +3,18 @@
 #include "platform/multimedia/MP3MemoryDemuxer.h"
 #include "platform/multimedia/AudioContainerReader.h"
 
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+#include "core/modules/webaudio/render/AudioPCMResampler.h"
+#endif
+
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <iterator>
+#include <memory>
 #include <vector>
 
 static std::vector<uint8_t> readFile(const char* path)
@@ -17,8 +24,88 @@ static std::vector<uint8_t> readFile(const char* path)
                                 std::istreambuf_iterator<char>());
 }
 
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+static bool testResampling(unsigned inputRate, unsigned outputRate,
+                           size_t frames, double frequency,
+                           float expectedAmplitude)
+{
+    constexpr double twoPi = 6.28318530717958647692;
+    Starfish::AudioBufferDataBuilder whole(2, 0);
+    Starfish::AudioBufferDataBuilder chunked(2, 0);
+    Starfish::AudioPCMResampler oneBlock(inputRate, outputRate, 2);
+    Starfish::AudioPCMResampler smallBlocks(inputRate, outputRate, 2);
+
+    auto append = [&](Starfish::AudioPCMResampler& resampler,
+                      Starfish::AudioBufferDataBuilder& output, size_t offset,
+                      size_t count) {
+        float* planes[2];
+        resampler.prepareInput(count, planes);
+        for (size_t i = 0; i < count; ++i) {
+            planes[0][i] =
+                0.5 * std::sin(twoPi * frequency * (offset + i) / inputRate);
+            planes[1][i] = -0.25f;
+        }
+        return resampler.append(count, output);
+    };
+    if (!append(oneBlock, whole, 0, frames) || !oneBlock.drain(whole)) {
+        return false;
+    }
+    for (size_t offset = 0; offset < frames;) {
+        size_t count = std::min<size_t>(7, frames - offset);
+        if (!append(smallBlocks, chunked, offset, count)) {
+            return false;
+        }
+        offset += count;
+    }
+    if (!smallBlocks.drain(chunked)) {
+        return false;
+    }
+
+    auto release = [](Starfish::AudioBufferData* buffer) { buffer->release(); };
+    std::unique_ptr<Starfish::AudioBufferData, decltype(release)> a(
+        whole.finish(), release);
+    std::unique_ptr<Starfish::AudioBufferData, decltype(release)> b(
+        chunked.finish(), release);
+    size_t expected = std::lround(double(frames) * outputRate / inputRate);
+    if (!a || !b || a->frames() != expected || b->frames() != expected) {
+        return false;
+    }
+    for (size_t i = 0; i < expected; ++i) {
+        float sample = a->channel(0)[i];
+        if (!std::isfinite(sample) || sample != b->channel(0)[i] ||
+            a->channel(1)[i] != b->channel(1)[i] ||
+            std::abs(a->channel(1)[i] + 0.25f) > 0.00001f) {
+            return false;
+        }
+        if (i >= 64 && i + 64 < expected) {
+            double ideal = expectedAmplitude *
+                           std::sin(twoPi * frequency * i / outputRate);
+            if (std::abs(sample - ideal) > 0.001) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+#endif
+
 int main(int argc, char** argv)
 {
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+    if (argc == 1) {
+        if (!testResampling(44100, 48000, 1001, 997, 0.5f) ||
+            !testResampling(44101, 48000, 1001, 997, 0.5f) ||
+            !testResampling(48000, 16000, 1001, 997, 0.5f) ||
+            !testResampling(48000, 16000, 1001, 12000, 0) ||
+            !testResampling(48000, 44100, 1, 997, 0.5f) ||
+            !testResampling(768000, 3000, 4097, 997, 0.5f)) {
+            std::fprintf(stderr, "Native PCM resampling failed\n");
+            return 8;
+        }
+        std::puts("NATIVE_PCM_PASS");
+        return 0;
+    }
+#endif
     if (argc != 5 && argc != 6) {
         return 1;
     }

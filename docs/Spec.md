@@ -3622,8 +3622,10 @@ WAVE parsing includes RF64/BW64, big-endian RIFX and MP3-in-WAVE.
 Matroska/WebM reads audio blocks with Xiph, fixed and EBML lacing, CodecDelay
 and positive discard padding. Ogg Vorbis/Opus also handle a nonzero initial
 granule origin.
-Codec decoding, codec-level frame parsing and compressed-audio resampling
-still use FFmpeg's libavcodec/libavutil/libswresample.
+Codec decoding and codec-level frame parsing use FFmpeg's libavcodec and
+libavutil. On Tizen, Starfish converts compressed PCM to planar float,
+mixes channels and resamples with a windowed-sinc filter. FFmpeg media player
+builds on Linux and Windows use libswresample for those steps.
 The bounded native readers intentionally reject unsupported layouts instead
 of invoking a general-purpose container backend: free-format MP3 (also
 unsupported by the FFmpeg MP3 codec), backward/repeated MP4 edit ranges,
@@ -3631,8 +3633,7 @@ non-unit edit playback rates and encrypted tracks. Ogg audio packets and
 codec headers are limited to 1 MiB (comments are skipped with bounded memory),
 Ogg chains to 16, and fragmented MP4 runs to 4096 per fragment.
 Codec packet copies and unframed codec-parser buffering are limited to 16 MiB.
-Tizen builds decode compressed audio the same way with the platform's FFmpeg
-libraries, so the decoders available depend on the device's FFmpeg build.
+The compressed codecs available on Tizen depend on the device's FFmpeg build.
 Other Linux builds reject compressed formats.
 WAV data uses linear interpolation when resampling. Compressed decoding writes its
 output PCM in place, without a second copy, and shares the `AudioBuffer`

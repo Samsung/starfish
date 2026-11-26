@@ -766,16 +766,15 @@ int main() { AtkComponentIface i; i.grab_highlight = 0; (void)i; return 0; }"
 
     # src/platform/webaudio/AudioOutputDevice.cpp (audio_out_*,
     # sound_manager_*) and the platform FFmpeg in
-    # src/core/modules/webaudio/render/CompressedAudioDecoder.cpp:
-    # STARFISH_ENABLE_WEBAUDIO.
+    # src/core/modules/webaudio/render/CompressedAudioDecoder.cpp.
     IF ("${LWE_DEFINES_ENABLED}" MATCHES "STARFISH_ENABLE_WEBAUDIO")
         pkg_check_modules (STARFISH_TIZEN_WEBAUDIO REQUIRED capi-media-audio-io
-            capi-media-sound-manager libavcodec libavutil
-            libswresample)
+            capi-media-sound-manager libavcodec libavutil)
+        LIST (APPEND LWE_DEFINES_CUSTOM -DSTARFISH_USE_NATIVE_PCM_CONVERTER)
         # Each FFmpeg pkg-config version starts with its library's SONAME
         # major. An older FFmpeg in the same buildroot can otherwise win
         # the unversioned -lavutil lookup.
-        FOREACH (ff avcodec avutil swresample)
+        FOREACH (ff avcodec avutil)
             SET (FF_VERSION "${STARFISH_TIZEN_WEBAUDIO_lib${ff}_VERSION}")
             STRING (REGEX MATCH "^[0-9]+" FF_MAJOR "${FF_VERSION}")
             IF (FF_MAJOR STREQUAL "")

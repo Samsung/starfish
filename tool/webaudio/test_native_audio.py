@@ -2,7 +2,9 @@
 """Compare native audio demuxing with independently decoded reference PCM."""
 
 import argparse
+from array import array
 import json
+import math
 import os
 from pathlib import Path
 import shlex
@@ -190,7 +192,7 @@ def matroska_delay(data):
         return 0
 
 
-def corpus_test(binary, vorbis, directories, path, report):
+def corpus_test(binary, vorbis, directories, path, report, native_rate):
     extensions = {'.mp3', '.ogg', '.opus', '.oga', '.ogv', '.flac', '.m4a', '.mp4',
                   '.mov', '.webm', '.weba', '.mkv', '.mka', '.wav', '.aac', '.3gp'}
     codecs = {'aac', 'alac', 'mp3', 'flac', 'vorbis', 'opus', 'adpcm_ms', 'adpcm_ima_wav'}
@@ -217,11 +219,12 @@ def corpus_test(binary, vorbis, directories, path, report):
             channels = int(audio.get('channels', 0))
             if not 0 < duration <= 30 or not 0 < channels <= 32:
                 continue
-            if duration * 48000 * channels * 4 > 128 * 1024 * 1024:
+            rate = audio.get('sample_rate', '48000') if native_rate else '48000'
+            if duration * int(rate) * channels * 4 > 128 * 1024 * 1024:
                 continue
             reference = path / 'corpus-reference.f32'
             decoded = subprocess.run(['ffmpeg', '-nostdin', '-v', 'error', '-y',
-                                      '-i', str(track), '-map', '0:a:0', '-ar', '48000',
+                                      '-i', str(track), '-map', '0:a:0', '-ar', rate,
                                       '-f', 'f32le', str(reference)], capture_output=True,
                                      text=True, timeout=30)
             if decoded.returncode or not reference.stat().st_size:
@@ -234,7 +237,7 @@ def corpus_test(binary, vorbis, directories, path, report):
                     run([str(vorbis), str(vorbis_track)], stdout=output)
                 run(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-f', 'f32le',
                      '-ar', audio['sample_rate'], '-ac', str(channels), '-i', str(raw),
-                     '-ar', '48000', '-f', 'f32le', str(reference)])
+                     '-ar', rate, '-f', 'f32le', str(reference)])
             data = track.read_bytes()
             delay = matroska_delay(data)
             skip = (delay * int(audio['sample_rate']) + 500000000) // 1000000000
@@ -260,9 +263,9 @@ def corpus_test(binary, vorbis, directories, path, report):
                 raw.write_bytes(pcm[skip * channels * 4:])
                 run(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-f', 'f32le',
                      '-ar', audio['sample_rate'], '-ac', str(channels), '-i', str(raw),
-                     '-ar', '48000', '-f', 'f32le', str(reference)])
+                     '-ar', rate, '-f', 'f32le', str(reference)])
             checked = subprocess.run([str(binary), str(track), str(reference),
-                                      '48000', str(channels), 'corpus'],
+                                      rate, str(channels), 'corpus'],
                                      capture_output=True, text=True, timeout=30)
             result = {'file': str(track), 'codec': codec,
                       'ok': checked.returncode == 0, 'exit': checked.returncode,
@@ -278,6 +281,31 @@ def corpus_test(binary, vorbis, directories, path, report):
     return passed == len(results) and bool(results)
 
 
+def test_channel_layout_change(binary, path):
+    """Keep the first layout across chained streams and mix positioned PCM."""
+    mono = path / 'mono.ogg'
+    stereo = path / 'stereo.ogg'
+    sources = (
+        (mono, 'sine=frequency=997:sample_rate=48000:duration=0.1'),
+        (stereo, 'aevalsrc=0.1*sin(2*PI*440*t)|0.2*sin(2*PI*660*t):s=48000:d=0.1'),
+    )
+    pcm = []
+    for track, source in sources:
+        run(['ffmpeg', '-nostdin', '-v', 'error', '-y', '-f', 'lavfi',
+             '-i', source, '-c:a', 'libopus', str(track)])
+        decoded = subprocess.check_output(
+            ['ffmpeg', '-nostdin', '-v', 'error', '-i', str(track), '-f', 'f32le', '-'])
+        pcm.append(array('f', decoded))
+    chained = path / 'layout-change.ogg'
+    chained.write_bytes(mono.read_bytes() + stereo.read_bytes())
+    left = pcm[1][0::2]
+    right = pcm[1][1::2]
+    pcm[0].extend((a + b) * math.sqrt(0.5) for a, b in zip(left, right))
+    reference = path / 'layout-change.f32'
+    reference.write_bytes(pcm[0].tobytes())
+    run([str(binary), str(chained), str(reference), '48000', '1', 'container'])
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--build-dir', default='build/out_linux')
@@ -287,6 +315,8 @@ def main():
     parser.add_argument('--corpus-only', action='store_true')
     parser.add_argument('--report', default='/tmp/starfish-audio-corpus.json')
     parser.add_argument('--channels', type=int, nargs='+', default=[1, 2])
+    parser.add_argument('--native-pcm', action='store_true',
+                        help='Exercise the native Tizen PCM converter on the host')
     args = parser.parse_args()
     if not os.environ.get('DISPLAY'):
         raise RuntimeError('Run under xvfb-run')
@@ -301,12 +331,18 @@ def main():
              if flag.startswith(('-D', '-I'))]
     if '-DSTARFISH_USE_FFMPEG_MEDIAPLAYER' not in flags:
         raise RuntimeError('An FFmpeg-enabled build is required')
+    flags.insert(0, '-I' + str(root / 'src'))
+    packages = ['libavcodec', 'libavutil']
+    if not args.native_pcm:
+        packages.append('libswresample')
     libraries = shlex.split(subprocess.check_output(
-        ['pkg-config', '--cflags', '--libs', 'libavcodec',
-         'libavutil', 'libswresample'], text=True))
+        ['pkg-config', '--cflags', '--libs', *packages], text=True))
     sources = [root / 'src/core/modules/webaudio/render' / name
                for name in ('CompressedAudioDecoder.cpp', 'AudioDecoder.cpp',
                             'AudioBufferData.cpp')]
+    if args.native_pcm:
+        flags.append('-DSTARFISH_USE_NATIVE_PCM_CONVERTER')
+        sources.append(root / 'src/core/modules/webaudio/render/AudioPCMResampler.cpp')
     sources.append(Path(__file__).with_name('native_audio.cpp'))
     with tempfile.TemporaryDirectory(prefix='starfish-native-audio-') as directory:
         path = Path(directory)
@@ -323,9 +359,15 @@ def main():
         imports = subprocess.check_output(['nm', '-u', str(binary)], text=True)
         if 'avformat_' in imports or 'avio_' in imports:
             raise RuntimeError('Web Audio decoder still imports FFmpeg demuxing')
+        if args.native_pcm:
+            if 'swr_' in imports:
+                raise RuntimeError('Native PCM decoder still imports libswresample')
+            run([str(binary)])
+            test_channel_layout_change(binary, path)
         corpus_ok = True
         if args.corpus:
-            corpus_ok = corpus_test(binary, vorbis, args.corpus, path, args.report)
+            corpus_ok = corpus_test(binary, vorbis, args.corpus, path,
+                                    args.report, args.native_pcm)
         if args.corpus_only:
             if not corpus_ok:
                 raise SystemExit(1)
@@ -372,7 +414,7 @@ def main():
                         struct.pack_into('>I', data, position + 8, count + 1)
                         track.write_bytes(data)
                         reference_track.write_bytes(data)
-                    for target in (rate, 48000):
+                    for target in ((rate,) if args.native_pcm else (rate, 48000)):
                         reference = path / 'reference.f32'
                         run(['ffmpeg', '-nostdin', '-v', 'error', '-y',
                              '-i', str(reference_track), '-ar', str(target), '-f', 'f32le',
@@ -487,7 +529,8 @@ def main():
                              '-f', 'f32le', str(raw)])
                     raw.write_bytes(raw.read_bytes() * 2)
                     track.write_bytes(track.read_bytes() * 2)
-                for target in (source_rate, 44100):
+                rates = (source_rate,) if args.native_pcm else (source_rate, 44100)
+                for target in rates:
                     reference = path / 'reference.f32'
                     if codec == 'libvorbis' and suffix in {'ogg', 'mux.ogg', 'video.ogg', 'tags.ogg', 'offset.ogg'}:
                         raw = path / 'vorbis-reference.f32'

@@ -163,10 +163,9 @@ Default values are in **bold**.
 * -DWEBAUDIO=[ 0 | 1 ]<br>
   Enable Web Audio. It is on by default on Linux x86_64 and in Windows builds
   with the FFmpeg multimedia backend. Windows supports opting out with 0.
-  On Tizen it needs capi-media-audio-io, capi-media-sound-manager and the
-  platform FFmpeg (libavcodec, libavutil, libswresample) for compressed
-  `decodeAudioData()`. Audio containers are parsed internally; Web Audio
-  does not require libavformat.
+  On Tizen it needs capi-media-audio-io, capi-media-sound-manager and
+  platform FFmpeg (libavcodec, libavutil) for compressed `decodeAudioData()`.
+  Starfish handles container parsing and PCM conversion internally on Tizen.
 * -DAUDIO_WORKLET=[ **0** | 1 ]<br>
   Enable AudioWorklet (`Worklet`, `AudioWorklet` and the worklet global
   scope). Needs Web Audio. A context creates its worklet realm only when a
@@ -692,6 +691,12 @@ xvfb-run -s '-screen 0 1920x1080x24' -a \
 # to run with Address/Undefined sanitizers.
 xvfb-run -s '-screen 0 1920x1080x24' -a \
   python3 tool/webaudio/test_native_audio.py --build-dir out/ffmpeg
+
+# Test the Tizen PCM converter on the host. This mode compares decoder PCM
+# at its original rate and tests passband accuracy, anti-aliasing, resampling
+# length and filtering across block boundaries.
+xvfb-run -s '-screen 0 1920x1080x24' -a \
+  python3 tool/webaudio/test_native_audio.py --build-dir out/ffmpeg --native-pcm
 
 # Scan the pinned WPT audio/video corpus as well (audio tracks, up to 30 s
 # and the AudioBuffer limit). Writes a per-file JSON report under /tmp.

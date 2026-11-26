@@ -38,8 +38,14 @@ extern "C" {
 #include <libavcodec/vorbis_parser.h>
 #include <libavutil/channel_layout.h>
 #include <libavutil/mem.h>
+#if !defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
 #include <libswresample/swresample.h>
+#endif
 }
+
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+#include "core/modules/webaudio/render/AudioPCMResampler.h"
+#endif
 #endif
 
 namespace Starfish {
@@ -51,6 +57,97 @@ namespace {
     // for extreme sample-rate ratios.
     constexpr int64_t ConversionFrames = 4096;
     constexpr int MaxChannels = 32;
+
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+    std::vector<float> channelMix(const AVChannelLayout& input,
+                                  const AVChannelLayout& output)
+    {
+        if (!av_channel_layout_compare(&input, &output)) {
+            return {};
+        }
+
+        int channels = input.nb_channels;
+        std::vector<float> matrix(channels * output.nb_channels, 0);
+        if (input.order == AV_CHANNEL_ORDER_UNSPEC ||
+            output.order == AV_CHANNEL_ORDER_UNSPEC) {
+            for (int i = 0; i < std::min(channels, output.nb_channels); ++i) {
+                matrix[i * channels + i] = 1;
+            }
+            return matrix;
+        }
+
+        constexpr float sqrtHalf = 0.7071067811865475f;
+        for (int i = 0; i < channels; ++i) {
+            auto route = [&](AVChannel speaker, float gain) {
+                int target =
+                    av_channel_layout_index_from_channel(&output, speaker);
+                if (target < 0) {
+                    return false;
+                }
+                matrix[target * channels + i] = gain;
+                return true;
+            };
+
+            AVChannel speaker = av_channel_layout_channel_from_index(&input, i);
+            if (route(speaker, 1)) {
+                continue;
+            }
+            switch (speaker) {
+            case AV_CHAN_FRONT_CENTER:
+                route(AV_CHAN_FRONT_LEFT, sqrtHalf);
+                route(AV_CHAN_FRONT_RIGHT, sqrtHalf);
+                break;
+            case AV_CHAN_FRONT_LEFT:
+            case AV_CHAN_FRONT_RIGHT:
+                route(AV_CHAN_FRONT_CENTER, sqrtHalf);
+                break;
+            case AV_CHAN_BACK_LEFT:
+            case AV_CHAN_SIDE_LEFT:
+                if (!route(AV_CHAN_BACK_LEFT, 1) &&
+                    !route(AV_CHAN_SIDE_LEFT, 1) &&
+                    !route(AV_CHAN_FRONT_LEFT, sqrtHalf)) {
+                    route(AV_CHAN_FRONT_CENTER, 0.5f);
+                }
+                break;
+            case AV_CHAN_BACK_RIGHT:
+            case AV_CHAN_SIDE_RIGHT:
+                if (!route(AV_CHAN_BACK_RIGHT, 1) &&
+                    !route(AV_CHAN_SIDE_RIGHT, 1) &&
+                    !route(AV_CHAN_FRONT_RIGHT, sqrtHalf)) {
+                    route(AV_CHAN_FRONT_CENTER, 0.5f);
+                }
+                break;
+            case AV_CHAN_BACK_CENTER:
+                if (route(AV_CHAN_BACK_LEFT, sqrtHalf)) {
+                    route(AV_CHAN_BACK_RIGHT, sqrtHalf);
+                } else if (route(AV_CHAN_SIDE_LEFT, sqrtHalf)) {
+                    route(AV_CHAN_SIDE_RIGHT, sqrtHalf);
+                } else if (route(AV_CHAN_FRONT_LEFT, 0.5f)) {
+                    route(AV_CHAN_FRONT_RIGHT, 0.5f);
+                } else {
+                    route(AV_CHAN_FRONT_CENTER, sqrtHalf);
+                }
+                break;
+            default:
+                // Unmatched LFE and other uncommon speakers are silent.
+                break;
+            }
+        }
+        return matrix;
+    }
+
+    template <typename Sample>
+    void unpackPCM(const uint8_t* source, size_t step, size_t frames,
+                   float* output, double gain, float offset)
+    {
+        for (size_t i = 0; i < frames; ++i) {
+            Sample sample;
+            memcpy(&sample, source + i * step, sizeof(sample));
+            output[i] = static_cast<float>(sample * gain) + offset;
+        }
+    }
+#endif
+
     struct BufferInput {
         BufferInput(const uint8_t* data, size_t size)
             : bytes(data)
@@ -106,14 +203,19 @@ namespace {
     private:
         void releaseDecoder()
         {
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+            m_resampler.reset();
+            std::vector<float>().swap(m_mixBuffer);
+#else
             swr_free(&m_resampler);
+            std::vector<float>().swap(m_conversionBuffer);
+#endif
             av_frame_free(&m_frame);
             av_packet_free(&m_packet);
             avcodec_free_context(&m_codec);
             av_vorbis_parse_free(&m_vorbisGranules);
             av_parser_close(m_parser);
             m_parser = nullptr;
-            std::vector<float>().swap(m_conversionBuffer);
         }
 
         bool open()
@@ -475,6 +577,11 @@ namespace {
                 m_frame->sample_rate <= 0 || m_frame->format < 0) {
                 return false;
             }
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+            if (m_frame->sample_rate > 768000) {
+                return false;
+            }
+#endif
             AVChannelLayout layout{};
             if (av_channel_layout_check(&m_frame->ch_layout)) {
                 if (av_channel_layout_copy(&layout, &m_frame->ch_layout) < 0) {
@@ -483,22 +590,26 @@ namespace {
             } else {
                 av_channel_layout_default(&layout, channels);
             }
-            if (m_resampler && m_inputFormat == m_frame->format &&
+            if (m_output && m_inputFormat == m_frame->format &&
                 m_inputRate == m_frame->sample_rate &&
                 !av_channel_layout_compare(&m_inputLayout, &layout)) {
                 av_channel_layout_uninit(&layout);
                 return true;
             }
-            if (m_resampler) {
+            if (m_output) {
                 // Sample format, rate or layout may change mid-stream (e.g.
                 // chained Ogg). Drain and rebuild the resampler so it never
                 // reads planes with a stale layout; the output keeps the first
-                // frame's layout, and swresample remixes into it.
+                // frame's layout.
                 if (!flushResampler()) {
                     av_channel_layout_uninit(&layout);
                     return false;
                 }
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+                m_resampler.reset();
+#else
                 swr_free(&m_resampler);
+#endif
             } else {
                 if (av_channel_layout_copy(&m_outputLayout, &layout) < 0) {
                     av_channel_layout_uninit(&layout);
@@ -512,11 +623,20 @@ namespace {
             m_inputLayout = layout;
             m_inputFormat = m_frame->format;
             m_inputRate = m_frame->sample_rate;
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+            m_channelMix = channelMix(m_inputLayout, m_outputLayout);
+            if (m_inputRate != m_targetRate) {
+                m_resampler.reset(new AudioPCMResampler(
+                    m_inputRate, m_targetRate, m_channels));
+            }
+            return true;
+#else
             int status = swr_alloc_set_opts2(
                 &m_resampler, &m_outputLayout, AV_SAMPLE_FMT_FLTP, m_targetRate,
                 &m_inputLayout, static_cast<AVSampleFormat>(m_inputFormat),
                 m_inputRate, 0, nullptr);
             return status >= 0 && swr_init(m_resampler) >= 0;
+#endif
         }
 
         // The container duration sizes the first allocation. It may be
@@ -544,6 +664,90 @@ namespace {
             return 0;
         }
 
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+        template <typename Sample>
+        void convertPCM(const uint8_t* const* input, size_t frames,
+                        float* const* output, bool planar, double gain,
+                        float offset = 0)
+        {
+            size_t channels = m_inputLayout.nb_channels;
+            size_t step = sizeof(Sample) * (planar ? 1 : channels);
+            if (m_channelMix.empty()) {
+                for (size_t channel = 0; channel < channels; ++channel) {
+                    auto* source = planar ? input[channel]
+                                          : input[0] + channel * sizeof(Sample);
+                    unpackPCM<Sample>(source, step, frames, output[channel],
+                                      gain, offset);
+                }
+                return;
+            }
+
+            for (size_t channel = 0; channel < m_channels; ++channel) {
+                std::fill_n(output[channel], frames, 0);
+            }
+            m_mixBuffer.resize(frames);
+            for (size_t channel = 0; channel < channels; ++channel) {
+                auto* source = planar ? input[channel]
+                                      : input[0] + channel * sizeof(Sample);
+                unpackPCM<Sample>(source, step, frames, m_mixBuffer.data(),
+                                  gain, offset);
+                for (size_t target = 0; target < m_channels; ++target) {
+                    float weight = m_channelMix[target * channels + channel];
+                    if (weight) {
+                        for (size_t i = 0; i < frames; ++i) {
+                            output[target][i] += m_mixBuffer[i] * weight;
+                        }
+                    }
+                }
+            }
+        }
+
+        bool convertSamples(AVSampleFormat format, const uint8_t* const* input,
+                            size_t frames, bool planar)
+        {
+            float* output[MaxChannels];
+            if (m_resampler) {
+                m_resampler->prepareInput(frames, output);
+            } else {
+                if (!m_output->reserve(frames)) {
+                    return false;
+                }
+                for (size_t channel = 0; channel < m_channels; ++channel) {
+                    output[channel] = m_output->end(channel);
+                }
+            }
+            switch (av_get_packed_sample_fmt(format)) {
+            case AV_SAMPLE_FMT_U8:
+                convertPCM<uint8_t>(input, frames, output, planar, 1.0 / 128,
+                                    -1);
+                break;
+            case AV_SAMPLE_FMT_S16:
+                convertPCM<int16_t>(input, frames, output, planar, 1.0 / 32768);
+                break;
+            case AV_SAMPLE_FMT_S32:
+                convertPCM<int32_t>(input, frames, output, planar,
+                                    1.0 / (uint64_t(1) << 31));
+                break;
+            case AV_SAMPLE_FMT_S64:
+                convertPCM<int64_t>(input, frames, output, planar,
+                                    1.0 / (uint64_t(1) << 63));
+                break;
+            case AV_SAMPLE_FMT_FLT:
+                convertPCM<float>(input, frames, output, planar, 1);
+                break;
+            case AV_SAMPLE_FMT_DBL:
+                convertPCM<double>(input, frames, output, planar, 1);
+                break;
+            default:
+                return false;
+            }
+            if (m_resampler) {
+                return m_resampler->append(frames, *m_output);
+            }
+            m_output->commit(frames);
+            return true;
+        }
+#else
         bool appendFrames(const float* planar, size_t stride, size_t frames)
         {
             // Short packets can be fully buffered by the resampling filter.
@@ -587,6 +791,7 @@ namespace {
                    appendFrames(m_conversionBuffer.data(), stride,
                                 static_cast<size_t>(frames));
         }
+#endif
 
         bool convertFrame()
         {
@@ -657,6 +862,9 @@ namespace {
             size_t planes = planar ? channels : 1;
             int64_t slice = std::max<int64_t>(
                 1, av_rescale(ConversionFrames, m_inputRate, m_targetRate));
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+            slice = std::min(slice, ConversionFrames);
+#endif
             for (int offset = start; offset < end;) {
                 int count =
                     static_cast<int>(std::min<int64_t>(slice, end - offset));
@@ -665,10 +873,16 @@ namespace {
                     input[plane] = m_frame->extended_data[plane] +
                                    static_cast<size_t>(offset) * step;
                 }
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+                if (!convertSamples(format, input, count, planar)) {
+                    return false;
+                }
+#else
                 if (!appendConverted(swr_get_out_samples(m_resampler, count),
                                      input, count)) {
                     return false;
                 }
+#endif
                 offset += count;
             }
             return true;
@@ -690,11 +904,15 @@ namespace {
 
         bool flushResampler()
         {
-            if (!m_resampler) {
+            if (!m_output) {
                 return false;
             }
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+            return !m_resampler || m_resampler->drain(*m_output);
+#else
             int capacity = swr_get_out_samples(m_resampler, 0);
             return appendConverted(capacity, nullptr, 0);
+#endif
         }
 
         BufferInput m_input;
@@ -724,14 +942,20 @@ namespace {
         AVCodecContext* m_codec{ nullptr };
         AVPacket* m_packet{ nullptr };
         AVFrame* m_frame{ nullptr };
+#if defined(STARFISH_USE_NATIVE_PCM_CONVERTER)
+        std::unique_ptr<AudioPCMResampler> m_resampler;
+        std::vector<float> m_channelMix;
+        std::vector<float> m_mixBuffer;
+#else
         SwrContext* m_resampler{ nullptr };
+        std::vector<float> m_conversionBuffer;
+#endif
         int m_inputFormat{ -1 };
         int m_inputRate{ 0 };
         AVChannelLayout m_inputLayout{};
         AVChannelLayout m_outputLayout{};
         size_t m_channels{ 0 };
         std::unique_ptr<AudioBufferDataBuilder> m_output;
-        std::vector<float> m_conversionBuffer;
     };
 
 } // namespace
