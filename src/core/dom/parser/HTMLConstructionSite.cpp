@@ -942,8 +942,9 @@ Element* HTMLConstructionSite::createElement(AtomicHTMLToken* token,
         element = HTMLDocument::createHTMLElement(
             &ownerDocumentForCurrentNode(), tagName);
     } else if (namespaceURI == starfish()->staticStrings()->m_svgNamespaceURI) {
-        element = SVGDocument::createSVGElement(&ownerDocumentForCurrentNode(),
-                                                tagName);
+        element = SVGDocument::createSVGElement(
+            &ownerDocumentForCurrentNode(),
+            SVGDocument::adjustSVGTagName(starfish(), tagName));
     } else {
         element = new NamedElement(&ownerDocumentForCurrentNode(), tagName);
     }

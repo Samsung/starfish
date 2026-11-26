@@ -38,8 +38,14 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGDocument() const override;
 
+    // HTML § 13.2.6.5 ("adjust SVG tag names"): restore spec-defined camelCase
+    // names lowercased by HTMLTokenizer. Used only on the HTML parser path;
+    // createSVGElement() preserves qname's exact case for createElementNS,
+    // DOMParser and cloneNode.
+    static QualifiedName adjustSVGTagName(Starfish* starfish,
+                                          const QualifiedName& qname);
     static Element* createSVGElement(Document* document,
-                                     const QualifiedName& localName);
+                                     const QualifiedName& qname);
 
 protected:
 };

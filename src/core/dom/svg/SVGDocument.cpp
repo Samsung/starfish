@@ -64,22 +64,88 @@
 
 namespace Starfish {
 
+QualifiedName SVGDocument::adjustSVGTagName(Starfish* starfish,
+                                            const QualifiedName& qname)
+{
+    // HTML § 13.2.6.5 ("adjust SVG tag names"): HTMLTokenizer lowercases all
+    // tag names; restore the spec-defined camelCase spellings for SVG elements
+    // inserted by the HTML parser.
+    auto data = qname.localName()->bufferAccessData();
+    if (!data.hasASCIIData() || data.length < 6 || data.length > 19) {
+        return qname;
+    }
+
+    struct TagCaseEntry {
+        const char* lower;
+        const char* adjusted;
+        uint8_t length;
+    };
+    static constexpr TagCaseEntry kTable[] = {
+        { "altglyph", "altGlyph", 8 },
+        { "altglyphdef", "altGlyphDef", 11 },
+        { "altglyphitem", "altGlyphItem", 12 },
+        { "animatecolor", "animateColor", 12 },
+        { "animatemotion", "animateMotion", 13 },
+        { "animatetransform", "animateTransform", 16 },
+        { "clippath", "clipPath", 8 },
+        { "feblend", "feBlend", 7 },
+        { "fecolormatrix", "feColorMatrix", 13 },
+        { "fecomponenttransfer", "feComponentTransfer", 19 },
+        { "fecomposite", "feComposite", 11 },
+        { "feconvolvematrix", "feConvolveMatrix", 16 },
+        { "fediffuselighting", "feDiffuseLighting", 17 },
+        { "fedisplacementmap", "feDisplacementMap", 17 },
+        { "fedistantlight", "feDistantLight", 14 },
+        { "fedropshadow", "feDropShadow", 12 },
+        { "feflood", "feFlood", 7 },
+        { "fefunca", "feFuncA", 7 },
+        { "fefuncb", "feFuncB", 7 },
+        { "fefuncg", "feFuncG", 7 },
+        { "fefuncr", "feFuncR", 7 },
+        { "fegaussianblur", "feGaussianBlur", 14 },
+        { "feimage", "feImage", 7 },
+        { "femerge", "feMerge", 7 },
+        { "femergenode", "feMergeNode", 11 },
+        { "femorphology", "feMorphology", 12 },
+        { "feoffset", "feOffset", 8 },
+        { "fepointlight", "fePointLight", 12 },
+        { "fespecularlighting", "feSpecularLighting", 18 },
+        { "fespotlight", "feSpotLight", 11 },
+        { "fetile", "feTile", 6 },
+        { "feturbulence", "feTurbulence", 12 },
+        { "foreignobject", "foreignObject", 13 },
+        { "glyphref", "glyphRef", 8 },
+        { "lineargradient", "linearGradient", 14 },
+        { "radialgradient", "radialGradient", 14 },
+        { "textpath", "textPath", 8 },
+    };
+
+    const char* target = data.asciiData();
+    size_t targetLen = data.length;
+    size_t lo = 0;
+    size_t hi = sizeof(kTable) / sizeof(kTable[0]);
+    while (lo < hi) {
+        size_t mid = lo + (hi - lo) / 2;
+        const TagCaseEntry& e = kTable[mid];
+        size_t minLen = e.length < targetLen ? e.length : targetLen;
+        int cmp = std::memcmp(e.lower, target, minLen);
+        if (cmp == 0 && e.length == targetLen) {
+            return QualifiedName(qname.namespaceURI().getValue(),
+                                 AtomicString::createAtomicString(
+                                     starfish, e.adjusted, e.length));
+        }
+        if (cmp < 0 || (cmp == 0 && e.length < targetLen)) {
+            lo = mid + 1;
+        } else {
+            hi = mid;
+        }
+    }
+    return qname;
+}
+
 Element* SVGDocument::createSVGElement(Document* document,
                                        const QualifiedName& qname)
 {
-    // FIXME: qname is always in lowercase when passed through HTMLTokenizer
-    // during document build.
-    // However, if qname is passed directly through the js interface, it must be
-    // strict on case sensitivity.
-
-    // For example, with the <animateTransform> tag
-    /* clang-format off
-        const animateTransform1 = svgElement.createElementNS('http://www.w3.org/2000/svg', 'animatetransform')
-        console.log(animateTransform1.__proto__); // print SVGElement
-        const animateTransform2 = svgElement.createElementNS('http://www.w3.org/2000/svg', 'animateTransform')
-        console.log(animateTransform2.__proto__); // print SVGAnimateTransformElement
-    clang-format on */
-
     StaticStrings* str = document->starfish()->staticStrings();
     AtomicString localName = qname.localNameAtomic();
 
@@ -111,19 +177,14 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGUseElement(document, qname);
     } else if (str->m_svgdefsTagName == localName) {
         return new SVGDefsElement(document, qname);
-    } else if (str->m_svglinearGradientTagName == localName ||
-               str->m_svglineargradientTagName == localName) {
-        return new SVGLinearGradientElement(document,
-                                            str->m_svglinearGradientTagName);
-    } else if (str->m_svgradialGradientTagName == localName ||
-               str->m_svgradialgradientTagName == localName) {
-        return new SVGRadialGradientElement(document,
-                                            str->m_svgradialGradientTagName);
+    } else if (str->m_svglinearGradientTagName == localName) {
+        return new SVGLinearGradientElement(document, qname);
+    } else if (str->m_svgradialGradientTagName == localName) {
+        return new SVGRadialGradientElement(document, qname);
     } else if (str->m_svgstopTagName == localName) {
         return new SVGStopElement(document, qname);
-    } else if (str->m_svgclippathTagName == localName ||
-               str->m_svgclipPathTagName == localName) {
-        return new SVGClipPathElement(document, str->m_svgclipPathTagName);
+    } else if (str->m_svgclipPathTagName == localName) {
+        return new SVGClipPathElement(document, qname);
     } else if (str->m_svgscriptTagName == localName) {
         return new SVGScriptElement(document, qname);
     } else if (str->m_svgmaskTagName == localName) {
@@ -138,70 +199,44 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGSymbolElement(document, qname);
     } else if (str->m_svganimateTagName == localName) {
         return new SVGAnimateElement(document, qname);
-    } else if (str->m_svganimateTransformTagName == localName ||
-               str->m_svganimatetransformTagName == localName) {
+    } else if (str->m_svganimateTransformTagName == localName) {
         return new SVGAnimateTransformElement(document, qname);
     } else if (str->m_svgfilterTagName == localName) {
         return new SVGFilterElement(document, qname);
-    } else if (str->m_svgfegaussianblurTagName == localName ||
-               str->m_svgfeGaussianBlurTagName == localName) {
-        return new SVGFEGaussianBlurElement(document,
-                                            str->m_svgfeGaussianBlurTagName);
-    } else if (str->m_svgfecolormatrixTagName == localName ||
-               str->m_svgfeColorMatrixTagName == localName) {
-        return new SVGFEColorMatrixElement(document,
-                                           str->m_svgfeColorMatrixTagName);
-    } else if (str->m_svgfecomponenttransferTagName == localName ||
-               str->m_svgfeComponentTransferTagName == localName) {
-        return new SVGFEComponentTransferElement(
-            document, str->m_svgfeComponentTransferTagName);
-    } else if (str->m_svgfeFuncATagName == localName ||
-               str->m_svgfefuncaTagName == localName) {
-        return new SVGFEFuncAElement(document, str->m_svgfeFuncATagName);
-    } else if (str->m_svgfeFuncRTagName == localName ||
-               str->m_svgfefuncrTagName == localName) {
-        return new SVGFEFuncRElement(document, str->m_svgfeFuncRTagName);
-    } else if (str->m_svgfeFuncGTagName == localName ||
-               str->m_svgfefuncgTagName == localName) {
-        return new SVGFEFuncGElement(document, str->m_svgfeFuncGTagName);
-    } else if (str->m_svgfeFuncBTagName == localName ||
-               str->m_svgfefuncbTagName == localName) {
-        return new SVGFEFuncBElement(document, str->m_svgfeFuncBTagName);
-    } else if (str->m_svgfeMergeTagName == localName ||
-               str->m_svgfemergeTagName == localName) {
-        return new SVGFEMergeElement(document, str->m_svgfeMergeTagName);
-    } else if (str->m_svgfeMergeNodeTagName == localName ||
-               str->m_svgfemergenodeTagName == localName) {
-        return new SVGFEMergeNodeElement(document,
-                                         str->m_svgfeMergeNodeTagName);
-    } else if (str->m_svgfecompositeTagName == localName ||
-               str->m_svgfeCompositeTagName == localName) {
-        return new SVGFECompositeElement(document,
-                                         str->m_svgfeCompositeTagName);
-    } else if (str->m_svgfemorphologyTagName == localName ||
-               str->m_svgfeMorphologyTagName == localName) {
-        return new SVGFEMorphologyElement(document,
-                                          str->m_svgfeMorphologyTagName);
-    } else if (str->m_svgfeoffsetTagName == localName ||
-               str->m_svgfeOffsetTagName == localName) {
-        return new SVGFEOffsetElement(document, str->m_svgfeOffsetTagName);
-    } else if (str->m_svgfefloodTagName == localName ||
-               str->m_svgfeFloodTagName == localName) {
-        return new SVGFEFloodElement(document, str->m_svgfeFloodTagName);
-    } else if (str->m_svgfeturbulenceTagName == localName ||
-               str->m_svgfeTurbulenceTagName == localName) {
-        return new SVGFETurbulenceElement(document,
-                                          str->m_svgfeTurbulenceTagName);
-    } else if (str->m_svgfeDisplacementMapTagName == localName ||
-               str->m_svgfedisplacementmapTagName == localName) {
-        return new SVGFEDisplacementMapElement(
-            document, str->m_svgfeDisplacementMapTagName);
-    } else if (str->m_svganimateMotionTagName == localName ||
-               str->m_svganimatemotionTagName == localName) {
-        return new SVGAnimateMotionElement(document,
-                                           str->m_svganimateMotionTagName);
+    } else if (str->m_svgfeGaussianBlurTagName == localName) {
+        return new SVGFEGaussianBlurElement(document, qname);
+    } else if (str->m_svgfeColorMatrixTagName == localName) {
+        return new SVGFEColorMatrixElement(document, qname);
+    } else if (str->m_svgfeComponentTransferTagName == localName) {
+        return new SVGFEComponentTransferElement(document, qname);
+    } else if (str->m_svgfeFuncATagName == localName) {
+        return new SVGFEFuncAElement(document, qname);
+    } else if (str->m_svgfeFuncRTagName == localName) {
+        return new SVGFEFuncRElement(document, qname);
+    } else if (str->m_svgfeFuncGTagName == localName) {
+        return new SVGFEFuncGElement(document, qname);
+    } else if (str->m_svgfeFuncBTagName == localName) {
+        return new SVGFEFuncBElement(document, qname);
+    } else if (str->m_svgfeMergeTagName == localName) {
+        return new SVGFEMergeElement(document, qname);
+    } else if (str->m_svgfeMergeNodeTagName == localName) {
+        return new SVGFEMergeNodeElement(document, qname);
+    } else if (str->m_svgfeCompositeTagName == localName) {
+        return new SVGFECompositeElement(document, qname);
+    } else if (str->m_svgfeMorphologyTagName == localName) {
+        return new SVGFEMorphologyElement(document, qname);
+    } else if (str->m_svgfeOffsetTagName == localName) {
+        return new SVGFEOffsetElement(document, qname);
+    } else if (str->m_svgfeFloodTagName == localName) {
+        return new SVGFEFloodElement(document, qname);
+    } else if (str->m_svgfeTurbulenceTagName == localName) {
+        return new SVGFETurbulenceElement(document, qname);
+    } else if (str->m_svgfeDisplacementMapTagName == localName) {
+        return new SVGFEDisplacementMapElement(document, qname);
+    } else if (str->m_svganimateMotionTagName == localName) {
+        return new SVGAnimateMotionElement(document, qname);
     } else if (str->m_svgmpathTagName == localName) {
-        return new SVGMPathElement(document, str->m_svgmpathTagName);
+        return new SVGMPathElement(document, qname);
     } else {
         return new SVGElement(document, qname);
     }

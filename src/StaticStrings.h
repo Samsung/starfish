@@ -163,9 +163,7 @@ namespace Starfish {
 #define STARFISH_ENUM_SVG_TAG_NAMES(F) \
     F(animate)                         \
     F(animateTransform)                \
-    F(animatetransform)                \
     F(animateMotion)                   \
-    F(animatemotion)                   \
     F(svg)                             \
     F(switch)                          \
     F(rect)                            \
@@ -182,12 +180,9 @@ namespace Starfish {
     F(script)                          \
     F(defs)                            \
     F(linearGradient)                  \
-    F(lineargradient)                  \
     F(radialGradient)                  \
-    F(radialgradient)                  \
     F(stop)                            \
     F(use)                             \
-    F(clippath)                        \
     F(clipPath)                        \
     F(mask)                            \
     F(tspan)                           \
@@ -197,28 +192,19 @@ namespace Starfish {
     F(filter)                          \
     F(feBlend)                         \
     F(feFlood)                         \
-    F(feflood)                         \
     F(feColorMatrix)                   \
-    F(fecolormatrix)                   \
     F(feComponentTransfer)             \
-    F(fecomponenttransfer)             \
     F(feComposite)                     \
-    F(fecomposite)                     \
     F(feConvolveMatrix)                \
     F(feDiffuseLighting)               \
     F(feDropShadow)                    \
     F(feSpotLight)                     \
     F(feGaussianBlur)                  \
-    F(fegaussianblur)                  \
     F(feImage)                         \
     F(feMerge)                         \
-    F(femerge)                         \
     F(feMergeNode)                     \
-    F(femergenode)                     \
     F(feMorphology)                    \
-    F(femorphology)                    \
     F(feOffset)                        \
-    F(feoffset)                        \
     F(feSpecularLighting)              \
     F(fePointLight)                    \
     F(feDistantLight)                  \
@@ -227,17 +213,8 @@ namespace Starfish {
     F(feFuncR)                         \
     F(feFuncB)                         \
     F(feFuncG)                         \
-    F(fefunca)                         \
-    F(fefuncr)                         \
-    F(fefuncb)                         \
-    F(fefuncg)                         \
-    F(feturbulence)                    \
     F(feTurbulence)                    \
-    F(feDisplacementMap)               \
-    F(fedisplacementmap)
-
-// FIXME: current parser converts linearGradient to lineargradient
-// Remove F(lineargradient) after fixing this issue
+    F(feDisplacementMap)
 
 #define STARFISH_ENUM_MATHML_TAG_NAMES(F) F(math)
 
