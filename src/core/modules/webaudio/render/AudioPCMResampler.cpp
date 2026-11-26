@@ -17,6 +17,10 @@
 #include <cmath>
 #include <cstring>
 
+#if defined(__ARM_NEON_FP)
+#include <arm_neon.h>
+#endif
+
 namespace Starfish {
 namespace {
 
@@ -55,12 +59,34 @@ namespace {
 
     float filterSample(const float* samples, const float* weights, size_t taps)
     {
+        size_t i = 0;
+#if defined(__ARM_NEON_FP)
+        float32x4_t first = vdupq_n_f32(0);
+        float32x4_t second = vdupq_n_f32(0);
+        for (; i + 7 < taps; i += 8) {
+            first = vmlaq_f32(first, vld1q_f32(samples + i),
+                              vld1q_f32(weights + i));
+            second = vmlaq_f32(second, vld1q_f32(samples + i + 4),
+                               vld1q_f32(weights + i + 4));
+        }
+        if (i + 3 < taps) {
+            first = vmlaq_f32(first, vld1q_f32(samples + i),
+                              vld1q_f32(weights + i));
+            i += 4;
+        }
+        float32x4_t sum = vaddq_f32(first, second);
+        float32x2_t halves = vadd_f32(vget_low_f32(sum), vget_high_f32(sum));
+        float result = vget_lane_f32(vpadd_f32(halves, halves), 0);
+        for (; i < taps; ++i) {
+            result += samples[i] * weights[i];
+        }
+        return result;
+#else
         // Independent sums shorten the dependency chain of the dot product.
         float a = 0;
         float b = 0;
         float c = 0;
         float d = 0;
-        size_t i = 0;
         for (; i + 3 < taps; i += 4) {
             a += samples[i] * weights[i];
             b += samples[i + 1] * weights[i + 1];
@@ -72,6 +98,7 @@ namespace {
             b += samples[i + 1] * weights[i + 1];
         }
         return (a + b) + (c + d);
+#endif
     }
 
 } // namespace
