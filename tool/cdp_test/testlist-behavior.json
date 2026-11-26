@@ -2946,8 +2946,7 @@
       "category": "output-differs"
     },
     "page/page-resetNavigationHistory.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "page/page-search-in-resource-not-cached.js": {
       "expected": "fail",

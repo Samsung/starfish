@@ -157,6 +157,9 @@ await p2.close();                             // tears down the spawned WebView
 
 ## 4. Implemented domains & methods
 
+`Page.resetNavigationHistory` removes the entries before and after the current
+one without reloading it or clearing `history.state`.
+
 | Domain   | Methods (MVP) | Events emitted |
 | -------- | ------------- | -------------- |
 | **Target**  | `getBrowserContexts`, `setDiscoverTargets`, `setAutoAttach`, `getTargets`, `getTargetInfo`, `attachToTarget`, `attachToBrowserTarget`, `createTarget`, `closeTarget`, `detachFromTarget` | `targetCreated`, `attachedToTarget`, `detachedFromTarget`, `targetDestroyed` |

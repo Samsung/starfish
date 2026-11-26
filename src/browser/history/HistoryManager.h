@@ -83,6 +83,7 @@ public:
     void clear();
 
     // CDP Page.getNavigationHistory / navigateToHistoryEntry support.
+    void pruneToCurrentEntry();
     size_t currentIndex();
     size_t entryCount();
     String* entryURL(size_t index);   // nullptr if out of range

@@ -157,6 +157,17 @@ void HistoryManager::clear()
     m_curEntry = 0;
 }
 
+void HistoryManager::pruneToCurrentEntry()
+{
+    if (m_historyEntries.size() < 2) {
+        return;
+    }
+
+    m_historyEntries.front() = m_historyEntries[m_curEntry];
+    m_historyEntries.resize(1);
+    m_curEntry = 0;
+}
+
 size_t HistoryManager::currentIndex()
 {
     return m_curEntry;

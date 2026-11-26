@@ -1717,7 +1717,7 @@ void PageDomain::handleResetNavigationHistory(CDPCommand& cmd,
 {
     WebView* wv = m_dispatcher->webView();
 
-    wv->historyManager()->clear();
+    wv->historyManager()->pruneToCurrentEntry();
     cmd.sendResultEmpty();
 }
 
