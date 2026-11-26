@@ -92,8 +92,9 @@ int AppLoopGlib::start(double timeoutInSec)
     if (timeoutInSec) {
         // Millisecond resolution: a timeout below one second must not
         // truncate to "fire at once".
+        double timeoutInMs = std::min<double>(timeoutInSec * 1000, G_MAXUINT);
         m_timerID = g_timeout_add(
-            std::max<guint>(1, static_cast<guint>(timeoutInSec * 1000)),
+            std::max<guint>(1, static_cast<guint>(timeoutInMs)),
             [](gpointer data) -> gboolean {
                 AppLoopGlib* self = static_cast<AppLoopGlib*>(data);
                 self->m_timerID = 0;

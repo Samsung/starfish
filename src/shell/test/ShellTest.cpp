@@ -49,6 +49,13 @@ TEST(ShellTest, VersionAndHelp)
     EXPECT_EQ(1, runShell({ "Starfish" }));
 }
 
+// A timeout below one second must still end the run; parsed as an
+// integer it became "no timeout" and the browser never exited.
+TEST(ShellTest, SubSecondTimeout)
+{
+    EXPECT_EQ(0, runShell({ "Starfish", "about:blank", "--timeout=0.5" }));
+}
+
 TEST(ShellTest, CreateDestroyTest)
 {
     // Wrong arity prints the usage and reports failure.
