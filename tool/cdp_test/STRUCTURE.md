@@ -69,7 +69,9 @@ result.
 **schema**, in Python:
 
 1. `launcher` starts Starfish and waits for the endpoint to answer.
-2. `client` opens the WebSocket and sends the command with no parameters.
+2. `client` opens the WebSocket. Most commands are sent without parameters.
+   The two DOM geometry cases first resolve a fixture element and send its
+   `backendNodeId`.
 3. `case` checks that every field the protocol requires is in the response.
 
 **behavior**, in Node:

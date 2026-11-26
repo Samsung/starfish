@@ -2,10 +2,9 @@
 
 """Execute and assert one generated case.
 
-Every case is the same shape, because every case is generated from the
-protocol: send one CDP request with no parameters and check that the response
-carries each required result field. There is no other case type, since
-nothing in the protocol says how to satisfy a required parameter.
+Cases check that a CDP response carries each required result field.
+Requests normally have no parameters. Commands with a semantic parameter
+requirement can use a fixture to supply a valid value.
 """
 
 from . import launcher
@@ -24,12 +23,29 @@ def label(case):
     return case["method"]
 
 
+def geometry_params(socket):
+    document = call(socket, 1, "DOM.getDocument", {"depth": 0})
+    check_response("DOM.getDocument", document, ("root",))
+    root_id = document["result"]["root"]["nodeId"]
+    selected = call(socket, 2, "DOM.querySelector",
+                    {"nodeId": root_id, "selector": "#schema-geometry"})
+    check_response("DOM.querySelector", selected, ("nodeId",))
+    described = call(socket, 3, "DOM.describeNode",
+                     {"nodeId": selected["result"]["nodeId"]})
+    check_response("DOM.describeNode", described, ("node",))
+    return {"backendNodeId": described["result"]["node"]["backendNodeId"]}
+
+
 def run(starfish, case, timeout):
     """Start Starfish, send the request, then always stop the process."""
     with launcher.running(starfish, timeout) as endpoint:
         socket = connect(debugger_url(endpoint), timeout)
         try:
-            response = call(socket, 1, case["method"])
+            method = case["method"]
+            if method in ("DOM.getBoxModel", "DOM.getContentQuads"):
+                response = call(socket, 4, method, geometry_params(socket))
+            else:
+                response = call(socket, 1, method)
         finally:
             socket.close()
     check_response(case["method"], response, case["result_keys"])

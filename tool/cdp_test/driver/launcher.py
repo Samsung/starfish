@@ -30,6 +30,7 @@ MARKER = "starfish-cdp-test"
 # OWNER_VARIABLE in common/storage.py.
 STORAGE_GROUP = "test-cdp"
 TEST_PAGE = ("data:text/html,<!--%s-->"
+             '<div id="schema-geometry" style="width:40px;height:20px"></div>'
              "<script>setInterval(function(){}, 300)</script>" % MARKER)
 
 # The sweep finds leftovers by this string on the command line. Losing it

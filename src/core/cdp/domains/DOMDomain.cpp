@@ -99,9 +99,10 @@ static Node* nodeFromParams(CDPDispatcher* disp, CDPCommand& cmd,
 
 // nodeFromParams for a command that needs an element. Replies that there is
 // no such node and returns nullptr otherwise.
-static Element* elementFromParams(CDPDispatcher* disp, CDPCommand& cmd)
+static Element* elementFromParams(CDPDispatcher* disp, CDPCommand& cmd,
+                                  bool acceptBackendNodeId = false)
 {
-    Node* node = nodeFromParams(disp, cmd, false);
+    Node* node = nodeFromParams(disp, cmd, acceptBackendNodeId);
     if (!node || !node->isElement()) {
         cmd.sendError(-32000, "Could not find node with given id");
         return nullptr;
@@ -609,7 +610,8 @@ void DOMDomain::handleSetFileInputFiles(CDPCommand& cmd, const std::string&)
 
 void DOMDomain::handleGetBoxModel(CDPCommand& cmd, const std::string& method)
 {
-    Element* element = elementFromParams(m_dispatcher, cmd);
+    Element* element =
+        elementFromParams(m_dispatcher, cmd, /*acceptBackendNodeId=*/true);
     if (!element) {
         return;
     }

@@ -88,14 +88,10 @@
       "detail": "DOM.describeNode returned {'code': -32000, 'message': 'Could not find node with given id'}"
     },
     "DOM.getBoxModel": {
-      "expected": "fail",
-      "category": "failed",
-      "detail": "DOM.getBoxModel returned {'code': -32000, 'message': 'Could not find node with given id'}"
+      "expected": "pass"
     },
     "DOM.getContentQuads": {
-      "expected": "fail",
-      "category": "failed",
-      "detail": "DOM.getContentQuads returned {'code': -32000, 'message': 'Could not find node with given id'}"
+      "expected": "pass"
     },
     "DOM.getDetachedDomNodes": {
       "expected": "fail",
