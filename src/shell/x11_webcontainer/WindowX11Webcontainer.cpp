@@ -492,22 +492,15 @@ void WindowX11Webcontainer::pollEvent()
 
         case ButtonPress:
         case ButtonRelease:
-            if (m_buttonEventHandler) {
-                if (event.xbutton.button == Button1) {
-                    m_buttonEventHandler(INPUT::MOUSE_LBUTTON,
-                                         event.type == ButtonPress
-                                             ? INPUT::PRESS
-                                             : INPUT::RELEASE);
-                } else if (event.xbutton.button == Button4 ||
-                           event.xbutton.button == Button5) {
-                    if (m_scrollEventHandler) {
-                        double xpos, ypos;
-                        getCursorPos(xpos, ypos);
-                        m_scrollEventHandler(
-                            xpos, ypos,
-                            event.xbutton.button == Button4 ? -1 : 1);
-                    }
-                }
+            if (event.xbutton.button == Button1 && m_buttonEventHandler) {
+                m_buttonEventHandler(
+                    INPUT::MOUSE_LBUTTON,
+                    event.type == ButtonPress ? INPUT::PRESS : INPUT::RELEASE);
+            } else if (event.type == ButtonPress && m_scrollEventHandler &&
+                       (event.xbutton.button == Button4 ||
+                        event.xbutton.button == Button5)) {
+                m_scrollEventHandler(event.xbutton.x, event.xbutton.y,
+                                     event.xbutton.button == Button4 ? -1 : 1);
             }
             break;
 

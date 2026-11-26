@@ -1,0 +1,19 @@
+// https://w3c.github.io/uievents/#interface-wheelevent
+dictionary WheelEventInit : MouseEventInit {
+    double deltaX = 0;
+    double deltaY = 0;
+    double deltaZ = 0;
+    unsigned long deltaMode = 0;
+};
+
+[Exposed=Window, Constructor(DOMString type, optional WheelEventInit eventInitDict),
+ ConstructorCallWith=ExecutionContext]
+interface WheelEvent : MouseEvent {
+    const unsigned long DOM_DELTA_PIXEL = 0;
+    const unsigned long DOM_DELTA_LINE = 1;
+    const unsigned long DOM_DELTA_PAGE = 2;
+    readonly attribute double deltaX;
+    readonly attribute double deltaY;
+    readonly attribute double deltaZ;
+    readonly attribute unsigned long deltaMode;
+};

@@ -608,6 +608,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "focusout"));
     m_onfocusout =
         QualifiedName(AtomicString::createAtomicString(starfish, "onfocusout"));
+    m_wheel =
+        QualifiedName(AtomicString::createAtomicString(starfish, "wheel"));
+    m_onwheel =
+        QualifiedName(AtomicString::createAtomicString(starfish, "onwheel"));
     m_scroll =
         QualifiedName(AtomicString::createAtomicString(starfish, "scroll"));
     m_onscroll =

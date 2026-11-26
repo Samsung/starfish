@@ -412,8 +412,19 @@ TEST_F(WebContainerAPITest, InputEventDispatch)
     m_lwe->DispatchMouseMoveEvent(LWE::NoButton, LWE::NoButtonDown, 50, 20);
     m_lwe->DispatchMouseDownEvent(LWE::LeftButton, LWE::LeftButtonDown, 50, 20);
     m_lwe->DispatchMouseUpEvent(LWE::LeftButton, LWE::NoButtonDown, 50, 20);
-    // A wheel step scrolls the page; it is not a DOM wheel event.
+    js("window.cancelWheel = e => {"
+       "window.wheelReceived = e instanceof WheelEvent && e.isTrusted && "
+       "e.deltaY === 3 && e.deltaMode === WheelEvent.DOM_DELTA_LINE;"
+       "e.preventDefault(); };"
+       "document.querySelector('div').addEventListener('wheel', cancelWheel)");
     m_lwe->DispatchMouseWheelEvent(100, 300, 3);
+    EXPECT_TRUE(
+        runUntil([&] { return js("String(window.wheelReceived)") == "true"; }));
+    EXPECT_EQ("0", js("String(scrollY)"));
+    js("document.querySelector('div').removeEventListener('wheel', "
+       "cancelWheel)");
+    m_lwe->DispatchMouseWheelEvent(100, 300, 3);
+    EXPECT_TRUE(runUntil([&] { return js("String(scrollY)") != "0"; }));
 
     float points[] = { 60.f, 20.f, 120.f, 200.f };
     int ids[] = { 1, 2 };
@@ -435,13 +446,12 @@ TEST_F(WebContainerAPITest, InputEventDispatch)
     };
     EXPECT_TRUE(runUntil([&] { return saw("compositionend"); }));
     for (const char* type :
-         { "mousemove", "mousedown", "mouseup", "touchstart", "touchmove",
-           "touchend", "keydown", "keypress", "keyup", "compositionstart",
-           "compositionupdate" }) {
+         { "mousemove", "mousedown", "mouseup", "wheel", "touchstart",
+           "touchmove", "touchend", "keydown", "keypress", "keyup",
+           "compositionstart", "compositionupdate" }) {
         EXPECT_TRUE(saw(type)) << type;
     }
     EXPECT_TRUE(keyboardShown);
-    EXPECT_NE("0", js("String(scrollY)"));
 
     m_lwe->Blur();
     m_lwe->Focus();

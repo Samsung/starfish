@@ -1151,6 +1151,7 @@ DEFINE_EVENT_LISTENER(Window, rejectionhandled);
 DEFINE_EVENT_LISTENER(Window, unhandledrejection);
 DEFINE_EVENT_LISTENER(Window, unload);
 DEFINE_EVENT_LISTENER(Window, scroll);
+DEFINE_EVENT_LISTENER(Window, wheel);
 DEFINE_EVENT_LISTENER(Window, ttsstart);
 DEFINE_EVENT_LISTENER(Window, ttsend);
 DEFINE_EVENT_LISTENER(Window, touchstart);

@@ -45,7 +45,7 @@ interface GlobalEventHandlers {
   attribute EventHandler onmouseout;
   attribute EventHandler onmouseover;
   attribute EventHandler onmouseup;
-  [Unimplemented] attribute EventHandler onwheel;
+  attribute EventHandler onwheel;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler onpause;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler onplay;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler onplaying;

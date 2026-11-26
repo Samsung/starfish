@@ -690,6 +690,8 @@ public:
     QualifiedName m_onfocusin;
     QualifiedName m_focusout;
     QualifiedName m_onfocusout;
+    QualifiedName m_wheel;
+    QualifiedName m_onwheel;
     QualifiedName m_scroll;
     QualifiedName m_onscroll;
     QualifiedName m_reset;

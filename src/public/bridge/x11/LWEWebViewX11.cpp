@@ -489,18 +489,15 @@ public:
 
             case ButtonPress:
             case ButtonRelease:
-                if (m_mouseButtonCallback) {
-                    if (event.xbutton.button == Button1) {
-                        m_mouseButtonCallback(event.type == ButtonPress ? 1 : 0,
-                                              event.xbutton.x, event.xbutton.y);
-                    } else if (event.xbutton.button == Button4 ||
-                               event.xbutton.button == Button5) {
-                        if (m_mouseWheelCallback) {
-                            m_mouseWheelCallback(
-                                event.xbutton.button == Button4 ? -1 : 1,
-                                event.xbutton.x, event.xbutton.y);
-                        }
-                    }
+                if (event.xbutton.button == Button1 && m_mouseButtonCallback) {
+                    m_mouseButtonCallback(event.type == ButtonPress ? 1 : 0,
+                                          event.xbutton.x, event.xbutton.y);
+                } else if (event.type == ButtonPress && m_mouseWheelCallback &&
+                           (event.xbutton.button == Button4 ||
+                            event.xbutton.button == Button5)) {
+                    m_mouseWheelCallback(event.xbutton.button == Button4 ? -1
+                                                                         : 1,
+                                         event.xbutton.x, event.xbutton.y);
                 }
                 break;
 

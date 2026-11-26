@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WheelEvent construction and handlers</title>
+<body>
+<script>
+function testStart() {
+    const empty = new WheelEvent("wheel");
+    console.assert(empty instanceof MouseEvent);
+    console.assert(empty.deltaX === 0 && empty.deltaY === 0 && empty.deltaZ === 0);
+    console.assert(empty.deltaMode === WheelEvent.DOM_DELTA_PIXEL);
+    const wheel = new WheelEvent("wheel", {
+        bubbles: true, cancelable: true, deltaX: 2.5, deltaY: -3,
+        deltaZ: 4, deltaMode: WheelEvent.DOM_DELTA_LINE
+    });
+    let received;
+    document.body.onwheel = event => {
+        received = event;
+        event.preventDefault();
+    };
+    console.assert(!document.body.dispatchEvent(wheel));
+    console.assert(received === wheel && wheel.deltaX === 2.5 && wheel.deltaY === -3);
+    console.assert(wheel.deltaZ === 4 && wheel.deltaMode === 1);
+    testEnd();
+}
+</script>

@@ -174,6 +174,8 @@ void HTMLElement::didAttributeChanged(QualifiedName name, Optional<String*> old,
         setAttributeEventListener(ss->m_focusin, value, this);
     } else if (name == ss->m_onfocusout) {
         setAttributeEventListener(ss->m_focusout, value, this);
+    } else if (name == ss->m_onwheel) {
+        setAttributeEventListener(ss->m_wheel, value, this);
     } else if (name == ss->m_onscroll) {
         setAttributeEventListener(ss->m_scroll, value, this);
     } else if (name == ss->m_onkeydown) {
@@ -625,6 +627,7 @@ DEFINE_EVENT_LISTENER(HTMLElement, mouseleave);
 DEFINE_EVENT_LISTENER(HTMLElement, mouseup);
 DEFINE_EVENT_LISTENER(HTMLElement, progress);
 DEFINE_EVENT_LISTENER(HTMLElement, scroll);
+DEFINE_EVENT_LISTENER(HTMLElement, wheel);
 DEFINE_EVENT_LISTENER(HTMLElement, resize);
 DEFINE_EVENT_LISTENER(HTMLElement, submit);
 DEFINE_EVENT_LISTENER(HTMLElement, toggle);

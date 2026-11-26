@@ -3147,6 +3147,7 @@ DEFINE_EVENT_LISTENER(Document, change);
 DEFINE_EVENT_LISTENER(Document, error);
 DEFINE_EVENT_LISTENER(Document, focus);
 DEFINE_EVENT_LISTENER(Document, scroll);
+DEFINE_EVENT_LISTENER(Document, wheel);
 DEFINE_EVENT_LISTENER(Document, input);
 DEFINE_EVENT_LISTENER(Document, invalid);
 DEFINE_EVENT_LISTENER(Document, keydown);
