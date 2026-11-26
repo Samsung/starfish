@@ -5890,9 +5890,9 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
 
         if (hasShadow) {
             canvas->save();
-            size_t width = (size_t)contentWidth().ceil();
-            size_t height =
-                (size_t)(ceil((float)s->font()->metrics().m_fontHeight));
+            // A negative letter-spacing can make the box narrower than zero.
+            float width = std::max(0, contentWidth().ceil());
+            float height = ceil((float)s->font()->metrics().m_fontHeight);
             canvas->translate(dx, dy);
 
             CanvasShadowDataList list =
@@ -5929,8 +5929,14 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
 
                 auto imageWidth = width + ceil(radiusOffset);
                 auto imageHeight = height + ceil(radiusOffset);
-                NativeImageData* nativeImage = BufferedNativeImageData::create(
-                    dp, imageWidth, imageHeight);
+                // The page sizes this buffer; skip a shadow that cannot have
+                // one rather than abort.
+                auto shadowImage = BufferedNativeImageData::tryCreate(
+                    ceil(imageWidth * dp), ceil(imageHeight * dp));
+                if (!shadowImage) {
+                    continue;
+                }
+                NativeImageData* nativeImage = shadowImage.value();
                 Canvas* cv = Canvas::create(node()->webView(), nativeImage);
                 cv->clearColor(Unit::Color(0, 0, 0, 0));
                 cv->setFont(s->font());

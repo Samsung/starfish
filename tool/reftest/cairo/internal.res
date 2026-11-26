@@ -1234,3 +1234,5 @@ tests/assertion/event/event-handler-non-callable-object.html
 tests/assertion/canvas/put-image-data-dirty-overflow.html
 tests/assertion/media/mp4-largesize-box.html
 tests/assertion/css/calc-angle-zero-factor.html
+tests/crash/text-shaping-more-glyphs-than-characters.html
+tests/crash/text-shadow-blur-negative-or-huge-width.html

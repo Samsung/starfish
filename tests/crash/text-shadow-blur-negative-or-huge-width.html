@@ -1,0 +1,22 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Blurred text shadows on text narrower than zero or wider than a surface</title>
+<link rel="help" href="https://drafts.csswg.org/css-text-decor-3/#text-shadow-property">
+<body>
+<span style="letter-spacing: -50px; text-shadow: 0 0 10px red">ab</span>
+<p id="wide" style="white-space: nowrap; text-shadow: 0 0 10px red"></p>
+<script>
+// A negative letter-spacing can give a text box a negative width, and a long
+// unbreakable line can be wider than an image surface may be. A blurred
+// shadow is drawn through a buffer of the text's size; the page passes if
+// both are painted without a crash.
+document.getElementById("wide").textContent = "x".repeat(6000);
+onload = function () {
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      if (typeof testEnd === "function") testEnd();
+    });
+  });
+};
+</script>
+</body>

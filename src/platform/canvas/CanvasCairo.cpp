@@ -2761,6 +2761,22 @@ private:
         } else {
             auto runs = generateFontCairoTextRuns(&sv, f);
 
+            // Shaping can yield more glyphs than code units (Thai SARA AM
+            // becomes two), so size the buffer by the shaped glyphs.
+            size_t shapedGlyphCount = 0;
+            for (size_t i = 0; i < runs.size(); i++) {
+                shapedGlyphCount += runs[i].m_glyphs.size();
+            }
+            if (shapedGlyphCount >
+                std::max(stackProcessingSize, stringAccessData.length)) {
+                if (glyphs != glyphsStackBuffer) {
+                    free(glyphs);
+                }
+                glyphs = (cairo_glyph_t*)malloc(sizeof(cairo_glyph_t) *
+                                                shapedGlyphCount);
+                STARFISH_ASSERT(glyphs != nullptr);
+            }
+
             int lastUnicodeBlock = 0;
             float xBias = 0;
             for (size_t i = 0; i < runs.size(); i++) {
@@ -2846,7 +2862,7 @@ private:
 
         cairo_translate(canvas, -dx, -dy - fontMetrics.m_ascender);
 
-        if (UNLIKELY(stringAccessData.length > stackProcessingSize)) {
+        if (glyphs != glyphsStackBuffer) {
             free(glyphs);
         }
     }

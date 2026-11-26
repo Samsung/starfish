@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Text that shapes into more glyphs than characters</title>
+<style>p { white-space: nowrap; font-size: 10px; }</style>
+<body>
+<canvas id="c" width="400" height="100"></canvas>
+<script>
+// HarfBuzz decomposes Thai SARA AM (U+0E33) into two glyphs, so these strings
+// shape into more glyphs than they have characters. The short one fits the
+// glyph buffer kept on the stack and the long one a heap buffer sized by the
+// character count; the page passes if both are drawn without a crash.
+var short = "ก" + "ำ".repeat(120);
+var long = "ก" + "ำ".repeat(1000);
+var ctx = document.getElementById("c").getContext("2d");
+ctx.font = "10px sans-serif";
+[short, long].forEach(function (text) {
+  ctx.fillText(text, 0, 20);
+  ctx.strokeText(text, 0, 60);
+  var p = document.createElement("p");
+  p.textContent = text;
+  document.body.appendChild(p);
+});
+onload = function () {
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      if (typeof testEnd === "function") testEnd();
+    });
+  });
+};
+</script>
+</body>

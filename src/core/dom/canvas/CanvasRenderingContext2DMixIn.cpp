@@ -1825,7 +1825,8 @@ void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
 #endif
         }
     }
-    m_canvas->markDirtyRect(Unit::Rect(dx, dy, dirtyWidth, dirtyHeight));
+    m_canvas->markDirtyRect(
+        Unit::Rect(dx + dirtyX, dy + dirtyY, dirtyWidth, dirtyHeight));
 }
 
 void CanvasRenderingContext2DMixIn::clearRect(float x, float y, float w,
