@@ -126,6 +126,7 @@ public:
     bool pageEnabled = false;
     bool runtimeEnabled = false;
     bool domEnabled = false;
+    bool domIncludesWhitespace = false;
     bool logEnabled = false;
     bool networkEnabled = false;
     bool cssEnabled = false;

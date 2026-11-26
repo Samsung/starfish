@@ -71,11 +71,14 @@ static Node* nodeFromObjectId(CDPDispatcher* disp, const char* oid)
 }
 
 // Pushes the children of node so that popping visits them in document order.
-static void pushChildrenInReverse(Node* node, std::vector<Node*>& stack)
+static void pushChildrenInReverse(Node* node, std::vector<Node*>& stack,
+                                  bool includeWhitespace = true)
 {
     size_t first = stack.size();
     for (Node* c = node->firstChild(); c; c = c->nextSibling()) {
-        stack.push_back(c);
+        if (NodeRegistry::shouldExposeNode(c, includeWhitespace)) {
+            stack.push_back(c);
+        }
     }
     std::reverse(stack.begin() + first, stack.end());
 }
@@ -130,13 +133,17 @@ static void sendChildNodes(CDPDispatcher* dispatcher, CDPCommand& cmd,
     rapidjson::Value params(rapidjson::kObjectType);
     params.AddMember("parentId", reg->getOrCreate(parent), alloc);
     rapidjson::Value nodes(rapidjson::kArrayType);
+    const bool includeWhitespace = dispatcher->session()->domIncludesWhitespace;
     for (Node* c = parent->firstChild(); c; c = c->nextSibling()) {
+        if (!NodeRegistry::shouldExposeNode(c, includeWhitespace)) {
+            continue;
+        }
         rapidjson::Value child(rapidjson::kObjectType);
-        reg->serializeNode(c, depth - 1, child, alloc);
+        reg->serializeNode(c, depth - 1, child, alloc, includeWhitespace);
         nodes.PushBack(child, alloc);
     }
     params.AddMember("nodes", nodes, alloc);
-    reg->markChildrenSent(parent);
+    reg->markChildrenSent(parent, includeWhitespace);
 
     CDPCommand evt(dispatcher, Optional<int64_t>(), cmd.sessionId(), nullptr);
     evt.sendEvent("DOM.setChildNodes", params, out);
@@ -154,6 +161,10 @@ static int pushNodePathToFrontend(CDPDispatcher* dispatcher, CDPCommand& cmd,
     }
     if (reg->wasSent(node)) {
         return reg->getOrCreate(node);
+    }
+    const bool includeWhitespace = dispatcher->session()->domIncludesWhitespace;
+    if (!NodeRegistry::shouldExposeNode(node, includeWhitespace)) {
+        return 0;
     }
 
     // Collect the ancestors the client is missing, nearest first.
@@ -173,7 +184,7 @@ static int pushNodePathToFrontend(CDPDispatcher* dispatcher, CDPCommand& cmd,
 
     for (size_t i = path.size(); i > 0; i--) {
         Node* parent = path[i - 1];
-        if (!reg->childrenWereSent(parent)) {
+        if (!reg->childrenWereSent(parent, includeWhitespace)) {
             sendChildNodes(dispatcher, cmd, reg, parent, 1);
         }
     }
@@ -184,6 +195,9 @@ void DOMDomain::handleEnable(CDPCommand& cmd, const std::string&)
 {
     CDPSession* s = m_dispatcher->session();
 
+    s->domIncludesWhitespace =
+        hasStringParam(cmd, "includeWhitespace") &&
+        strcmp((*cmd.params())["includeWhitespace"].GetString(), "all") == 0;
     s->domEnabled = true;
     cmd.sendResultEmpty();
 }
@@ -193,6 +207,7 @@ void DOMDomain::handleDisable(CDPCommand& cmd, const std::string&)
     CDPSession* s = m_dispatcher->session();
 
     s->domEnabled = false;
+    s->domIncludesWhitespace = false;
     cmd.sendResultEmpty();
 }
 
@@ -212,7 +227,8 @@ void DOMDomain::handleGetDocument(CDPCommand& cmd, const std::string&)
     rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
     rapidjson::Value result(rapidjson::kObjectType);
     rapidjson::Value root(rapidjson::kObjectType);
-    reg->serializeNode(doc, depth, root, alloc);
+    reg->serializeNode(doc, depth, root, alloc,
+                       m_dispatcher->session()->domIncludesWhitespace);
     result.AddMember("root", root, alloc);
     cmd.sendResult(result, out);
 }
@@ -307,7 +323,7 @@ void DOMDomain::handleDescribeNode(CDPCommand& cmd, const std::string&)
     rapidjson::Value n(rapidjson::kObjectType);
     // describeNode hands back a node without binding it to the client's
     // node id space, so nothing here counts as sent.
-    reg->serializeNode(node, depth, n, alloc, false);
+    reg->serializeNode(node, depth, n, alloc, s->domIncludesWhitespace, false);
     if (node->isHTMLIFrameElement()) {
         Optional<BrowsingContext*> context =
             node->asHTMLIFrameElement()->browsingContext();
@@ -987,15 +1003,17 @@ void DOMDomain::handleGetFlattenedDocument(CDPCommand& cmd, const std::string&)
     // Pre-order walk; serialize every node at depth 0 (no nested children),
     // so the flat array carries each node once with childNodeCount but no
     // inline "children" subtrees.
+    const bool includeWhitespace =
+        m_dispatcher->session()->domIncludesWhitespace;
     std::vector<Node*> stack;
     stack.push_back(doc);
     while (!stack.empty()) {
         Node* n = stack.back();
         stack.pop_back();
         rapidjson::Value sn(rapidjson::kObjectType);
-        reg->serializeNode(n, 0, sn, alloc);
+        reg->serializeNode(n, 0, sn, alloc, includeWhitespace);
         nodes.PushBack(sn, alloc);
-        pushChildrenInReverse(n, stack);
+        pushChildrenInReverse(n, stack, includeWhitespace);
     }
     result.AddMember("nodes", nodes, alloc);
     cmd.sendResult(result, out);

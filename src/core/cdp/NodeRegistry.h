@@ -48,8 +48,10 @@ public:
     // Accessibility queries. These two say what the client has actually been
     // sent, so DOM.setChildNodes only has to carry the levels it is missing.
     bool wasSent(Node* node) const;
-    bool childrenWereSent(Node* node) const;
-    void markChildrenSent(Node* node);
+    bool childrenWereSent(Node* node, bool includeWhitespace) const;
+    void markChildrenSent(Node* node, bool includeWhitespace);
+
+    static bool shouldExposeNode(Node* node, bool includeWhitespace);
 
     // Serialize a CDP Node. depth: 0=no children, N=N levels, <0=full.
     // `send` records the node, and every descendant written with it, as
@@ -57,14 +59,26 @@ public:
     // without binding it, such as DOM.describeNode.
     void serializeNode(Node* node, int depth, rapidjson::Value& out,
                        rapidjson::Document::AllocatorType& alloc,
-                       bool send = true);
+                       bool includeWhitespace, bool send = true);
 
 private:
+    enum class ChildList : uint8_t {
+        Unsent,
+        WithoutWhitespace,
+        WithWhitespace,
+    };
+
+    static ChildList childListMode(bool includeWhitespace)
+    {
+        return includeWhitespace ? ChildList::WithWhitespace
+                                 : ChildList::WithoutWhitespace;
+    }
+
     struct Entry {
         int id;
         // Both are about what the client has seen, not about the node.
         bool sent;
-        bool childrenSent;
+        ChildList childrenSent;
     };
 
     Entry* entryFor(Node* node);

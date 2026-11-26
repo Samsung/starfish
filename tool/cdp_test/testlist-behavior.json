@@ -650,8 +650,7 @@
       "category": "script-error"
     },
     "dom/dom-include-whitespace.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "dom/dom-node-editing.js": {
       "expected": "pass",

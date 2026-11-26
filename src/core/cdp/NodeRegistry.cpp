@@ -23,6 +23,7 @@
 #include "Starfish.h"
 #include "NodeRegistry.h"
 #include "core/dom/Node.h"
+#include "core/dom/CharacterData.h"
 #include "core/dom/Element.h"
 #include "core/dom/ShadowRoot.h"
 
@@ -43,7 +44,7 @@ int NodeRegistry::getOrCreate(Node* node)
         return it->second.id;
     }
     int id = m_next++;
-    m_nodeToId[node] = Entry{ id, false, false };
+    m_nodeToId[node] = Entry{ id, false, ChildList::Unsent };
     m_idToNode[id] = node;
     return id;
 }
@@ -62,16 +63,23 @@ bool NodeRegistry::wasSent(Node* node) const
     return it != m_nodeToId.end() && it->second.sent;
 }
 
-bool NodeRegistry::childrenWereSent(Node* node) const
+bool NodeRegistry::childrenWereSent(Node* node, bool includeWhitespace) const
 {
     auto it = m_nodeToId.find(node);
-    return it != m_nodeToId.end() && it->second.childrenSent;
+    return it != m_nodeToId.end() &&
+           it->second.childrenSent == childListMode(includeWhitespace);
 }
 
-void NodeRegistry::markChildrenSent(Node* node)
+void NodeRegistry::markChildrenSent(Node* node, bool includeWhitespace)
 {
     getOrCreate(node);
-    entryFor(node)->childrenSent = true;
+    entryFor(node)->childrenSent = childListMode(includeWhitespace);
+}
+
+bool NodeRegistry::shouldExposeNode(Node* node, bool includeWhitespace)
+{
+    return includeWhitespace || node->nodeType() != Node::TEXT_NODE ||
+           !node->asCharacterData()->data()->containsOnlyWhitespace();
 }
 
 Node* NodeRegistry::lookup(int nodeId)
@@ -115,7 +123,7 @@ static void addStringMember(rapidjson::Value& obj, const char* key,
 
 void NodeRegistry::serializeNode(Node* node, int depth, rapidjson::Value& out,
                                  rapidjson::Document::AllocatorType& alloc,
-                                 bool send)
+                                 bool includeWhitespace, bool send)
 {
     out.SetObject();
 
@@ -156,7 +164,9 @@ void NodeRegistry::serializeNode(Node* node, int depth, rapidjson::Value& out,
     // child count via firstChild/nextSibling traversal
     int childCount = 0;
     for (Node* c = node->firstChild(); c; c = c->nextSibling()) {
-        childCount++;
+        if (shouldExposeNode(c, includeWhitespace)) {
+            childCount++;
+        }
     }
     out.AddMember("childNodeCount", childCount, alloc);
 
@@ -197,7 +207,8 @@ void NodeRegistry::serializeNode(Node* node, int depth, rapidjson::Value& out,
         if (shadowRoot) {
             rapidjson::Value roots(rapidjson::kArrayType);
             rapidjson::Value root(rapidjson::kObjectType);
-            serializeNode(shadowRoot.value(), 0, root, alloc, send);
+            serializeNode(shadowRoot.value(), 0, root, alloc, includeWhitespace,
+                          send);
             roots.PushBack(root, alloc);
             out.AddMember("shadowRoots", roots, alloc);
             if (depth == 0) {
@@ -211,13 +222,16 @@ void NodeRegistry::serializeNode(Node* node, int depth, rapidjson::Value& out,
         rapidjson::Value children(rapidjson::kArrayType);
         int childDepth = (depth < 0) ? -1 : depth - 1;
         for (Node* c = node->firstChild(); c; c = c->nextSibling()) {
+            if (!shouldExposeNode(c, includeWhitespace)) {
+                continue;
+            }
             rapidjson::Value child(rapidjson::kObjectType);
-            serializeNode(c, childDepth, child, alloc, send);
+            serializeNode(c, childDepth, child, alloc, includeWhitespace, send);
             children.PushBack(child, alloc);
         }
         out.AddMember("children", children, alloc);
         if (send) {
-            entryFor(node)->childrenSent = true;
+            entryFor(node)->childrenSent = childListMode(includeWhitespace);
         }
     }
 }

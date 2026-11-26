@@ -214,6 +214,9 @@ await p2.close();                             // tears down the spawned WebView
   with `exceptionDetails` for thrown errors. `callFunctionOn`/`getProperties`
   operate on `objectId` handles (Puppeteer JSHandle/ElementHandle); DOM nodes
   serialize with `subtype:"node"`.
+- DOM tree responses omit whitespace-only text nodes by default. Use
+  `DOM.enable({includeWhitespace: "all"})` to include them in child lists
+  and counts for that session.
 - `Input` maps to the WebView's mouse/key dispatch; `page.mouse`/`page.keyboard`
   and `elementHandle` clicks (via `DOM.getBoxModel`/`getContentQuads`
   coordinates) work.
