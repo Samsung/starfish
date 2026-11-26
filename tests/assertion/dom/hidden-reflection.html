@@ -1,0 +1,20 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>hidden reflects presence regardless of attribute index</title>
+<script>
+function testStart() {
+    const el = document.createElement("div");
+    console.assert(el.hidden === false, "absent on a new element");
+    el.hidden = true;
+    console.assert(el.hidden === true, "hidden is the first attribute");
+    el.hidden = false;
+    console.assert(!el.hasAttribute("hidden") && el.hidden === false,
+                   "setting false removes the attribute");
+    el.id = "item";
+    el.setAttribute("hidden", "");
+    console.assert(el.hidden === true, "hidden follows another attribute");
+    el.removeAttribute("hidden");
+    console.assert(el.hidden === false, "absent while another attribute remains");
+    testEnd();
+}
+</script>

@@ -435,7 +435,7 @@ String* HTMLElement::dir()
 
 bool HTMLElement::hidden()
 {
-    return hasAttribute(starfish()->staticStrings()->m_hidden);
+    return hasAttribute(starfish()->staticStrings()->m_hidden) != SIZE_MAX;
 }
 
 void HTMLElement::setHidden(bool h)

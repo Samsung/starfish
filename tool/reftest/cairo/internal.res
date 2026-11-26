@@ -445,6 +445,7 @@ tests/assertion/event/click.html
 tests/assertion/event/click2.html
 tests/assertion/event/custom-event-detail.html
 tests/assertion/dom/document-all.html
+tests/assertion/dom/hidden-reflection.html
 tests/assertion/page-visibility/visibilitychange_test.html
 tests/pixel/css/position2/left-margin-auto-right-margin-auto-width-fixed.html
 tests/pixel/css/position2/left-margin-fixed-right-margin-fixed-width-fixed.html
