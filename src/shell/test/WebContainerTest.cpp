@@ -194,18 +194,35 @@ TEST_F(WebContainerCreationTest, WebGLAfterRecreatingContainer)
 // usable; they share the process' default EGL display.
 TEST_F(WebContainerCreationTest, WebGLSurvivesAnotherWindowTeardown)
 {
+    // Draws red, then green, and reads each back: first on the context the
+    // previous call left current, then on a new one.
     static const char* draw = R"JS(
         (function() {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl', { antialias: false });
-            if (!gl)
+            function drawsBothColors(gl) {
+                const pixel = new Uint8Array(4);
+                for (const [r, g] of [[1, 0], [0, 1]]) {
+                    gl.clearColor(r, g, 0, 1);
+                    gl.clear(gl.COLOR_BUFFER_BIT);
+                    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE,
+                                  pixel);
+                    if (pixel[0] !== r * 255 || pixel[1] !== g * 255 ||
+                        pixel[2] !== 0 || pixel[3] !== 255)
+                        return false;
+                }
+                return true;
+            }
+            function create() {
+                return document.createElement('canvas').getContext(
+                    'webgl', { antialias: false });
+            }
+            // The context drawn last is reused by the next call, before
+            // anything else binds one.
+            const kept = window.keptGL;
+            if (kept && !drawsBothColors(kept))
                 return false;
-            gl.clearColor(0, 1, 0, 1);
-            gl.clear(gl.COLOR_BUFFER_BIT);
-            const pixel = new Uint8Array(4);
-            gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
-            return pixel[0] === 0 && pixel[1] === 255 &&
-                   pixel[2] === 0 && pixel[3] === 255;
+            const fresh = create();
+            window.keptGL = fresh;
+            return !!fresh && drawsBothColors(fresh);
         })()
     )JS";
 

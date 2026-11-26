@@ -314,6 +314,7 @@ public:
             return false;
         }
         m_onMakeCurrent(this);
+        s_lastBinder = this;
         m_currentContext = kEmptyContextOrUnknown;
         if (!m_compositorContext) {
             ensureCompositorContext();
@@ -353,6 +354,7 @@ public:
         if (!m_onClearCurrentContext || !m_onClearCurrentContext(this)) {
             return false;
         }
+        s_lastBinder = this;
         m_currentContext = kEmptyContextOrUnknown;
         return true;
     }
@@ -362,13 +364,14 @@ public:
         if (!m_onMakeCurrentWithContext(this, context)) {
             return false;
         }
+        s_lastBinder = this;
         m_currentContext = context;
         return true;
     }
 
     virtual uintptr_t getCurrentContext() override
     {
-        return m_currentContext;
+        return s_lastBinder == this ? m_currentContext : kEmptyContextOrUnknown;
     }
 
     virtual void* getProcAddress(const char* name) override
@@ -434,7 +437,12 @@ public:
     bool m_suppressSwapForCapture;
     int m_offsetYDueToSoftwareKeyboard;
     uintptr_t m_currentContext;
+    // The current context is per thread, not per renderer: once another
+    // renderer binds one, m_currentContext no longer describes the thread.
+    static thread_local RendererGL* s_lastBinder;
 };
+
+thread_local RendererGL* RendererGL::s_lastBinder = nullptr;
 
 Renderer* RendererFactory::createGL(Starfish* starfish, uint32_t width,
                                     uint32_t height)
