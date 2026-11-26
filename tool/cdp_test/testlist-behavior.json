@@ -2704,8 +2704,7 @@
       "category": "output-differs"
     },
     "page/capture-screenshot-invalid-format.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "page/capture-screenshot-optimize-for-speed.js": {
       "expected": "fail",

@@ -1870,10 +1870,14 @@ void PageDomain::handleCaptureScreenshot(CDPCommand& cmd, const std::string&)
     CDPSession* s = m_dispatcher->session();
     WebView* wv = m_dispatcher->webView();
 
-    // format: png (default) | jpeg. quality: jpeg only. clip: optional
-    // {x,y,width,height,scale}. Returns { data: <base64> }.
-    std::string format = "png";
-    format = paramString(cmd, "format", format);
+    if (const auto* params = cmd.params()) {
+        const auto format = params->FindMember("format");
+        if (format != params->MemberEnd() && format->value != "png" &&
+            format->value != "jpeg" && format->value != "webp") {
+            cmd.sendError(-32602, "Invalid image format");
+            return;
+        }
+    }
 
     // Viewport in device pixels.
     float dpr = wv->screenInfo().devicePixelRatio;
@@ -1946,7 +1950,6 @@ void PageDomain::handleCaptureScreenshot(CDPCommand& cmd, const std::string&)
 
     // libjpeg is not linked in the glib_headless backend, so jpeg requests
     // fall back to PNG (the buffer is encoded the same way either way).
-    (void)format;
     std::vector<uint8_t> encoded = ImageEncoder::encodePNG(
         rgba.data(), outW, outH, ImageEncoder::ImageColorSpace::RGBA);
 

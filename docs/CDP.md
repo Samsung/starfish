@@ -223,6 +223,8 @@ await p2.close();                             // tears down the spawned WebView
 - `Page.captureScreenshot`/`printToPDF` read back the GL framebuffer on a
   `*_cairo_gl` backend (real pixels) and emit structurally-valid blank output
   on the Mock `*_headless` backend (see §6).
+  `Page.captureScreenshot` rejects unrecognized `format` values with
+  `-32602`.
 - Multiple tabs: `Target.createTarget` (Puppeteer `newPage()`) spawns an
   independent WebView; console output routes to each tab's own session. Only
   a headless engine (`glib_headless` or `--headless`) can open one; a
