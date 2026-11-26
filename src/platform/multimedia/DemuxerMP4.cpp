@@ -770,7 +770,11 @@ static int64_t resolvePacketCTSOffset(StreamInfoMP4& stream,
 {
     int64_t ctsOffset = 0;
     if (parsingInfo.m_hasSampleCTSOffset) {
-        ctsOffset = parsingInfo.m_samples[sampleID].composition_time_offset;
+        // Signed in version 1 trun boxes (ISO/IEC 14496-12 8.8.8), and a
+        // version 0 offset never reaches 2^31 ticks in practice. MP4Parse
+        // drops the version, so read every offset as signed.
+        ctsOffset =
+            (int32_t)parsingInfo.m_samples[sampleID].composition_time_offset;
     }
     return ctsOffset - stream.mediaTime();
 }

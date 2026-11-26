@@ -425,7 +425,7 @@ void MockMediaPlayer::handleSeeked()
     m_seeking = false;
     window()->clearInterval(m_seekingTimer);
     m_seekingTimer = TimerInvalidID;
-    m_container->mediaPlayerNotifySeekedItsContainer(currentTimeInMS() / 1000);
+    m_container->mediaPlayerNotifySeekedItsContainer(currentTime());
 }
 void MockMediaPlayer::fillBufferIfNeeded(StreamType type)
 {

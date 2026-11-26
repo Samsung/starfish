@@ -1240,3 +1240,4 @@ tests/crash/css-ending-in-partial-comment-open.html
 tests/crash/transition-height-to-percent-in-zero-height-box.html
 tests/assertion/svg/svg-length-list-detached-items.html
 tests/assertion/svg/svg-length-absolute-units.html
+tests/assertion/media/mp4-negative-composition-offset.html

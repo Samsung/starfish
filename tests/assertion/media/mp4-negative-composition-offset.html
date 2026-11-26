@@ -1,0 +1,104 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>MP4 track runs with negative composition time offsets</title>
+<link rel="help" href="https://w3c.github.io/mse-byte-stream-format-isobmff/">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[mp4-negative-composition-offset] " + document.title);
+  };
+}
+</script>
+<body>
+<script>
+// A version 1 trun box stores signed composition time offsets
+// (ISO/IEC 14496-12, 8.8.8). Packagers shift the offsets down by the
+// reordering delay so the first frame is presented at its decode time, which
+// makes some offsets negative. The media file is a copy of
+// web-platform-tests media-source/mp4 (3-Clause BSD); its frames last 512
+// ticks and its largest reordering delay is 1024 ticks.
+var MP4_VIDEO = {url: "resources/test-v-128k-640x480-30fps-10kfr.mp4",
+                 type: 'video/mp4; codecs="avc1.4D4001"'};
+var SHIFT = 1024;
+
+// Rewrites every trun that carries composition offsets as version 1 with
+// each offset lowered by SHIFT; box sizes stay the same.
+function withNegativeOffsets(bytes) {
+  var out = new Uint8Array(bytes);
+  var view = new DataView(out.buffer);
+  var rewritten = 0;
+  function walk(start, end) {
+    for (var pos = start; pos + 8 <= end; pos += view.getUint32(pos)) {
+      var type = String.fromCharCode.apply(null, out.subarray(pos + 4, pos + 8));
+      if (type === "moof" || type === "traf") {
+        walk(pos + 8, pos + view.getUint32(pos));
+      } else if (type === "trun") {
+        var flags = view.getUint32(pos + 8) & 0xffffff;
+        if (!(flags & 0x800)) {
+          continue;
+        }
+        out[pos + 8] = 1;
+        var count = view.getUint32(pos + 12);
+        var field = pos + 16 + (flags & 0x1 ? 4 : 0) + (flags & 0x4 ? 4 : 0);
+        for (var i = 0; i < count; i++) {
+          field += (flags & 0x100 ? 4 : 0) + (flags & 0x200 ? 4 : 0) + (flags & 0x400 ? 4 : 0);
+          view.setInt32(field, view.getUint32(field) - SHIFT);
+          field += 4;
+        }
+        rewritten++;
+      }
+    }
+  }
+  walk(0, out.length);
+  console.assert(rewritten > 0, "the file has track runs with composition offsets");
+  return out;
+}
+
+function once(target, type) {
+  return new Promise(function (resolve) {
+    target.addEventListener(type, function handler(e) {
+      target.removeEventListener(type, handler);
+      resolve(e);
+    });
+  });
+}
+
+var deadline = setTimeout(function () {
+  console.assert(false, "the append finished in time");
+  testEnd();
+}, 20000);
+var video = document.createElement("video");
+video.muted = true;
+document.body.appendChild(video);
+var source = new MediaSource();
+var opened = once(source, "sourceopen");
+video.src = URL.createObjectURL(source);
+Promise.all([fetch(MP4_VIDEO.url).then(function (r) { return r.arrayBuffer(); }), opened]).then(function (results) {
+  var buffer = source.addSourceBuffer(MP4_VIDEO.type);
+  var done = once(buffer, "updateend");
+  buffer.appendBuffer(withNegativeOffsets(new Uint8Array(results[0])));
+  return done.then(function () {
+    var ranges = buffer.buffered;
+    console.assert(ranges.length === 1, "one buffered range, got " + ranges.length);
+    // 60 frames of 512 ticks at 15360 ticks per second span 2 seconds, and
+    // the first frame now starts at 0 rather than 1024 ticks in.
+    console.assert(ranges.length && Math.abs(ranges.start(0)) < 0.01,
+                   "the range starts at 0, got " + (ranges.length && ranges.start(0)));
+    console.assert(ranges.length && Math.abs(ranges.end(ranges.length - 1) - 2) < 0.01,
+                   "the range ends at 2 seconds, got " + (ranges.length && ranges.end(ranges.length - 1)));
+  });
+}).catch(function (e) {
+  console.assert(false, "unexpected rejection: " + e);
+}).then(function () {
+  clearTimeout(deadline);
+  testEnd();
+});
+</script>
+</body>
