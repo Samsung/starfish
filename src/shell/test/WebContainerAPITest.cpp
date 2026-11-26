@@ -457,6 +457,25 @@ TEST_F(WebContainerAPITest, InputEventDispatch)
     m_lwe->Focus();
 }
 
+TEST_F(WebContainerAPITest, WheelScrollChainsOutOfFrame)
+{
+    loadData(R"HTML(
+        <body style="margin:0;height:3000px">
+        <iframe style="display:block;border:0;width:200px;height:100px"
+                srcdoc="<body style='margin:0;height:100px'>inside"></iframe>
+        <script>
+        window.outerWheels = 0;
+        window.innerWheels = 0;
+        window.addEventListener("wheel", () => outerWheels++);
+        </script></body>)HTML");
+    js("document.querySelector('iframe').contentWindow.addEventListener("
+       "'wheel', () => innerWheels++)");
+    m_lwe->DispatchMouseWheelEvent(30, 30, 3);
+    EXPECT_TRUE(runUntil([&] { return js("String(scrollY > 0)") == "true"; }));
+    EXPECT_EQ("1", js("String(innerWheels)"));
+    EXPECT_EQ("0", js("String(outerWheels)"));
+}
+
 TEST_F(WebContainerAPITest, IdleRenderingAndDebuggerHooks)
 {
     // Static: the engine still calls these while the fixture tears down, and

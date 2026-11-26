@@ -2027,28 +2027,28 @@ bool BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
                 ->dispatchMouseWheelEvent(wx, wy, z, isVerticalWheelEvent)) {
             return true;
         }
-    }
-
-    WheelEventInit init;
-    init.setBubbles(true);
-    init.setCancelable(true);
-    init.setComposed(true);
-    init.setView(window());
-    init.setClientX(screenX);
-    init.setClientY(screenY);
-    init.setScreenX(screenX);
-    init.setScreenY(screenY);
-    init.setPageX(wx);
-    init.setPageY(wy);
-    init.setDeltaMode(1); // Platform wheel steps are expressed in lines.
-    init.setDeltaX(isVerticalWheelEvent ? 0 : z);
-    init.setDeltaY(isVerticalWheelEvent ? z : 0);
-    auto* event =
-        new WheelEvent(document()->executionContext(),
-                       starfish()->staticStrings()->m_wheel.localName(), init);
-    if (!window()->dispatchEventByUA(targetNode->nearestParentElement(),
-                                     event)) {
-        return true;
+    } else {
+        WheelEventInit init;
+        init.setBubbles(true);
+        init.setCancelable(true);
+        init.setComposed(true);
+        init.setView(window());
+        init.setClientX(screenX);
+        init.setClientY(screenY);
+        init.setScreenX(screenX);
+        init.setScreenY(screenY);
+        init.setPageX(wx);
+        init.setPageY(wy);
+        init.setDeltaMode(1); // Platform wheel steps are expressed in lines.
+        init.setDeltaX(isVerticalWheelEvent ? 0 : z);
+        init.setDeltaY(isVerticalWheelEvent ? z : 0);
+        auto* event = new WheelEvent(
+            document()->executionContext(),
+            starfish()->staticStrings()->m_wheel.localName(), init);
+        if (!window()->dispatchEventByUA(targetNode->nearestParentElement(),
+                                         event)) {
+            return true;
+        }
     }
 
     bool useEventInDOMTree = false;
