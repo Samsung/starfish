@@ -30,6 +30,7 @@
  */
 
 #include "StarfishConfig.h"
+#include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "AncestorSelectorFilter.h"
 #include "core/style/Style.h"
@@ -48,6 +49,18 @@ static void collectElementIdentifierHashes(Element* element,
         element->name().localNameAtomic().string()->hashValue() * TagNameSalt;
     bloomFilter.add(hash);
     identifierHashes.push_back(hash);
+
+    // Lowercase type selectors match an HTML element with an uppercase local
+    // name too (createElementNS() can produce one), so expose that spelling.
+    if (element->isHTMLElement() && !element->document()->typeIsXML()) {
+        String* localName = element->name().localName();
+        String* lower = localName->toASCIILower();
+        if (lower != localName) {
+            unsigned lowerHash = lower->hashValue() * TagNameSalt;
+            bloomFilter.add(lowerHash);
+            identifierHashes.push_back(lowerHash);
+        }
+    }
 
     if (element->hasId()) {
         unsigned hash = element->atomicId().string()->hashValue() * IdSalt;
@@ -95,14 +108,13 @@ static inline void collectDescendantSelectorIdentifierHashes(
             selector->selectorText().string()->hashValue() * ClassNameSalt;
         break;
     case CSSSelector::Tag:
-        if (selector->isCaseInsensitiveTagSelector()) {
-            // An uppercase type selector matches HTML elements by the
-            // lowercased name and SVG/XML elements by the exact name. Skip
-            // collecting so the bloom filter never falsely rejects either.
-            break;
+        // A name written with uppercase letters matches either its lowercased
+        // or its original spelling depending on the ancestor, so it has no
+        // single hash to require.
+        if (!selector->isCaseInsensitiveTagSelector()) {
+            (*hash++) =
+                selector->selectorText().string()->hashValue() * TagNameSalt;
         }
-        (*hash++) =
-            selector->selectorText().string()->hashValue() * TagNameSalt;
         break;
     case CSSSelector::NamespacedTag: {
         // Same as Tag above (selectorText() is the bare local name), unless
@@ -111,9 +123,7 @@ static inline void collectDescendantSelectorIdentifierHashes(
         const QualifiedName& name =
             selector->asCSSNamespacedTagSelector()->qualifiedName();
         if (!name.localName()->equals("*") &&
-            selector->asCSSNamespacedTagSelector()
-                ->lowercasedLocalName()
-                .isEmptyAtomicString()) {
+            selector->selectorText() == name.localNameAtomic()) {
             (*hash++) =
                 selector->selectorText().string()->hashValue() * TagNameSalt;
         }

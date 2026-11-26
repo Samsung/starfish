@@ -1882,6 +1882,32 @@ bool String::equalsIgnoreCase(const String* str) const
     return false;
 }
 
+bool String::equalsIgnoreASCIICase(const String* str) const
+{
+    auto dataA = bufferAccessData();
+    auto dataB = str->bufferAccessData();
+    if (dataA.length != dataB.length) {
+        return false;
+    }
+    for (size_t i = 0; i < dataA.length; i++) {
+        char32_t a = dataA.charAt(i);
+        char32_t b = dataB.charAt(i);
+        if (a == b) {
+            continue;
+        }
+        if (a >= 'A' && a <= 'Z') {
+            a += 'a' - 'A';
+        }
+        if (b >= 'A' && b <= 'Z') {
+            b += 'a' - 'A';
+        }
+        if (a != b) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool String::isASCIIStringData(const char* str)
 {
     const char* p = str;

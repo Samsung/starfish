@@ -3455,6 +3455,13 @@ public:
         return (const CSSCaseInsensitiveTagSelector*)this;
     }
 
+    // For Tag and non-wildcard NamespacedTag selectors. Type selectors match
+    // HTML elements in HTML documents ASCII case-insensitively and all other
+    // elements case-sensitively
+    // (https://html.spec.whatwg.org/multipage/semantics-other.html#case-sensitivity-of-selectors).
+    bool matchesLocalName(Element* element,
+                          const AtomicString& localName) const;
+
     bool isPseudoSelector() const
     {
         return m_type == PseudoClass || m_type == PseudoElement;
@@ -3581,9 +3588,11 @@ public:
     CSSNamespacedTagSelector(
         const QualifiedName& name,
         const AtomicString& lowercasedLocalName = AtomicString())
-        : CSSSelector(CSSSelector::Type::NamespacedTag, name.localNameAtomic())
+        : CSSSelector(CSSSelector::Type::NamespacedTag,
+                      lowercasedLocalName.isEmptyAtomicString()
+                          ? name.localNameAtomic()
+                          : lowercasedLocalName)
         , m_name(name)
-        , m_lowercasedLocalName(lowercasedLocalName)
     {
     }
 
@@ -3592,15 +3601,8 @@ public:
         return m_name;
     }
 
-    // Empty when the parsed local name had no ASCII uppercase letters.
-    const AtomicString& lowercasedLocalName() const
-    {
-        return m_lowercasedLocalName;
-    }
-
 protected:
     QualifiedName m_name;
-    AtomicString m_lowercasedLocalName;
 };
 
 // A type selector whose parsed tag name contained ASCII uppercase letters
@@ -3612,21 +3614,21 @@ protected:
 // keep the base 16-byte CSSSelector layout.
 class CSSCaseInsensitiveTagSelector : public CSSSelector {
 public:
-    CSSCaseInsensitiveTagSelector(const AtomicString& text,
+    CSSCaseInsensitiveTagSelector(const AtomicString& originalText,
                                   const AtomicString& lowercasedText)
-        : CSSSelector(CSSSelector::Type::Tag, text)
-        , m_lowercasedText(lowercasedText)
+        : CSSSelector(CSSSelector::Type::Tag, lowercasedText)
+        , m_originalText(originalText)
     {
         m_tagCaseInsensitive = true;
     }
 
-    const AtomicString& lowercasedText() const
+    const AtomicString& originalText() const
     {
-        return m_lowercasedText;
+        return m_originalText;
     }
 
 protected:
-    AtomicString m_lowercasedText;
+    AtomicString m_originalText;
 };
 
 class CSSPseudoSelector : public CSSSelector {

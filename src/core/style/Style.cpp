@@ -8662,13 +8662,8 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
                 continue;
             }
             if (type == CSSSelector::Type::Tag && rule->isSimpleTagSelector()) {
-                CSSSelector* sel = rule->selectorList()[0].m_selector;
-                if (elementName == sel->selectorText() ||
-                    (sel->isCaseInsensitiveTagSelector() &&
-                     element->isHTMLElement() &&
-                     !element->document()->typeIsXML() &&
-                     elementName == sel->asCSSCaseInsensitiveTagSelector()
-                                        ->lowercasedText())) {
+                if (rule->selectorList()[0].m_selector->matchesLocalName(
+                        element, elementName)) {
                     authorRules.push_back(std::make_pair(rule, url));
                 }
                 continue;
@@ -8814,8 +8809,18 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
     }
 
     {
+        // Every type rule is bucketed under its ASCII-lowercased name, which
+        // is the whole candidate set for a case-insensitive match; any other
+        // element matches only the spelling it carries (see addToRuleSet()).
+        AtomicString tagKey = elementName;
+        if (element->isHTMLElement() && !element->document()->typeIsXML()) {
+            String* lower = elementName.string()->toASCIILower();
+            if (lower != elementName.string()) {
+                tagKey = AtomicString::createAtomicString(starfish(), lower);
+            }
+        }
         auto& rules = m_ruleSet->tagRules();
-        auto iter = rules.find(elementName);
+        auto iter = rules.find(tagKey);
         if (iter != rules.end()) {
             collectMatchingRulesFromAuthorSheet(
                 ctx, iter.value().begin(), iter.value().end(),
@@ -9314,27 +9319,24 @@ StyleResolver::Match StyleResolver::matchForRelation(
     }
 }
 
-static bool equalsASCIICaseInsensitive(String* a, String* b)
+bool CSSSelector::matchesLocalName(Element* element,
+                                   const AtomicString& localName) const
 {
-    auto da = a->bufferAccessData();
-    auto db = b->bufferAccessData();
-    if (da.length != db.length) {
-        return false;
+    if (!element->isHTMLElement() || element->document()->typeIsXML()) {
+        if (m_type == NamespacedTag) {
+            return localName == asCSSNamespacedTagSelector()
+                                    ->qualifiedName()
+                                    .localNameAtomic();
+        }
+        if (m_tagCaseInsensitive) {
+            return localName ==
+                   asCSSCaseInsensitiveTagSelector()->originalText();
+        }
+        return localName == m_selectorText;
     }
-    for (size_t i = 0; i < da.length; i++) {
-        char32_t ca = da.charAt(i);
-        char32_t cb = db.charAt(i);
-        if (ca >= 'A' && ca <= 'Z') {
-            ca += ('a' - 'A');
-        }
-        if (cb >= 'A' && cb <= 'Z') {
-            cb += ('a' - 'A');
-        }
-        if (ca != cb) {
-            return false;
-        }
-    }
-    return true;
+    // m_selectorText is the ASCII-lowercased name.
+    return localName == m_selectorText ||
+           localName.string()->equalsIgnoreASCIICase(m_selectorText.string());
 }
 
 bool StyleResolver::checkOne(
@@ -9358,47 +9360,13 @@ bool StyleResolver::checkOne(
         }
         return false;
     } else if (selectorType == CSSSelector::Type::Tag) {
-        if (elementName == selector->selectorText()) {
-            return true;
-        }
-        // HTML § 4.16.3 / Selectors 4 § 3.3: type selectors match HTML
-        // elements in HTML documents ASCII case-insensitively, and non-HTML
-        // or XML elements case-sensitively.
-        if (element->isHTMLElement() && !element->document()->typeIsXML()) {
-            if (selector->isCaseInsensitiveTagSelector() &&
-                elementName == selector->asCSSCaseInsensitiveTagSelector()
-                                   ->lowercasedText()) {
-                return true;
-            }
-            // Rare fallback for HTML elements whose localName contains ASCII
-            // uppercase letters (e.g. createElementNS(XHTML, "DIV")).
-            if (elementName.string()->length() ==
-                selector->selectorText().string()->length()) {
-                return equalsASCIICaseInsensitive(
-                    elementName.string(), selector->selectorText().string());
-            }
-        }
-        return false;
+        return selector->matchesLocalName(element, elementName);
     } else if (selectorType == CSSSelector::Type::NamespacedTag) {
         const QualifiedName& want =
             selector->asCSSNamespacedTagSelector()->qualifiedName();
-        // selectorText() (inherited) is the bare local name -- see
-        // CSSNamespacedTagSelector's comment for why.
         if (!want.localName()->equals("*") &&
-            elementName != selector->selectorText()) {
-            if (!element->isHTMLElement() || element->document()->typeIsXML()) {
-                return false;
-            }
-            const AtomicString& lower =
-                selector->asCSSNamespacedTagSelector()->lowercasedLocalName();
-            if (elementName != lower &&
-                (elementName.string()->length() !=
-                     selector->selectorText().string()->length() ||
-                 !equalsASCIICaseInsensitive(
-                     elementName.string(),
-                     selector->selectorText().string()))) {
-                return false;
-            }
+            !selector->matchesLocalName(element, elementName)) {
+            return false;
         }
         AtomicString wantNsURI = want.namespaceURI().getValue();
         if (wantNsURI.string()->equals("*")) {
@@ -12076,23 +12044,18 @@ void StyleResolver::addToRuleSet(std::pair<StyleRule*, ResourceURL*> rule)
         // Bucket uppercase type selectors under both original and lowercased
         // spellings so matchAllRules() can look up elementName directly
         // without lowercasing every element on the hot path.
-        const AtomicString* lowercased = nullptr;
-        if (selectorList[0].m_selector->isCaseInsensitiveTagSelector()) {
-            lowercased = &selectorList[0]
-                              .m_selector->asCSSCaseInsensitiveTagSelector()
-                              ->lowercasedText();
-        } else if (selectorList[0].m_selector->type() ==
-                   CSSSelector::Type::NamespacedTag) {
-            const AtomicString& lower =
-                selectorList[0]
-                    .m_selector->asCSSNamespacedTagSelector()
-                    ->lowercasedLocalName();
-            if (!lower.isEmptyAtomicString()) {
-                lowercased = &lower;
-            }
+        CSSSelector* subject = selectorList[0].m_selector;
+        AtomicString original;
+        if (subject->isCaseInsensitiveTagSelector()) {
+            original =
+                subject->asCSSCaseInsensitiveTagSelector()->originalText();
+        } else if (subject->type() == CSSSelector::Type::NamespacedTag) {
+            original = subject->asCSSNamespacedTagSelector()
+                           ->qualifiedName()
+                           .localNameAtomic();
         }
-        if (lowercased && *lowercased != tagName) {
-            m_ruleSet->tagRules().insert(std::make_pair(*lowercased, rule));
+        if (!original.isEmptyAtomicString() && original != tagName) {
+            m_ruleSet->tagRules().insert(std::make_pair(original, rule));
         }
         return;
     }

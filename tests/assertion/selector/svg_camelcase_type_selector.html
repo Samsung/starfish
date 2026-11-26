@@ -13,6 +13,8 @@
     filter feFlood { opacity: 0.5; }
     linearGradient stop { stop-opacity: 0.25; }
     lineargradient stop { stop-opacity: 0.9; }
+    linearGradient { color: rgb(4, 5, 6); }
+    customhtml p { background-color: rgb(7, 8, 9); }
   </style>
 </head>
 <body>
@@ -44,6 +46,9 @@
     document.body.appendChild(upperHtml);
     console.assert(document.querySelector('customhtml') === upperHtml, 'lowercase type selector matches uppercase XHTML element in HTML doc');
     console.assert(document.querySelector('CUSTOMHTML') === upperHtml, 'exact type selector matches uppercase XHTML element in HTML doc');
+    const upperChild = document.createElement('p');
+    upperHtml.appendChild(upperChild);
+    console.assert(getComputedStyle(upperChild).backgroundColor === 'rgb(7, 8, 9)', 'customhtml p descendant rule applies under uppercase XHTML ancestor');
     upperHtml.remove();
 
     // SVG camelCase elements match case-sensitively
@@ -59,6 +64,12 @@
     console.assert(floodStyle.color === 'rgb(10, 20, 30)', 'feFlood rule applies and feflood rule does not override');
     console.assert(floodStyle.opacity === '0.5', 'filter feFlood descendant rule applies');
     console.assert(getComputedStyle(document.getElementById('stp')).stopOpacity === '0.25', 'linearGradient stop rule applies and lineargradient does not');
+    console.assert(getComputedStyle(document.getElementById('grad')).color === 'rgb(4, 5, 6)', 'simple linearGradient rule applies to <linearGradient>');
+    const lowerGrad = document.createElementNS(svgNs, 'lineargradient');
+    document.querySelector('defs').appendChild(lowerGrad);
+    console.assert(lowerGrad.localName === 'lineargradient', 'createElementNS preserves lowercase SVG localName');
+    console.assert(getComputedStyle(lowerGrad).color !== 'rgb(4, 5, 6)', 'simple linearGradient rule must NOT apply to SVG <lineargradient>');
+    lowerGrad.remove();
 
     // Dynamically created SVG camelCase elements
     const svg = document.createElementNS(svgNs, 'svg');

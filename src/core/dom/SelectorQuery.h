@@ -74,7 +74,7 @@ private:
                                     const AtomicString& className,
                                     std::vector<Element*>& collection,
                                     bool shouldOnlyMatchFirstElement);
-    void collectElementsByTagName(Node& rootNode, const AtomicString& tagName,
+    void collectElementsByTagName(Node& rootNode, CSSSelector* selector,
                                   std::vector<Element*>& collection,
                                   bool shouldOnlyMatchFirstElement);
     bool selectorMatches(const CSSSelectorList& selector, Element* element,

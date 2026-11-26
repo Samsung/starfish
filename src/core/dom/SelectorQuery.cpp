@@ -209,67 +209,18 @@ void SelectorQuery::collectElementsByClassName(
         &collection, shouldOnlyMatchFirstElement);
 }
 
-static bool equalsASCIICaseInsensitive(String* a, String* b)
-{
-    auto da = a->bufferAccessData();
-    auto db = b->bufferAccessData();
-    if (da.length != db.length) {
-        return false;
-    }
-    for (size_t i = 0; i < da.length; i++) {
-        char32_t ca = da.charAt(i);
-        char32_t cb = db.charAt(i);
-        if (ca >= 'A' && ca <= 'Z') {
-            ca += ('a' - 'A');
-        }
-        if (cb >= 'A' && cb <= 'Z') {
-            cb += ('a' - 'A');
-        }
-        if (ca != cb) {
-            return false;
-        }
-    }
-    return true;
-}
-
 void SelectorQuery::collectElementsByTagName(Node& rootNode,
-                                             const AtomicString& tagName,
+                                             CSSSelector* selector,
                                              std::vector<Element*>& collection,
                                              bool shouldOnlyMatchFirstElement)
 {
-    struct MatchData {
-        AtomicString tagName;
-        AtomicString lowerTagName;
-        bool isXML;
-    };
-    bool isXML = rootNode.document()->typeIsXML();
-    AtomicString lowerTagName = tagName;
-    if (!isXML) {
-        String* lowerStr = tagName.string()->toASCIILower();
-        if (lowerStr != tagName.string()) {
-            lowerTagName =
-                AtomicString::createAtomicString(rootNode.starfish(), lowerStr);
-        }
-    }
-    MatchData matchData{ tagName, lowerTagName, isXML };
     Traverse::findMatchedDescendants(
         &rootNode,
         [](Element* element, void* data) -> bool {
-            MatchData* d = static_cast<MatchData*>(data);
-            AtomicString localName = element->name().localNameAtomic();
-            if (localName == d->tagName) {
-                return true;
-            }
-            // HTML § 4.16.3 / Selectors 4 § 3.3: HTML elements in HTML
-            // documents match type selectors ASCII case-insensitively.
-            if (!d->isXML && element->isHTMLElement()) {
-                return localName == d->lowerTagName ||
-                       equalsASCIICaseInsensitive(localName.string(),
-                                                  d->tagName.string());
-            }
-            return false;
+            return static_cast<CSSSelector*>(data)->matchesLocalName(
+                element, element->name().localNameAtomic());
         },
-        &matchData,
+        selector,
         [](Element* e, void* data) {
             std::vector<Element*>* collection = (std::vector<Element*>*)data;
             collection->push_back(e);
@@ -599,8 +550,8 @@ void SelectorQuery::execute(Node& rootNode, std::vector<Element*>& output,
                                        output, shouldOnlyMatchFirstElement);
             return;
         case CSSSelector::Tag:
-            collectElementsByTagName(rootNode, firstSelector->selectorText(),
-                                     output, shouldOnlyMatchFirstElement);
+            collectElementsByTagName(rootNode, firstSelector, output,
+                                     shouldOnlyMatchFirstElement);
             return;
         default:
             break; // If we need another fast path, add here.

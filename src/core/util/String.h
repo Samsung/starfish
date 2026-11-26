@@ -796,6 +796,8 @@ public:
     bool equals(const char* str, size_t strLen) const;
 
     bool equalsIgnoreCase(const String* str) const;
+    // Folds only ASCII A-Z, unlike equalsIgnoreCase().
+    bool equalsIgnoreASCIICase(const String* str) const;
     template <size_t N>
     bool equalsIgnoreCase(const char (&str)[N]) const
     {
