@@ -1,0 +1,32 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Numeric animation duration</title>
+<body>
+<script>
+function testStart() {
+    const root = document.documentElement;
+    console.assert(root.animate([], 0) instanceof Animation);
+    const frames = [{ opacity: 0 }, { opacity: 1 }];
+    const animation = root.animate(frames, 250);
+    console.assert(animation instanceof Animation);
+    animation.cancel();
+    console.assert(root.animate([{ opacity: 1 }], 20) instanceof Animation);
+    let rejected = false;
+    try {
+        root.animate(null, -1);
+    } catch (error) {
+        rejected = error instanceof TypeError;
+    }
+    console.assert(rejected);
+    for (const options of [NaN, {duration: -1}, {duration: NaN}]) {
+        let threw = false;
+        try {
+            root.animate(frames, options);
+        } catch (error) {
+            threw = error instanceof TypeError;
+        }
+        console.assert(threw, "Invalid duration must throw TypeError");
+    }
+    if (typeof testEnd === "function") testEnd();
+}
+</script>

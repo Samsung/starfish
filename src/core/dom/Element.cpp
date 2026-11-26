@@ -91,6 +91,8 @@ using namespace Escargot;
 #include "core/page/A11yAtspiTreeSource.h"
 #endif
 
+#include "binding/generated/doubleOrKeyframeAnimationOptionsUnion.h"
+
 namespace Starfish {
 
 static bool hiddenElementChangeIsContained(Element* element, bool paintOnly);
@@ -2624,7 +2626,7 @@ void Element::blur()
     window()->browsingContext()->releaseFocusedNode(this);
 }
 
-void Element::makeKeyframesFromObject(ScriptObject object,
+void Element::makeKeyframesFromObject(ScriptObject object, double offset,
                                       GCVector<StyleRuleBase*>& keyframeRules)
 {
     ContextRef* ctx = scriptBindingInstance()->scriptContext();
@@ -2659,6 +2661,7 @@ void Element::makeKeyframesFromObject(ScriptObject object,
 
     if (declarations->length() > 0) {
         GCAtomicVector<double> selectorList;
+        selectorList.push_back(offset);
         keyframeRules.push_back(
             new StyleRuleKeyframe(selectorList, declarations));
     }
@@ -2666,8 +2669,19 @@ void Element::makeKeyframesFromObject(ScriptObject object,
 
 Animation* Element::animate(ExecutionContext* executionContext,
                             Optional<GCVector<ScriptValue>>& keyframes,
-                            KeyframeAnimationOptions& options)
+                            const doubleOrKeyframeAnimationOptions& timing)
 {
+    KeyframeAnimationOptions options;
+    if (timing.isKeyframeAnimationOptionsValue()) {
+        options = timing.getKeyframeAnimationOptionsValue();
+    } else if (timing.isdoubleValue()) {
+        options.setDuration(timing.getdoubleValue());
+    }
+    if (std::isnan(options.duration()) || options.duration() < 0) {
+        throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
+                               "Animation duration must be non-negative.");
+    }
+
     // FIXME: If CSS keyframes animation is already applied to this element,
     // it is applied together with the animation by animate, and both animations
     // start together after calling this method(This method causes CSS keyframes
@@ -2683,7 +2697,7 @@ Animation* Element::animate(ExecutionContext* executionContext,
         return new Animation(executionContext);
     }
 
-    GCVector<ScriptValue> values = keyframes.getValue();
+    const auto& values = keyframes.getValue();
     if (!TimingOptions::makeTimingOptions(this, options)) {
         return new Animation(executionContext);
     }
@@ -2692,18 +2706,17 @@ Animation* Element::animate(ExecutionContext* executionContext,
     for (size_t i = 0; i < values.size(); i++) {
         if (values[i]->isObject()) {
             auto object = values[i]->asObject();
-            makeKeyframesFromObject(object, keyframeRules);
+            // Web Animations places a lone keyframe without an offset at 1.
+            double offset = values.size() == 1
+                                ? 1.0
+                                : static_cast<double>(i) / (values.size() - 1);
+            makeKeyframesFromObject(object, offset, keyframeRules);
         } else {
             // TODO
         }
     }
 
     if (keyframeRules.size() > 0) {
-        double key = 100.0 / (keyframeRules.size() - 1);
-        for (size_t i = 0; i < keyframeRules.size(); i++) {
-            keyframeRules[i]->asStyleRuleKeyframe()->setSelectorListText(
-                document(), String::fromInt(key * i)->concat('%'));
-        }
         // make style animation data for Web Animation
         computeWebAnimationKeyframes(styleResolver(), this, style(),
                                      keyframeRules);

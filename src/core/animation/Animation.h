@@ -29,7 +29,7 @@ struct EffectTiming {
         : m_delay(0)
         , m_direction(String::emptyString)
         , m_duration(0.0)
-        , m_easing(String::emptyString)
+        , m_easing(String::fromUTF8("linear"))
         , m_endDelay(0)
         , m_fill(String::emptyString)
         , m_iterationStart(0.0)

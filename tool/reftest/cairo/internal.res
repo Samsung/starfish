@@ -715,6 +715,7 @@ tests/assertion/css/animation/paused-negative-delay.html
 tests/assertion/css/animation/paused-delay-phases.html
 tests/crash/background-animation-without-image.html
 tests/crash/animation-sub-millisecond-running.html
+tests/assertion/dom/animate-duration.html
 tests/assertion/svg/animation/check-frame-exist.html
 tests/assertion/svg/geometry-property-negative.html
 tests/assertion/svg/currentcolor-stop-and-flood-color.html
