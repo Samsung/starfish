@@ -30,7 +30,9 @@ namespace Starfish {
 HTMLAllCollection::HTMLAllCollection(Document* document)
     : ScriptWrappable(this)
     , m_document(document)
-    , m_elements(document->getElementsByTagName(String::fromUTF8("*")))
+    , m_elements(document->getElementsByTagName(QualifiedName(
+          AtomicString::emptyAtomicString(),
+          AtomicString::createAtomicString(document->starfish(), "*"))))
 {
 }
 
