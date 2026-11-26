@@ -174,7 +174,9 @@ private:
 
     std::string m_storageDirOverride;
 
+#if defined(SHELL_HOST_GL_WEBCONTAINER)
     bool m_isMouseLbuttonDown = false;
+#endif
 
     Window* m_window = nullptr;
     LWEType m_lwe = nullptr;
