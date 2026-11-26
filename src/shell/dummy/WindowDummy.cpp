@@ -39,8 +39,13 @@ public:
     ~RendererDelegateOffscreen()
     {
         if (m_eglDisplay != EGL_NO_DISPLAY) {
-            eglMakeCurrent(m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
-                           EGL_NO_CONTEXT);
+            // Release only our own binding: the thread's current context
+            // may belong to another window's view, which would keep
+            // drawing into nothing.
+            if (eglGetCurrentContext() == m_eglContext) {
+                eglMakeCurrent(m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
+                               EGL_NO_CONTEXT);
+            }
             if (m_eglSurface != EGL_NO_SURFACE)
                 eglDestroySurface(m_eglDisplay, m_eglSurface);
             if (m_eglContext != EGL_NO_CONTEXT)

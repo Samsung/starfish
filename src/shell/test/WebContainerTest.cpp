@@ -244,6 +244,8 @@ TEST_F(WebContainerCreationTest, WebGLSurvivesAnotherWindowTeardown)
 
     other->StopLoading();
     other->Destroy();
+    // The survivor binds its own context between the two teardown steps.
+    EXPECT_EQ("true", m_lwe->EvaluateJavaScript(draw));
     delete otherWindow;
 
     m_window->appLoop()->start(1);
