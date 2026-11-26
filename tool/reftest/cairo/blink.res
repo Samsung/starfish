@@ -3706,11 +3706,11 @@ http://localhost:11013/svg/dom/SVGGeometryElement-valid-arguments.html
 # http://localhost:11013/svg/dom/SVGLength-absolute-length-units.html
 # http://localhost:11013/svg/dom/SVGLength-calc-in-attr.html
 # http://localhost:11013/svg/dom/SVGLength-viewport-units.html
-# http://localhost:11013/svg/dom/SVGLengthList-dom-modifications.html
+http://localhost:11013/svg/dom/SVGLengthList-dom-modifications.html
 # http://localhost:11013/svg/dom/SVGLengthList-initialize.html
-# http://localhost:11013/svg/dom/SVGLengthList-insertItemBefore.html
-# http://localhost:11013/svg/dom/SVGLengthList-removeItem.html
-# http://localhost:11013/svg/dom/SVGLengthList-replaceItem.html
+http://localhost:11013/svg/dom/SVGLengthList-insertItemBefore.html
+http://localhost:11013/svg/dom/SVGLengthList-removeItem.html
+http://localhost:11013/svg/dom/SVGLengthList-replaceItem.html
 http://localhost:11013/svg/dom/SVGLengthList-setEmptyString.html
 # http://localhost:11013/svg/dom/SVGListPropertyTearOff-gccrash.html
 # http://localhost:11013/svg/dom/SVGLocatable-getCTM-svg-root.html

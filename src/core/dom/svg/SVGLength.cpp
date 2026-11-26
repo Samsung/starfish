@@ -71,6 +71,10 @@ void SVGLength::throwIfReadOnly()
 
 void SVGLength::updateByAttribute()
 {
+    // A detached length reflects no attribute; its value is its own.
+    if (isDetached()) {
+        return;
+    }
     // set fromElementDidAttributeChanged for prevent update of attribute
     String* value = m_sourceElement->getAttributeOrEmpty(m_targetAttribute);
     setValueAsString(value, true, false);
@@ -187,7 +191,6 @@ float SVGLength::value(unsigned short unitType, float rawValue)
         }
         return result;
     } else {
-        return rawValue;
         // unimplemented EMS, EXS
         if (unitType == SVG_LENGTHTYPE_NUMBER) {
             return rawValue;
@@ -393,8 +396,9 @@ void SVGLength::detach()
 {
     throwIfReadOnly();
 
-    // Set the SVGLength to no longer be associated with any element.
-    m_sourceElement = nullptr;
+    // Set the SVGLength to no longer be associated with any element. Without a
+    // target attribute it reflects nothing, like one from createSVGLength();
+    // the element stays for its script wrapper and exceptions.
     m_targetAttribute = AtomicString::emptyAtomicString();
 
     // If the SVGLength is read only, set it to be no longer read only. Set the

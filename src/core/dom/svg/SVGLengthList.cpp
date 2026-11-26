@@ -31,6 +31,16 @@
 
 namespace Starfish {
 
+// A copy of a length in its own unit. value() first reads a length back
+// from the attribute it reflects, which the other accessors do not.
+static SVGLength* copyLength(SVGElement* element, QualifiedName attribute,
+                             SVGLength* length)
+{
+    length->value(false);
+    return new SVGLength(element, attribute, length->unitType(),
+                         length->valueInSpecifiedUnits(false));
+}
+
 SVGLengthList::SVGLengthList(SVGElement* sourceElement,
                              QualifiedName targetAttribute)
     : ScriptWrappable(this)
@@ -107,8 +117,7 @@ SVGLength* SVGLengthList::initialize(SVGLength* newItem)
         item = newItem;
         item->attach(m_sourceElement, m_targetAttribute);
     } else {
-        item = new SVGLength(m_sourceElement, m_targetAttribute,
-                             newItem->unitType(), newItem->value());
+        item = copyLength(m_sourceElement, m_targetAttribute, newItem);
     }
 
     // 5. Append newItem to this list.
@@ -160,8 +169,7 @@ SVGLength* SVGLengthList::insertItemBefore(SVGLength* newItem,
         item = newItem;
         item->attach(m_sourceElement, m_targetAttribute);
     } else {
-        item = new SVGLength(m_sourceElement, m_targetAttribute,
-                             newItem->unitType(), newItem->value());
+        item = copyLength(m_sourceElement, m_targetAttribute, newItem);
     }
 
     // 3. If index is greater than the length of the list, then set index to be
@@ -211,15 +219,14 @@ SVGLength* SVGLengthList::replaceItem(SVGLength* newItem, unsigned long index)
         item = newItem;
         item->attach(m_sourceElement, m_targetAttribute);
     } else {
-        item = new SVGLength(m_sourceElement, m_targetAttribute,
-                             newItem->unitType(), newItem->value());
+        item = copyLength(m_sourceElement, m_targetAttribute, newItem);
     }
 
     // 4. Detach the element in the list at index index.
     m_v.at(index)->detach();
 
     // 5. Replace the element in the list at index index with newItem.
-    m_v.at(index)->newValueSpecifiedUnits(item->unitType(), item->value());
+    m_v.at(index) = item;
 
     // 7. If the list reflects an attribute, or represents the base value of an
     // object that reflects an attribute, then reserialize the reflected
@@ -283,8 +290,7 @@ SVGLength* SVGLengthList::appendItem(SVGLength* newItem)
         item = newItem;
         item->attach(m_sourceElement, m_targetAttribute);
     } else {
-        item = new SVGLength(m_sourceElement, m_targetAttribute,
-                             newItem->unitType(), newItem->value());
+        item = copyLength(m_sourceElement, m_targetAttribute, newItem);
     }
 
     // 3. Let index be the length of the list.

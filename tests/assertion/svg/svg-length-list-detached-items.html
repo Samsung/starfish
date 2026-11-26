@@ -1,0 +1,52 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>SVGLengthList items that are removed, replaced or created detached</title>
+<link rel="help" href="https://svgwg.org/svg2-draft/types.html#InterfaceSVGLengthList">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[svg-length-list-detached-items] " + document.title);
+  };
+}
+</script>
+<body>
+<svg id="s" width="200" height="100">
+  <text id="t" x="1 2 3">b</text>
+</svg>
+<script>
+// A length taken out of a list, or made by createSVGLength(), is detached:
+// it keeps its own value and reflects no attribute. replaceItem() puts the
+// new item in the list in place of the old one, which it detaches.
+var text = document.getElementById("t");
+var list = text.x.baseVal;
+console.assert(list.getItem(1).value === 2, "a list item reads its value, got " + list.getItem(1).value);
+
+var removed = list.removeItem(0);
+console.assert(removed.value === 1, "the removed item keeps its value, got " + removed.value);
+console.assert(list.numberOfItems === 2, "the list has two items left");
+
+var created = document.getElementById("s").createSVGLength();
+created.newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX, 5);
+console.assert(created.value === 5, "a created length reads back 5, got " + created.value);
+console.assert(created.value === 5, "and still 5 on a second read, got " + created.value);
+list.appendItem(created);
+console.assert(list.numberOfItems === 3 && list.getItem(2).value === 5, "appendItem adds the 5px length");
+
+var old = list.getItem(0);
+var other = document.getElementById("s").createSVGLength();
+other.newValueSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX, 7);
+var replaced = list.replaceItem(other, 0);
+console.assert(replaced.value === 7, "replaceItem returns the 7px length, got " + replaced.value);
+console.assert(list.getItem(0).value === 7, "the list item is now 7, got " + list.getItem(0).value);
+console.assert(old.value === 2, "the replaced item keeps 2, got " + old.value);
+console.assert(text.getAttribute("x").split(" ").length === 3, "the attribute has three lengths: " + text.getAttribute("x"));
+testEnd();
+</script>
+</body>

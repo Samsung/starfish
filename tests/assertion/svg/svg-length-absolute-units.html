@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>SVGLength values in absolute units, and copies into a length list</title>
+<link rel="help" href="https://svgwg.org/svg2-draft/types.html#InterfaceSVGLength">
+<script>
+if (typeof testEnd !== "function") {
+  var passed = 0, failed = 0;
+  var nativeAssert = console.assert.bind(console);
+  console.assert = function (condition, message) {
+    if (condition) passed++;
+    else { failed++; nativeAssert(false, message); }
+  };
+  window.testEnd = function () {
+    document.title = (failed ? "FAIL" : "PASS") + " (" + passed + " passed, " + failed + " failed)";
+    console.log("[svg-length-absolute-units] " + document.title);
+  };
+}
+</script>
+<body>
+<svg width="200" height="100">
+  <rect id="r" width="10" height="10"/>
+  <text id="to" x="1">b</text>
+</svg>
+<script>
+// SVGLength.value is the length in user units: 1in = 96, 1cm = 96 / 2.54,
+// 1mm = 9.6 / 2.54, 1pt = 4 / 3 and 1pc = 16 user units. A length list keeps
+// a copied item in its own unit, so a copy is made from
+// valueInSpecifiedUnits, not from the resolved value.
+function near(a, b) {
+  return Math.abs(a - b) < 0.01;
+}
+var rect = document.getElementById("r");
+[["1in", 96], ["2cm", 192 / 2.54], ["10mm", 96 / 2.54], ["12pt", 16],
+ ["1pc", 16], ["7px", 7], ["7", 7]].forEach(function (c) {
+  rect.setAttribute("width", c[0]);
+  var length = rect.width.baseVal;
+  console.assert(near(length.value, c[1]), c[0] + " is " + c[1] + " user units, got " + length.value);
+  console.assert(near(length.valueInSpecifiedUnits, parseFloat(c[0])),
+                 c[0] + " keeps its number in its own unit, got " + length.valueInSpecifiedUnits);
+});
+
+rect.setAttribute("width", "50%");
+var list = document.getElementById("to").x.baseVal;
+var copy = list.appendItem(rect.width.baseVal);
+console.assert(copy !== rect.width.baseVal, "appending an attached length copies it");
+console.assert(copy.unitType === SVGLength.SVG_LENGTHTYPE_PERCENTAGE, "the copy stays a percentage");
+console.assert(near(copy.valueInSpecifiedUnits, 50), "the copy is 50%, got " + copy.valueInSpecifiedUnits);
+rect.setAttribute("width", "1in");
+var inserted = list.insertItemBefore(rect.width.baseVal, 0);
+console.assert(inserted.unitType === SVGLength.SVG_LENGTHTYPE_IN && near(inserted.valueInSpecifiedUnits, 1),
+               "insertItemBefore copies 1in as 1in, got " + inserted.valueInSpecifiedUnits);
+testEnd();
+</script>
+</body>
