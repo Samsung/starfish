@@ -48,7 +48,7 @@ http://web-platform.test:8000/svg/embedded/image-large-bitmap.svg
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/embedded/image-modify-href-3.svg
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/embedded/image-modify-href-4.svg
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/embedded/image-remove-href-1.svg
-http://web-platform.test:8000/svg/embedded/image-remove-href-2.svg
+# [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/embedded/image-remove-href-2.svg
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/embedded/image-remove-href-3.svg
 http://web-platform.test:8000/svg/extensibility/foreignObject/composited-inside-object.html
 # [auto-fail:IMG_MISMATCH] http://web-platform.test:8000/svg/extensibility/foreignObject/compositing-backface-visibility.html

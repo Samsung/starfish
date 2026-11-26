@@ -55,19 +55,41 @@
 
     // An unprefixed XLink href must load the image, not be shadowed as if it were a plain href
     const pixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const redPixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==';
+    const greenPixel = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNg+M/wHwAEAQH/cetH5QAAAABJRU5ErkJggg==';
     const img2 = document.createElementNS(svgNs, 'image');
     img2.setAttributeNS(xlinkNs, 'href', pixel);
     img2.width.baseVal.value = 1;
     img2.height.baseVal.value = 1;
 
+    // Removing plain href when xlink:href is also present reloads the xlink:href image
+    const img3 = document.createElementNS(svgNs, 'image');
+    img3.setAttribute('href', redPixel);
+    img3.setAttributeNS(xlinkNs, 'xlink:href', greenPixel);
+    img3.width.baseVal.value = 1;
+    img3.height.baseVal.value = 1;
+
     window.onload = () => {
       const ctx = document.createElement('canvas').getContext('2d');
       ctx.drawImage(img2, 0, 0);
-      console.assert(ctx.getImageData(0, 0, 1, 1).data[3] > 0,'unprefixed XLink href loads the image');
+      console.assert(ctx.getImageData(0, 0, 1, 1).data[3] > 0, 'unprefixed XLink href loads the image');
 
-      if (typeof testEnd === 'function') {
-        testEnd();
-      }
+      ctx.clearRect(0, 0, 1, 1);
+      ctx.drawImage(img3, 0, 0);
+      const before = ctx.getImageData(0, 0, 1, 1).data;
+      console.assert(before[0] === 255 && before[1] === 0 && before[3] === 255, 'initial image uses plain href over xlink:href');
+
+      img3.addEventListener('load', () => {
+        ctx.clearRect(0, 0, 1, 1);
+        ctx.drawImage(img3, 0, 0);
+        const after = ctx.getImageData(0, 0, 1, 1).data;
+        console.assert(after[0] === 0 && after[1] === 255 && after[3] === 255, 'removing plain href reloads xlink:href image');
+
+        if (typeof testEnd === 'function') {
+          testEnd();
+        }
+      }, { once: true });
+      img3.removeAttribute('href');
     };
   </script>
 </body>
