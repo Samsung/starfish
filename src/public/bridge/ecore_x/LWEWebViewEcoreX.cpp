@@ -487,10 +487,10 @@ public:
             eglDestroyContext(m_eglDisplay, m_eglContext);
             m_eglContext = EGL_NO_CONTEXT;
         }
-        if (m_eglDisplay != EGL_NO_DISPLAY) {
-            eglTerminate(m_eglDisplay);
-            m_eglDisplay = EGL_NO_DISPLAY;
-        }
+        // No eglTerminate: the display comes from EGL_DEFAULT_DISPLAY, which
+        // every other view and the embedder in this process share, and
+        // terminating it invalidates their contexts and surfaces too.
+        m_eglDisplay = EGL_NO_DISPLAY;
     }
 
     bool makeCurrent()
