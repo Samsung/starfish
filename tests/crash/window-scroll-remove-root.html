@@ -1,0 +1,15 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Pending window scroll repaint after the document root is removed</title>
+<body style="height: 5000px">
+<script>
+function testStart() {
+    const root = document.documentElement;
+    window.scrollTo(0, 200);
+    document.removeChild(root);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.appendChild(root);
+        if (typeof testEnd === "function") testEnd();
+    }));
+}
+</script>

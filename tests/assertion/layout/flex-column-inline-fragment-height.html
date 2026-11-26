@@ -1,0 +1,18 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Column flex item measures a nested inline image after relayout</title>
+<style>
+  #column { display: flex; flex-direction: column; height: 1px; }
+  #item { line-height: 0; }
+  img { width: 12px; height: 20px; vertical-align: top; }
+</style>
+<div id="column"><div id="item"><span><span><img alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='20'/%3E"></span></span></div></div>
+<script>
+function testStart() {
+    const item = document.getElementById("item");
+    console.assert(item.offsetHeight === 20, "The flex item must fit its inline image");
+    item.querySelector("img").style.height = "36px";
+    console.assert(item.offsetHeight === 36, "The minimum height must reflect the resized image");
+    if (typeof testEnd === "function") testEnd();
+}
+</script>

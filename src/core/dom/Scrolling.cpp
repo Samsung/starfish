@@ -508,26 +508,24 @@ void Scrolling::giveDamageToTarget(bool inScrollbarAppearingOrDisappearing)
 {
     // Scroll offsets feed the screen matrices of everything under the
     // scroller, whichever path below handles the repaint.
-    {
-        Frame* scrolledFrame = nullptr;
-        if (m_target->isWindow()) {
-            Element* html = m_target->asWindow()->document()->html();
-            scrolledFrame = html ? html->frame() : nullptr;
-        } else {
-            scrolledFrame = m_target->asElement()->frame();
-        }
-        if (scrolledFrame) {
-            scrolledFrame->markStackingContextScreenExtentDirty();
-        }
+    Frame* scrolledFrame;
+    if (m_target->isWindow()) {
+        // rAF runs before layout. Use the root of the rendered frame tree,
+        // which can differ from the current DOM root or be empty.
+        Frame* documentFrame = m_target->asWindow()->document()->frame();
+        scrolledFrame = documentFrame ? documentFrame->firstChild() : nullptr;
+    } else {
+        scrolledFrame = m_target->asElement()->frame();
+    }
+    if (scrolledFrame) {
+        scrolledFrame->markStackingContextScreenExtentDirty();
     }
 
     if (m_target->isWindow()) {
-        StackingContext* ctx = m_target->asWindow()
-                                   ->document()
-                                   ->html()
-                                   ->frame()
-                                   ->asFrameBox()
-                                   ->stackingContext();
+        StackingContext* ctx =
+            scrolledFrame && scrolledFrame->isFrameBox()
+                ? scrolledFrame->asFrameBox()->stackingContext()
+                : nullptr;
         if (ctx && ctx->needsGraphicsBuffer()) {
             RepaintingWhenScrollingReason reason =
                 ctx->repaintingWhenScrollingReason();

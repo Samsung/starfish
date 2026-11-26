@@ -816,6 +816,8 @@ tests/pixel/css/stackingcontext/fixed-inside-buffered-ancestors.html
 tests/assertion/css/flex/flex-webkit-prefix.html
 tests/pixel/css/flex/flex-webkit-prefix_with_-webkit-line-clamp.html
 tests/crash/layout-both-side-every-flex-item.html
+tests/assertion/layout/flex-column-inline-fragment-height.html
+tests/crash/window-scroll-remove-root.html
 tests/assertion/css/flex/respect-under-compute-preferred-width-value.html
 tests/pixel/css/flex/flex_svg_maxHeight_01.html
 tests/pixel/css/flex/flex_svg_maxHeight_02.html

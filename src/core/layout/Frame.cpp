@@ -976,48 +976,48 @@ LayoutUnit LayoutContext::contentHeight(FrameBox* box)
     return iter->second;
 }
 
+// During flex measurement an inline fragment may still be acquiring its
+// layout parent. Accumulate coordinates along the fragments being measured.
+static void measureFirstLineOrDefiniteHeight(FrameBox* box, LayoutUnit y,
+                                             bool isRoot,
+                                             Optional<LayoutUnit>& result)
+{
+    if (box->isAbsolutePositioned()) {
+        return;
+    }
+    auto include = [&](LayoutUnit bottom) {
+        result = std::max(result ? result.value() : LayoutUnit(), bottom);
+    };
+    if (!isRoot && box->style() && box->style()->height().isDefinite(false)) {
+        auto height = box->style()->height().specifiedValue(0, box);
+        include(y + box->contentHeightAfterApplyingBoxSizing(height));
+    }
+    if (box->isFrameReplaced()) {
+        include(y + box->asFrameReplaced()
+                        ->intrinsicSize()
+                        .m_intrinsicContentSize.height());
+        return;
+    }
+    if (box->isFrameBlockBox()) {
+        auto& lines = box->asFrameBlockBox()->lineBoxes();
+        if (!lines.empty()) {
+            include(y + lines[0]->y() + lines[0]->height());
+        }
+    }
+    auto* children = box->childFrameBoxIterator(
+        alloca(FrameBox::maxChildFrameBoxIteratorSize));
+    while (children->hasNext()) {
+        auto* child = children->next();
+        measureFirstLineOrDefiniteHeight(child, y + child->y(), false, result);
+    }
+}
+
 Optional<LayoutUnit> LayoutContext::lookupFirstLineOrDefiniteHeight(
     FrameBox* box)
 {
-    bool exists = false;
-    LayoutUnit result = 0;
-    box->iterateChildFrameBoxOnCondition([&](FrameBox* child) -> bool {
-        if (child->isAbsolutePositioned()) {
-            return false;
-        }
-        if (box != child && child->style() &&
-            child->style()->height().isDefinite(false)) {
-            LayoutUnit height =
-                child->style()->height().specifiedValue(0, child);
-            height = child->contentHeightAfterApplyingBoxSizing(height);
-            auto pt = child->absolutePoint(box);
-            result = std::max(result, pt.y() + height);
-            exists = true;
-        }
-        if (child->isFrameReplaced()) {
-            auto siz = child->asFrameReplaced()->intrinsicSize();
-            auto pt = child->absolutePoint(box);
-            result =
-                std::max(result, pt.y() + siz.m_intrinsicContentSize.height());
-            exists = true;
-            return false;
-        }
-        if (child->isFrameBlockBox()) {
-            auto blockBox = child->asFrameBlockBox();
-            if (blockBox->lineBoxes().size()) {
-                auto rt = blockBox->lineBoxes()[0]->absoluteRect(box);
-                result = std::max(result, rt.maxY());
-                exists = true;
-            }
-        }
-        return true;
-    });
-
-    if (exists) {
-        return Optional<LayoutUnit>(result);
-    }
-
-    return nullptr;
+    Optional<LayoutUnit> result;
+    measureFirstLineOrDefiniteHeight(box, LayoutUnit(), true, result);
+    return result;
 }
 
 void LayoutContext::pushIntoLineBoxPool(LineBox* b)
