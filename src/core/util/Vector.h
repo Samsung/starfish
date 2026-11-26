@@ -482,7 +482,7 @@ protected:
             return 1;
         }
         size_t base = STARFISH_FAST_LOG2_UINT(size);
-        size_t capacity = 1 << (base + 1);
+        size_t capacity = (size_t)1 << (base + 1);
         return capacity;
     }
 
