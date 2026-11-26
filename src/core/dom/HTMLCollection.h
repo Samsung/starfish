@@ -34,6 +34,12 @@ public:
     HTMLCollection(Node* root, NodeListImpl::FilterFunctionType filterType,
                    void* data, bool canCache = false, bool includeRoot = false);
 
+    HTMLCollection(Node* root, NodeListFilterFunction filter, void* data)
+        : ScriptWrappable(this)
+        , m_nodeListImpl(root, filter, data, false)
+    {
+    }
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLCollection() const override;

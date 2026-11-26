@@ -1,0 +1,26 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>document.all identity, live updates and legacy calls</title>
+<script>
+function testStart() {
+    const all = document.all;
+    console.assert(all === document.all && all !== undefined);
+    const other = document.implementation.createHTMLDocument("");
+    console.assert(all !== other.all);
+    const length = all.length;
+    const element = document.createElement("div");
+    element.id = "entry";
+    document.body.appendChild(element);
+    console.assert(all.length === length + 1 && all[length] === element);
+    console.assert(all.entry === element && other.all.entry === undefined);
+
+    // The legacy caller resolves against its collection even if script
+    // replaces the public item method or supplies a different receiver.
+    all.item = () => null;
+    console.assert(Function.prototype.call.call(all, other.all, "entry") === element);
+    element.remove();
+    console.assert(all.length === length && all.entry === undefined);
+    testEnd();
+}
+</script>
+<body></body>

@@ -56,6 +56,7 @@
 #include "core/dom/HTMLBaseElement.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLCollection.h"
+#include "core/dom/HTMLAllCollection.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLFormElement.h"
@@ -1036,6 +1037,14 @@ NodeList* Document::getElementsByName(String* elementName)
 {
     return ensureRareMembers()->ensureQueryInActiveNodeListVectorForName(
         this, elementName);
+}
+
+HTMLAllCollection* Document::all()
+{
+    if (!m_all) {
+        m_all = new HTMLAllCollection(this);
+    }
+    return m_all.value();
 }
 
 HTMLCollection* Document::images()

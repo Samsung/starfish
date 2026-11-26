@@ -1,0 +1,9 @@
+// https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#htmlallcollection
+// The generator expresses LegacyUnenumerableNamedProperties on the getter.
+[Exposed=Window]
+interface HTMLAllCollection {
+    readonly attribute unsigned long length;
+    getter Element (unsigned long index);
+    [NotEnumerable] getter (HTMLCollection or Element)? namedItem(DOMString name);
+    (HTMLCollection or Element)? item(optional DOMString nameOrIndex);
+};

@@ -164,7 +164,7 @@ interface Document : Node {
   void captureEvents();
   void releaseEvents();
 
-  [Unimplemented, SameObject] readonly attribute HTMLAllCollection all;
+  [SameObject] readonly attribute HTMLAllCollection all;
 
   [STARFISH_ENABLE_OBSOLETE_SPEC] readonly attribute long width;
   [STARFISH_ENABLE_OBSOLETE_SPEC] readonly attribute long height;

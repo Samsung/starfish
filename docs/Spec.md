@@ -500,6 +500,7 @@ section are supported.
 | [Document](https://html.spec.whatwg.org/multipage/dom.html#the-document-object) | attribute | location | Return this Document object's relevant global object's Location object |
 |  | attribute | body | Returns body element or null if not exists |
 |  | attribute | head | Returns head element or null if not exists |
+|  | attribute | all | Returns the same live, callable HTMLAllCollection for the document. Supports indexed and named lookup, length, item(), and namedItem(). Indexed and named properties are inherited from the generated collection wrapper. Production Escargot treats the collection as an ordinary callable for typeof, Boolean conversion, and loose equality. |
 |  | attribute | images | Returns an HTMLCollection rooted at the Document node, whose filter matches only img elements |
 |  | attribute | forms | Returns an HTMLCollection rooted at the Document node, whose filter matches only form elements |
 |  | attribute | scripts | Returns an HTMLCollection rooted at the Document node, whose filter matches only script elements |

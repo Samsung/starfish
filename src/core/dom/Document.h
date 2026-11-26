@@ -67,6 +67,7 @@ class DOMImplementation;
 class DeferredScriptDownloadClient;
 class DeferredSVGScriptDownloadClient;
 class PreloadScanner;
+class HTMLAllCollection;
 class ContentSecurityPolicy;
 class ExecutionContext;
 class FontFaceSet;
@@ -204,6 +205,7 @@ public:
     // HTMLCollection* getElementsByClassName(String* classNames);
     NodeList* getElementsByName(String* elementName);
 
+    HTMLAllCollection* all();
     HTMLCollection* images();
     HTMLCollection* links();
     HTMLCollection* forms();
@@ -863,6 +865,7 @@ protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         Node::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_all));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_window));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_fullscreenElement));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_executionContext));
@@ -938,6 +941,7 @@ protected:
     bool m_isMutationObserverMicroTaskQueued : 1;
 
     ExecutionContext* m_executionContext;
+    Optional<HTMLAllCollection*> m_all;
     Window* m_window;
     Element* m_fullscreenElement = nullptr;
     ResourceURL* m_baseElementURL;
