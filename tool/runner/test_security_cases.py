@@ -62,7 +62,7 @@ SUITE = Suite("future", "A new area", cases, features={"future-mode": "strict"})
         self.assertEqual(3, len(cases))
         self.assertTrue(all(c.name.endswith("-xhr") for c in cases))
         context = Context("http://127.0.0.1:1", configure_features(suites))
-        self.assertEqual(22, len(collect_cases(suites, context, internal_only=True)))
+        self.assertEqual(23, len(collect_cases(suites, context, internal_only=True)))
 
     def test_invalid_selection_and_duplicate_ids_fail(self):
         suite = Suite("example", "example",

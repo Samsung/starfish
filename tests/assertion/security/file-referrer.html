@@ -1,0 +1,55 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>A file: document sends no referrer</title>
+<body>
+<script>
+(function () {
+  var echo = new URLSearchParams(location.search).get('echo');
+  // referrerpolicy attribute ('' = none) -> Referer the frame must receive;
+  // a file: document has an opaque origin, so no policy may send one
+  // (Referrer Policy, "strip url for use as a referrer")
+  var expected = {
+    '': '',
+    'strict-origin': '',
+    'unsafe-url': '',
+    'no-referrer': '',
+    'same-origin': ''
+  };
+  var pending = Object.keys(expected).length;
+  var failures = [];
+  var finished = false;
+  var timer;
+  function finish(passed, message) {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timer);
+    console.assert(passed, message);
+    console.log('PRODUCT_SECURITY:' + JSON.stringify({
+      passed: passed, message: message,
+      testHooks: typeof testEnd === 'function'
+    }));
+    if (typeof testEnd === 'function') testEnd();
+  }
+  timer = setTimeout(function () {
+    finish(false, 'test did not complete');
+  }, 5000);
+
+  addEventListener('message', function (event) {
+    var data = event.data;
+    if (!data || !(data.policy in expected)) return;
+    if (data.referer !== expected[data.policy]) {
+      failures.push('"' + data.policy + '" sent "' + data.referer + '"');
+    }
+    if (--pending === 0) {
+      finish(failures.length === 0,
+             failures.join(', ') || 'file: document sends no referrer');
+    }
+  });
+  Object.keys(expected).forEach(function (policy) {
+    var frame = document.createElement('iframe');
+    if (policy) frame.setAttribute('referrerpolicy', policy);
+    frame.src = echo + '?policy=' + encodeURIComponent(policy);
+    document.body.appendChild(frame);
+  });
+}());
+</script>
