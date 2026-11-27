@@ -115,11 +115,12 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
             ReferrerURL* rUrl =
                 new ReferrerURL(document()->documentURI(), policy);
             String* hrefStr = hrefAttr.getValue()->trim();
+            const auto source = Location::NavigationSource::AnchorClick;
             if (hrefStr->length()) {
                 if (hrefStr->startsWith("#")) {
                     window()->location()->setHash(hrefStr);
                 } else if (hrefStr->startsWith("?")) {
-                    window()->location()->setSearch(hrefStr);
+                    window()->location()->setSearch(hrefStr, source);
                 } else if (hrefStr->startsWith("javascript:", false)) {
                     String* ret2 = toBrowserString(
                         window()->scriptBindingInstance(),
@@ -138,11 +139,11 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
                         }
                     }
                 } else {
-                    window()->location()->setLocation(hrefStr, rUrl);
+                    window()->location()->setLocation(hrefStr, rUrl, source);
                 }
             } else {
                 window()->location()->setLocation(
-                    document()->documentURI()->urlString(), rUrl);
+                    document()->documentURI()->urlString(), rUrl, source);
             }
             return true;
         }

@@ -47,8 +47,11 @@ public:
     String* search();
     String* hash();
 
+    enum class NavigationSource { Other, AnchorClick };
+
     void assign(String* url);
-    void assign(String* url, ReferrerURL* referrerURL);
+    void assign(String* url, ReferrerURL* referrerURL,
+                NavigationSource source = NavigationSource::Other);
     void replace(String* url);
     void reload(bool force = true);
 
@@ -58,18 +61,22 @@ public:
     void setPort(String* newPort);
     void setProtocol(String* newProtocol);
     void setPathname(String* newPath, bool needRemovingDots = true);
-    void setSearch(String* search);
+    void setSearch(String* search,
+                   NavigationSource source = NavigationSource::Other);
     void setHash(String* search);
 
     void dispose()
     {
     }
 
-    void setLocation(String* newURL, ReferrerURL* referrerURL);
+    void setLocation(String* newURL, ReferrerURL* referrerURL,
+                     NavigationSource source = NavigationSource::Other);
 
 private:
-    void assign(ResourceURL* url, bool force = false);
-    void assign(ResourceURL* url, ReferrerURL* referrerURL, bool force = false);
+    void assign(ResourceURL* url, bool force = false,
+                NavigationSource source = NavigationSource::Other);
+    void assign(ResourceURL* url, ReferrerURL* referrerURL, bool force = false,
+                NavigationSource source = NavigationSource::Other);
 
     // HTML "navigate" algorithm: a URL with a non-empty fragment that is
     // otherwise identical to the current document URL is a same-document

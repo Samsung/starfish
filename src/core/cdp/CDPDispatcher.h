@@ -34,6 +34,7 @@ class ValueRef;
 namespace Starfish {
 
 class WebView;
+class BrowsingContext;
 class Document;
 class Element;
 class CDPServer;
@@ -109,6 +110,8 @@ public:
     // announced via Page.frameAttached/frameNavigated +
     // executionContextCreated. No-op if the WebView has no context.
     void emitChildFrameLoaded(WebView* webView);
+
+    void emitAnchorNavigationRequested(BrowsingContext* context, String* url);
 
     // Dialog bridge (main thread). Emits Page.javascriptDialogOpening on the
     // session owning `webView` when Page is enabled, for a window

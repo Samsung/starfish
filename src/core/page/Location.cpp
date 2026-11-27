@@ -34,6 +34,11 @@
 #include "platform/loader/ResourceURL.h"
 #include "platform/loader/ResourceLoader.h"
 
+#if defined(STARFISH_ENABLE_CDP)
+#include "core/cdp/CDPDispatcher.h"
+#include "core/cdp/CDPServer.h"
+#endif
+
 namespace Starfish {
 
 Location::Location(Document* document)
@@ -164,10 +169,10 @@ void Location::setPathname(String* newPath, bool needRemovingDots)
     assign(newUrl);
 }
 
-void Location::setSearch(String* search)
+void Location::setSearch(String* search, NavigationSource source)
 {
     ResourceURL* newUrl = url()->setSearch(search);
-    assign(newUrl);
+    assign(newUrl, false, source);
 }
 
 void Location::setHash(String* search)
@@ -195,9 +200,10 @@ void Location::setHash(String* search)
     }
 }
 
-void Location::setLocation(String* url, ReferrerURL* referrerURL)
+void Location::setLocation(String* url, ReferrerURL* referrerURL,
+                           NavigationSource source)
 {
-    assign(url, referrerURL);
+    assign(url, referrerURL, source);
 }
 
 void Location::assign(String* url)
@@ -209,10 +215,11 @@ void Location::assign(String* url)
     assign(r, document()->documentURI());
 }
 
-void Location::assign(String* url, ReferrerURL* referrerURL)
+void Location::assign(String* url, ReferrerURL* referrerURL,
+                      NavigationSource source)
 {
     ResourceURL* r = new ResourceURL(url, document()->baseURL()->urlString());
-    assign(r, referrerURL);
+    assign(r, referrerURL, false, source);
 }
 
 static void navigateImpl(BrowsingContext* ctx, ResourceURL* url,
@@ -248,9 +255,9 @@ static void navigateImpl(BrowsingContext* ctx, ResourceURL* url,
     }
 }
 
-void Location::assign(ResourceURL* url, bool force)
+void Location::assign(ResourceURL* url, bool force, NavigationSource source)
 {
-    assign(url, new ReferrerURL(document()->documentURI()), force);
+    assign(url, new ReferrerURL(document()->documentURI()), force, source);
 }
 
 class HeaderResourceClient : public ResourceClient {
@@ -382,12 +389,23 @@ private:
     bool m_force;
 };
 
-void Location::assign(ResourceURL* url, ReferrerURL* referrerURL, bool force)
+void Location::assign(ResourceURL* url, ReferrerURL* referrerURL, bool force,
+                      NavigationSource source)
 {
     if (url->isFileURL() &&
         !document()->executionContext()->allowLocalFileAccess(url)) {
         return;
     }
+#if defined(STARFISH_ENABLE_CDP)
+    if (source == NavigationSource::AnchorClick) {
+        if (auto* server = webView()->cdpServer()) {
+            // Report the request during the click, not after the header check
+            // decides whether to navigate the document.
+            server->dispatcher()->emitAnchorNavigationRequested(
+                document()->browsingContext(), url->urlString());
+        }
+    }
+#endif
     // check whether the resource can be displayed
     HeaderResource* resource = document()->resourceLoader().fetchHeader(url);
     resource->addResourceClient(

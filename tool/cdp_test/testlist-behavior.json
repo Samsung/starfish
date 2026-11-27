@@ -2910,12 +2910,10 @@
       "category": "output-differs"
     },
     "page/page-events-associated-isolation.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "page/page-events-associated.js": {
-      "expected": "fail",
-      "category": "output-differs"
+      "expected": "pass"
     },
     "page/page-get-resource-content-not-cached.js": {
       "expected": "fail",

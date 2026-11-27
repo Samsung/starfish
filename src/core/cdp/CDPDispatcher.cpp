@@ -2006,6 +2006,30 @@ void CDPDispatcher::emitChildFrameLoaded(WebView* webView)
     m_current = saved;
 }
 
+void CDPDispatcher::emitAnchorNavigationRequested(BrowsingContext* context,
+                                                  String* url)
+{
+    TargetContext* ctx = contextForWebView(context->webView());
+    if (!ctx || !ctx->session->pageEnabled) {
+        return;
+    }
+    ScopedTarget target(this, ctx);
+    std::string frameId = m_page->frameIdForBrowsingContext(context);
+    if (frameId.empty()) {
+        return;
+    }
+
+    rapidjson::Document doc;
+    auto& alloc = doc.GetAllocator();
+    rapidjson::Value params(rapidjson::kObjectType);
+    addStringMember(params, "frameId", frameId, alloc);
+    params.AddMember("reason", rapidjson::StringRef("anchorClick"), alloc);
+    params.AddMember("disposition", rapidjson::StringRef("currentTab"), alloc);
+    addStringMember(params, "url", url->toUTF8NonGCString(), alloc);
+    CDPCommand evt(this, Optional<int64_t>(), ctx->session->sessionId, nullptr);
+    evt.sendEvent("Page.frameRequestedNavigation", params, doc);
+}
+
 void CDPDispatcher::emitJavaScriptDialogOpening(
     WebView* webView, const std::string& url, const std::string& message,
     const char* type, const std::string& defaultPrompt)
