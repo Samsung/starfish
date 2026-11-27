@@ -27,7 +27,7 @@ namespace Starfish {
 
 class Steps : public TimingFunction {
 public:
-    enum class StepPosition { START, END };
+    enum class StepPosition { START, END, JUMP_START };
 
     static Steps* createSteps(size_t numberOfSteps, StepPosition position)
     {
@@ -63,10 +63,16 @@ public:
         StringBuilder builder;
         builder.appendString("steps(");
         builder.appendString(String::fromInt(m_numberOfSteps));
-        if (m_position == StepPosition::END) {
-            builder.appendString(", end)");
-        } else {
+        switch (m_position) {
+        case StepPosition::END:
+            builder.appendString(")");
+            break;
+        case StepPosition::START:
             builder.appendString(", start)");
+            break;
+        case StepPosition::JUMP_START:
+            builder.appendString(", jump-start)");
+            break;
         }
         return builder.finalize();
     }

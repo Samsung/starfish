@@ -1053,6 +1053,7 @@ public:
         ScaleY,
         ScaleZ,
         Rotate,
+        RotateZ,
         Rotate3D,
         Skew,
         SkewX,
@@ -1117,6 +1118,8 @@ public:
             return String::fromUTF8("scaleZ");
         case Rotate:
             return String::fromUTF8("rotate");
+        case RotateZ:
+            return String::fromUTF8("rotateZ");
         case Rotate3D:
             return String::fromUTF8("rotate3D");
         case Skew:

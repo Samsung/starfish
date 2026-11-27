@@ -2000,10 +2000,11 @@ public:
         m_rareComputedStyleData.ensureTransforms()->append(t);
     }
 
-    void setTransformSkew(double a, double b)
+    void setTransformSkew(double a, double b,
+                          StyleTransformData::SkewFunction function)
     {
         StyleTransformData t(StyleTransformData::OperationType::Skew);
-        t.setSkew(a, b);
+        t.setSkew(a, b, function);
         m_rareComputedStyleData.ensureTransforms()->append(t);
     }
 

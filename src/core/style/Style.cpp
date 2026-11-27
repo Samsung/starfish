@@ -470,6 +470,24 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
         case CSSTransformFunction::Kind::ScaleY:
             style->setTransformScale(1, dValues[0]);
             break;
+        case CSSTransformFunction::Kind::Rotate3D:
+            if (dValues[0] == 0 && dValues[1] == 0) {
+                // CSS Transforms normalizes the rotation axis. A negative Z
+                // axis reverses the angle and a zero vector has no effect.
+                style->setTransformRotate(
+                    dValues[2] == 0
+                        ? 0
+                        : (dValues[2] < 0 ? -dValues[3] : dValues[3]));
+            } else {
+                style->rareComputedStyleData()
+                    ->ensureTransforms()
+                    ->m_has3DTransform = true;
+            }
+            style->rareComputedStyleData()
+                ->ensureTransforms()
+                ->m_hasComplexTransform = true;
+            break;
+        case CSSTransformFunction::Kind::RotateZ:
         case CSSTransformFunction::Kind::Rotate:
             if (valueSize > 1) {
                 Length a, b(Length::Fixed, 0);
@@ -503,17 +521,18 @@ void CSSTransformFunctions::toTransformDataGroup(Element* element,
             break;
         case CSSTransformFunction::Kind::Skew:
         case CSSTransformFunction::Kind::SkewX:
-            if (valueSize == 2) {
-                style->setTransformSkew(dValues[0], dValues[1]);
-            } else {
-                style->setTransformSkew(dValues[0], 0);
-            }
+            style->setTransformSkew(
+                dValues[0], valueSize == 2 ? dValues[1] : 0,
+                f.kind() == CSSTransformFunction::Kind::SkewX
+                    ? StyleTransformData::SkewFunction::SkewX
+                    : StyleTransformData::SkewFunction::Skew);
             style->rareComputedStyleData()
                 ->ensureTransforms()
                 ->m_hasComplexTransform = true;
             break;
         case CSSTransformFunction::Kind::SkewY:
-            style->setTransformSkew(0, dValues[0]);
+            style->setTransformSkew(0, dValues[0],
+                                    StyleTransformData::SkewFunction::SkewY);
             style->rareComputedStyleData()
                 ->ensureTransforms()
                 ->m_hasComplexTransform = true;
@@ -17719,6 +17738,8 @@ static CSSTransformFunction::Kind transformFunctionKind(
         return CSSTransformFunction::Kind::ScaleZ;
     } else if (name == "rotate") {
         return CSSTransformFunction::Kind::Rotate;
+    } else if (name == "rotatez") {
+        return CSSTransformFunction::Kind::RotateZ;
     } else if (name == "rotate3d") {
         return CSSTransformFunction::Kind::Rotate3D;
     } else if (name == "skew") {
@@ -17786,6 +17807,10 @@ bool CSSStyleValuePair::updateTransformUnit(CSSTransformFunction::Kind fkind,
         units[0] = TransformUnit::Angle;
         units[1] = units[2] = TransformUnit::Length;
         maxArgCnt = 3;
+        break;
+    case CSSTransformFunction::Kind::RotateZ:
+        units[0] = TransformUnit::Angle;
+        minArgCnt = maxArgCnt = 1;
         break;
     case CSSTransformFunction::Kind::Rotate3D:
         units[0] = units[1] = units[2] = TransformUnit::Number;
@@ -19212,7 +19237,9 @@ static bool parseStepsFunction(const CSSTokenValue& value,
     if (size == 2) {
         if (args[1] == "start") {
             position = Steps::StepPosition::START;
-        } else if (args[1] != "end") {
+        } else if (args[1] == "jump-start") {
+            position = Steps::StepPosition::JUMP_START;
+        } else if (args[1] != "end" && args[1] != "jump-end") {
             return false;
         }
     }

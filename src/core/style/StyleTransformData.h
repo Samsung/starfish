@@ -34,7 +34,8 @@ class ComputedStyle;
 
 class StyleTransformData : public gc {
 public:
-    enum OperationType {
+    enum class SkewFunction : uint8_t { Skew, SkewX, SkewY };
+    enum OperationType : uint8_t {
         Matrix,
         Translate,
         Scale,
@@ -85,8 +86,8 @@ public:
         } else if (m_type == Skew) {
             newData.setType(Skew);
             if (m_value.m_skew) {
-                newData.setScale(m_value.m_skew->angleX(),
-                                 m_value.m_skew->angleY());
+                newData.setSkew(m_value.m_skew->angleX(),
+                                m_value.m_skew->angleY(), m_skewFunction);
             }
         } else if (m_type == Translate) {
             newData.setType(Translate);
@@ -135,9 +136,16 @@ public:
         }
     }
 
-    void setSkew(double angX, double angY)
+    SkewFunction skewFunction() const
+    {
+        return m_skewFunction;
+    }
+
+    void setSkew(double angX, double angY,
+                 SkewFunction function = SkewFunction::Skew)
     {
         STARFISH_ASSERT(m_type == Skew);
+        m_skewFunction = function;
         if (m_value.m_skew == NULL) {
             m_value.m_skew = new SkewTransform(angX, angY);
         } else {
@@ -260,6 +268,7 @@ private:
                                   const StyleTransformData& b);
 
     OperationType m_type;
+    SkewFunction m_skewFunction{ SkewFunction::Skew };
     union TransformPointer {
         MatrixTransform* m_matrix;
         TranslateTransform* m_translate;
@@ -303,7 +312,8 @@ bool operator==(const StyleTransformData& a, const StyleTransformData& b)
         }
         break;
     case StyleTransformData::OperationType::Skew:
-        if (*(a.skew()) != *(b.skew())) {
+        if (a.skewFunction() != b.skewFunction() ||
+            *(a.skew()) != *(b.skew())) {
             return false;
         }
         break;
@@ -365,7 +375,7 @@ public:
                 ret->at(i).setRotate(0);
                 break;
             case StyleTransformData::OperationType::Skew:
-                ret->at(i).setSkew(0, 0);
+                ret->at(i).setSkew(0, 0, ret->at(i).skewFunction());
                 break;
             case StyleTransformData::OperationType::None:
                 break;

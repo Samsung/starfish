@@ -767,7 +767,10 @@ bool ActiveTransformAnimationTask::needsDecomposing(
     size_t size = from->size();
 
     for (size_t i = 0; i < size; i++) {
-        if (from->at(i).type() != to->at(i).type()) {
+        // CSS Transforms gives skew, skewX and skewY no common primitive.
+        if (from->at(i).type() != to->at(i).type() ||
+            (from->at(i).type() == StyleTransformData::Skew &&
+             from->at(i).skewFunction() != to->at(i).skewFunction())) {
             return true;
         }
     }
@@ -972,7 +975,8 @@ void ActiveTransformAnimationTask::execute(double progress,
                 newData.setSkew(aData.skew()->angleX() * (1 - progress) +
                                     bData.skew()->angleX() * progress,
                                 aData.skew()->angleY() * (1 - progress) +
-                                    bData.skew()->angleY() * progress);
+                                    bData.skew()->angleY() * progress,
+                                aData.skewFunction());
             } else {
                 STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }

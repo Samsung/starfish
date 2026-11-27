@@ -26,6 +26,15 @@ function testStart() {
     console.assert(root.animate({ opacity: [0, 1], left: ["1px", "2px", "3px"],
         offset: [0, null, 1], easing: ["ease", "steps(2)"] }, 250) instanceof Animation,
         "Property-indexed keyframes accept lists of different lengths");
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    for (const easing of ["steps(1, jump-start)", "steps(1, jump-end)"]) {
+        const transform = target.animate({transform: ["none", "skewX(30deg) rotateZ(60deg)"]},
+                                         {duration: 250, easing});
+        console.assert(transform instanceof Animation, "Step aliases accept transform keyframes");
+        transform.cancel();
+    }
+    target.remove();
     rejects(frames, "abc", "Nonnumeric durations must throw");
     rejects([{offset: 1}, {offset: 0}], 10, "Offsets must increase");
     rejects({opacity: [0, 1], offset: [0, 2]}, 10, "Indexed offsets must stay in range");

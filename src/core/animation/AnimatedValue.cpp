@@ -286,6 +286,10 @@ Optional<AnimatedValue*> AnimatedValue::create(
                 return new AnimatedValue(new StyleTransformDataGroup());
             }
         }
+        if (property.valueKind() == CSSStyleValuePair::ValueKind::None) {
+            // CSS Transforms interpolates none as an empty transform list.
+            return new AnimatedValue(new StyleTransformDataGroup());
+        }
 
         if (property.valueKind() ==
             CSSStyleValuePair::ValueKind::TransformFunctions) {

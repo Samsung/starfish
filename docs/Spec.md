@@ -1789,7 +1789,7 @@ section are supported.
 | | caption-side | 	top &#124; bottom | Positions the content of a table's &lt;caption&gt; on the specified side. | |
 | | border-spacing | 	&lt;length&gt; &lt;length&gt;? | Specifies the distance between the borders of adjacent table cells (only for the separated borders model). | |
 | | empty-cells | show &#124; hide | Hide border and background on empty cells in a table. | |
-| [Transform](https://www.w3.org/TR/css-transforms-1/) | transform | none &#124; &lt;transform-function&gt;+ | Applies a transformation to an element. **Recognized 2D functions:** `matrix(a,b,c,d,e,f)`, `translate(tx [, ty])`, `translateX(tx)`, `translateY(ty)`, `scale(sx [, sy])`, `scaleX(sx)`, `scaleY(sy)`, `rotate(<angle>)`, `skew(<angle> [, <angle>])`, `skewX(<angle>)`, `skewY(<angle>)`. **Recognized 3D functions:** `matrix3d(<16 numbers>)`, `translate3d(tx, ty, tz)`, `translateZ(tz)`, `scale3d(sx, sy, sz)`, `scaleZ(sz)`, `rotate3d(x, y, z, <angle>)`, `perspective(<length>)`. **`rotateX()`, `rotateY()`, `rotateZ()` are NOT recognized** — use `rotate3d(1,0,0,θ)`, `rotate3d(0,1,0,θ)`, `rotate3d(0,0,1,θ)` instead. **Bug:** `getComputedStyle(el).transform` always returns `"none"` regardless of the actual transform — see "Angles" in the units audit. |
+| [Transform](https://www.w3.org/TR/css-transforms-1/) | transform | none &#124; &lt;transform-function&gt;+ | Applies a transformation to an element. **Recognized 2D functions:** `matrix(a,b,c,d,e,f)`, `translate(tx [, ty])`, `translateX(tx)`, `translateY(ty)`, `scale(sx [, sy])`, `scaleX(sx)`, `scaleY(sy)`, `rotate(<angle>)`, `skew(<angle> [, <angle>])`, `skewX(<angle>)`, `skewY(<angle>)`. **Recognized 3D functions:** `matrix3d(<16 numbers>)`, `translate3d(tx, ty, tz)`, `translateZ(tz)`, `scale3d(sx, sy, sz)`, `scaleZ(sz)`, `rotate3d(x, y, z, <angle>)`, `perspective(<length>)`. `rotateZ(θ)` and rotations about the Z axis in `rotate3d(x,y,z,θ)` render as planar rotations. `rotateX()` and `rotateY()` are unsupported. **Bug:** `getComputedStyle(el).transform` always returns `"none"` regardless of the actual transform — see "Angles" in the units audit. |
 | | transform-origin | &lt;percentage&gt; &#124; &lt;length&gt; &#124; top &#124; right &#124; bottom &#124; left &#124; center | Changes the position of transformed elements | |
 | [User Interface](https://www.w3.org/TR/css-ui-4/) | user-select | none &#124; auto  | The user-select property enables authors to specify which elements in the document can be selected by the user and how. |  |
 | | caret-color | auto &#124; transparent &#124; currentColor &#124; &lt;color&gt; | The caret-color CSS property sets the color of the insertion caret. | |
@@ -2733,7 +2733,8 @@ The existing canvas mixin tables are incomplete. Adding the missing pieces:
 | `ease`, `linear`, `ease-in`, `ease-out`, `ease-in-out`, `step-start`, `step-end` | All seven keywords supported. |
 | `cubic-bezier(x1, y1, x2, y2)` | Supported. **`x1` and `x2` must be in `[0, 1]`** (`y1`/`y2` may be any number); out-of-range x rejects the whole declaration. |
 | `steps(<integer>, start \| end)` | Supported. `<integer>` must be > 0; the second argument defaults to `end`. |
-| `steps(<n>, jump-start \| jump-end \| jump-none \| jump-both)` | **NOT recognized** — only `start`/`end` accepted as the 2nd arg. |
+| `steps(<n>, jump-start \| jump-end)` | Supported as aliases for `start` and `end`. |
+| `steps(<n>, jump-none \| jump-both)` | Unsupported. |
 | `linear(<linear-stop-list>)` (CSS Easing 2) | **NOT recognized.** |
 
 **`animation-direction`**: `normal`, `reverse`, `alternate`, `alternate-reverse` all parse. (At runtime, `alternate`/`alternate-reverse` end-of-cycle is buggy — see the table above.)
