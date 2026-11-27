@@ -171,6 +171,10 @@ jobs:
             cmake CMakeLists.txt -DCMAKE_BUILD_TYPE=Debug -DBACKEND=glib_cairo_gl -DSHELL=x11_webcontainer -DDOCKER=1 -G Ninja
             ninja starfish.executable
             xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish https://github.com/Samsung/escargot --crash-test --disable-console || exit 1
+
+      - name: Run unit tests
+        run: xvfb-run -s '-screen 0 1920x1080x24' -a ./Starfish unit-test
+
   x64_glib_headless:
     runs-on:  [ code-linux, code-2xlarge ]
     container:

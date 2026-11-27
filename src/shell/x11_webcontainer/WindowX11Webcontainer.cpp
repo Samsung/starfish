@@ -320,6 +320,7 @@ WindowX11Webcontainer::WindowX11Webcontainer()
 
 WindowX11Webcontainer::~WindowX11Webcontainer()
 {
+    terminate();
 }
 
 bool WindowX11Webcontainer::init(const char* appName, int width, int height)
@@ -398,27 +399,9 @@ void WindowX11Webcontainer::registerX11Fd()
     int fd = ConnectionNumber(m_display);
     GIOChannel* channel = g_io_channel_unix_new(fd);
 
-    m_x11FdSource = g_io_add_watch_full(
-        channel, G_PRIORITY_DEFAULT,
-        (GIOCondition)(G_IO_IN | G_IO_HUP | G_IO_ERR),
-        [](GIOChannel* source, GIOCondition condition,
-           gpointer data) -> gboolean {
-            WindowX11Webcontainer* self =
-                static_cast<WindowX11Webcontainer*>(data);
-
-            if (condition & (G_IO_HUP | G_IO_ERR)) {
-                return G_SOURCE_CONTINUE;
-            }
-
-            self->pollEvent();
-
-            return G_SOURCE_CONTINUE;
-        },
-        this,
-        [](gpointer data) {
-            GIOChannel* channel = static_cast<GIOChannel*>(data);
-            g_io_channel_unref(channel);
-        });
+    m_x11FdSource =
+        g_io_add_watch(channel, (GIOCondition)(G_IO_IN | G_IO_HUP | G_IO_ERR),
+                       onX11Event, this);
 
     g_io_channel_unref(channel);
 }
@@ -575,6 +558,15 @@ void WindowX11Webcontainer::pollEvent()
 
 void WindowX11Webcontainer::terminate()
 {
+    if (!m_display) {
+        return;
+    }
+
+    if (m_x11FdSource) {
+        g_source_remove(m_x11FdSource);
+        m_x11FdSource = 0;
+    }
+
     m_renderer->deinitialize();
     m_renderer = nullptr;
 
