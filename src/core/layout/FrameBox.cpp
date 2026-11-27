@@ -5882,6 +5882,7 @@ struct ScreenMatrixCacheState {
     bool seenAbsBlock;
     bool seenFixedBlock;
     bool canScroll;
+    bool viewportFixed;
 
     ScreenMatrixCacheState()
         : forWhat(ComputeMatrixFor::Screen)
@@ -5891,11 +5892,13 @@ struct ScreenMatrixCacheState {
         , seenAbsBlock(false)
         , seenFixedBlock(false)
         , canScroll(false)
+        , viewportFixed(false)
     {
     }
 
     ScreenMatrixCacheState(const OverflowStatus& status,
-                           ComputeMatrixFor forWhat, bool canScroll)
+                           ComputeMatrixFor forWhat, bool canScroll,
+                           bool viewportFixed)
         : forWhat(forWhat)
         , childIsFixed(isFixedPositioned(status.m_child))
         , absChildIsFixed(isFixedPositioned(status.m_absChild))
@@ -5904,6 +5907,7 @@ struct ScreenMatrixCacheState {
         , seenAbsBlock(status.m_seenAbsBlock)
         , seenFixedBlock(status.m_seenFixedBlock)
         , canScroll(canScroll)
+        , viewportFixed(viewportFixed)
     {
     }
 
@@ -5914,7 +5918,8 @@ struct ScreenMatrixCacheState {
                seenContainingBlockForAbsBlock ==
                    o.seenContainingBlockForAbsBlock &&
                seenAbsBlock == o.seenAbsBlock &&
-               seenFixedBlock == o.seenFixedBlock && canScroll == o.canScroll;
+               seenFixedBlock == o.seenFixedBlock && canScroll == o.canScroll &&
+               viewportFixed == o.viewportFixed;
     }
 };
 
@@ -5980,7 +5985,7 @@ static SkMatrix computeBoxMatrix(
     FrameBox* self, ComputeMatrixFor forWhat,
     bool includesScrollOnTopForGraphicsLayerMode = false)
 {
-    bool seenFixedPositionedLayer = false;
+    Frame* fixedBox = nullptr;
     bool inRendering = false;
 
     if (self->node() && self->node()->webView()->inRendering()) {
@@ -6000,6 +6005,7 @@ static SkMatrix computeBoxMatrix(
     if (forWhat == ComputeMatrixFor::GraphicsLayerOnGraphicsLayer) {
         forWhat = GraphicsLayer;
         frameList.push_back(std::make_pair(f->asFrameBox(), canScroll));
+        fixedBox = isFixedPositioned(f) ? f : nullptr;
         f = f->layoutParent();
     }
 
@@ -6030,7 +6036,8 @@ static SkMatrix computeBoxMatrix(
         }
 
         if (cache && f != self && f->asFrameBox()->stackingContext()) {
-            ScreenMatrixCacheState state(status, forWhat, canScroll);
+            ScreenMatrixCacheState state(status, forWhat, canScroll,
+                                         fixedBox != nullptr);
             if (cache->lookup(f->asFrameBox(), state, cachedMatrix,
                               graphicsLayerHolder)) {
                 cachedFrom = f->asFrameBox();
@@ -6039,6 +6046,15 @@ static SkMatrix computeBoxMatrix(
             cacheProbes.push_back(std::make_pair(frameList.size(), state));
         }
 
+        // A fixed subtree follows document scrolling only when an ancestor
+        // establishes its fixed-position containing block.
+        if (fixedBox && !f->isFrameDocument() &&
+            f->canBeContainingBlockOfAbsolutePositionedBox(fixedBox)) {
+            fixedBox = nullptr;
+        }
+        if (isFixedPositioned(f)) {
+            fixedBox = f;
+        }
         bool applyOverflow = status.canApplyOverflow(f);
         bool canScrollNow = false;
         if (applyOverflow) {
@@ -6065,7 +6081,8 @@ static SkMatrix computeBoxMatrix(
             break;
         }
 
-        frameList.push_back(std::make_pair(f->asFrameBox(), canScrollNow));
+        frameList.push_back(std::make_pair(
+            f->asFrameBox(), f->isFrameDocument() ? !fixedBox : canScrollNow));
 
         f = f->layoutParent();
     }
@@ -6099,8 +6116,10 @@ static SkMatrix computeBoxMatrix(
             pos = fBox->absolutePoint(lastParentBox);
         } else if (fBox->isFrameDocument()) {
             pos = fBox->absolutePoint(lastParentBox);
-            pos.setX(pos.x() - fBox->node()->window()->scrollX(false));
-            pos.setY(pos.y() - fBox->node()->window()->scrollY(false));
+            if (iter->second) {
+                pos.setX(pos.x() - fBox->node()->window()->scrollX(false));
+                pos.setY(pos.y() - fBox->node()->window()->scrollY(false));
+            }
         } else {
             pos = fBox->absolutePoint(lastParentBox);
             if (fBox->isFrameBlockBox() && iter->second) {
