@@ -251,6 +251,89 @@ TEST_F(WebContainerCreationTest, WebGLSurvivesAnotherWindowTeardown)
     m_window->appLoop()->start(1);
     EXPECT_EQ("true", m_lwe->EvaluateJavaScript(draw));
 }
+
+static void alternateWebGLBetweenViewsInThreadMode()
+{
+    // Each view fills a framebuffer of its own with its own colour, and on
+    // the next call expects to read that colour back from the context it
+    // kept. Landing on the other view's context reads the other colour.
+    static const char* draw = R"JS(
+        (function() {
+            let gl = window.keptGL;
+            if (gl) {
+                const pixel = new Uint8Array(4);
+                gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+                for (let i = 0; i < 3; i++) {
+                    if (pixel[i] !== window.viewColor[i] * 255)
+                        return false;
+                }
+            } else {
+                gl = window.keptGL = document.createElement('canvas')
+                    .getContext('webgl', { antialias: false });
+                if (!gl)
+                    return false;
+                const texture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA,
+                              gl.UNSIGNED_BYTE, null);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer());
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                                        gl.TEXTURE_2D, texture, 0);
+            }
+            gl.clearColor(...window.viewColor, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            return gl.getError() === gl.NO_ERROR;
+        })()
+    )JS";
+    static const char* colors[2] = { "window.viewColor = [1, 0, 0]",
+                                     "window.viewColor = [0, 1, 0]" };
+
+    LWE::LWE::Initialize("/tmp/starfish_storage/",
+                         LWE::InitializeOption::PreferSeparateThread);
+    Window* windows[2];
+    LWE::WebContainer* views[2];
+    // Both windows are set up before the engine thread touches EGL.
+    for (int i = 0; i < 2; i++) {
+        windows[i] = Window::create();
+        windows[i]->setInitHint(HINT_VISIBLE, 0);
+        windows[i]->init("Starfish", 800, 600);
+    }
+    for (int i = 0; i < 2; i++) {
+        views[i] = LWE::WebContainer::CreateGL(getWebContainerArgs(),
+                                               getRendererConfig(windows[i]));
+        ASSERT_TRUE(views[i]);
+        views[i]->LoadData("<p>view</p>");
+    }
+    windows[0]->appLoop()->start(1);
+    for (int i = 0; i < 2; i++) {
+        views[i]->EvaluateJavaScript(colors[i]);
+    }
+
+    for (int round = 0; round < 3; round++) {
+        EXPECT_EQ("true", views[0]->EvaluateJavaScript(draw));
+        EXPECT_EQ("true", views[1]->EvaluateJavaScript(draw));
+    }
+
+    for (int i = 0; i < 2; i++) {
+        views[i]->Destroy();
+        delete windows[i];
+    }
+    LWE::LWE::Finalize();
+}
+
+// Embedders that host several views run the engine on its own thread, so
+// every view's renderer binds its contexts on that one thread. A process
+// cannot change its thread mode, hence the fresh one.
+TEST(WebContainerThreadModeDeathTest, WebGLAlternatesBetweenViews)
+{
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
+    EXPECT_EXIT(
+        {
+            alternateWebGLBetweenViewsInThreadMode();
+            exit(::testing::Test::HasFailure() ? 1 : 0);
+        },
+        ::testing::ExitedWithCode(0), "");
+}
 #endif
 
 class WebContainerDestroyTest : public ::testing::Test {
