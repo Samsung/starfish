@@ -21,7 +21,6 @@
 #include "Starfish.h"
 
 #include "core/animation/Animation.h"
-#include "core/animation/CubicBezier.h"
 #include "core/animation/TimingOptions.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Element.h"
@@ -33,27 +32,54 @@ namespace Starfish {
 
 static size_t gAnimationCount = 0;
 
-TimingOutput::TimingOutput()
-    : m_startDelay(0)
-    , m_endDelay(0)
-    , m_fill(AnimationFillModeValue::None)
-    , m_iterationStart(0.0)
-    , m_iterationCount(1.0)
-    , m_iterationDuration(0.0)
-    , m_direction(AnimationDirectionValue::Normal)
-    , m_easing(CubicBezier::createCubicBezier(CubicBezierEaseType::Ease))
+TimingFunction* TimingOptions::validate(ExecutionContext* context,
+                                        const KeyframeAnimationOptions& options)
 {
+    if (!(options.duration() >= 0) || !(options.iterationStart() >= 0) ||
+        !(options.iterations() >= 0)) {
+        throw new DOMException(
+            context, DOMException::SCRIPT_TYPE_ERR,
+            "Duration, iterationStart and iterations must be non-negative.");
+    }
+    auto easing = parseEasing(options.easing());
+    if (!easing) {
+        throw new DOMException(context, DOMException::SCRIPT_TYPE_ERR,
+                               "Invalid animation easing");
+    }
+    return easing.value();
 }
 
-bool TimingOptions::makeTimingOptions(Element* element,
-                                      KeyframeAnimationOptions& options)
+static AnimationDirectionValue animationDirection(String* direction)
+{
+    if (direction->equals("reverse")) {
+        return AnimationDirectionValue::Reverse;
+    } else if (direction->equals("alternate")) {
+        return AnimationDirectionValue::Alternate;
+    } else if (direction->equals("alternate-reverse")) {
+        return AnimationDirectionValue::AlternateReverse;
+    } else {
+        return AnimationDirectionValue::Normal;
+    }
+}
+
+static AnimationFillModeValue animationFillMode(String* fill)
+{
+    if (fill->equals("forwards")) {
+        return AnimationFillModeValue::Forwards;
+    } else if (fill->equals("backwards")) {
+        return AnimationFillModeValue::Backwards;
+    } else if (fill->equals("both")) {
+        return AnimationFillModeValue::Both;
+    } else {
+        return AnimationFillModeValue::None;
+    }
+}
+
+void TimingOptions::apply(Element* element, KeyframeAnimationOptions& options,
+                          TimingFunction* easing)
 {
     ComputedStyle* style = element->style();
-    if (!style) {
-        return false;
-    }
 
-    TimingOutput output;
     AtomicString name =
         AtomicString::createAtomicString(element->starfish(), "AnimationId");
     StringBuilder id;
@@ -61,150 +87,32 @@ bool TimingOptions::makeTimingOptions(Element* element,
     id.appendString(String::fromInt64(gAnimationCount++));
     options.setId(id.finalize());
 
-    setFillMode(output, options);
-
-    if (!setIterationStart(element, options, output)) {
-        return false;
-    }
-
-    if (!setIterationCount(element, options, output)) {
-        return false;
-    }
-
-    if (!setIterationDuration(element, options, output)) {
-        return false;
-    }
-
-    setDirection(output, options);
-
-    if (!setTimingFunction(element, options, output)) {
-        return false;
-    }
-
     StyleAnimationData* styleAnimationData = style->animation();
     size_t animationNameSize =
         styleAnimationData ? styleAnimationData->animationNameSize() : 0;
 
-    // TimingOutput to StyleAnimationData
     style->setAnimationName(options.id(), animationNameSize);
-    style->setAnimationIterationCount(output.m_iterationCount,
-                                      animationNameSize);
-    style->setAnimationDelay(CSSTime(output.m_startDelay), animationNameSize);
-    style->setAnimationDirection(output.m_direction, animationNameSize);
-    style->setAnimationDuration(CSSTime(output.m_iterationDuration),
+    style->setAnimationIterationCount(options.iterations(), animationNameSize);
+    style->setAnimationDelay(CSSTime(options.delay()), animationNameSize);
+    style->setAnimationDirection(animationDirection(options.direction()),
+                                 animationNameSize);
+    style->setAnimationDuration(CSSTime(options.duration()), animationNameSize);
+    style->setAnimationFillMode(animationFillMode(options.fill()),
                                 animationNameSize);
-    style->setAnimationFillMode(output.m_fill, animationNameSize);
-    style->setAnimationTimingFunction(output.m_easing, animationNameSize);
-    // TODO: handle items like m_endDelay and m_iterationStart
-
-    return true;
+    style->setAnimationTimingFunction(easing, animationNameSize);
+    // TODO: apply endDelay and iterationStart to playback.
 }
 
-bool TimingOptions::setIterationStart(Element* element,
-                                      KeyframeAnimationOptions& options,
-                                      TimingOutput& output)
+Optional<TimingFunction*> TimingOptions::parseEasing(String* easing)
 {
-    if (std::isnan(options.iterationStart()) || options.iterationStart() < 0) {
-        throw new DOMException(element->executionContext(),
-                               DOMException::Code::INVALID_NODE_TYPE_ERR,
-                               "iterationStart must be non-negative.");
-        return false;
-    }
-
-    output.m_iterationStart = options.iterationStart();
-    return true;
-}
-bool TimingOptions::setIterationCount(Element* element,
-                                      KeyframeAnimationOptions& options,
-                                      TimingOutput& output)
-{
-    if (std::isnan(options.iterations()) || options.iterations() < 0) {
-        throw new DOMException(element->executionContext(),
-                               DOMException::Code::INVALID_NODE_TYPE_ERR,
-                               "iterationCount must be non-negative.");
-        return false;
-    }
-
-    output.m_iterationCount = options.iterations();
-    return true;
-}
-
-bool TimingOptions::setIterationDuration(Element* element,
-                                         KeyframeAnimationOptions& options,
-                                         TimingOutput& output)
-{
-    static const char* errMsg = "duration must be non-negative or auto.";
-
-    // TODO : handle this as restricted double
-    // if (options.duration().isUnrestricted())
-    {
-        // it represents the number of milliseconds.
-        double d = options.duration();
-        if (std::isnan(d) || d < 0) {
-            throw new DOMException(element->executionContext(),
-                                   DOMException::Code::INVALID_NODE_TYPE_ERR,
-                                   errMsg);
-            return false;
-        }
-        output.m_iterationDuration = d;
-        return true;
-    }
-
-    // TODO : handle this as DOMString
-    /*if (iteration_duration.GetAsString() != "auto") {
-        throw new DOMException(element->executionContext(),
-    DOMException::Code::INVALID_NODE_TYPE_ERR, errMsg);
-        return false;
-    }
-    */
-
-    output.m_iterationDuration = 0.0;
-    return true;
-}
-
-void TimingOptions::setDirection(TimingOutput& output,
-                                 KeyframeAnimationOptions& options)
-{
-    if (options.direction()->equals("reverse")) {
-        output.m_direction = AnimationDirectionValue::Reverse;
-    } else if (options.direction()->equals("alternate")) {
-        output.m_direction = AnimationDirectionValue::Alternate;
-    } else if (options.direction()->equals("alternate-reverse")) {
-        output.m_direction = AnimationDirectionValue::AlternateReverse;
-    } else {
-        output.m_direction = AnimationDirectionValue::Normal;
-    }
-}
-
-void TimingOptions::setFillMode(TimingOutput& output,
-                                KeyframeAnimationOptions& options)
-{
-    if (options.fill()->equals("none")) {
-        output.m_fill = AnimationFillModeValue::None;
-    } else if (options.fill()->equals("forwards")) {
-        output.m_fill = AnimationFillModeValue::Forwards;
-    } else if (options.fill()->equals("backwards")) {
-        output.m_fill = AnimationFillModeValue::Backwards;
-    } else if (options.fill()->equals("both")) {
-        output.m_fill = AnimationFillModeValue::Both;
-    } else {
-        output.m_fill = AnimationFillModeValue::None;
-    }
-}
-
-bool TimingOptions::setTimingFunction(Element* element,
-                                      KeyframeAnimationOptions& options,
-                                      TimingOutput& output)
-{
+    auto utf8 = easing->toUTF8NonGCString();
     CSSTokenVector layers;
-    if (!CSSPropertyParser::parseLayers(
-            options.easing()->toUTF8NonGCString().c_str(),
-            options.easing()->length(), layers)) {
-        return false;
+    if (!CSSPropertyParser::parseLayers(utf8.data(), utf8.size(), layers)) {
+        return nullptr;
     }
 
     if (layers.size() != 1) {
-        return false;
+        return nullptr;
     }
 
     CSSStyleValuePair value;
@@ -212,17 +120,13 @@ bool TimingOptions::setTimingFunction(Element* element,
     CSSStyleDeclaration::tokenizeCSSValue(tokens, layers[0].data(),
                                           layers[0].length());
     if (!value.updateValueLayerAnimationTimingFunction(tokens)) {
-        return false;
+        return nullptr;
     }
 
     if (value.valueKind() ==
         CSSStyleValuePair::ValueKind::TimingFunctionValueKind) {
-        output.m_easing =
-            ComputedStyle::knownTimingFunction(value.timingFunctionValue());
-    } else if (value.valueKind() ==
-               CSSStyleValuePair::ValueKind::TimingFunctionPointerKind) {
-        output.m_easing = value.timingFunctionPointerValue();
+        return ComputedStyle::knownTimingFunction(value.timingFunctionValue());
     }
-    return true;
+    return value.timingFunctionPointerValue();
 }
 } // namespace Starfish

@@ -11,21 +11,37 @@ function testStart() {
     console.assert(animation instanceof Animation);
     animation.cancel();
     console.assert(root.animate([{ opacity: 1 }], 20) instanceof Animation);
-    let rejected = false;
-    try {
-        root.animate(null, -1);
-    } catch (error) {
-        rejected = error instanceof TypeError;
-    }
-    console.assert(rejected);
-    for (const options of [NaN, {duration: -1}, {duration: NaN}]) {
-        let threw = false;
+    function rejects(keyframes, timing, message) {
+        let rejected = false;
         try {
-            root.animate(frames, options);
+            root.animate(keyframes, timing);
         } catch (error) {
-            threw = error instanceof TypeError;
+            rejected = error instanceof TypeError;
         }
-        console.assert(threw, "Invalid duration must throw TypeError");
+        console.assert(rejected, message);
+    }
+
+    console.assert(root.animate(frames, "250") instanceof Animation, "Numeric strings are durations");
+    console.assert(root.animate(new Set(frames), {duration: 250}) instanceof Animation, "Iterable keyframes");
+    console.assert(root.animate({ opacity: [0, 1], left: ["1px", "2px", "3px"],
+        offset: [0, null, 1], easing: ["ease", "steps(2)"] }, 250) instanceof Animation,
+        "Property-indexed keyframes accept lists of different lengths");
+    rejects(frames, "abc", "Nonnumeric durations must throw");
+    rejects([{offset: 1}, {offset: 0}], 10, "Offsets must increase");
+    rejects({opacity: [0, 1], offset: [0, 2]}, 10, "Indexed offsets must stay in range");
+    rejects({opacity: [0], easing: ["linear", "inherit"]}, 10, "Even unused easings must parse");
+    rejects([{opacity: 0, composite: "other"}], 10, "Invalid composite enum");
+    const marker = {};
+    let caught;
+    try {
+        root.animate([{ get opacity() { throw marker; } }], 10);
+    } catch (error) {
+        caught = error;
+    }
+    console.assert(caught === marker, "A throwing property getter must propagate its exception");
+    for (const options of [-1, NaN, {duration: -1}, {duration: NaN},
+                           {iterations: -1}, {iterationStart: -1}]) {
+        rejects(null, options, "Invalid timing must throw even for null keyframes");
     }
     if (typeof testEnd === "function") testEnd();
 }

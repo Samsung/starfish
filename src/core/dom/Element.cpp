@@ -70,7 +70,6 @@
 #include "core/modules/resize_observer/ResizeObserver.h"
 
 #include "binding/ScriptBindingInstance.h"
-#include "core/style/CSSStyleLookupTrie.h"
 #include "core/style/StyleRule.h"
 #include "core/animation/AnimationApplier.h"
 #include "core/animation/AnimationExecutor.h"
@@ -90,8 +89,6 @@ using namespace Escargot;
 #ifdef STARFISH_ENABLE_A11Y_ATSPI
 #include "core/page/A11yAtspiTreeSource.h"
 #endif
-
-#include "binding/generated/doubleOrKeyframeAnimationOptionsUnion.h"
 
 namespace Starfish {
 
@@ -2626,62 +2623,11 @@ void Element::blur()
     window()->browsingContext()->releaseFocusedNode(this);
 }
 
-void Element::makeKeyframesFromObject(ScriptObject object, double offset,
-                                      GCVector<StyleRuleBase*>& keyframeRules)
-{
-    ContextRef* ctx = scriptBindingInstance()->scriptContext();
-    CSSStyleDeclaration* declarations = new CSSStyleDeclaration(document());
-
-    Evaluator::execute(
-        ctx,
-        [](ExecutionStateRef* state, ScriptObject object,
-           CSSStyleDeclaration* declarations) -> ValueRef* {
-            ValueVectorRef* values = object->ownPropertyKeys(state);
-
-            for (size_t i = 0; i < values->size(); i++) {
-                auto key = values->at(i);
-                if (key->isString() && object->hasOwnProperty(state, key)) {
-                    ScriptValue scirptValue = object->get(state, key);
-                    String* name = toBrowserString(state, key->toString(state));
-                    // TODO: Need to check if camel case is really needed.
-                    CSSStyleValuePair::KeyKind keykind =
-                        CSSStyleLookupTrie::lookupCSSStyleCamelCase(
-                            name->toUTF8NonGCString().data(), name->length());
-                    String* value =
-                        toBrowserString(state, scirptValue->toString(state));
-                    size_t len = value->length();
-                    declarations->setPropertyInternal(
-                        keykind, value->toUTF8NonGCString().data(), len, false);
-                }
-            }
-
-            return ValueRef::createUndefined();
-        },
-        object, declarations);
-
-    if (declarations->length() > 0) {
-        GCAtomicVector<double> selectorList;
-        selectorList.push_back(offset);
-        keyframeRules.push_back(
-            new StyleRuleKeyframe(selectorList, declarations));
-    }
-}
-
 Animation* Element::animate(ExecutionContext* executionContext,
-                            Optional<GCVector<ScriptValue>>& keyframes,
-                            const doubleOrKeyframeAnimationOptions& timing)
+                            GCVector<StyleRuleBase*>& keyframeRules,
+                            KeyframeAnimationOptions& options,
+                            TimingFunction* easing)
 {
-    KeyframeAnimationOptions options;
-    if (timing.isKeyframeAnimationOptionsValue()) {
-        options = timing.getKeyframeAnimationOptionsValue();
-    } else if (timing.isdoubleValue()) {
-        options.setDuration(timing.getdoubleValue());
-    }
-    if (std::isnan(options.duration()) || options.duration() < 0) {
-        throw new DOMException(executionContext, DOMException::SCRIPT_TYPE_ERR,
-                               "Animation duration must be non-negative.");
-    }
-
     // FIXME: If CSS keyframes animation is already applied to this element,
     // it is applied together with the animation by animate, and both animations
     // start together after calling this method(This method causes CSS keyframes
@@ -2693,34 +2639,12 @@ Animation* Element::animate(ExecutionContext* executionContext,
         document()->browsingContext()->resolveStyleIfNeeds();
     }
 
-    if (!keyframes.hasValue() || !style()) {
+    if (!style() || keyframeRules.empty()) {
         return new Animation(executionContext);
     }
 
-    const auto& values = keyframes.getValue();
-    if (!TimingOptions::makeTimingOptions(this, options)) {
-        return new Animation(executionContext);
-    }
-
-    GCVector<StyleRuleBase*> keyframeRules;
-    for (size_t i = 0; i < values.size(); i++) {
-        if (values[i]->isObject()) {
-            auto object = values[i]->asObject();
-            // Web Animations places a lone keyframe without an offset at 1.
-            double offset = values.size() == 1
-                                ? 1.0
-                                : static_cast<double>(i) / (values.size() - 1);
-            makeKeyframesFromObject(object, offset, keyframeRules);
-        } else {
-            // TODO
-        }
-    }
-
-    if (keyframeRules.size() > 0) {
-        // make style animation data for Web Animation
-        computeWebAnimationKeyframes(styleResolver(), this, style(),
-                                     keyframeRules);
-    }
+    TimingOptions::apply(this, options, easing);
+    computeWebAnimationKeyframes(styleResolver(), this, style(), keyframeRules);
 
     Animation* animation = new Animation(executionContext);
     if (style()->display() != DisplayValue::NoneDisplayValue &&
@@ -2739,13 +2663,6 @@ Animation* Element::animate(ExecutionContext* executionContext,
         setNeedsStyleRecalcForAnimation();
     }
     return animation;
-}
-
-Animation* Element::animate(ExecutionContext* executionContext,
-                            Optional<GCVector<ScriptValue>>& keyframes)
-{
-    // TODO
-    return new Animation(executionContext);
 }
 
 Optional<ShadowRoot*> Element::shadowRoot(bool returnNullWhenMeetClosed)

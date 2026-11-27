@@ -1203,7 +1203,7 @@ section are supported.
 | [Slottable](https://dom.spec.whatwg.org/#slotable) | interface | Slottable | Mixin implemented by `Element` and `Text`. |
 |  | attribute | assignedSlot | Returns the assigned `<slot>` element, or `null`. |
 | [ElementAnimation](https://www.w3.org/TR/web-animations-1/#extensions-to-the-element-interface) | interface | ElementAnimation | Mixin on `Element`. |
-|  | method | Animation animate(sequence&lt;any&gt;? keyframes, optional (unrestricted double or KeyframeAnimationOptions) options) | Creates and starts an animation; returns an `Animation` object. |
+|  | method | Animation animate(object? keyframes, optional (unrestricted double or KeyframeAnimationOptions) options = {}) | Accepts iterable and property-indexed keyframes, validates offsets, easing and composite names, and returns an `Animation`. Rendering uses the engine’s supported CSS properties and easing functions. Per-keyframe additive composition is not implemented. |
 |  | method | sequence&lt;Animation&gt; getAnimations() | **Not implemented** (returns `undefined`). |
 | [Animation](https://www.w3.org/TR/web-animations-1/#the-animation-interface) | interface | Animation | Returned by `Element.animate()`. An `EventTarget`; not constructible. `KeyframeEffect`, `AnimationEffect`, `AnimationTimeline` and `document.timeline` are not exposed. |
 |  | method | void cancel() | Drops the animation and any value it was filling, then fires `cancel`. |

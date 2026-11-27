@@ -23,47 +23,18 @@
 namespace Starfish {
 
 class Element;
+class ExecutionContext;
 class TimingFunction;
 struct KeyframeAnimationOptions;
-
-enum class AnimationDirectionValue ENSURE_ENUM_UNSIGNED;
-enum class AnimationFillModeValue ENSURE_ENUM_UNSIGNED;
-
-struct TimingOutput {
-    TimingOutput();
-
-    double m_startDelay;
-    double m_endDelay;
-    AnimationFillModeValue m_fill;
-    double m_iterationStart;
-    double m_iterationCount;
-    double m_iterationDuration;
-    AnimationDirectionValue m_direction;
-    TimingFunction* m_easing;
-};
 
 class TimingOptions {
 public:
     STARFISH_MAKE_STACK_ALLOCATED()
-    static bool makeTimingOptions(Element* element,
-                                  KeyframeAnimationOptions& options);
-
-    static bool setIterationStart(Element* element,
-                                  KeyframeAnimationOptions& options,
-                                  TimingOutput& output);
-    static bool setIterationCount(Element* element,
-                                  KeyframeAnimationOptions& options,
-                                  TimingOutput& output);
-    static bool setIterationDuration(Element* element,
-                                     KeyframeAnimationOptions& options,
-                                     TimingOutput& output);
-    static void setDirection(TimingOutput& output,
-                             KeyframeAnimationOptions& options);
-    static void setFillMode(TimingOutput& output,
-                            KeyframeAnimationOptions& options);
-    static bool setTimingFunction(Element* element,
-                                  KeyframeAnimationOptions& options,
-                                  TimingOutput& output);
+    static TimingFunction* validate(ExecutionContext* context,
+                                    const KeyframeAnimationOptions& options);
+    static void apply(Element* element, KeyframeAnimationOptions& options,
+                      TimingFunction* easing);
+    static Optional<TimingFunction*> parseEasing(String* easing);
 };
 } // namespace Starfish
 

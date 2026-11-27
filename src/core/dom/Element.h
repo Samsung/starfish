@@ -30,7 +30,6 @@
 #include "core/page/ScrollOptions.h"
 
 namespace Starfish {
-class doubleOrKeyframeAnimationOptions;
 
 class Attr;
 class CSSStyleDeclaration;
@@ -461,13 +460,10 @@ public:
     virtual void onGlobalPointingEvent(float x, float y, DOMTimeStamp timeStamp,
                                        GlobalPointingEventKind kind) override;
 
-    void makeKeyframesFromObject(ScriptObject object, double offset,
-                                 GCVector<StyleRuleBase*>& keyframeRules);
     Animation* animate(ExecutionContext* executionContext,
-                       Optional<GCVector<ScriptValue>>& keyframes,
-                       const doubleOrKeyframeAnimationOptions& timing);
-    Animation* animate(ExecutionContext* executionContext,
-                       Optional<GCVector<ScriptValue>>& keyframes);
+                       GCVector<StyleRuleBase*>& keyframeRules,
+                       KeyframeAnimationOptions& options,
+                       TimingFunction* easing);
     void getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds = true);
 
     void appendIntersectionObserverRegistration(

@@ -54,8 +54,7 @@ dictionary KeyframeAnimationOptions : KeyframeEffectOptions {
 [PartialInterface,
  NoInterfaceObject]
 interface ElementAnimation {
-//    [CallWith=ExecutionContext, Measure, RaisesException] Animation animate((sequence<any> or any)? effect, optional (unrestricted double or KeyframeAnimationOptions) options);
-    [CallWith=ExecutionContext, Measure, RaisesException] Animation animate(sequence<any>? effect, optional (unrestricted double or KeyframeAnimationOptions) options);
+    [Custom, RaisesException] Animation animate(object? keyframes, optional (unrestricted double or KeyframeAnimationOptions) options /* = {} */);
     [Unimplemented] sequence<Animation> getAnimations();
 };
 
