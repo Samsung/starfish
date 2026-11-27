@@ -25,15 +25,20 @@
 #include "core/dom/Node.h"
 #include "core/dom/CharacterData.h"
 #include "core/dom/Element.h"
+#include "core/dom/Document.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/ShadowRoot.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 
 #include <algorithm>
 #include <string>
 
 namespace Starfish {
 
-NodeRegistry::NodeRegistry()
-    : m_next(1)
+NodeRegistry::NodeRegistry(WebView* webView)
+    : m_webView(webView)
+    , m_next(1)
 {
 }
 
@@ -82,6 +87,32 @@ bool NodeRegistry::shouldExposeNode(Node* node, bool includeWhitespace)
            !node->asCharacterData()->data()->containsOnlyWhitespace();
 }
 
+Optional<Document*> NodeRegistry::frameDocumentForNode(Node* node) const
+{
+    if (!node->isHTMLIFrameElement()) {
+        return {};
+    }
+    auto* owner = node->asHTMLIFrameElement();
+    Optional<Document*> document = owner->contentDocument();
+    if (!document) {
+        return {};
+    }
+
+    // Page and Runtime discover local frames by walking each active
+    // document's light tree from this target's main browsing context.
+    // Native contentDocument() is not itself a check for that scope.
+    auto* main = m_webView->mainBrowsingContext();
+    for (auto* context = owner->browsingContext(); context != main;) {
+        Optional<BrowsingContext*> parent = context->parentBrowsingContext();
+        if (!parent ||
+            context->sourceElement()->getRootNode() != parent->document()) {
+            return {};
+        }
+        context = parent.value();
+    }
+    return document;
+}
+
 Node* NodeRegistry::lookup(int nodeId)
 {
     auto it = m_idToNode.find(nodeId);
@@ -123,7 +154,8 @@ static void addStringMember(rapidjson::Value& obj, const char* key,
 
 void NodeRegistry::serializeNode(Node* node, int depth, rapidjson::Value& out,
                                  rapidjson::Document::AllocatorType& alloc,
-                                 bool includeWhitespace, bool send)
+                                 bool includeWhitespace, bool send,
+                                 bool pierceFrames)
 {
     out.SetObject();
 
@@ -197,6 +229,15 @@ void NodeRegistry::serializeNode(Node* node, int depth, rapidjson::Value& out,
                         alloc);
     }
 
+    // Frame documents belong to the owner in the protocol, not to its child
+    // list. A shallow document still lets later requests expand its children.
+    if (auto document = frameDocumentForNode(node)) {
+        rapidjson::Value content(rapidjson::kObjectType);
+        serializeNode(document.value(), pierceFrames ? depth : 0, content,
+                      alloc, includeWhitespace, send, pierceFrames);
+        out.AddMember("contentDocument", content, alloc);
+    }
+
     // A shadow root is reported on its host, not as one of its children. The
     // host's own children are then always written too: the client has no
     // other way to learn about a light-tree child once it starts following
@@ -226,7 +267,8 @@ void NodeRegistry::serializeNode(Node* node, int depth, rapidjson::Value& out,
                 continue;
             }
             rapidjson::Value child(rapidjson::kObjectType);
-            serializeNode(c, childDepth, child, alloc, includeWhitespace, send);
+            serializeNode(c, childDepth, child, alloc, includeWhitespace, send,
+                          pierceFrames);
             children.PushBack(child, alloc);
         }
         out.AddMember("children", children, alloc);

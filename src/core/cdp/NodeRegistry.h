@@ -24,13 +24,15 @@
 
 namespace Starfish {
 
+class Document;
 class Node;
+class WebView;
 
 // Node* <-> nodeId mapping. GC: inherited so GC tracks the held Node* maps.
 // Main-thread only.
 class NodeRegistry : public gc {
 public:
-    NodeRegistry();
+    explicit NodeRegistry(WebView* webView);
 
     int getOrCreate(Node* node); // register if new, return nodeId (>=1)
     Node* lookup(int nodeId);    // nullptr if absent
@@ -52,14 +54,17 @@ public:
     void markChildrenSent(Node* node, bool includeWhitespace);
 
     static bool shouldExposeNode(Node* node, bool includeWhitespace);
+    Optional<Document*> frameDocumentForNode(Node* node) const;
 
     // Serialize a CDP Node. depth: 0=no children, N=N levels, <0=full.
     // `send` records the node, and every descendant written with it, as
     // known to the client. Pass false for a command that returns a node
-    // without binding it, such as DOM.describeNode.
+    // without binding it, such as DOM.describeNode. `pierceFrames` lets
+    // the requested depth carry across iframe document boundaries.
     void serializeNode(Node* node, int depth, rapidjson::Value& out,
                        rapidjson::Document::AllocatorType& alloc,
-                       bool includeWhitespace, bool send = true);
+                       bool includeWhitespace, bool send = true,
+                       bool pierceFrames = false);
 
 private:
     enum class ChildList : uint8_t {
@@ -83,6 +88,7 @@ private:
 
     Entry* entryFor(Node* node);
 
+    WebView* m_webView;
     GCUnorderedMap<Node*, Entry> m_nodeToId;
     GCUnorderedMap<int, Node*> m_idToNode;
     int m_next;

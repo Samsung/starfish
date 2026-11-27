@@ -69,6 +69,8 @@ private:
     void handleRequestNode(CDPCommand& cmd, const std::string& method);
     void handleMarkUndoableState(CDPCommand& cmd, const std::string& method);
     void handleGetNodeStackTraces(CDPCommand& cmd, const std::string& method);
+    void handlePushNodeByPathToFrontend(CDPCommand& cmd,
+                                        const std::string& method);
     void handlePushNodesByBackendIdsToFrontend(CDPCommand& cmd,
                                                const std::string& method);
 

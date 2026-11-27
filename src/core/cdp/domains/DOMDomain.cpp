@@ -52,6 +52,7 @@
 
 #include "rapidjson/document.h"
 #include <cstring>
+#include <limits>
 #include <set>
 
 namespace Starfish {
@@ -116,12 +117,35 @@ static Element* elementFromParams(CDPDispatcher* disp, CDPCommand& cmd,
 // The parent the DOM domain reports. A shadow root reports its host, and a
 // document reports the frame owner that embeds it, so one chain reaches the
 // main document from anywhere in the page.
-static Node* innerParentNode(Node* node)
+static Optional<Node*> innerParentNode(Node* node, NodeRegistry* reg)
 {
     if (node->isShadowRoot()) {
         return node->asShadowRoot()->host();
     }
+    if (node->isDocument()) {
+        Optional<BrowsingContext*> context =
+            node->asDocument()->browsingContext();
+        if (context && !context->isTopLevelBrowsingContext()) {
+            auto* owner = context->sourceElement();
+            auto document = reg->frameDocumentForNode(owner);
+            if (document && document.value() == node) {
+                return owner;
+            }
+        }
+    }
     return node->parentNode();
+}
+
+static void emitSetChildNodes(CDPDispatcher* dispatcher, CDPCommand& cmd,
+                              int parentId, rapidjson::Value& nodes,
+                              rapidjson::Document& out)
+{
+    auto& alloc = out.GetAllocator();
+    rapidjson::Value params(rapidjson::kObjectType);
+    params.AddMember("parentId", parentId, alloc);
+    params.AddMember("nodes", nodes, alloc);
+    CDPCommand evt(dispatcher, Optional<int64_t>(), cmd.sessionId(), nullptr);
+    evt.sendEvent("DOM.setChildNodes", params, out);
 }
 
 // Tell the client about one level of children and record that it was sent.
@@ -130,8 +154,6 @@ static void sendChildNodes(CDPDispatcher* dispatcher, CDPCommand& cmd,
 {
     rapidjson::Document out;
     rapidjson::Document::AllocatorType& alloc = out.GetAllocator();
-    rapidjson::Value params(rapidjson::kObjectType);
-    params.AddMember("parentId", reg->getOrCreate(parent), alloc);
     rapidjson::Value nodes(rapidjson::kArrayType);
     const bool includeWhitespace = dispatcher->session()->domIncludesWhitespace;
     for (Node* c = parent->firstChild(); c; c = c->nextSibling()) {
@@ -142,11 +164,8 @@ static void sendChildNodes(CDPDispatcher* dispatcher, CDPCommand& cmd,
         reg->serializeNode(c, depth - 1, child, alloc, includeWhitespace);
         nodes.PushBack(child, alloc);
     }
-    params.AddMember("nodes", nodes, alloc);
     reg->markChildrenSent(parent, includeWhitespace);
-
-    CDPCommand evt(dispatcher, Optional<int64_t>(), cmd.sessionId(), nullptr);
-    evt.sendEvent("DOM.setChildNodes", params, out);
+    emitSetChildNodes(dispatcher, cmd, reg->getOrCreate(parent), nodes, out);
 }
 
 // A command answers with a node id, but the client only knows the nodes it
@@ -169,10 +188,10 @@ static int pushNodePathToFrontend(CDPDispatcher* dispatcher, CDPCommand& cmd,
 
     // Collect the ancestors the client is missing, nearest first.
     GCVector<Node*> path;
-    for (Node* parent = innerParentNode(node); parent;
-         parent = innerParentNode(parent)) {
-        path.push_back(parent);
-        if (reg->wasSent(parent)) {
+    for (auto parent = innerParentNode(node, reg); parent;
+         parent = innerParentNode(parent.value(), reg)) {
+        path.push_back(parent.value());
+        if (reg->wasSent(parent.value())) {
             break;
         }
     }
@@ -228,7 +247,8 @@ void DOMDomain::handleGetDocument(CDPCommand& cmd, const std::string&)
     rapidjson::Value result(rapidjson::kObjectType);
     rapidjson::Value root(rapidjson::kObjectType);
     reg->serializeNode(doc, depth, root, alloc,
-                       m_dispatcher->session()->domIncludesWhitespace);
+                       m_dispatcher->session()->domIncludesWhitespace, true,
+                       paramBool(cmd, "pierce", false));
     result.AddMember("root", root, alloc);
     cmd.sendResult(result, out);
 }
@@ -1110,6 +1130,127 @@ void DOMDomain::handleGetNodeStackTraces(CDPCommand& cmd, const std::string&)
     cmd.sendResult(result, out);
 }
 
+// Blink's CDP path alternates a zero-based visible child index and nodeName.
+// Frame documents and author shadow roots are not part of that child list.
+static Optional<Node*> nodeForPath(Node* node, const std::string& path,
+                                   bool includeWhitespace, NodeRegistry* reg)
+{
+    for (size_t start = 0; start < path.size();) {
+        size_t separator = path.find(',', start);
+        if (separator == std::string::npos || separator == start) {
+            return {};
+        }
+        size_t nameStart = separator + 1;
+        size_t nameEnd = path.find(',', nameStart);
+        const bool last = nameEnd == std::string::npos;
+        if (last) {
+            nameEnd = path.size();
+        }
+        if (nameStart == nameEnd) {
+            return {};
+        }
+
+        Optional<Node*> child;
+        if (separator == start + 1 && path[start] == 'd') {
+            auto document = reg->frameDocumentForNode(node);
+            if (document) {
+                child = document.value();
+            }
+        } else if (separator == start + 1 && path[start] == 'a') {
+            if (node->isElement()) {
+                auto root = node->asElement()->internalShadowRoot();
+                // Blink reserves `u` for user-agent roots. Only author
+                // shadow paths are supported here.
+                if (root && !root->isUserAgent()) {
+                    child = root.value();
+                }
+            }
+        } else {
+            size_t index = 0;
+            for (size_t i = start; i < separator; ++i) {
+                if (path[i] < '0' || path[i] > '9') {
+                    return {};
+                }
+                size_t digit = path[i] - '0';
+                if (index > (std::numeric_limits<size_t>::max() - digit) / 10) {
+                    return {};
+                }
+                index = index * 10 + digit;
+            }
+            for (Node* c = node->firstChild(); c; c = c->nextSibling()) {
+                if (!NodeRegistry::shouldExposeNode(c, includeWhitespace)) {
+                    continue;
+                }
+                if (index == 0) {
+                    child = c;
+                    break;
+                }
+                --index;
+            }
+        }
+        if (!child ||
+            path.compare(nameStart, nameEnd - nameStart,
+                         child->nodeName()->toUTF8NonGCString()) != 0) {
+            return {};
+        }
+        node = child.value();
+        if (last) {
+            return node;
+        }
+        start = nameEnd + 1;
+    }
+    return {};
+}
+
+void DOMDomain::handlePushNodeByPathToFrontend(CDPCommand& cmd,
+                                               const std::string&)
+{
+    CDPSession* session = m_dispatcher->session();
+    if (!session->domEnabled) {
+        cmd.sendError(-32000, "DOM agent is not enabled");
+        return;
+    }
+    if (!hasStringParam(cmd, "path")) {
+        cmd.sendError(-32602, "Invalid path");
+        return;
+    }
+    const auto& path = (*cmd.params())["path"];
+    NodeRegistry* reg = m_dispatcher->nodeRegistry();
+    Optional<Document*> doc = mainDocument(m_dispatcher->webView());
+    Optional<Node*> node;
+    if (doc) {
+        node = nodeForPath(
+            doc.value(), std::string(path.GetString(), path.GetStringLength()),
+            session->domIncludesWhitespace, reg);
+    }
+    if (!node) {
+        cmd.sendError(-32000, "No node with given path found");
+        return;
+    }
+    int nodeId = 0;
+    if (!reg->wasSent(doc.value())) {
+        // Blink sends the unbound root under parent ID 0, but it cannot bind
+        // the path to the main document until that document is requested.
+        rapidjson::Document event;
+        auto& alloc = event.GetAllocator();
+        rapidjson::Value nodes(rapidjson::kArrayType);
+        rapidjson::Value root(rapidjson::kObjectType);
+        reg->serializeNode(doc.value(), 0, root, alloc,
+                           session->domIncludesWhitespace, false);
+        nodes.PushBack(root, alloc);
+        emitSetChildNodes(m_dispatcher, cmd, 0, nodes, event);
+    } else {
+        int id = pushNodePathToFrontend(m_dispatcher, cmd, reg, node.value());
+        if (reg->wasSent(node.value())) {
+            nodeId = id;
+        }
+    }
+    rapidjson::Document out;
+    rapidjson::Value result(rapidjson::kObjectType);
+    result.AddMember("nodeId", nodeId, out.GetAllocator());
+    cmd.sendResult(result, out);
+}
+
 void DOMDomain::handlePushNodesByBackendIdsToFrontend(CDPCommand& cmd,
                                                       const std::string&)
 {
@@ -1177,6 +1318,8 @@ void DOMDomain::processMessage(CDPCommand& cmd, const std::string& method)
         { "undo", &DOMDomain::handleMarkUndoableState },
         { "redo", &DOMDomain::handleMarkUndoableState },
         { "getNodeStackTraces", &DOMDomain::handleGetNodeStackTraces },
+        { "pushNodeByPathToFrontend",
+          &DOMDomain::handlePushNodeByPathToFrontend },
         { "pushNodesByBackendIdsToFrontend",
           &DOMDomain::handlePushNodesByBackendIdsToFrontend },
     };

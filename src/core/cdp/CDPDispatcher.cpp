@@ -158,7 +158,7 @@ TargetContext* CDPDispatcher::createContext(WebView* wv, bool ownsWebView)
     TargetContext* ctx = new TargetContext();
     ctx->webView = wv;
     ctx->session = new CDPSession();
-    ctx->nodeRegistry = new NodeRegistry();
+    ctx->nodeRegistry = new NodeRegistry(wv);
     ctx->remoteObjectStore = new RemoteObjectStore();
     ctx->ownsWebView = ownsWebView;
     // Spawned tabs do not start their own CDP server; point them at the shared

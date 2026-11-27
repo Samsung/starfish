@@ -1,0 +1,4 @@
+Restores a DOM path without requesting the document
+unrequested document has no frontend ID: true
+Restores a DOM path from a shallow document
+shallow document exposes the returned node: true

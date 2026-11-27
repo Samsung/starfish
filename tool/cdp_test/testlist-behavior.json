@@ -656,9 +656,12 @@
       "expected": "pass",
       "suite": "internal"
     },
+    "dom/dom-node-path-exposure.js": {
+      "expected": "pass",
+      "suite": "internal"
+    },
     "dom/dom-node-push-by-path-to-frontend.js": {
-      "expected": "fail",
-      "category": "script-error"
+      "expected": "pass"
     },
     "dom/resolve-node-blocked.js": {
       "expected": "pass"
