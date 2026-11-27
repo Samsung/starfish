@@ -549,6 +549,17 @@ machine with a live desktop session: the suites launch Starfish instances
 8-way in parallel, which spikes load on a real X server, and the fixed
 virtual screen keeps pixel/reftest comparisons reproducible.
 
+The unit tests (`Starfish unit-test`) also need `-noreset`:
+
+``` sh
+xvfb-run -s '-screen 0 1920x1080x24 -noreset' -a ./Starfish unit-test
+```
+
+Xvfb resets itself when its last client disconnects, and Mesa opens and
+closes several X connections while it initializes EGL. The unit tests
+render offscreen and hold no X connection of their own, so a reconnect can
+land in that reset and fail `eglInitialize`.
+
 Regression mode (`--regression-test`) substitutes SamsungOne for every font
 family whose name does not contain `Ahem` or `CanvasTest` and loads images
 synchronously (`ComputedStyle::loadFont`); the internal and pixel test
